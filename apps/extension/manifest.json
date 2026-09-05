@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Libitu",
+  "description": "Start a Libitu Stage 1 blueprint from supported YouTube videos.",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "Open Libitu"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["src/content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "http://localhost:3000/*",
+    "https://www.youtube.com/*"
+  ],
+  "permissions": ["activeTab", "scripting", "sidePanel", "storage", "tabs"],
+  "side_panel": {
+    "default_path": "src/sidepanel.html"
+  }
+}

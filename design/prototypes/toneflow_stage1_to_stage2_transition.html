@@ -1,0 +1,382 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;font-family:var(--font-sans);font-size:14px;display:flex;flex-direction:column;height:900px}
+.topbar{display:flex;align-items:center;gap:8px;padding:0 16px;height:44px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;background:var(--color-background-primary)}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px}
+.tbsp{flex:1}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary)}
+.pill.done{color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5;font-weight:500}
+.pill.next{color:#3C3489;background:#EEEDFE;border-color:#AFA9EC}
+.scr{display:none;flex-direction:column;flex:1;overflow:hidden}
+.scr.on{display:flex}
+
+/* ── SCREEN 1: Stage 1 complete ── */
+.s1-body{display:grid;grid-template-columns:220px 1fr 220px;flex:1;overflow:hidden}
+.s1-left{border-right:0.5px solid var(--color-border-tertiary);padding:16px;overflow-y:auto}
+.s1-center{padding:0;overflow:hidden;display:flex;flex-direction:column;border-right:0.5px solid var(--color-border-tertiary)}
+.s1-right{padding:16px;overflow-y:auto}
+.slbl{font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.logic-node{display:flex;gap:8px;margin-bottom:4px;align-items:flex-start}
+.ln-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.ln-line{width:1px;height:12px;background:var(--color-border-tertiary);margin-left:3px;margin-bottom:-2px}
+.ln-text{font-size:12px;color:var(--color-text-primary)}
+.ln-sub{font-size:10px;color:var(--color-text-tertiary)}
+.video-thumb{height:160px;background:var(--color-background-tertiary);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;flex-shrink:0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.vt-label{font-size:11px;color:var(--color-text-tertiary)}
+.vt-dur{font-size:12px;color:var(--color-text-secondary);font-weight:500}
+.transcript-preview{flex:1;padding:14px 16px;overflow-y:hidden}
+.tp-line{display:flex;gap:10px;padding:4px 0;font-size:13px}
+.tp-time{font-size:11px;color:var(--color-text-tertiary);min-width:32px;flex-shrink:0;padding-top:1px;font-variant-numeric:tabular-nums}
+.tp-text{color:var(--color-text-secondary);line-height:1.5}
+.tp-hl{background:#FAEEDA;border-radius:3px;padding:0 2px;color:#412402}
+.corp-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;margin-bottom:8px;font-size:12px}
+.corp-text{color:var(--color-text-primary);margin-bottom:4px;line-height:1.4}
+.corp-tags{display:flex;gap:3px;flex-wrap:wrap}
+.tag{font-size:10px;padding:1px 6px;border-radius:10px;font-weight:500}
+.tg{background:#E1F5EE;color:#085041}.ta{background:#FAEEDA;color:#633806}.tp2{background:#EEEDFE;color:#3C3489}
+.corpus-summary{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.cs-num{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.cs-lbl{font-size:11px;color:var(--color-text-tertiary)}
+
+/* CTA bar */
+.cta-bar{flex-shrink:0;border-top:0.5px solid var(--color-border-tertiary);padding:12px 20px;display:flex;align-items:center;gap:16px;background:var(--color-background-secondary)}
+.cta-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)}
+.cta-dot{width:7px;height:7px;border-radius:50%;background:#1D9E75;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.cta-dot{animation:pulse 2s ease-in-out infinite}
+.cta-sp{flex:1}
+.cta-hint{font-size:11px;color:var(--color-text-tertiary)}
+.cta-btn{padding:9px 20px;border-radius:var(--border-radius-md);background:#534AB7;border:none;color:white;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:background .15s}
+.cta-btn:hover{background:#3C3489}
+
+/* ── SCREEN 2: Segment picker ── */
+.pk-header{padding:14px 20px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;display:flex;align-items:center;gap:14px}
+.pk-back{font-size:12px;color:var(--color-text-secondary);cursor:pointer;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent}
+.pk-back:hover{background:var(--color-background-secondary)}
+.pk-hinfo{flex:1}
+.pk-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.pk-sub{font-size:12px;color:var(--color-text-tertiary);margin-top:2px}
+.pk-rule{font-size:11px;padding:4px 10px;border-radius:20px;background:#E1F5EE;border:0.5px solid #5DCAA5;color:#085041;white-space:nowrap}
+
+/* Timeline */
+.pk-timeline{padding:14px 20px 10px;flex-shrink:0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.tl-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-tertiary);margin-bottom:8px;display:flex;justify-content:space-between}
+.tl-bar{display:flex;height:32px;border-radius:var(--border-radius-md);overflow:hidden;gap:2px;background:var(--color-background-secondary)}
+.tl-seg{flex:1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:filter .15s;position:relative;min-width:0}
+.tl-seg:hover{filter:brightness(.88)}
+.tl-seg.sel{outline:2px solid #534AB7;outline-offset:1px;border-radius:2px}
+.tl-seg span{font-size:9px;font-weight:600;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden}
+.tl-times{display:flex;justify-content:space-between;font-size:10px;color:var(--color-text-tertiary);margin-top:4px;padding:0 1px}
+.tl-leg{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
+.tl-li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--color-text-secondary)}
+.tl-ld{width:10px;height:10px;border-radius:3px}
+
+/* Segment grid */
+.pk-scroll{flex:1;overflow-y:auto;padding:14px 20px}
+.pk-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.seg-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;cursor:pointer;transition:border-color .15s,background .15s;position:relative;display:flex;flex-direction:column}
+.seg-card:hover{border-color:var(--color-border-secondary);background:var(--color-background-secondary)}
+.seg-card.sel{border:1.5px solid #534AB7;background:#EEEDFE}
+.sc-accent{height:3px;width:100%;flex-shrink:0}
+.sc-body{padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px}
+.sc-top{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sc-badge{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap}
+.sc-dur{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+.sc-rec{background:#E1F5EE;border:0.5px solid #5DCAA5;color:#085041}
+.sc-title{font-size:13px;font-weight:500;color:var(--color-text-primary);line-height:1.3}
+.sc-time{font-size:11px;color:var(--color-text-tertiary)}
+.sc-quote{font-size:11px;color:var(--color-text-tertiary);font-style:italic;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:2px}
+.sc-ph{display:flex;gap:2px;flex-wrap:wrap}
+.bsm{font-size:8.5px;padding:1px 4px;border-radius:3px;font-weight:700}
+.bsm-wk{background:#F1EFE8;color:#44403C}.bsm-ft{background:#CCFBF1;color:#0F766E}
+.bsm-lk{background:#DBEAFE;color:#1D4ED8}.bsm-el{background:#EDE9FE;color:#6D28D9}
+.bsm-hd{background:#FCE7F3;color:#BE185D}.bsm-vl{background:#F3E8FF;color:#7E22CE}
+.bsm-as{background:#E0E7FF;color:#3730A3}.bsm-gl{background:#FED7AA;color:#C2410C}
+.sc-diff{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--color-text-tertiary)}
+.dd{width:6px;height:6px;border-radius:50%}
+.sel-check{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:#534AB7;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;opacity:0;transition:opacity .2s}
+.seg-card.sel .sel-check{opacity:1}
+.dur-bar{height:3px;border-radius:2px;background:var(--color-border-secondary);overflow:hidden;margin-top:2px}
+.dur-fill{height:100%;border-radius:2px;background:#534AB7;opacity:.5}
+
+/* Picker footer */
+.pk-footer{flex-shrink:0;padding:12px 20px;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:14px;background:var(--color-background-secondary)}
+.pk-sel-info{flex:1}
+.pk-sel-lbl{font-size:12px;color:var(--color-text-tertiary)}
+.pk-sel-val{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-top:2px}
+.begin-btn{padding:10px 24px;border-radius:var(--border-radius-md);background:var(--color-border-secondary);border:none;color:var(--color-text-tertiary);font-size:13px;font-weight:500;cursor:not-allowed;transition:all .2s;white-space:nowrap}
+.begin-btn.active{background:#534AB7;color:white;cursor:pointer}
+.begin-btn.active:hover{background:#3C3489}
+
+/* ── SCREEN 3: Preparation ── */
+.prep-wrap{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;padding:40px}
+.prep-seg-card{border:0.5px solid #AFA9EC;background:#EEEDFE;border-radius:var(--border-radius-lg);padding:14px 20px;width:360px;display:flex;align-items:center;gap:14px}
+.psc-icon{width:40px;height:40px;border-radius:10px;background:#534AB7;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.psc-info{}
+.psc-title{font-size:14px;font-weight:500;color:#3C3489}
+.psc-meta{font-size:12px;color:#534AB7;margin-top:2px}
+.prep-steps{width:360px;display:flex;flex-direction:column;gap:8px}
+.ps{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--border-radius-md);font-size:13px;transition:all .3s}
+.ps.pending{color:var(--color-text-tertiary);background:var(--color-background-secondary)}
+.ps.loading{color:#3C3489;background:#EEEDFE;border:0.5px solid #AFA9EC}
+.ps.done{color:#085041;background:#E1F5EE;border:0.5px solid #5DCAA5}
+.ps-ico{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.ps.pending .ps-ico{background:var(--color-border-secondary);color:transparent}
+.ps.loading .ps-ico{background:#AFA9EC;color:#3C3489}
+.ps.done .ps-ico{background:#1D9E75;color:white}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ps.loading .ps-ico::after{content:'↻';display:block;animation:spin 1s linear infinite}
+.ps.done .ps-ico::after{content:'✓';display:block}
+.prep-go{padding:11px 32px;border-radius:var(--border-radius-md);background:#534AB7;border:none;color:white;font-size:13px;font-weight:500;cursor:pointer;opacity:0;transition:opacity .4s,background .15s;width:360px;text-align:center}
+.prep-go:hover{background:#3C3489}
+.prep-go.show{opacity:1}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <span class="logo">ToneFlow</span>
+    <span class="pill done">Stage 1 — Ingest</span>
+    <span class="pill next">Stage 2 — Shadow</span>
+    <span class="pill">Stage 3 — Mission</span>
+    <div class="tbsp"></div>
+    <span style="font-size:11px;color:var(--color-text-tertiary)">Building Anthropic · 17:40</span>
+  </div>
+
+  <!-- ═══ SCREEN 1: Stage 1 complete ═══ -->
+  <div id="s1" class="scr on">
+    <div class="s1-body">
+      <div class="s1-left">
+        <div class="slbl">Logic flow</div>
+        <div style="display:flex;flex-direction:column">
+          <div class="logic-node"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:3px"><div class="ln-dot" style="background:#1D9E75"></div><div class="ln-line"></div></div><div><div class="ln-text">Context</div><div class="ln-sub">Why AI safety matters</div></div></div>
+          <div class="logic-node"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:3px"><div class="ln-dot" style="background:#EF9F27"></div><div class="ln-line"></div></div><div><div class="ln-text">Conflict</div><div class="ln-sub">Capability vs. safety</div></div></div>
+          <div class="logic-node"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:3px"><div class="ln-dot" style="background:#534AB7"></div><div class="ln-line"></div></div><div><div class="ln-text">Technical approach</div><div class="ln-sub">Responsible scaling</div></div></div>
+          <div class="logic-node"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:3px"><div class="ln-dot" style="background:#3B82F6"></div></div><div><div class="ln-text">Outcome</div><div class="ln-sub">Racing to the top</div></div></div>
+        </div>
+        <div class="ldiv" style="height:0.5px;background:var(--color-border-tertiary);margin:12px 0"></div>
+        <div class="slbl">Chapters</div>
+        <div style="font-size:12px;color:#534AB7;padding:3px 0;font-weight:500">Why work on AI?</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);padding:3px 0">Scaling breakthroughs</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);padding:3px 0">Early days of AI</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);padding:3px 0">Responsible Scaling</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);padding:3px 0">Founding story</div>
+      </div>
+      <div class="s1-center">
+        <div class="video-thumb">
+          <svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="1"/><path d="M14 12l12 6-12 6V12z" fill="#534AB7"/></svg>
+          <div class="vt-label">Building Anthropic · 6 segments identified</div>
+          <div class="vt-dur">Total: 17:40</div>
+        </div>
+        <div class="transcript-preview">
+          <div class="tp-line"><span class="tp-time">0:49</span><span class="tp-text">So I guess I actually met <span class="tp-hl">a bunch</span> of you when I was 19 and I was visiting —</span></div>
+          <div class="tp-line"><span class="tp-time">1:04</span><span class="tp-text">The problem isn't <span class="tp-hl">that we lack</span> the technology, but rather that we lack the frameworks.</span></div>
+          <div class="tp-line"><span class="tp-time">1:18</span><span class="tp-text">And <span class="tp-hl">to be fair</span>, I think the question of whether scaling continues is genuinely uncertain.</span></div>
+          <div class="tp-line"><span class="tp-time">1:31</span><span class="tp-text">What we decided was — given everything we knew, the responsible path forward was to build safety in.</span></div>
+        </div>
+      </div>
+      <div class="s1-right">
+        <div class="corpus-summary">
+          <div><div class="cs-num">11</div><div class="cs-lbl">chunks saved</div></div>
+          <div style="width:0.5px;height:32px;background:var(--color-border-tertiary)"></div>
+          <div><div class="cs-num">4</div><div class="cs-lbl">structures</div></div>
+        </div>
+        <div class="corp-card">
+          <div class="corp-text">"to be fair" — conceding before counterpoint</div>
+          <div class="corp-tags"><span class="tag tg">softening</span><span class="tag ta">acknowledging</span></div>
+        </div>
+        <div class="corp-card">
+          <div class="corp-text">"genuinely uncertain" — calibrated hedging</div>
+          <div class="corp-tags"><span class="tag ta">hedging</span></div>
+        </div>
+        <div class="corp-card">
+          <div class="corp-text">The problem isn't [A], but rather [B]</div>
+          <div class="corp-tags"><span class="tag tp2">contrast</span><span class="tag tg">reframing</span></div>
+        </div>
+        <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:8px;text-align:center">+ 8 more in corpus</div>
+      </div>
+    </div>
+    <div class="cta-bar">
+      <div class="cta-status"><div class="cta-dot"></div>Analysis complete · 6 practice segments ready</div>
+      <div class="cta-sp"></div>
+      <div class="cta-hint">All segments under 5 minutes</div>
+      <button class="cta-btn" onclick="openPicker()">Choose a segment to shadow <i class="ti ti-arrow-right" style="font-size:13px" aria-hidden="true"></i></button>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 2: Segment picker ═══ -->
+  <div id="s2" class="scr">
+    <div class="pk-header">
+      <button class="pk-back" onclick="goBack()"><i class="ti ti-arrow-left" style="font-size:12px" aria-hidden="true"></i> Back</button>
+      <div class="pk-hinfo">
+        <div class="pk-title">Choose a segment to shadow</div>
+        <div class="pk-sub">AI divided the video into 6 segments aligned to the logic flow</div>
+      </div>
+      <div class="pk-rule"><i class="ti ti-clock" style="font-size:11px;vertical-align:-1px" aria-hidden="true"></i> All under 5 min</div>
+    </div>
+    <div class="pk-timeline">
+      <div class="tl-label"><span>Video timeline — 17:40 total</span><span>Click a segment to select</span></div>
+      <div class="tl-bar" id="tl-bar"></div>
+      <div class="tl-times"><span>0:00</span><span>4:20</span><span>8:40</span><span>13:00</span><span>17:40</span></div>
+      <div class="tl-leg">
+        <div class="tl-li"><div class="tl-ld" style="background:#1D9E75"></div>Context</div>
+        <div class="tl-li"><div class="tl-ld" style="background:#EF9F27"></div>Conflict</div>
+        <div class="tl-li"><div class="tl-ld" style="background:#534AB7"></div>Technical</div>
+        <div class="tl-li"><div class="tl-ld" style="background:#3B82F6"></div>Outcome</div>
+      </div>
+    </div>
+    <div class="pk-scroll"><div class="pk-grid" id="pk-grid"></div></div>
+    <div class="pk-footer">
+      <div class="pk-sel-info">
+        <div class="pk-sel-lbl" id="psl">Select a segment above to begin</div>
+        <div class="pk-sel-val" id="psv"></div>
+      </div>
+      <button class="begin-btn" id="begin-btn" onclick="openPrep()">Begin Stage 2 →</button>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 3: Preparation ═══ -->
+  <div id="s3" class="scr">
+    <div class="prep-wrap">
+      <div style="text-align:center"><div style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px">Preparing Stage 2</div><div style="font-size:12px;color:var(--color-text-tertiary)">Setting up your shadowing session</div></div>
+      <div class="prep-seg-card" id="prep-card"></div>
+      <div class="prep-steps">
+        <div class="ps done" id="ps1"><div class="ps-ico"></div>Extracting transcript segment</div>
+        <div class="ps loading" id="ps2"><div class="ps-ico"></div>Building reference pitch contour</div>
+        <div class="ps pending" id="ps3"><div class="ps-ico"></div>Annotating phonological phenomena</div>
+        <div class="ps pending" id="ps4"><div class="ps-ico"></div>Generating word cover masks</div>
+      </div>
+      <button class="prep-go" id="prep-go" onclick="sendPrompt('Stage 2 shadowing is ready. Open the Shadow interface for the selected segment.')">
+        <i class="ti ti-player-play" style="font-size:13px;vertical-align:-1px" aria-hidden="true"></i> Stage 2 ready — Start shadowing
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SEGS = [
+  {id:1,title:'Why work on AI?',start:'0:00',end:'1:45',durS:105,dur:'1m 45s',logic:'Context',logicCol:'#1D9E75',logicBg:'#E1F5EE',logicTxt:'#085041',diff:'easy',diffN:1,quote:'"So I guess I actually met a bunch of you when I was 19..."',ph:['wk','lk','vl'],wc:156,rec:false},
+  {id:2,title:'Scaling breakthroughs',start:'1:45',end:'4:20',durS:155,dur:'2m 35s',logic:'Conflict',logicCol:'#EF9F27',logicBg:'#FAEEDA',logicTxt:'#633806',diff:'medium',diffN:2,quote:'"The problem isn\'t that we lack the technology, but rather..."',ph:['ft','wk','lk','el'],wc:234,rec:true},
+  {id:3,title:'Early days & sentiment',start:'4:20',end:'7:10',durS:170,dur:'2m 50s',logic:'Conflict',logicCol:'#EF9F27',logicBg:'#FAEEDA',logicTxt:'#633806',diff:'dense',diffN:3,quote:'"I think the question of whether scaling continues is genuinely..."',ph:['ft','wk','lk','hd','el','gl'],wc:312,rec:false},
+  {id:4,title:'Responsible Scaling Policy',start:'7:10',end:'10:30',durS:200,dur:'3m 20s',logic:'Technical',logicCol:'#534AB7',logicBg:'#EEEDFE',logicTxt:'#3C3489',diff:'medium',diffN:2,quote:'"Given everything we knew, the responsible path forward was..."',ph:['wk','lk','as','vl'],wc:298,rec:false},
+  {id:5,title:'Founding story',start:'10:30',end:'14:15',durS:225,dur:'3m 45s',logic:'Technical',logicCol:'#534AB7',logicBg:'#EEEDFE',logicTxt:'#3C3489',diff:'dense',diffN:3,quote:'"What we decided — the tension between moving fast and carefully..."',ph:['ft','wk','lk','hd','el'],wc:387,rec:false},
+  {id:6,title:'Looking to the future',start:'14:15',end:'17:40',durS:205,dur:'3m 25s',logic:'Outcome',logicCol:'#3B82F6',logicBg:'#EFF6FF',logicTxt:'#1E3A8A',diff:'medium',diffN:2,quote:'"The upshot of all this is — safety and capability aren\'t opposed..."',ph:['wk','lk','ft','vl','as'],wc:278,rec:false},
+];
+const TOTAL = 1060;
+const PH_CLS = {wk:'bsm-wk',ft:'bsm-ft',lk:'bsm-lk',el:'bsm-el',hd:'bsm-hd',vl:'bsm-vl',as:'bsm-as',gl:'bsm-gl'};
+const PH_LBL = {wk:'WK',ft:'FT',lk:'LK',el:'EL',hd:'HD',vl:'VL',as:'AS',gl:'GT'};
+const DIFF_COLOR = {easy:'#1D9E75',medium:'#EF9F27',dense:'#E24B4A'};
+const DIFF_LBL = {easy:'Easy',medium:'Medium',dense:'Dense'};
+
+let selectedId = null;
+
+function buildTimeline(){
+  const bar = document.getElementById('tl-bar');
+  bar.innerHTML = '';
+  SEGS.forEach(s=>{
+    const w = (s.durS/TOTAL*100).toFixed(1);
+    const el = document.createElement('div');
+    el.className = 'tl-seg';
+    el.id = 'tl-'+s.id;
+    el.style.cssText = `flex:${s.durS};background:${s.logicCol};min-width:0`;
+    el.innerHTML = `<span>${s.id}</span>`;
+    el.title = s.title + ' · ' + s.dur;
+    el.onclick = ()=>selectSeg(s.id);
+    bar.appendChild(el);
+  });
+}
+
+function buildCards(){
+  const grid = document.getElementById('pk-grid');
+  grid.innerHTML = '';
+  SEGS.forEach(s=>{
+    const card = document.createElement('div');
+    card.className = 'seg-card';
+    card.id = 'card-'+s.id;
+    card.onclick = ()=>selectSeg(s.id);
+    const pct = (s.durS/(5*60)*100).toFixed(0);
+    const dots = [1,2,3].map(i=>`<span class="dd" style="background:${i<=s.diffN?DIFF_COLOR[s.diff]:'var(--color-border-secondary)'}"></span>`).join('');
+    const phBadges = s.ph.map(p=>`<span class="bsm ${PH_CLS[p]||''}">${PH_LBL[p]||p}</span>`).join('');
+    card.innerHTML = `
+      <div class="sc-accent" style="background:${DIFF_COLOR[s.diff]}"></div>
+      <div class="sc-body">
+        <div class="sc-top">
+          <span class="sc-badge" style="background:${s.logicBg};border:0.5px solid ${s.logicCol}40;color:${s.logicTxt}">${s.logic}</span>
+          <span class="sc-dur">${s.dur}</span>
+          ${s.rec?'<span class="sc-dur sc-rec">⭐ Recommended</span>':''}
+        </div>
+        <div class="sc-title">${s.title}</div>
+        <div class="sc-time">${s.start} – ${s.end} · ${s.wc} words</div>
+        <div class="dur-bar"><div class="dur-fill" style="width:${pct}%"></div></div>
+        <div class="sc-quote">${s.quote}</div>
+        <div class="sc-footer">
+          <div class="sc-ph">${phBadges}</div>
+          <div class="sc-diff">${dots}<span style="margin-left:3px">${DIFF_LBL[s.diff]}</span></div>
+        </div>
+      </div>
+      <div class="sel-check">✓</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function selectSeg(id){
+  selectedId = id;
+  document.querySelectorAll('.seg-card').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('.tl-seg').forEach(t=>t.classList.remove('sel'));
+  document.getElementById('card-'+id).classList.add('sel');
+  document.getElementById('tl-'+id).classList.add('sel');
+  const s = SEGS.find(x=>x.id===id);
+  document.getElementById('psl').textContent = 'Selected segment:';
+  document.getElementById('psv').textContent = s.title + ' · ' + s.dur + ' · ' + s.logic;
+  const btn = document.getElementById('begin-btn');
+  btn.classList.add('active');
+  btn.textContent = 'Begin Stage 2 → ' + s.title;
+}
+
+function openPicker(){
+  document.getElementById('s1').classList.remove('on');
+  document.getElementById('s2').classList.add('on');
+}
+function goBack(){
+  document.getElementById('s2').classList.remove('on');
+  document.getElementById('s1').classList.add('on');
+}
+
+let prepTimer = null;
+function openPrep(){
+  if(!selectedId) return;
+  const s = SEGS.find(x=>x.id===selectedId);
+  document.getElementById('s2').classList.remove('on');
+  document.getElementById('s3').classList.add('on');
+  document.getElementById('prep-card').innerHTML = `
+    <div class="psc-icon">🎯</div>
+    <div class="psc-info">
+      <div class="psc-title">${s.title}</div>
+      <div class="psc-meta">${s.start} – ${s.end} · ${s.dur} · ${s.logic}</div>
+    </div>
+  `;
+  const steps = ['ps1','ps2','ps3','ps4'];
+  steps.forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(i===0){el.className='ps done'}
+    else if(i===1){el.className='ps loading'}
+    else{el.className='ps pending'}
+  });
+  let step=2;
+  function advance(){
+    if(step>4){document.getElementById('prep-go').classList.add('show');return}
+    const prev=document.getElementById('ps'+(step-1));
+    const cur=document.getElementById('ps'+step);
+    if(prev)prev.className='ps done';
+    if(cur)cur.className='ps loading';
+    step++;
+    prepTimer=setTimeout(advance,900);
+  }
+  prepTimer=setTimeout(advance,900);
+}
+
+buildTimeline();
+buildCards();
+</script>

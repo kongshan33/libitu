@@ -1,0 +1,11 @@
+{
+  "name": "@libitu/extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/validate-extension.mjs",
+    "lint": "node scripts/validate-extension.mjs",
+    "test": "node scripts/validate-extension.mjs"
+  }
+}

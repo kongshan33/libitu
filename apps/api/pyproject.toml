@@ -1,0 +1,28 @@
+[project]
+name = "libitu-api"
+version = "0.1.0"
+description = "FastAPI backend for Libitu content processing, corpus, and speaking practice."
+requires-python = ">=3.11"
+dependencies = [
+  "clerk-backend-api>=6.0.1",
+  "fastapi>=0.115.0",
+  "httpx>=0.27.0",
+  "pydantic>=2.8.0",
+  "pydantic-settings>=2.4.0",
+  "sherpa-onnx>=1.13.6,<2",
+  "sherpa-onnx-core>=1.13.6,<2",
+  "upstash-redis>=1.5.0",
+  "uvicorn[standard]>=0.30.0",
+  "youtube-transcript-api>=1.2.4,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2.0",
+]
+
+[tool.fastapi]
+entrypoint = "app.main:app"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

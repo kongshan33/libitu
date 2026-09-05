@@ -1,0 +1,491 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;font-family:var(--font-sans);font-size:14px;display:flex;flex-direction:column;height:940px}
+.topbar{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px}
+.pill{font-size:11px;padding:3px 9px;border-radius:20px;border:0.5px solid var(--color-border-tertiary)}
+.pill.done{color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5}
+.pill.active{color:#3C3489;background:#EEEDFE;border-color:#AFA9EC;font-weight:500}
+.tbsp{flex:1}
+.rec-ok{font-size:11px;padding:3px 9px;border-radius:20px;background:#E1F5EE;border:0.5px solid #5DCAA5;color:#0F6E56;font-weight:500}
+.body{display:grid;grid-template-columns:184px 1fr 244px;flex:1;overflow:hidden}
+.left{border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;padding:12px 0;display:flex;flex-direction:column}
+.slbl{font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;padding:0 12px 7px}
+.seg{padding:6px 12px;cursor:pointer;border-left:2px solid transparent;font-size:12px;color:var(--color-text-secondary)}
+.seg:hover{background:var(--color-background-secondary)}
+.seg.a{border-left-color:#534AB7;background:#EEEDFE;color:#3C3489;font-weight:500}
+.seg.d{border-left-color:#1D9E75}
+.segm{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.ldiv{height:0.5px;background:var(--color-border-tertiary);margin:10px 12px}
+.lbtn{padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-left:2px solid transparent;transition:all .12s}
+.lbtn:hover{background:var(--color-background-secondary)}
+.lbtn[data-l=sound]{border-left-color:transparent}.lbtn[data-l=sound].on{border-left-color:#E24B4A;background:#FCEBEB}
+.lbtn[data-l=rhythm]{border-left-color:transparent}.lbtn[data-l=rhythm].on{border-left-color:#EF9F27;background:#FAEEDA}
+.lbtn[data-l=melody]{border-left-color:transparent}.lbtn[data-l=melody].on{border-left-color:#6366F1;background:#EEF2FF}
+.lico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.lbtn[data-l=sound] .lico{background:#FCEBEB;color:#E24B4A}
+.lbtn[data-l=rhythm] .lico{background:#FAEEDA;color:#EF9F27}
+.lbtn[data-l=melody] .lico{background:#EEF2FF;color:#6366F1}
+.lname{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.lsub{font-size:10px;color:var(--color-text-tertiary)}
+.lsc{font-size:13px;font-weight:700}
+.lbtn[data-l=sound] .lsc{color:#E24B4A}.lbtn[data-l=rhythm] .lsc{color:#EF9F27}.lbtn[data-l=melody] .lsc{color:#6366F1}
+.center{display:flex;flex-direction:column;overflow:hidden;border-right:0.5px solid var(--color-border-tertiary)}
+.ptabs{display:flex;flex-shrink:0;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.ptab{flex:1;padding:10px 4px;text-align:center;cursor:pointer;font-size:12px;font-weight:500;color:var(--color-text-tertiary);border-bottom:2px solid transparent;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s}
+.ptab:hover{color:var(--color-text-secondary)}
+.ptab.on[data-p=sound]{color:#E24B4A;border-bottom-color:#E24B4A;background:var(--color-background-primary)}
+.ptab.on[data-p=rhythm]{color:#EF9F27;border-bottom-color:#EF9F27;background:var(--color-background-primary)}
+.ptab.on[data-p=melody]{color:#6366F1;border-bottom-color:#6366F1;background:var(--color-background-primary)}
+.tsco{font-size:10px;padding:1px 5px;border-radius:8px;font-weight:700}
+.ptab[data-p=sound] .tsco{background:#FCEBEB;color:#E24B4A}
+.ptab[data-p=rhythm] .tsco{background:#FAEEDA;color:#EF9F27}
+.ptab[data-p=melody] .tsco{background:#EEF2FF;color:#6366F1}
+.page{display:none;flex-direction:column;flex:1;overflow:hidden}
+.page.on{display:flex}
+.pstrip{display:flex;gap:3px;padding:7px 12px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;overflow-x:auto;background:var(--color-background-secondary)}
+.pc{padding:3px 8px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--color-text-secondary);background:transparent;transition:all .12s;user-select:none}
+.pc:hover{background:var(--color-background-primary)}
+.pc.on{background:#FCEBEB;border-color:#E24B4A;color:#7F1D1D}
+.reveal-bar{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0;background:var(--color-background-secondary)}
+.rb-label{font-size:11px;color:var(--color-text-secondary);flex:1}
+.rb-label span{color:#534AB7;font-weight:500}
+.rbtn{font-size:11px;padding:3px 9px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.rbtn:hover{background:var(--color-background-primary)}
+.rcnt{font-size:11px;color:var(--color-text-tertiary);white-space:nowrap}
+.sscroll{flex:1;overflow-y:auto;padding:14px 12px}
+.sent-label{font-size:11px;color:var(--color-text-tertiary);font-style:italic;margin-bottom:12px}
+.rowlbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+.rowlbl.ref{color:var(--color-text-tertiary)}.rowlbl.usr{color:#534AB7}
+.wflow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;margin-bottom:12px}
+.wc{display:flex;align-items:center;gap:0}
+.wcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 6px;border-radius:8px;border:0.5px solid transparent;transition:border-color .2s,background .2s,opacity .2s;cursor:default}
+.wcard.issue{border-color:#FCA5A5;background:#FFF5F5}
+.wcard.faded{opacity:.12}
+.wcard.lit{border-color:#534AB7;background:#EEEDFE}
+.wcipa{font-family:var(--font-mono);font-size:9px;color:var(--color-text-tertiary);min-height:12px;opacity:0;transition:opacity .15s}
+.wcard:hover .wcipa{opacity:1}
+.wctb{position:relative;height:20px;min-width:16px;padding:0 3px;display:flex;align-items:center;justify-content:center}
+.wcover{position:absolute;inset:-1px;background:#888780;border-radius:5px;cursor:pointer;z-index:2;transition:opacity .22s,transform .22s;display:flex;align-items:center;justify-content:center}
+.wcover:hover{background:#5F5E5A}
+.wcover::after{content:'';position:absolute;inset:3px;border-radius:3px;background:rgba(255,255,255,.12)}
+.wcover.rev{opacity:0;transform:scaleY(0);pointer-events:none}
+.wctext{font-size:14px;font-weight:500;color:var(--color-text-primary);white-space:nowrap}
+.wcard.fn .wctext{color:var(--color-text-tertiary);font-weight:400;font-size:13px}
+.wcb{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:13px;margin-top:2px}
+.badge3{font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700;white-space:nowrap}
+.badge3.miss{outline:1.5px solid #E24B4A;outline-offset:1px}
+.blink{background:#DBEAFE;color:#1D4ED8}.bweak{background:#F1EFE8;color:#44403C}
+.bflap{background:#CCFBF1;color:#0F766E}.bel{background:#EDE9FE;color:#6D28D9}
+.bas{background:#E0E7FF;color:#3730A3}.bgl{background:#FED7AA;color:#C2410C}
+.bdd{background:#FEF3C7;color:#92400E}.bhd{background:#FCE7F3;color:#BE185D}
+.bvl{background:#F3E8FF;color:#7E22CE}.bvc{background:#E5E7EB;color:#374151}
+.conn2{display:flex;flex-direction:column;align-items:center;padding:0 2px;margin-bottom:12px;transition:opacity .2s}
+.conn2.faded{opacity:.08}
+.carc{font-size:10px;font-weight:700;line-height:1}
+.ctag{font-size:8px;padding:0 2px;border-radius:2px;font-weight:600;line-height:1.5}
+.conn2.cv .carc{color:#3B82F6}.conn2.cv .ctag{background:#DBEAFE;color:#1D4ED8}
+.conn2.vv .carc{color:#22C55E}.conn2.vv .ctag{background:#DCFCE7;color:#15803D}
+.conn2.miss .carc{color:#E24B4A}.conn2.miss .ctag{background:#FEE2E2;color:#B91C1C}
+.pleg{display:flex;flex-wrap:wrap;gap:4px 8px;padding:8px 12px;border-top:0.5px solid var(--color-border-tertiary);flex-shrink:0;background:var(--color-background-secondary)}
+.pli{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--color-text-secondary)}
+.rhscroll{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:18px}
+.rh-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-tertiary);margin-bottom:9px}
+.stress-section{display:flex;flex-direction:column;gap:10px}
+.srow{display:flex;flex-wrap:wrap;gap:5px 9px;align-items:flex-end}
+.sw{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 5px;border-radius:6px}
+.sw.iss{background:#FAEEDA}
+.sdots{display:flex;gap:2px;align-items:flex-end;min-height:11px}
+.sd{border-radius:50%;display:inline-block}
+.sd.p{width:9px;height:9px;background:#EF9F27}
+.sd.s{width:6px;height:6px;background:#EF9F2780}
+.sd.u{width:5px;height:5px;background:var(--color-border-secondary)}
+.swt{font-size:13px;line-height:1}
+.sw.co .swt{color:var(--color-text-primary);font-weight:500}.sw.fn .swt{color:var(--color-text-tertiary);font-size:12px}
+.sw.iss .swt{color:#633806}
+.swnote{font-size:9px;color:#BA7517;background:#FEF3C7;padding:1px 3px;border-radius:3px}
+.rdiv2{height:0.5px;background:var(--color-border-tertiary)}
+.pause-rows{display:flex;flex-direction:column;gap:7px}
+.prow{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:7px 9px;border-radius:var(--border-radius-md)}
+.prow.ref{background:var(--color-background-secondary)}
+.prow.bad{background:#FFF5F5}
+.prow.ok2{background:#E1F5EE}
+.prowlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;width:32px;flex-shrink:0}
+.prowlbl.ref{color:var(--color-text-tertiary)}.prowlbl.bad{color:#E24B4A}.prowlbl.ok2{color:#0F6E56}
+.tunit{padding:4px 8px;border-radius:5px;font-size:13px}
+.prow.ref .tunit{background:var(--color-background-primary);color:var(--color-text-primary)}
+.tunit.wc2{background:#FEE2E2;color:#991B1B;font-weight:500}
+.tunit.gc{background:#D1FAE5;color:#065F46;font-weight:500}
+.pmk{display:flex;flex-direction:column;align-items:center;padding:0 2px}
+.pmkbar{width:1.5px;height:18px}
+.pmkdur{font-size:9px;white-space:nowrap}
+.pmk.rp .pmkbar{background:var(--color-text-tertiary)}.pmk.rp .pmkdur{color:var(--color-text-tertiary)}
+.pmk.op .pmkbar{background:#1D9E75}.pmk.op .pmkdur{color:#0F6E56}
+.pmk.bp .pmkbar{background:#E24B4A}.pmk.bp .pmkdur{color:#E24B4A}
+.pause-note{font-size:12px;color:#991B1B;background:#FEE2E2;padding:8px 11px;border-radius:var(--border-radius-md);line-height:1.55;margin-top:4px}
+.mel-scroll{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:14px}
+.pitch-cv{width:100%;height:84px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);overflow:hidden;position:relative}
+.pleg2{display:flex;gap:12px;flex-wrap:wrap}
+.pli2{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.pll{width:20px;height:3px;border-radius:2px}
+.int-row{display:flex;flex-wrap:wrap;gap:5px 7px}
+.iw{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 7px;border-radius:7px;cursor:default}
+.iw.nuc{background:#EEF2FF;border:0.5px solid #6366F1}
+.iw.nucw{background:#FEE2E2;border:0.5px solid #E24B4A}
+.iwarr{font-size:12px;line-height:1}
+.iwt{font-size:14px;line-height:1;color:var(--color-text-primary)}
+.iw.nuc .iwt{color:#3730A3;font-weight:500}.iw.nucw .iwt{color:#991B1B;font-weight:500}
+.iwtone{font-size:9px;padding:1px 4px;border-radius:3px;margin-top:1px}
+.iw.nuc .iwtone{background:#C7D2FE;color:#3730A3}.iw.nucw .iwtone{background:#FEE2E2;color:#991B1B}
+.mel-note{font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:9px 12px;border-radius:var(--border-radius-md);line-height:1.55}
+.right{overflow-y:auto;padding:12px 11px;display:flex;flex-direction:column;gap:11px;background:var(--color-background-secondary)}
+.lhd{border-radius:var(--border-radius-md);padding:11px 13px;border:0.5px solid transparent}
+.lhd-s{background:#FCEBEB;border-color:#FCA5A5;color:#7F1D1D}
+.lhd-r{background:#FAEEDA;border-color:#FCD588;color:#633806}
+.lhd-m{background:#EEF2FF;border-color:#C7D2FE;color:#3730A3}
+.lhdlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.lhdtit{font-size:14px;font-weight:500;margin-bottom:3px}
+.lhddesc{font-size:12px;line-height:1.5;opacity:.9}
+.scblk{display:flex;align-items:center;gap:10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:9px 12px;border:0.5px solid var(--color-border-tertiary)}
+.scn{font-size:26px;font-weight:500;color:var(--color-text-primary)}
+.scr{flex:1}
+.scsub{font-size:10px;color:var(--color-text-tertiary);margin-bottom:4px}
+.scbar{height:5px;border-radius:3px;background:var(--color-background-secondary);overflow:hidden}
+.scfill{height:100%;border-radius:3px;transition:width .35s}
+.issblk{background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:9px 12px;border:0.5px solid var(--color-border-tertiary)}
+.issblkhd{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-tertiary);margin-bottom:7px}
+.iss2{display:flex;gap:7px;margin-bottom:6px;font-size:12px;line-height:1.5;color:var(--color-text-secondary)}
+.iss2:last-child{margin-bottom:0}
+.issico{width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;margin-top:1px}
+.issico.ok{background:#E1F5EE;color:#0F6E56}.issico.warn{background:#FAEEDA;color:#BA7517}.issico.bad{background:#FCEBEB;color:#E24B4A}
+.tipblk{background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:9px 12px;border-left:3px solid #534AB7}
+.tiptt{font-size:10px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.tiptx{font-size:12px;color:var(--color-text-secondary);line-height:1.55}
+.retry{width:100%;padding:9px;border-radius:var(--border-radius-md);background:#534AB7;border:none;color:white;font-size:12px;font-weight:500;cursor:pointer;margin-top:auto}
+.retry:hover{background:#3C3489}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <span class="logo">ToneFlow</span>
+    <span class="pill done">S1 ✓</span>
+    <span class="pill active">Stage 2 — Shadow</span>
+    <div class="tbsp"></div>
+    <span class="rec-ok">● Analysis complete</span>
+  </div>
+
+  <div class="body">
+    <div class="left">
+      <div class="slbl">Segments</div>
+      <div class="seg d">Intro <div class="segm">0:00–0:42</div></div>
+      <div class="seg a">Early days <div class="segm">0:42–1:45</div></div>
+      <div class="seg">Scaling <div class="segm">1:45–3:20</div></div>
+      <div class="seg">Founding <div class="segm">3:20–5:10</div></div>
+      <div class="ldiv"></div>
+      <div class="slbl">Layers</div>
+      <div class="lbtn on" data-l="sound" onclick="sw('sound',this)">
+        <div class="lico">🔊</div>
+        <div style="flex:1"><div class="lname">Sound</div><div class="lsub">Phonemes · Connected</div></div>
+        <div class="lsc">72</div>
+      </div>
+      <div class="lbtn" data-l="rhythm" onclick="sw('rhythm',this)">
+        <div class="lico">♩</div>
+        <div style="flex:1"><div class="lname">Rhythm</div><div class="lsub">Stress · Pauses</div></div>
+        <div class="lsc">89</div>
+      </div>
+      <div class="lbtn" data-l="melody" onclick="sw('melody',this)">
+        <div class="lico">〰</div>
+        <div style="flex:1"><div class="lname">Melody</div><div class="lsub">Intonation</div></div>
+        <div class="lsc">65</div>
+      </div>
+    </div>
+
+    <div class="center">
+      <div class="ptabs">
+        <div class="ptab on" data-p="sound" onclick="sw('sound',null,this)">🔊 Sound <span class="tsco">72</span></div>
+        <div class="ptab" data-p="rhythm" onclick="sw('rhythm',null,this)">♩ Rhythm <span class="tsco">89</span></div>
+        <div class="ptab" data-p="melody" onclick="sw('melody',null,this)">〰 Melody <span class="tsco">65</span></div>
+      </div>
+
+      <!-- SOUND PAGE -->
+      <div class="page on" id="page-sound">
+        <div class="pstrip">
+          <div class="pc on" data-ph="all" onclick="selPh(this)">All</div>
+          <div class="pc" data-ph="link" onclick="selPh(this)">⌢ Linking</div>
+          <div class="pc" data-ph="weak" onclick="selPh(this)">ə Weak</div>
+          <div class="pc" data-ph="flap" onclick="selPh(this)">ɾ Flap-T</div>
+          <div class="pc" data-ph="el" onclick="selPh(this)">∅ Elision</div>
+          <div class="pc" data-ph="as" onclick="selPh(this)">≈ Assim.</div>
+          <div class="pc" data-ph="gl" onclick="selPh(this)">ʔ Glottal</div>
+          <div class="pc" data-ph="dd" onclick="selPh(this)">∅d Drop-D</div>
+          <div class="pc" data-ph="hd" onclick="selPh(this)">∅h H-drop</div>
+          <div class="pc" data-ph="vl" onclick="selPh(this)">◌ Vowel len.</div>
+          <div class="pc" data-ph="vc" onclick="selPh(this)">◑ Voicing</div>
+        </div>
+        <div class="reveal-bar">
+          <div class="rb-label"><span>Shadow mode</span> — text hidden · click any word to peek</div>
+          <button class="rbtn" onclick="revAll()">Reveal all</button>
+          <button class="rbtn" onclick="hidAll()">Hide all</button>
+          <span class="rcnt" id="rcnt">0 / 12 revealed</span>
+        </div>
+        <div class="sscroll">
+          <div class="sent-label">"I actually met a bunch of you when I was visiting him"</div>
+          <div class="rowlbl ref">Reference — hover for IPA</div>
+          <div class="wflow" id="wf-ref"></div>
+          <div class="rowlbl usr" style="margin-top:8px">Your recording</div>
+          <div class="wflow" id="wf-usr"></div>
+        </div>
+        <div class="pleg">
+          <div class="pli"><span class="badge3 blink">LK</span>Linking</div>
+          <div class="pli"><span class="badge3 bweak">WK</span>Weak form</div>
+          <div class="pli"><span class="badge3 bflap">FT</span>Flap-T</div>
+          <div class="pli"><span class="badge3 bel">EL</span>Elision</div>
+          <div class="pli"><span class="badge3 bas">AS</span>Assimilation</div>
+          <div class="pli"><span class="badge3 bgl">GT</span>Glottal</div>
+          <div class="pli"><span class="badge3 bdd">DD</span>Drop-D</div>
+          <div class="pli"><span class="badge3 bhd">HD</span>H-drop</div>
+          <div class="pli"><span class="badge3 bvl">VL</span>Vowel len.</div>
+          <div class="pli"><span class="badge3 bvc">VC</span>Voicing</div>
+        </div>
+      </div>
+
+      <!-- RHYTHM PAGE -->
+      <div class="page" id="page-rhythm">
+        <div class="rhscroll">
+          <div>
+            <div class="rh-title">Sentence stress</div>
+            <div class="stress-section">
+              <div>
+                <div class="rowlbl ref" style="margin-bottom:7px">Reference</div>
+                <div class="srow" id="sr-ref"></div>
+              </div>
+              <div>
+                <div class="rowlbl usr" style="margin-bottom:7px">Your voice</div>
+                <div class="srow" id="sr-usr"></div>
+              </div>
+            </div>
+          </div>
+          <div class="rdiv2"></div>
+          <div>
+            <div class="rh-title">Tone units & pauses</div>
+            <div class="pause-rows">
+              <div class="prow ref">
+                <span class="prowlbl ref">REF</span>
+                <span class="tunit">I actually met a bunch of you</span>
+                <div class="pmk rp"><div class="pmkbar"></div><div class="pmkdur">0.32s</div></div>
+                <span class="tunit">when I was visiting him</span>
+              </div>
+              <div class="prow bad">
+                <span class="prowlbl bad">YOU</span>
+                <span class="tunit wc2">I actually met a bunch</span>
+                <div class="pmk bp"><div class="pmkbar"></div><div class="pmkdur">✗ 0.28s</div></div>
+                <span class="tunit wc2">of you</span>
+                <div class="pmk op"><div class="pmkbar"></div><div class="pmkdur">✓ 0.38s</div></div>
+                <span class="tunit gc">when I was visiting him</span>
+              </div>
+            </div>
+            <div class="pause-note" style="margin-top:8px">✗ Paused after "bunch" — this splits the noun phrase "a bunch of you". Keep NPs together; pause at clause boundaries only.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MELODY PAGE -->
+      <div class="page" id="page-melody">
+        <div class="mel-scroll">
+          <div class="rh-title">Pitch contour</div>
+          <div class="pitch-cv">
+            <svg width="100%" height="84" viewBox="0 0 500 84" preserveAspectRatio="none">
+              <polyline points="0,65 35,60 70,50 110,38 150,28 190,22 220,26 250,32 280,36 310,34 340,30 370,28 410,36 455,50 500,65" fill="none" stroke="#6366F1" stroke-width="2" opacity=".4"/>
+              <polyline points="0,68 35,66 70,62 110,58 150,54 190,52 220,54 250,58 280,60 310,60 340,62 370,64 410,66 455,68 500,70" fill="none" stroke="#E24B4A" stroke-width="2"/>
+              <line x1="410" y1="5" x2="410" y2="84" stroke="#6366F1" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>
+              <text x="414" y="14" font-size="8.5" fill="#3730A3" font-family="sans-serif">nuclear</text>
+              <circle cx="410" cy="28" r="3" fill="#6366F1" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="pleg2">
+            <div class="pli2"><div class="pll" style="background:#6366F1;opacity:.5"></div>Reference</div>
+            <div class="pli2"><div class="pll" style="background:#E24B4A"></div>Your voice — too flat</div>
+          </div>
+          <div class="rh-title" style="margin-top:4px">Word-by-word pitch movement</div>
+          <div class="int-row" id="irow"></div>
+          <div class="mel-note">Nuclear stress should land on <strong style="color:var(--color-text-primary)">"him"</strong> — the final content word. Your pitch arrives flat by "him", suggesting the utterance ended at "visiting". The listener hears the wrong endpoint.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right" id="rp"></div>
+  </div>
+</div>
+
+<script>
+const W=[
+  {t:'I',ipa:'/aɪ/',c:1,ph:[],ok:1,conn:{k:'VV',ok:1}},
+  {t:'actually',ipa:'/ˈækt∫uəli/',c:1,ph:[{k:'el',l:'EL',ok:null}],ok:1,conn:{k:'CV',ok:1}},
+  {t:'met',ipa:'/mɛt/',c:1,ph:[{k:'vl',l:'VL',ok:1},{k:'flap',l:'FT',ok:0}],ok:0,conn:{k:'CV+FLAP',ok:0}},
+  {t:'a',ipa:'/ə/',c:0,ph:[{k:'weak',l:'WK',ok:1}],ok:1,conn:{k:'CV',ok:1}},
+  {t:'bunch',ipa:'/bʌnt∫/',c:1,ph:[{k:'vl',l:'VL',ok:1},{k:'vc',l:'VC',ok:1}],ok:1,conn:{k:'CV',ok:1}},
+  {t:'of',ipa:'/əv/',c:0,ph:[{k:'weak',l:'WK',ok:0}],ok:0,conn:{k:'CV',ok:1}},
+  {t:'you',ipa:'/jə/',c:0,ph:[{k:'weak',l:'WK',ok:1}],ok:1,conn:{k:'CV',ok:1}},
+  {t:'when',ipa:'/wən/',c:0,ph:[{k:'weak',l:'WK',ok:1}],ok:1,conn:{k:'CV',ok:1}},
+  {t:'I',ipa:'/aɪ/',c:0,ph:[],ok:1,conn:{k:'CV',ok:1}},
+  {t:'was',ipa:'/wəz/',c:0,ph:[{k:'weak',l:'WK',ok:0}],ok:0,conn:{k:'CV',ok:1}},
+  {t:'visiting',ipa:'/ˈvɪzɪɾɪŋ/',c:1,ph:[{k:'flap',l:'FT',ok:1}],ok:1,conn:{k:'CV',ok:1}},
+  {t:'him',ipa:'/ɪm/',c:0,ph:[{k:'hd',l:'HD',ok:0}],ok:0,conn:null},
+];
+const BC={link:'blink',weak:'bweak',flap:'bflap',el:'bel',as:'bas',gl:'bgl',dd:'bdd',hd:'bhd',vl:'bvl',vc:'bvc'};
+
+function buildFlow(id,isUser){
+  const el=document.getElementById(id);el.innerHTML='';
+  W.forEach((w,i)=>{
+    const col=document.createElement('div');col.className='wc';
+    const pkeys=w.ph.map(p=>p.k);
+    if(w.conn&&!w.conn.ok)pkeys.push('link');
+    col.dataset.ph=pkeys.join(' ');
+    const card=document.createElement('div');
+    const hasIss=isUser&&(w.ph.some(p=>p.ok===0)||(w.conn&&!w.conn.ok));
+    card.className='wcard'+(w.c?'':' fn')+(hasIss?' issue':'');
+    card.dataset.ph=w.ph.map(p=>p.k).join(' ');
+    const ipa=document.createElement('div');ipa.className='wcipa';ipa.textContent=w.ipa;
+    const tb=document.createElement('div');tb.className='wctb';
+    if(isUser){
+      const cov=document.createElement('div');cov.className='wcover';
+      cov.onclick=function(){this.classList.add('rev');updCnt()};
+      tb.appendChild(cov);
+    }
+    const txt=document.createElement('div');txt.className='wctext';txt.textContent=w.t;
+    tb.appendChild(txt);
+    const badges=document.createElement('div');badges.className='wcb';
+    if(isUser){
+      w.ph.forEach(p=>{
+        const b=document.createElement('span');
+        b.className='badge3 '+(BC[p.k]||'')+(p.ok===0?' miss':'');
+        b.textContent=p.l+(p.ok===0?' ✗':p.ok===1?' ✓':' ?');
+        badges.appendChild(b);
+      });
+    }
+    card.appendChild(ipa);card.appendChild(tb);card.appendChild(badges);
+    col.appendChild(card);
+    if(w.conn&&i<W.length-1){
+      const cn=document.createElement('div');
+      const ok=!isUser||w.conn.ok;
+      cn.className='conn2 '+(w.conn.k.includes('VV')?'vv':'cv')+(ok?'':' miss');
+      cn.dataset.ph='link';
+      const at=document.createElement('span');at.className='carc';at.textContent=ok?'⌢':'✗';
+      const tg=document.createElement('span');tg.className='ctag';tg.textContent=w.conn.k.replace('+FLAP','');
+      cn.appendChild(at);cn.appendChild(tg);col.appendChild(cn);
+    }
+    el.appendChild(col);
+  });
+  if(isUser)updCnt();
+}
+
+function updCnt(){
+  const all=document.querySelectorAll('#wf-usr .wcover').length;
+  const rev=document.querySelectorAll('#wf-usr .wcover.rev').length;
+  document.getElementById('rcnt').textContent=rev+'/'+all+' revealed';
+}
+function revAll(){document.querySelectorAll('#wf-usr .wcover').forEach(c=>c.classList.add('rev'));updCnt()}
+function hidAll(){document.querySelectorAll('#wf-usr .wcover').forEach(c=>c.classList.remove('rev'));updCnt()}
+
+function applyFilter(ph){
+  document.querySelectorAll('#wf-usr .wcard').forEach(el=>{
+    const p=el.dataset.ph||'';
+    el.classList.toggle('faded',ph!=='all'&&!p.includes(ph));
+    el.classList.toggle('lit',ph!=='all'&&p.includes(ph));
+  });
+  document.querySelectorAll('#wf-usr .conn2').forEach(el=>{
+    el.classList.toggle('faded',ph!=='all'&&ph!=='link');
+  });
+}
+
+const SW=[
+  {t:'I',s:[1],u:[1],c:1,ok:1},{t:'actually',s:[2,0,0,0],u:[2,0,0,0],c:1,ok:1},
+  {t:'met',s:[2],u:[2],c:1,ok:1},{t:'a',s:[0],u:[0],c:0,ok:1},
+  {t:'bunch',s:[2],u:[2],c:1,ok:1},{t:'of',s:[0],u:[0],c:0,ok:1},
+  {t:'you',s:[1],u:[1],c:1,ok:1},{t:'when',s:[0],u:[2],c:0,ok:0},
+  {t:'I',s:[0],u:[0],c:0,ok:1},{t:'was',s:[0],u:[0],c:0,ok:1},
+  {t:'visiting',s:[2,0,0],u:[2,0,0],c:1,ok:1},{t:'him',s:[0],u:[0],c:0,ok:1},
+];
+function buildStress(id,useUser){
+  const el=document.getElementById(id);el.innerHTML='';
+  SW.forEach(w=>{
+    const d=document.createElement('div');
+    const iss=useUser&&!w.ok;
+    d.className='sw '+(w.c?'co':'fn')+(iss?' iss':'');
+    const dots=document.createElement('div');dots.className='sdots';
+    (useUser?w.u:w.s).forEach(v=>{const sp=document.createElement('span');sp.className='sd '+(v===2?'p':v===1?'s':'u');dots.appendChild(sp)});
+    const t=document.createElement('div');t.className='swt';t.textContent=w.t;
+    d.appendChild(dots);d.appendChild(t);
+    if(iss){const n=document.createElement('div');n.className='swnote';n.textContent='over-stressed';d.appendChild(n)}
+    el.appendChild(d);
+  });
+}
+
+const IW=[
+  {t:'I',arr:'→'},{t:'actually',arr:'↗'},{t:'met',arr:'↗'},{t:'a',arr:'→'},
+  {t:'bunch',arr:'↗'},{t:'of',arr:'→'},{t:'you',arr:'↘'},{t:'when',arr:'→'},
+  {t:'I',arr:'→'},{t:'was',arr:'→'},
+  {t:'visiting',arr:'↘',nuc:true,nucWrong:false},
+  {t:'him',arr:'↘↘',nuc:true,nucWrong:true},
+];
+function buildIntWords(){
+  const el=document.getElementById('irow');el.innerHTML='';
+  IW.forEach(w=>{
+    const d=document.createElement('div');
+    d.className='iw'+(w.nucWrong?' nucw':w.nuc?' nuc':'');
+    const a=document.createElement('div');a.className='iwarr';a.textContent=w.arr;
+    const t=document.createElement('div');t.className='iwt';t.textContent=w.t;
+    d.appendChild(a);d.appendChild(t);
+    if(w.nuc){const b=document.createElement('div');b.className='iwtone';b.textContent=w.nucWrong?'nuclear ✗':'nuclear ref';d.appendChild(b)}
+    el.appendChild(d);
+  });
+}
+
+const RP={
+  sound_all:{cls:'lhd-s',title:'Sound layer',desc:'Phonemes + all connected-speech phenomena in one view.',score:72,col:'#E24B4A',sub:'4 issues detected',issues:[{t:'bad',x:'"met_a": Flap-T missing — said /mɛt.ə/, target /mɛɾə/'},{t:'bad',x:'"of": strong /ɒv/ — should reduce to /əv/'},{t:'bad',x:'"was": strong /wɒz/ — should reduce to /wəz/'},{t:'bad',x:'"him": H not dropped — said /hɪm/, target /ɪm/'}],tip:'Use the chips above to zoom in on one phenomenon at a time.'},
+  sound_link:{cls:'lhd-s',title:'Linking',desc:'CV/VV linking: when words blend into a single flow.',score:85,col:'#3B82F6',sub:'1 missed link',issues:[{t:'bad',x:'"met_a" — pause detected, should be /mɛɾə/ with no break'},{t:'ok',x:'"bunch_of" → /bʌnt∫əv/ ✓'},{t:'ok',x:'"of_you" → /əvjuː/ ✓'},{t:'ok',x:'"was_visiting" → /wəzˈvɪzɪɾɪŋ/ ✓'}],tip:'"met a" = think of it as one word "meta" — no reset between them.'},
+  sound_weak:{cls:'lhd-s',title:'Weak forms',desc:'Function words reduce to /ə/ in connected speech.',score:60,col:'#888780',sub:'2/5 weak forms missed',issues:[{t:'bad',x:'"of" → said /ɒv/, target /əv/'},{t:'bad',x:'"was" → said /wɒz/, target /wəz/'},{t:'ok',x:'"a" → correctly /ə/ ✓'},{t:'ok',x:'"when" → correctly /wən/ ✓'},{t:'ok',x:'"you" → correctly reduced ✓'}],tip:'Strong forms make speech sound read aloud, not spoken. Let content words carry the weight.'},
+  sound_flap:{cls:'lhd-s',title:'Flap-T',desc:'/t/ and /d/ between vowels become /ɾ/ in American English.',score:50,col:'#0F766E',sub:'1/2 flap-Ts correct',issues:[{t:'bad',x:'"met_a" — /t/ not flapped, said /mɛt.ə/'},{t:'ok',x:'"visiting" — internal /t/ correctly flapped: /vɪzɪɾɪŋ/ ✓'}],tip:'Same sound as "butter", "water", "better". Say those, then apply the same tap to "met a".'},
+  sound_el:{cls:'lhd-s',title:'Elision',desc:'Sounds dropped in consonant clusters in fast speech.',score:100,col:'#6D28D9',sub:'No required elisions here',issues:[{t:'warn',x:'"actually" /t/ before /∫/ is optionally elided: /ˈækʃuəli/'}],tip:'Elision most often affects /t/ and /d/ in clusters: "next day" → /nɛkʃdeɪ/'},
+  sound_as:{cls:'lhd-s',title:'Assimilation',desc:'"don\'t you" → /doʊnt∫ə/, "did you" → /dɪdʒə/.',score:90,col:'#3730A3',sub:'No errors',issues:[{t:'ok',x:'No /t,d/+/j/ boundaries in this segment'},{t:'warn',x:'Example: "met you" → /mɛt∫ə/ (not in this sentence)'}],tip:'Most common with /t/+/j/, /d/+/j/, /s/+/j/, /z/+/j/ at word boundaries.'},
+  sound_gl:{cls:'lhd-s',title:'Glottal stop',desc:'British /t/ at syllable coda → /ʔ/, especially before consonants.',score:85,col:'#C2410C',sub:'1 context found',issues:[{t:'warn',x:'"met" final /t/ — BrE: /mɛʔ.ə/ (but CV linking is preferred here)'},{t:'warn',x:'"visiting" internal /t/ — BrE: /ˈvɪzɪʔɪŋ/ vs AmE flap /ɾ/'}],tip:'Glottal and Flap-T are the same environment handled by different accents. Pick one and be consistent.'},
+  sound_dd:{cls:'lhd-s',title:'Drop-D',desc:'/d/ silent in clusters: "and" → /ən/, "sandwich" → /ˈsænwɪt∫/.',score:100,col:'#92400E',sub:'No Drop-D contexts here',issues:[{t:'warn',x:'No "and" or /nd/ clusters in this segment'},{t:'warn',x:'Example: "and I" → /ən_aɪ/ in fast speech'}],tip:'"and" almost always loses its /d/ in fast connected speech. It sounds like "an" before consonants, "an_" before vowels.'},
+  sound_hd:{cls:'lhd-s',title:'H-dropping',desc:'Unstressed /h/ words (him, her, his, have) drop /h/ in connected speech.',score:0,col:'#BE185D',sub:'1 error found',issues:[{t:'bad',x:'"him" — said /hɪm/, target /ɪm/ after consonant-final "visiting"'}],tip:'/h/ drops only in unstressed function words mid-sentence. Never drop it at sentence start or in stressed position.'},
+  sound_vl:{cls:'lhd-s',title:'Vowel length',desc:'Vowels are longer before voiced finals (/d,b,g,v,z/) than voiceless (/t,p,k,f,s/).',score:85,col:'#7E22CE',sub:'Mostly correct',issues:[{t:'ok',x:'"met" /ɛ/ correctly short before voiceless /t/ ✓'},{t:'ok',x:'"bunch" /ʌ/ correctly short before voiceless /t∫/ ✓'},{t:'warn',x:'"him" /ɪ/ could be longer before voiced /m/'}],tip:'This length contrast is how listeners distinguish "cap/cab", "back/bag". The final consonant can be inaudible — the vowel length carries the information.'},
+  sound_vc:{cls:'lhd-s',title:'Final consonant voicing',desc:'Word-final consonants often devoice; vowel length encodes the contrast.',score:90,col:'#374151',sub:'Generally correct',issues:[{t:'ok',x:'"bunch" ends in voiceless /t∫/ — /ʌ/ correctly short ✓'},{t:'warn',x:'"visiting" final /ŋ/ voiced — preceding /ɪ/ should be slightly longer'}],tip:'Listeners use vowel length more than the consonant itself. "Bead/beat" differ primarily in how long the /iː/ is.'},
+  rhythm:{cls:'lhd-r',title:'Rhythm layer',desc:'Stress-timed: stressed syllables at equal intervals, function words compress between them.',score:89,col:'#EF9F27',sub:'2 issues found',issues:[{t:'bad',x:'"when" over-stressed — function word, must be quick and unstressed'},{t:'bad',x:'Pause splits NP "a bunch of you" — keep NPs together'},{t:'ok',x:'Content words clearly prominent throughout ✓'},{t:'ok',x:'Segment length and pacing good ✓'}],tip:'English rhythm is a heartbeat on content words. Function words are passengers that compress to fit.'},
+  melody:{cls:'lhd-m',title:'Melody layer',desc:'Last content word before a pause carries the nuclear stress — the main pitch movement.',score:65,col:'#6366F1',sub:'2 issues found',issues:[{t:'bad',x:'Pitch range too narrow — reference ~9 semitones, yours ~3'},{t:'bad',x:'Nuclear stress on "visiting" not "him" — wrong endpoint signalled'},{t:'ok',x:'Declarative falling pattern overall — correct ✓'}],tip:'Find the last content word before a pause. That\'s where your pitch should fall most dramatically. Say "him" with a clear drop.'},
+};
+
+function updateRP(key){
+  const d=RP[key]||RP.sound_all;
+  const rp=document.getElementById('rp');
+  rp.innerHTML=`<div class="lhd ${d.cls}"><div class="lhdlbl">Layer focus</div><div class="lhdtit">${d.title}</div><div class="lhddesc">${d.desc}</div></div><div class="scblk"><div class="scn">${d.score}</div><div class="scr"><div class="scsub">${d.sub}</div><div class="scbar"><div class="scfill" style="width:${d.score}%;background:${d.col}"></div></div></div></div><div class="issblk"><div class="issblkhd">Feedback</div>${d.issues.map(i=>`<div class="iss2"><div class="issico ${i.t}">${i.t==='ok'?'✓':i.t==='warn'?'!':'✗'}</div><span>${i.x}</span></div>`).join('')}</div><div class="tipblk"><div class="tiptt">Tip</div><div class="tiptx">${d.tip}</div></div><button class="retry">↺ Re-record this segment</button>`;
+}
+
+let curPh='all';
+function sw(page,lb,tab){
+  curPh='all';
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('on',t.dataset.p===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('on',p.id==='page-'+page));
+  document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b.dataset.l===page));
+  if(lb)document.querySelectorAll('.lbtn').forEach(b=>b.classList.toggle('on',b===lb));
+  document.querySelectorAll('.pc').forEach(c=>c.classList.toggle('on',c.dataset.ph==='all'));
+  applyFilter('all');
+  updateRP(page==='sound'?'sound_all':page);
+}
+function selPh(chip){
+  document.querySelectorAll('.pc').forEach(c=>c.classList.remove('on'));
+  chip.classList.add('on');curPh=chip.dataset.ph;
+  applyFilter(curPh);
+  updateRP('sound_'+curPh);
+}
+
+buildFlow('wf-ref',false);
+buildFlow('wf-usr',true);
+buildStress('sr-ref',false);
+buildStress('sr-usr',true);
+buildIntWords();
+updateRP('sound_all');
+</script>

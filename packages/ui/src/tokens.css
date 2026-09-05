@@ -1,0 +1,24 @@
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f7f6f2;
+  --color-background-tertiary: #eeecea;
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #5f5e5a;
+  --color-text-tertiary: #888780;
+  --color-border-tertiary: rgb(0 0 0 / 10%);
+  --color-border-secondary: rgb(0 0 0 / 20%);
+  --purple-50: #eeedfe;
+  --purple-200: #afa9ec;
+  --purple-600: #534ab7;
+  --purple-800: #3c3489;
+  --teal-50: #e1f5ee;
+  --teal-600: #0f6e56;
+  --amber-50: #faeeda;
+  --amber-600: #ba7517;
+  --gray-50: #f1efe8;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --shadow-soft: rgb(0 0 0 / 7.5%) 0 0 0 0.5px inset, rgb(0 0 0 / 6%) 0 0 0 1px, rgb(0 0 0 / 4%) 0 4px 8px;
+  --shadow-warm: rgb(78 50 23 / 4%) 0 6px 16px;
+}

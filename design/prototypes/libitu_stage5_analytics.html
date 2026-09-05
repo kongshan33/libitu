@@ -1,0 +1,343 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;font-family:var(--font-sans);font-size:14px}
+.topbar{display:flex;align-items:center;gap:10px;padding:0 16px;height:44px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary)}
+.pill.done{color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5}
+.pill.active{color:#3C3489;background:#EEEDFE;border-color:#AFA9EC;font-weight:500}
+.tb-spacer{flex:1}
+.scenario-badge{font-size:11px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary)}
+
+.body{display:grid;grid-template-columns:1fr 272px;min-height:760px}
+
+.main{padding:24px;border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;display:flex;flex-direction:column;gap:24px}
+
+.score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.score-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 14px 12px;cursor:pointer;transition:border-color .15s,background .15s}
+.score-card:hover{background:var(--color-background-secondary)}
+.score-card.selected{border-color:#534AB7;background:#EEEDFE}
+.sc-label{font-size:11px;color:var(--color-text-tertiary);margin-bottom:8px;font-weight:500;letter-spacing:.03em}
+.sc-score{font-size:26px;font-weight:500;line-height:1}
+.sc-score.great{color:#0F6E56}
+.sc-score.good{color:#534AB7}
+.sc-score.ok{color:#BA7517}
+.sc-bar{height:3px;border-radius:2px;background:var(--color-background-secondary);margin-top:8px;overflow:hidden}
+.sc-fill{height:100%;border-radius:2px}
+.sc-sublabel{font-size:10px;color:var(--color-text-tertiary);margin-top:5px}
+
+.section-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-title-badge{font-size:10px;padding:2px 8px;border-radius:20px}
+
+.transfer-grid{display:flex;flex-direction:column;gap:7px}
+.transfer-row{display:grid;grid-template-columns:140px 1fr 48px;align-items:center;gap:10px}
+.tr-label{font-size:12px;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-bar-bg{height:6px;border-radius:3px;background:var(--color-background-secondary);overflow:hidden}
+.tr-bar-fill{height:100%;border-radius:3px}
+.tr-pct{font-size:12px;font-weight:500;text-align:right}
+.tr-tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap}
+.tag-teal{background:#E1F5EE;color:#085041}
+.tag-amber{background:#FAEEDA;color:#633806}
+.tag-gray{background:#F1EFE8;color:#5F5E5A}
+.tag-purple{background:#EEEDFE;color:#3C3489}
+.tag-red{background:#FCEBEB;color:#791F1F}
+
+.refactor-block{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.rb-header{padding:10px 14px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px}
+.rb-turn-badge{font-size:10px;padding:2px 8px;border-radius:20px;background:#EEEDFE;color:#3C3489;border:0.5px solid #AFA9EC}
+.rb-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.rb-col{padding:12px 14px}
+.rb-col:first-child{border-right:0.5px solid var(--color-border-tertiary)}
+.rb-col-label{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.rb-col:first-child .rb-col-label{color:#BA7517}
+.rb-col:last-child .rb-col-label{color:#0F6E56}
+.rb-text{font-size:13px;line-height:1.65;color:var(--color-text-secondary)}
+.rb-text.improved{color:var(--color-text-primary)}
+.inline-highlight{background:#FAEEDA;border-radius:3px;padding:1px 4px;color:#412402}
+.inline-good{background:#E1F5EE;border-radius:3px;padding:1px 4px;color:#085041;font-weight:500}
+.rb-why{font-size:11px;color:var(--color-text-tertiary);margin-top:8px;line-height:1.5;border-top:0.5px solid var(--color-border-tertiary);padding-top:8px}
+
+.turn-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.turn-tab{font-size:11px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);cursor:pointer;color:var(--color-text-secondary)}
+.turn-tab:hover{background:var(--color-background-secondary)}
+.turn-tab.active{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489}
+.turn-tab.triggered{border-color:#5DCAA5;color:#0F6E56}
+
+.naturalness-block{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px}
+.nat-item{display:flex;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.nat-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.nat-icon{width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.nat-icon.warn{background:#FAEEDA;color:#BA7517}
+.nat-icon.good{background:#E1F5EE;color:#0F6E56}
+.nat-text{font-size:12px;color:var(--color-text-secondary);line-height:1.55}
+.nat-text strong{color:var(--color-text-primary);font-weight:500}
+
+.sidebar{padding:20px 16px;display:flex;flex-direction:column;gap:20px;background:var(--color-background-secondary)}
+.slabel{font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+
+.radar-wrap{display:flex;justify-content:center;padding:4px 0 8px}
+
+.summary-list{display:flex;flex-direction:column;gap:6px}
+.summary-item{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:7px 10px;background:var(--color-background-primary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+.summary-key{color:var(--color-text-secondary)}
+.summary-val{font-weight:500;color:var(--color-text-primary)}
+
+.next-block{display:flex;flex-direction:column;gap:7px}
+.next-btn{width:100%;padding:10px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);font-size:12px;color:var(--color-text-secondary);cursor:pointer;text-align:left;line-height:1.4}
+.next-btn:hover{background:var(--color-background-secondary)}
+.next-btn.primary{background:#534AB7;border-color:#534AB7;color:white}
+.next-btn.primary:hover{background:#3C3489}
+.next-btn-label{font-weight:500;display:block;margin-bottom:1px}
+.next-btn-sub{font-size:11px;opacity:.75}
+
+.corpus-add{border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:10px 12px;cursor:pointer;background:var(--color-background-primary)}
+.corpus-add:hover{background:var(--color-background-secondary)}
+.corpus-add-text{font-size:12px;color:var(--color-text-secondary);line-height:1.4}
+.corpus-add-tag{font-size:10px;color:#534AB7;margin-top:4px}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <span class="logo">libitu</span>
+    <span class="pill done">S1 ✓</span>
+    <span class="pill done">S2 ✓</span>
+    <span class="pill done">S3 ✓</span>
+    <span class="pill done">S4 ✓</span>
+    <span class="pill active">Stage 5 — Analytics</span>
+    <span class="tb-spacer"></span>
+    <span class="scenario-badge">Persuasive pitch · 6 turns · 14 min</span>
+  </div>
+
+  <div class="body">
+    <div class="main">
+
+      <div class="score-row">
+        <div class="score-card selected" onclick="selectCard(this,'task')">
+          <div class="sc-label">Task fit</div>
+          <div class="sc-score great">78</div>
+          <div class="sc-bar"><div class="sc-fill" style="width:78%;background:#1D9E75"></div></div>
+          <div class="sc-sublabel">Reached "Proposal" stage</div>
+        </div>
+        <div class="score-card" onclick="selectCard(this,'transfer')">
+          <div class="sc-label">Chunk transfer</div>
+          <div class="sc-score good">60</div>
+          <div class="sc-bar"><div class="sc-fill" style="width:60%;background:#534AB7"></div></div>
+          <div class="sc-sublabel">3 of 5 chunks used</div>
+        </div>
+        <div class="score-card" onclick="selectCard(this,'scenario')">
+          <div class="sc-label">Scenario fit</div>
+          <div class="sc-score great">85</div>
+          <div class="sc-bar"><div class="sc-fill" style="width:85%;background:#1D9E75"></div></div>
+          <div class="sc-sublabel">Tone matched context</div>
+        </div>
+        <div class="score-card" onclick="selectCard(this,'natural')">
+          <div class="sc-label">Naturalness</div>
+          <div class="sc-score ok">62</div>
+          <div class="sc-bar"><div class="sc-fill" style="width:62%;background:#BA7517"></div></div>
+          <div class="sc-sublabel">2 refactoring notes</div>
+        </div>
+      </div>
+
+      <div id="panel-task">
+        <div class="section-title">
+          Task fit
+          <span class="section-title-badge tag-teal">You made it to "Proposal"</span>
+        </div>
+        <div class="naturalness-block">
+          <div class="nat-item">
+            <div class="nat-icon good">✓</div>
+            <div class="nat-text"><strong>Context → Tension:</strong> You correctly reframed the risk calculus early ("the risk of not migrating is higher"), which set up the tension phase cleanly.</div>
+          </div>
+          <div class="nat-item">
+            <div class="nat-icon good">✓</div>
+            <div class="nat-text"><strong>Used the contrast structure to pivot:</strong> "The problem isn't the migration itself, but rather the technical debt…" was a textbook use of the reframing structure at exactly the right moment.</div>
+          </div>
+          <div class="nat-item">
+            <div class="nat-icon warn">!</div>
+            <div class="nat-text"><strong>Missed: "Defend" stage:</strong> You reached Proposal but didn't get to defend your plan under pushback. When Alex asked about ownership, you gave a name but didn't pre-empt the follow-up risk. Try staying in the tension longer before jumping to proposal.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-transfer" style="display:none">
+        <div class="section-title">
+          Chunk transfer
+          <span class="section-title-badge tag-purple">3 / 5 used</span>
+        </div>
+        <div class="transfer-grid">
+          <div class="transfer-row">
+            <span class="tr-label">"to be fair"</span>
+            <div class="tr-bar-bg"><div class="tr-bar-fill" style="width:100%;background:#1D9E75"></div></div>
+            <span class="tr-pct" style="color:#0F6E56">used</span>
+          </div>
+          <div class="transfer-row">
+            <span class="tr-label" style="grid-column:1;font-family:var(--font-mono);font-size:11px">The problem isn't [A]…</span>
+            <div class="tr-bar-bg"><div class="tr-bar-fill" style="width:100%;background:#1D9E75"></div></div>
+            <span class="tr-pct" style="color:#0F6E56">used</span>
+          </div>
+          <div class="transfer-row">
+            <span class="tr-label">"a real tension here"</span>
+            <div class="tr-bar-bg"><div class="tr-bar-fill" style="width:100%;background:#1D9E75"></div></div>
+            <span class="tr-pct" style="color:#0F6E56">used</span>
+          </div>
+          <div class="transfer-row">
+            <span class="tr-label">"genuinely uncertain"</span>
+            <div class="tr-bar-bg"><div class="tr-bar-fill" style="width:0%;background:#E24B4A"></div></div>
+            <span class="tr-pct" style="color:#A32D2D">missed</span>
+          </div>
+          <div class="transfer-row">
+            <span class="tr-label">"what I would say is"</span>
+            <div class="tr-bar-bg"><div class="tr-bar-fill" style="width:0%;background:#E24B4A"></div></div>
+            <span class="tr-pct" style="color:#A32D2D">missed</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);font-size:12px;color:var(--color-text-secondary);line-height:1.55">
+          "Genuinely uncertain" and "what I would say is" were both natural fits when Alex pushed on timeline risk. In turn 4 you responded directly — try hedging first to buy framing time before stating your position.
+        </div>
+      </div>
+
+      <div id="panel-scenario" style="display:none">
+        <div class="section-title">
+          Scenario fit
+          <span class="section-title-badge tag-teal">Tone matched</span>
+        </div>
+        <div class="naturalness-block">
+          <div class="nat-item">
+            <div class="nat-icon good">✓</div>
+            <div class="nat-text"><strong>Register:</strong> Peer-to-peer professional tone maintained throughout. No over-formality ("I would like to propose…") or under-formality ("yeah totally").</div>
+          </div>
+          <div class="nat-item">
+            <div class="nat-icon good">✓</div>
+            <div class="nat-text"><strong>Directness:</strong> You pushed back on Alex's concerns without being aggressive. The balance between conceding ("to be fair") and holding ground was appropriate for a persuasive scenario.</div>
+          </div>
+          <div class="nat-item">
+            <div class="nat-icon warn">!</div>
+            <div class="nat-text"><strong>Turn length variance:</strong> Turns 1 and 3 were short (&lt;20 words). In a real pitch scenario, brevity can read as unprepared. Try anchoring short responses with one supporting clause.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="panel-natural" style="display:none">
+        <div class="section-title">
+          Naturalness — refactoring notes
+          <span class="section-title-badge tag-amber">2 suggestions</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="refactor-block">
+            <div class="rb-header">
+              <span class="rb-turn-badge">Turn 3</span>
+              Ownership question — response was functional but flat
+            </div>
+            <div class="rb-body">
+              <div class="rb-col">
+                <div class="rb-col-label">Your version</div>
+                <div class="rb-text">Sarah can own it. She's got the most context on the legacy system.</div>
+                <div class="rb-why">Works, but reads like a quick deflection. No acknowledgment of the real concern (stall risk), no forward commitment.</div>
+              </div>
+              <div class="rb-col">
+                <div class="rb-col-label">Refactored</div>
+                <div class="rb-text improved">I hear the stall risk — <span class="inline-good">what I would say is</span> Sarah is the right owner precisely because she knows where the bodies are buried. <span class="inline-good">Given that context</span>, I'd want weekly check-ins so it doesn't go quiet.</div>
+                <div class="rb-why">Uses two loaded chunks to signal intentionality. The hedge + commitment pattern reads as more credible under pressure.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="refactor-block">
+            <div class="rb-header">
+              <span class="rb-turn-badge">Turn 5</span>
+              Closing the tension — missed an escalation move
+            </div>
+            <div class="rb-body">
+              <div class="rb-col">
+                <div class="rb-col-label">Your version</div>
+                <div class="rb-text">We can put together a one-pager. I think that addresses most of the concerns.</div>
+                <div class="rb-why">"I think" softens the commitment too much. The proposal stage needs to land with more conviction.</div>
+              </div>
+              <div class="rb-col">
+                <div class="rb-col-label">Refactored</div>
+                <div class="rb-text improved"><span class="inline-good">The upshot of all this is</span> — the risks you're raising are real, but they're all addressable. A one-pager by Friday, then a 30-min alignment session. <span class="inline-good">At the end of the day</span>, the only unacceptable outcome is deciding nothing.</div>
+                <div class="rb-why">Closes the loop on the logic flow (tension → resolution), uses the summarizing chunk to signal you're wrapping up, and ends with a reframe that shifts pressure back.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sidebar">
+      <div>
+        <div class="slabel">Session overview</div>
+        <div class="radar-wrap">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <defs>
+              <polygon id="bg5" points="80,12 148,56 124,132 36,132 12,56" fill="none" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+            </defs>
+            <polygon points="80,12 148,56 124,132 36,132 12,56" fill="none" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+            <polygon points="80,46 119,68 104,108 56,108 41,68" fill="none" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+            <polygon points="80,80 88,80 80,84 72,80 80,76" fill="none" stroke="var(--color-border-tertiary)" stroke-width="0.5"/>
+            <polygon points="80,26 133,63 114,124 46,124 27,63" fill="#EEEDFE" fill-opacity="0.5" stroke="#534AB7" stroke-width="1.5"/>
+            <circle cx="80" cy="26" r="3" fill="#534AB7"/>
+            <circle cx="133" cy="63" r="3" fill="#534AB7"/>
+            <circle cx="114" cy="124" r="3" fill="#534AB7"/>
+            <circle cx="46" cy="124" r="3" fill="#534AB7"/>
+            <circle cx="27" cy="63" r="3" fill="#534AB7"/>
+            <text x="80" y="7" text-anchor="middle" font-size="9" fill="var(--color-text-tertiary)">Task fit</text>
+            <text x="153" y="59" text-anchor="start" font-size="9" fill="var(--color-text-tertiary)">Transfer</text>
+            <text x="118" y="144" text-anchor="middle" font-size="9" fill="var(--color-text-tertiary)">Scenario</text>
+            <text x="38" y="144" text-anchor="middle" font-size="9" fill="var(--color-text-tertiary)">Natural</text>
+            <text x="4" y="59" text-anchor="end" font-size="9" fill="var(--color-text-tertiary)">Fluency</text>
+          </svg>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">Numbers</div>
+        <div class="summary-list">
+          <div class="summary-item"><span class="summary-key">Logic stages reached</span><span class="summary-val">3 / 4</span></div>
+          <div class="summary-item"><span class="summary-key">Chunks triggered</span><span class="summary-val">3 / 5</span></div>
+          <div class="summary-item"><span class="summary-key">Structures triggered</span><span class="summary-val">1 / 2</span></div>
+          <div class="summary-item"><span class="summary-key">Turns</span><span class="summary-val">6</span></div>
+          <div class="summary-item"><span class="summary-key">Avg words / turn</span><span class="summary-val">28</span></div>
+          <div class="summary-item"><span class="summary-key">Refactor suggestions</span><span class="summary-val">2</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="slabel">Add to corpus</div>
+        <div class="corpus-add" onclick="this.style.background='var(--color-background-secondary)';this.querySelector('.corpus-add-tag').textContent='✓ Added'">
+          <div class="corpus-add-text">"The only unacceptable outcome is deciding nothing" — closing reframe under pressure</div>
+          <div class="corpus-add-tag">+ save to corpus · framing</div>
+        </div>
+      </div>
+
+      <div class="next-block">
+        <div class="slabel">What's next</div>
+        <button class="next-btn primary">
+          <span class="next-btn-label">Retry this mission ↺</span>
+          <span class="next-btn-sub">Same loadout, new scenario</span>
+        </button>
+        <button class="next-btn" onclick="sendPrompt('我想调整 loadout，换掉没用上的两个 chunk')">
+          <span class="next-btn-label">Adjust loadout ↗</span>
+          <span class="next-btn-sub">Swap unused chunks</span>
+        </button>
+        <button class="next-btn">
+          <span class="next-btn-label">New mission</span>
+          <span class="next-btn-sub">Pick a new logic template</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectCard(el,panel){
+  document.querySelectorAll('.score-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  ['task','transfer','scenario','natural'].forEach(p=>{
+    const el=document.getElementById('panel-'+p);
+    if(el) el.style.display=p===panel?'block':'none';
+  });
+}
+</script>

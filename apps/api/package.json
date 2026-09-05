@@ -1,0 +1,15 @@
+{
+  "name": "@libitu/api",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "pnpm run \"/^dev:.*/\"",
+    "dev:server": "uv run uvicorn app.main:app --reload",
+    "dev:worker": "uv run python -m app.workers.blueprint_worker",
+    "worker": "uv run python -m app.workers.blueprint_worker",
+    "setup:punctuation": "uv run python -m scripts.download_punctuation_model",
+    "build": "python3 -m compileall app tests",
+    "lint": "python3 -m compileall app tests",
+    "test": ".venv/bin/pytest tests"
+  }
+}

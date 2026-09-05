@@ -1,0 +1,26 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.routers import blueprints, content, corpus, health, jobs, speaking
+
+app = FastAPI(
+    title="Libitu API",
+    version="0.1.0",
+    summary="Backend API for Libitu's input, corpus, and speaking practice loops.",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"^chrome-extension://.*$",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(health.router)
+app.include_router(content.router, prefix="/api/content", tags=["content"])
+app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
+app.include_router(blueprints.router, prefix="/api/blueprints", tags=["blueprints"])
+app.include_router(corpus.router, prefix="/api/corpus", tags=["corpus"])
+app.include_router(speaking.router, prefix="/api/speaking", tags=["speaking"])

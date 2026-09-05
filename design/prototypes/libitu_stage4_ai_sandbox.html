@@ -1,0 +1,320 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;font-family:var(--font-sans);font-size:14px;display:flex;flex-direction:column;height:860px}
+
+.topbar{display:flex;align-items:center;gap:10px;padding:0 16px;height:44px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary)}
+.pill.done{color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5}
+.pill.active{color:#3C3489;background:#EEEDFE;border-color:#AFA9EC;font-weight:500}
+.tb-spacer{flex:1}
+.scenario-badge{font-size:11px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary)}
+
+.logic-bar{flex-shrink:0;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.logic-bar-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.logic-steps{display:flex;align-items:center;gap:0}
+.lstep{display:flex;align-items:center;gap:0;flex:1}
+.lstep-node{flex:1;padding:5px 8px;border-radius:var(--border-radius-md);text-align:center;font-size:11px;font-weight:500;border:0.5px solid transparent;cursor:default;position:relative}
+.lstep-node.done{background:#E1F5EE;color:#085041;border-color:#5DCAA5}
+.lstep-node.active{background:#EEEDFE;color:#3C3489;border-color:#AFA9EC}
+.lstep-node.upcoming{background:var(--color-background-primary);color:var(--color-text-tertiary);border-color:var(--color-border-tertiary)}
+.lstep-arrow{font-size:11px;color:var(--color-text-tertiary);padding:0 4px;flex-shrink:0}
+
+.body{display:grid;grid-template-columns:1fr 240px;flex:1;overflow:hidden}
+
+.chat-col{display:flex;flex-direction:column;overflow:hidden;border-right:0.5px solid var(--color-border-tertiary)}
+.chat-messages{flex:1;overflow-y:auto;padding:16px}
+.msg{margin-bottom:14px;display:flex;flex-direction:column;gap:4px}
+.msg.ai{align-items:flex-start}
+.msg.user{align-items:flex-end}
+.msg-role{font-size:10px;color:var(--color-text-tertiary);font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:0 2px}
+.bubble{padding:10px 14px;border-radius:var(--border-radius-lg);max-width:88%;font-size:13px;line-height:1.65;color:var(--color-text-primary)}
+.bubble.ai{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:4px 12px 12px 12px}
+.bubble.user{background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:12px 4px 12px 12px;color:#26215C}
+.trigger-highlight{background:#E1F5EE;border-radius:3px;padding:1px 4px;color:#085041;font-weight:500;border-bottom:1.5px solid #1D9E75;cursor:pointer;position:relative}
+.trigger-highlight::after{content:attr(data-chunk);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#2C2C2A;color:white;font-size:10px;padding:3px 8px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:10;opacity:0;transition:opacity .15s}
+.trigger-highlight:hover::after{opacity:1}
+.ai-hint{display:flex;align-items:flex-start;gap:8px;padding:8px 12px;background:#FAEEDA;border-radius:var(--border-radius-md);margin:8px 0;border-left:3px solid #EF9F27;border-radius:0}
+.ai-hint-text{font-size:12px;color:#412402;line-height:1.5}
+.typing-indicator{display:flex;align-items:center;gap:4px;padding:10px 14px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:4px 12px 12px 12px;width:fit-content}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--color-text-tertiary)}
+@keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+.typing-dot:nth-child(1){animation:blink 1.2s infinite 0s}
+.typing-dot:nth-child(2){animation:blink 1.2s infinite .2s}
+.typing-dot:nth-child(3){animation:blink 1.2s infinite .4s}
+
+.chat-input-area{padding:12px 16px;border-top:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input{flex:1;padding:9px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);font-size:13px;font-family:var(--font-sans);resize:none;min-height:38px;max-height:80px;color:var(--color-text-primary);background:var(--color-background-primary);line-height:1.5}
+.chat-input:focus{outline:none;border-color:#534AB7}
+.send-btn{width:34px;height:34px;border-radius:50%;background:#534AB7;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.send-btn:hover{background:#3C3489}
+.input-hint{font-size:11px;color:var(--color-text-tertiary);margin-top:5px}
+
+.right-col{overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:16px}
+.r-section-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+
+.skill-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 11px;transition:border-color .2s,background .2s}
+.skill-card.unused{opacity:.7}
+.skill-card.triggered{border-color:#1D9E75;background:#E1F5EE}
+.skill-card-label{font-size:11px;font-weight:500;margin-bottom:3px}
+.skill-card.unused .skill-card-label{color:var(--color-text-secondary)}
+.skill-card.triggered .skill-card-label{color:#085041}
+.skill-card-text{font-size:12px;line-height:1.4}
+.skill-card.unused .skill-card-text{color:var(--color-text-tertiary)}
+.skill-card.triggered .skill-card-text{color:#0F6E56}
+.skill-card-status{font-size:10px;margin-top:5px;display:flex;align-items:center;gap:4px}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.unused{background:var(--color-border-secondary)}
+.status-dot.triggered{background:#1D9E75}
+@keyframes popIn{0%{transform:scale(.92)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+.skill-card.just-triggered{animation:popIn .35s ease-out}
+
+.struct-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 11px;transition:border-color .2s,background .2s}
+.struct-card.triggered{border-color:#1D9E75;background:#E1F5EE}
+.struct-card-text{font-size:11px;font-family:var(--font-mono);color:#3C3489;line-height:1.5}
+.struct-card.unused .struct-card-text{color:var(--color-text-tertiary)}
+.struct-card.triggered .struct-card-text{color:#085041}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px}
+.stat-box-val{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.stat-box-lbl{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+
+.end-btn{width:100%;padding:9px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;font-size:12px;color:var(--color-text-secondary);cursor:pointer;text-align:center;margin-top:4px}
+.end-btn:hover{background:var(--color-background-secondary)}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <span class="logo">libitu</span>
+    <span class="pill done">S1 ✓</span>
+    <span class="pill done">S2 ✓</span>
+    <span class="pill done">S3 ✓</span>
+    <span class="pill active">Stage 4 — Sandbox</span>
+    <span class="tb-spacer"></span>
+    <span class="scenario-badge">Persuasive pitch · Tech lead interview</span>
+  </div>
+
+  <div class="logic-bar">
+    <div class="logic-bar-label">Logic flow — persuasive pitch</div>
+    <div class="logic-steps">
+      <div class="lstep">
+        <div class="lstep-node done" id="ls1">Context</div>
+      </div>
+      <div class="lstep-arrow">›</div>
+      <div class="lstep">
+        <div class="lstep-node active" id="ls2">Tension</div>
+      </div>
+      <div class="lstep-arrow">›</div>
+      <div class="lstep">
+        <div class="lstep-node upcoming" id="ls3">Proposal</div>
+      </div>
+      <div class="lstep-arrow">›</div>
+      <div class="lstep">
+        <div class="lstep-node upcoming" id="ls4">Defend</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="chat-col">
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg ai">
+          <div class="msg-role">Alex · Senior Engineer</div>
+          <div class="bubble ai">Hey, so I wanted to talk through the migration plan you proposed last week. I've been looking at the timeline and honestly, I'm not sure we can pull this off in Q3. What's your thinking?</div>
+        </div>
+
+        <div class="msg user">
+          <div class="msg-role">You</div>
+          <div class="bubble user">I hear you. <span class="trigger-highlight" data-chunk="to be fair">To be fair</span>, the timeline is aggressive — but I think the risk of not migrating is actually higher than the risk of doing it now.</div>
+        </div>
+
+        <div class="msg ai">
+          <div class="msg-role">Alex · Senior Engineer</div>
+          <div class="bubble ai">That's a strong claim. What makes you say the risk of waiting is higher? We've got three big launches already on the roadmap.</div>
+        </div>
+
+        <div class="msg user">
+          <div class="msg-role">You</div>
+          <div class="bubble user"><span class="trigger-highlight" data-chunk="The problem isn't [A], but rather [B]">The problem isn't the migration itself, but rather the technical debt compounding every quarter we delay.</span> Each new launch on the old stack makes the migration harder.</div>
+        </div>
+
+        <div class="msg ai">
+          <div class="msg-role">Alex · Senior Engineer</div>
+          <div class="bubble ai">Okay, I get that. But the team is already stretched. Who's actually going to own this? I don't want another project that quietly stalls out.</div>
+        </div>
+
+        <div class="ai-hint" id="hint1">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><circle cx="7" cy="7" r="6" stroke="#BA7517" stroke-width="1"/><path d="M7 6v4M7 4.5v.5" stroke="#BA7517" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="ai-hint-text">Your last two replies were short. Try using <strong style="color:#412402">"genuinely uncertain"</strong> or <strong style="color:#412402">"a real tension here"</strong> to add more depth to your next response.</span>
+        </div>
+
+        <div class="msg ai" id="typingMsg" style="display:none">
+          <div class="msg-role">Alex · Senior Engineer</div>
+          <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="input-row">
+          <textarea class="chat-input" id="chatInput" placeholder="Reply as yourself — try using a skill card..." rows="2" onkeydown="handleKey(event)"></textarea>
+          <button class="send-btn" onclick="sendMsg()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 12L12 7 2 2v4l7 1-7 1v4z" fill="white"/></svg>
+          </button>
+        </div>
+        <div class="input-hint" id="inputHint">Press Enter to send · Shift+Enter for new line</div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div>
+        <div class="r-section-label">Chunks</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="skill-card triggered just-triggered" id="sc1">
+            <div class="skill-card-label">to be fair</div>
+            <div class="skill-card-text">conceding before counterpoint</div>
+            <div class="skill-card-status"><div class="status-dot triggered"></div><span style="color:#0F6E56;font-size:10px">used · turn 1</span></div>
+          </div>
+          <div class="skill-card triggered" id="sc2">
+            <div class="skill-card-label">genuinely uncertain</div>
+            <div class="skill-card-text">calibrated hedging</div>
+            <div class="skill-card-status"><div class="status-dot unused"></div><span style="color:var(--color-text-tertiary);font-size:10px">not used yet</span></div>
+          </div>
+          <div class="skill-card unused" id="sc3">
+            <div class="skill-card-label">a real tension here</div>
+            <div class="skill-card-text">naming the conflict</div>
+            <div class="skill-card-status"><div class="status-dot unused"></div><span style="color:var(--color-text-tertiary);font-size:10px">not used yet</span></div>
+          </div>
+          <div class="skill-card unused" id="sc4">
+            <div class="skill-card-label">what I would say is</div>
+            <div class="skill-card-text">buying thinking time</div>
+            <div class="skill-card-status"><div class="status-dot unused"></div><span style="color:var(--color-text-tertiary);font-size:10px">not used yet</span></div>
+          </div>
+          <div class="skill-card unused" id="sc5">
+            <div class="skill-card-label">at the end of the day</div>
+            <div class="skill-card-text">closing a point</div>
+            <div class="skill-card-status"><div class="status-dot unused"></div><span style="color:var(--color-text-tertiary);font-size:10px">not used yet</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="r-section-label">Structures</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div class="struct-card triggered" id="str1">
+            <div class="struct-card-text">The problem isn't [A], but rather [B]</div>
+            <div class="skill-card-status" style="margin-top:4px"><div class="status-dot triggered"></div><span style="color:#0F6E56;font-size:10px">used · turn 2</span></div>
+          </div>
+          <div class="struct-card unused" id="str2">
+            <div class="struct-card-text">Given [premise], the [decision] was to [action]</div>
+            <div class="skill-card-status" style="margin-top:4px"><div class="status-dot unused"></div><span style="color:var(--color-text-tertiary);font-size:10px">not used yet</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="r-section-label">Progress</div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-box-val" id="chunkCount">2</div><div class="stat-box-lbl">chunks used</div></div>
+          <div class="stat-box"><div class="stat-box-val" id="turnCount">3</div><div class="stat-box-lbl">turns</div></div>
+          <div class="stat-box"><div class="stat-box-val" id="transferRate">40%</div><div class="stat-box-lbl">transfer rate</div></div>
+          <div class="stat-box"><div class="stat-box-val">Tension</div><div class="stat-box-lbl">logic stage</div></div>
+        </div>
+      </div>
+
+      <button class="end-btn" onclick="sendPrompt('Stage 4 对话结束，进入 Stage 5 Analytics 反馈界面')">End mission → Stage 5 ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const replies=[
+  "That's fair — I appreciate that you're thinking about the compounding cost. But I need to understand who specifically will be the DRI here. Do you have someone in mind, or is that still open?",
+  "Okay, so if Sarah owns it and we scope it tightly — what does 'tightly scoped' actually mean to you? What's in and what's out?",
+  "Right. So given that framing — what would make you feel confident enough to go to leadership with this? What do you need to see before you'd back it?",
+  "That's a reasonable ask. I think we could put together a one-pager by end of week. Can we align on the key risks you want addressed in it?"
+];
+let replyIdx=0;
+let usedChunks=2;
+let turns=3;
+
+const chunkTriggers=[
+  {words:['genuinely','uncertain'],id:'sc2',label:'genuinely uncertain'},
+  {words:['real tension','tension here'],id:'sc3',label:'a real tension here'},
+  {words:['would say','i would say'],id:'sc4',label:'what I would say is'},
+  {words:['end of the day','at the end'],id:'sc5',label:'at the end of the day'},
+  {words:['given that','given the'],id:'str2',label:'Given [premise]...'},
+];
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg()}}
+
+function sendMsg(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text) return;
+  input.value='';
+
+  const messages=document.getElementById('chatMessages');
+  const hint=document.getElementById('hint1');
+  if(hint) hint.remove();
+
+  const userMsg=document.createElement('div');
+  userMsg.className='msg user';
+  const lower=text.toLowerCase();
+  let displayText=text;
+  let triggered=null;
+  chunkTriggers.forEach(ct=>{
+    if(ct.words.some(w=>lower.includes(w))){
+      triggered=ct;
+      const re=new RegExp('('+ct.words.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+      displayText=displayText.replace(re,(m)=>'<span class="trigger-highlight" data-chunk="'+ct.label+'">'+m+'</span>');
+    }
+  });
+  userMsg.innerHTML='<div class="msg-role">You</div><div class="bubble user">'+displayText+'</div>';
+  messages.appendChild(userMsg);
+  turns++;
+  document.getElementById('turnCount').textContent=turns;
+
+  if(triggered){
+    usedChunks++;
+    document.getElementById('chunkCount').textContent=usedChunks;
+    document.getElementById('transferRate').textContent=Math.round((usedChunks/5)*100)+'%';
+    const card=document.getElementById(triggered.id);
+    if(card){
+      card.classList.remove('unused');
+      card.classList.add('triggered','just-triggered');
+      const dot=card.querySelector('.status-dot');
+      const status=card.querySelector('.skill-card-status span, .skill-card-status + span');
+      if(dot){dot.classList.remove('unused');dot.classList.add('triggered')}
+      const spans=card.querySelectorAll('span');
+      spans.forEach(s=>{if(s.textContent.includes('not used')){s.style.color='#0F6E56';s.textContent='used · turn '+turns}});
+    }
+  }
+
+  const typingMsg=document.getElementById('typingMsg');
+  typingMsg.style.display='flex';
+  messages.scrollTop=messages.scrollHeight;
+
+  setTimeout(()=>{
+    typingMsg.style.display='none';
+    if(replyIdx<replies.length){
+      const aiMsg=document.createElement('div');
+      aiMsg.className='msg ai';
+      aiMsg.innerHTML='<div class="msg-role">Alex · Senior Engineer</div><div class="bubble ai">'+replies[replyIdx]+'</div>';
+      messages.appendChild(aiMsg);
+      replyIdx++;
+      if(replyIdx===2){
+        const stepDone=document.getElementById('ls2');
+        const stepNext=document.getElementById('ls3');
+        stepDone.classList.remove('active');stepDone.classList.add('done');
+        stepNext.classList.remove('upcoming');stepNext.classList.add('active');
+        document.querySelector('.stat-box-val[id=""]') ;
+        document.querySelectorAll('.stat-box-lbl').forEach(l=>{if(l.textContent==='logic stage'){l.previousElementSibling.textContent='Proposal'}});
+      }
+    }
+    messages.scrollTop=messages.scrollHeight;
+  },1200);
+}
+</script>

@@ -1,0 +1,15 @@
+{
+  "name": "libitu",
+  "private": true,
+  "packageManager": "pnpm@10.19.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "supabase": "2.81.3",
+    "turbo": "^2.5.8"
+  }
+}

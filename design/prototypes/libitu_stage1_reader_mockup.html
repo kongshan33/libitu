@@ -1,0 +1,292 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.app{display:grid;grid-template-columns:220px 1fr 260px;grid-template-rows:44px 1fr;height:780px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;font-family:var(--font-sans);font-size:14px}
+.topbar{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.topbar-title{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);white-space:nowrap;cursor:pointer}
+.topbar-pill.active{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px;white-space:nowrap}
+
+.left{border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;padding:16px 0}
+.section-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;padding:0 16px 8px}
+
+.logic-flow{padding:0 12px 16px}
+.logic-node{display:flex;align-items:flex-start;gap:8px;padding:8px 8px;border-radius:var(--border-radius-md);cursor:pointer;position:relative}
+.logic-node:hover{background:var(--color-background-secondary)}
+.logic-node.active{background:#EEEDFE}
+.logic-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.logic-connector{width:1px;height:14px;margin-left:19px;background:var(--color-border-tertiary)}
+.logic-node-text{font-size:13px;color:var(--color-text-primary);line-height:1.4}
+.logic-node-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.logic-node.active .logic-node-text{color:#3C3489;font-weight:500}
+
+.chapters-section{border-top:0.5px solid var(--color-border-tertiary);padding:16px 0 0}
+.chapter-item{padding:7px 16px;cursor:pointer;font-size:13px;color:var(--color-text-secondary);line-height:1.4;border-left:2px solid transparent}
+.chapter-item:hover{color:var(--color-text-primary);background:var(--color-background-secondary)}
+.chapter-item.active{color:#534AB7;border-left-color:#534AB7;background:#EEEDFE}
+
+.center{overflow-y:auto;padding:0}
+.video-stub{background:var(--color-background-tertiary);height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border-bottom:0.5px solid var(--color-border-tertiary);position:relative}
+.video-controls{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.ctrl-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary);cursor:pointer;background:transparent;display:flex;align-items:center;gap:5px}
+.ctrl-btn svg{width:11px;height:11px}
+.ctrl-toggle{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--color-text-secondary)}
+.toggle-track{width:26px;height:14px;border-radius:7px;background:var(--color-border-secondary);position:relative;cursor:pointer;flex-shrink:0}
+.toggle-track.on{background:#534AB7}
+.toggle-thumb{width:10px;height:10px;border-radius:50%;background:white;position:absolute;top:2px;left:2px;transition:transform .15s}
+.toggle-track.on .toggle-thumb{transform:translateX(12px)}
+
+.transcript-area{padding:20px 24px}
+.ts-line{display:flex;gap:14px;padding:6px 0;cursor:pointer;border-radius:var(--border-radius-md);padding:7px 8px;margin:-7px -8px}
+.ts-line:hover{background:var(--color-background-secondary)}
+.ts-line.active-line{background:#EEEDFE}
+.ts-time{font-size:12px;color:var(--color-text-tertiary);min-width:36px;padding-top:2px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.ts-text{font-size:14px;color:var(--color-text-secondary);line-height:1.65}
+.ts-line.active-line .ts-text{color:var(--color-text-primary)}
+.chunk-highlight{background:#FAC775;border-radius:3px;padding:1px 3px;color:#412402;cursor:pointer;position:relative}
+.chunk-highlight:hover::after{content:attr(data-tag);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2C2C2A;color:white;font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:10}
+.structure-highlight{background:#E1F5EE;border-radius:3px;padding:1px 3px;color:#085041;cursor:pointer}
+.structure-highlight:hover::after{content:attr(data-tag);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#2C2C2A;color:white;font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap;pointer-events:none;z-index:10}
+
+.right{border-left:0.5px solid var(--color-border-tertiary);overflow-y:auto;padding:16px 0}
+.corpus-tabs{display:flex;gap:0;padding:0 16px 12px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:12px}
+.ctab{font-size:12px;padding:4px 10px;border-radius:var(--border-radius-md);color:var(--color-text-tertiary);cursor:pointer;border:0.5px solid transparent}
+.ctab.active{color:#534AB7;background:#EEEDFE;border-color:#AFA9EC}
+
+.corpus-section{padding:0 12px 16px}
+.corpus-section-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;padding:0 4px 8px}
+.corpus-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;margin-bottom:8px;cursor:pointer;position:relative}
+.corpus-card:hover{border-color:var(--color-border-secondary);background:var(--color-background-secondary)}
+.corpus-card.saved{border-color:#AFA9EC;background:#EEEDFE}
+.corpus-card-text{font-size:13px;color:var(--color-text-primary);line-height:1.5;margin-bottom:7px}
+.corpus-card-tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500}
+.tag-amber{background:#FAEEDA;color:#633806}
+.tag-teal{background:#E1F5EE;color:#085041}
+.tag-purple{background:#EEEDFE;color:#3C3489}
+.tag-gray{background:#F1EFE8;color:#5F5E5A}
+.save-btn{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-tertiary);font-size:14px;line-height:1}
+.save-btn.saved{background:#534AB7;border-color:#534AB7;color:white}
+.corpus-card-meta{font-size:11px;color:var(--color-text-tertiary);margin-top:6px}
+
+.add-to-mission{width:100%;padding:9px;border-radius:var(--border-radius-md);border:0.5px dashed var(--color-border-secondary);background:transparent;font-size:12px;color:var(--color-text-secondary);cursor:pointer;text-align:center;margin-top:4px}
+.add-to-mission:hover{background:var(--color-background-secondary)}
+
+.play-icon{width:40px;height:40px;border-radius:50%;background:rgba(83,74,183,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.video-title{font-size:12px;color:var(--color-text-secondary);max-width:200px;text-align:center;line-height:1.4}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <span class="logo">libitu</span>
+    <span class="topbar-title">Building Anthropic | A conversation with our co-founders</span>
+    <span class="topbar-pill active">Stage 1 — Ingest</span>
+    <span class="topbar-pill" onclick="sendPrompt('How do I start Stage 2 shadowing in libitu?')">Stage 2 — Shadow</span>
+    <span class="topbar-pill" onclick="sendPrompt('Take me to mission loadout for this video')">Stage 3 — Mission ↗</span>
+  </div>
+
+  <div class="left">
+    <div class="logic-flow">
+      <div class="section-label">Logic flow</div>
+      <div class="logic-node active" onclick="scrollTo('l1')">
+        <div class="logic-dot" style="background:#534AB7"></div>
+        <div>
+          <div class="logic-node-text">Context &amp; stakes</div>
+          <div class="logic-node-sub">Why AI safety matters now</div>
+        </div>
+      </div>
+      <div class="logic-connector"></div>
+      <div class="logic-node" onclick="scrollTo('l2')">
+        <div class="logic-dot" style="background:#B4B2A9"></div>
+        <div>
+          <div class="logic-node-text">Conflict / tension</div>
+          <div class="logic-node-sub">Capability vs. safety trade-off</div>
+        </div>
+      </div>
+      <div class="logic-connector"></div>
+      <div class="logic-node" onclick="scrollTo('l3')">
+        <div class="logic-dot" style="background:#B4B2A9"></div>
+        <div>
+          <div class="logic-node-text">Technical approach</div>
+          <div class="logic-node-sub">Responsible scaling policy</div>
+        </div>
+      </div>
+      <div class="logic-connector"></div>
+      <div class="logic-node" onclick="scrollTo('l4')">
+        <div class="logic-dot" style="background:#B4B2A9"></div>
+        <div>
+          <div class="logic-node-text">Outcome &amp; vision</div>
+          <div class="logic-node-sub">Racing to the top</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chapters-section">
+      <div class="section-label">Chapters</div>
+      <div class="chapter-item active">Why work on AI?</div>
+      <div class="chapter-item">Scaling breakthroughs</div>
+      <div class="chapter-item">Early days of AI</div>
+      <div class="chapter-item">Sentiment shifting</div>
+      <div class="chapter-item">The Responsible Scaling Policy</div>
+      <div class="chapter-item">Founding story</div>
+      <div class="chapter-item">Building a culture of trust</div>
+      <div class="chapter-item">Racing to the top</div>
+      <div class="chapter-item">Looking to the future</div>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="video-stub">
+      <div class="play-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M5 3l9 5-9 5V3z" fill="#534AB7"/></svg>
+      </div>
+      <div class="video-title">YouTube video plays here via IFrame API</div>
+    </div>
+
+    <div class="video-controls">
+      <div class="ctrl-toggle">
+        <div class="toggle-track on" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+        Auto-scroll
+      </div>
+      <div class="ctrl-toggle" style="margin-left:8px">
+        <div class="toggle-track" onclick="this.classList.toggle('on')"><div class="toggle-thumb"></div></div>
+        Highlight active
+      </div>
+      <div style="flex:1"></div>
+      <button class="ctrl-btn">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="5"/><path d="M6 4v4M4 6h4"/></svg>
+        Add to corpus
+      </button>
+    </div>
+
+    <div class="transcript-area">
+      <div class="ts-line">
+        <span class="ts-time">0:42</span>
+        <span class="ts-text">And did you meet everyone through Google when you were doing the interpretability stuff, Chris?</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">0:48</span>
+        <span class="ts-text">No.</span>
+      </div>
+      <div class="ts-line active-line" id="l1">
+        <span class="ts-time">0:49</span>
+        <span class="ts-text">So I guess I actually met a bunch of you when I was 19 and I was visiting — <span class="chunk-highlight" data-tag="hedging">I guess</span> I met Dario and Jared then, and I remember thinking <span class="chunk-highlight" data-tag="evaluating">at the time</span> it was so exciting.</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">1:04</span>
+        <span class="ts-text"><span class="structure-highlight" data-tag="contrast-structure">The problem isn't that we lack the technology, but rather that we lack the frameworks</span> to deploy it safely.</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">1:18</span>
+        <span class="ts-text">And <span class="chunk-highlight" data-tag="softening">to be fair</span>, I think the question of whether scaling continues to work is genuinely uncertain.</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">1:31</span>
+        <span class="ts-text">What we decided was — <span class="structure-highlight" data-tag="decision-framing">given everything we knew, the responsible path forward was</span> to build safety into the core, not as an afterthought.</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">1:45</span>
+        <span class="ts-text">So there's <span class="chunk-highlight" data-tag="acknowledging">a real tension here</span> between moving fast enough to stay relevant and moving carefully enough to avoid catastrophic mistakes.</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">2:02</span>
+        <span class="ts-text">I think <span class="chunk-highlight" data-tag="hedging">what I would say is</span> that we've tried to resolve that tension by being extremely transparent about what we're doing and why.</span>
+      </div>
+      <div class="ts-line">
+        <span class="ts-time">2:19</span>
+        <span class="ts-text"><span class="structure-highlight" data-tag="summarizing">The upshot of all this is</span> that safety and capability aren't actually opposed — you can race to the top instead of the bottom.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="right">
+    <div style="padding:0 16px 0">
+      <div class="corpus-tabs">
+        <span class="ctab active">Chunks</span>
+        <span class="ctab" style="margin-left:4px">Structures</span>
+        <span class="ctab" style="margin-left:4px">Saved</span>
+      </div>
+    </div>
+
+    <div class="corpus-section">
+      <div class="corpus-section-label">Extracted this video</div>
+
+      <div class="corpus-card saved">
+        <div class="save-btn saved">+</div>
+        <div class="corpus-card-text">"I guess" — softening certainty before a claim</div>
+        <div class="corpus-card-tags">
+          <span class="tag tag-amber">hedging</span>
+          <span class="tag tag-gray">softening</span>
+        </div>
+        <div class="corpus-card-meta">0:49 · saved to corpus</div>
+      </div>
+
+      <div class="corpus-card">
+        <div class="save-btn" onclick="this.classList.toggle('saved');this.closest('.corpus-card').classList.toggle('saved')">+</div>
+        <div class="corpus-card-text">"to be fair" — conceding before a counterpoint</div>
+        <div class="corpus-card-tags">
+          <span class="tag tag-teal">acknowledging</span>
+          <span class="tag tag-gray">softening</span>
+        </div>
+        <div class="corpus-card-meta">1:18 · click + to save</div>
+      </div>
+
+      <div class="corpus-card">
+        <div class="save-btn" onclick="this.classList.toggle('saved');this.closest('.corpus-card').classList.toggle('saved')">+</div>
+        <div class="corpus-card-text">"a real tension here" — naming the conflict explicitly</div>
+        <div class="corpus-card-tags">
+          <span class="tag tag-amber">framing</span>
+          <span class="tag tag-teal">acknowledging</span>
+        </div>
+        <div class="corpus-card-meta">1:45 · click + to save</div>
+      </div>
+
+      <div class="corpus-card">
+        <div class="save-btn" onclick="this.classList.toggle('saved');this.closest('.corpus-card').classList.toggle('saved')">+</div>
+        <div class="corpus-card-text">"what I would say is" — buying thinking time naturally</div>
+        <div class="corpus-card-tags">
+          <span class="tag tag-amber">hedging</span>
+          <span class="tag tag-purple">discourse</span>
+        </div>
+        <div class="corpus-card-meta">2:02 · click + to save</div>
+      </div>
+    </div>
+
+    <div class="corpus-section" style="border-top:0.5px solid var(--color-border-tertiary);padding-top:16px">
+      <div class="corpus-section-label">Structures</div>
+
+      <div class="corpus-card">
+        <div class="save-btn" onclick="this.classList.toggle('saved');this.closest('.corpus-card').classList.toggle('saved')">+</div>
+        <div class="corpus-card-text" style="font-family:var(--font-mono);font-size:12px;color:#3C3489">The problem isn't [A], but rather [B]</div>
+        <div class="corpus-card-tags" style="margin-top:6px">
+          <span class="tag tag-purple">contrast</span>
+          <span class="tag tag-teal">reframing</span>
+        </div>
+        <div class="corpus-card-meta">1:04 · syntactic structure</div>
+      </div>
+
+      <div class="corpus-card saved">
+        <div class="save-btn saved">+</div>
+        <div class="corpus-card-text" style="font-family:var(--font-mono);font-size:12px;color:#3C3489">given [premise], the [decision] was to [action]</div>
+        <div class="corpus-card-tags" style="margin-top:6px">
+          <span class="tag tag-purple">decision-framing</span>
+          <span class="tag tag-amber">justifying</span>
+        </div>
+        <div class="corpus-card-meta">1:31 · saved to corpus</div>
+      </div>
+
+      <div class="corpus-card">
+        <div class="save-btn" onclick="this.classList.toggle('saved');this.closest('.corpus-card').classList.toggle('saved')">+</div>
+        <div class="corpus-card-text" style="font-family:var(--font-mono);font-size:12px;color:#3C3489">The upshot of all this is [conclusion]</div>
+        <div class="corpus-card-tags" style="margin-top:6px">
+          <span class="tag tag-teal">summarizing</span>
+          <span class="tag tag-purple">discourse</span>
+        </div>
+        <div class="corpus-card-meta">2:19 · syntactic structure</div>
+      </div>
+
+      <button class="add-to-mission" onclick="sendPrompt('I want to build a mission loadout from these corpus items')">Add selection to mission loadout ↗</button>
+    </div>
+  </div>
+</div>

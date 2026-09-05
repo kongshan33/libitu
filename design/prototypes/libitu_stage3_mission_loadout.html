@@ -1,0 +1,318 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:14px}
+.shell{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;min-height:700px}
+.topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:44px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px}
+.topbar-title{font-size:13px;color:var(--color-text-secondary);flex:1}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary)}
+.pill.done{color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5}
+.pill.active{color:#3C3489;background:#EEEDFE;border-color:#AFA9EC;font-weight:500}
+
+.body{display:grid;grid-template-columns:1fr 300px;min-height:656px}
+
+.main{padding:24px;border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.step-num.active{background:#534AB7;color:white}
+.step-num.done{background:#1D9E75;color:white}
+.step-num.inactive{background:var(--color-background-secondary);color:var(--color-text-tertiary);border:0.5px solid var(--color-border-tertiary)}
+.step-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.step-sub{font-size:12px;color:var(--color-text-tertiary);margin-left:34px;margin-bottom:14px;line-height:1.5}
+
+.step-block{margin-bottom:24px;padding-bottom:24px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.step-block:last-child{border-bottom:none;margin-bottom:0}
+
+.logic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-left:34px}
+.logic-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.logic-card:hover{background:var(--color-background-secondary)}
+.logic-card.selected{border-color:#534AB7;background:#EEEDFE}
+.logic-card-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.logic-card-desc{font-size:11px;color:var(--color-text-tertiary);line-height:1.4}
+.logic-card-flow{font-size:10px;color:var(--color-text-tertiary);margin-top:8px;font-family:var(--font-mono);letter-spacing:-.2px}
+.logic-card.selected .logic-card-title{color:#3C3489}
+.logic-card.selected .logic-card-flow{color:#534AB7}
+
+.struct-list{margin-left:34px;display:flex;flex-direction:column;gap:7px}
+.struct-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);cursor:pointer}
+.struct-item:hover{background:var(--color-background-secondary)}
+.struct-item.selected{border-color:#534AB7;background:#EEEDFE}
+.struct-check{width:16px;height:16px;border-radius:4px;border:0.5px solid var(--color-border-secondary);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent}
+.struct-item.selected .struct-check{background:#534AB7;border-color:#534AB7;color:white}
+.struct-text{font-family:var(--font-mono);font-size:12px;color:#3C3489;flex:1}
+.struct-item:not(.selected) .struct-text{color:var(--color-text-secondary)}
+.struct-tags{display:flex;gap:4px}
+.tag{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:500}
+.tag-purple{background:#EEEDFE;color:#3C3489}
+.tag-teal{background:#E1F5EE;color:#085041}
+.tag-amber{background:#FAEEDA;color:#633806}
+.tag-gray{background:#F1EFE8;color:#5F5E5A}
+.struct-limit{font-size:11px;color:var(--color-text-tertiary);margin-left:34px;margin-top:6px}
+
+.chunk-library{margin-left:34px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.chunk-item{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:9px 11px;cursor:pointer;position:relative}
+.chunk-item:hover{background:var(--color-background-secondary)}
+.chunk-item.slotted{border-color:#AFA9EC;background:#EEEDFE;opacity:.6;pointer-events:none}
+.chunk-item-text{font-size:12px;color:var(--color-text-primary);line-height:1.4;margin-bottom:5px}
+.chunk-item-tags{display:flex;gap:4px;flex-wrap:wrap}
+.chunk-item-src{font-size:10px;color:var(--color-text-tertiary);margin-top:4px}
+.chunk-add{position:absolute;top:7px;right:7px;width:18px;height:18px;border-radius:50%;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-tertiary)}
+.chunk-item:hover .chunk-add{border-color:var(--color-border-secondary)}
+.chunk-limit{font-size:11px;color:var(--color-text-tertiary);margin-left:34px;margin-top:6px}
+
+.sidebar{padding:20px 16px;display:flex;flex-direction:column;gap:0;background:var(--color-background-secondary)}
+.sidebar-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.skill-slots{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.slot{border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:9px 12px;min-height:52px;display:flex;align-items:center;gap:8px;background:var(--color-background-primary);cursor:pointer}
+.slot.filled{border-style:solid;border-color:#AFA9EC;background:#EEEDFE;cursor:default}
+.slot-num{font-size:11px;color:var(--color-text-tertiary);min-width:16px}
+.slot-text{font-size:12px;color:var(--color-text-primary);line-height:1.3;flex:1}
+.slot-empty{font-size:12px;color:var(--color-text-tertiary)}
+.slot-remove{font-size:14px;color:var(--color-text-tertiary);cursor:pointer;padding:0 2px;margin-left:auto}
+.slot-tag{font-size:10px;padding:1px 6px;border-radius:10px;margin-top:3px;display:inline-block}
+
+.struct-slots{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.sstitle{font-size:11px;font-weight:500;color:var(--color-text-tertiary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.sslot{border:0.5px dashed var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 10px;background:var(--color-background-primary);font-size:11px;color:var(--color-text-tertiary);font-family:var(--font-mono);min-height:38px;display:flex;align-items:center}
+.sslot.filled{border-style:solid;border-color:#9FE1CB;background:#E1F5EE;color:#085041}
+
+.start-btn{width:100%;padding:11px;border-radius:var(--border-radius-md);background:#534AB7;border:none;color:white;font-size:14px;font-weight:500;cursor:pointer;margin-top:auto}
+.start-btn:hover{background:#3C3489}
+.start-btn:disabled{opacity:.4;cursor:not-allowed}
+.readiness{font-size:11px;color:var(--color-text-tertiary);text-align:center;margin-top:8px}
+.readiness span{color:#1D9E75;font-weight:500}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <span class="logo">libitu</span>
+    <span class="topbar-title">Mission loadout</span>
+    <span class="pill done">Stage 1 ✓</span>
+    <span class="pill done">Stage 2 ✓</span>
+    <span class="pill active">Stage 3 — Mission</span>
+  </div>
+
+  <div class="body">
+    <div class="main">
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num done">✓</div>
+          <div class="step-title">Choose your logic</div>
+        </div>
+        <div class="step-sub">Select the conversational strategy for this mission. This shapes how the AI roleplay unfolds.</div>
+        <div class="logic-grid">
+          <div class="logic-card selected" onclick="selectLogic(this)">
+            <div class="logic-card-title">Persuasive pitch</div>
+            <div class="logic-card-desc">Make a case under pushback</div>
+            <div class="logic-card-flow">Context → Tension → Proposal → Defend</div>
+          </div>
+          <div class="logic-card" onclick="selectLogic(this)">
+            <div class="logic-card-title">Technical troubleshoot</div>
+            <div class="logic-card-desc">Diagnose and explain a problem</div>
+            <div class="logic-card-flow">Symptom → Cause → Fix → Confirm</div>
+          </div>
+          <div class="logic-card" onclick="selectLogic(this)">
+            <div class="logic-card-title">Stakeholder alignment</div>
+            <div class="logic-card-desc">Navigate competing priorities</div>
+            <div class="logic-card-flow">Context → Stakes → Trade-off → Commit</div>
+          </div>
+          <div class="logic-card" onclick="selectLogic(this)">
+            <div class="logic-card-title">Status update</div>
+            <div class="logic-card-desc">Report progress, flag risks</div>
+            <div class="logic-card-flow">Done → Blockers → Next → Ask</div>
+          </div>
+          <div class="logic-card" onclick="selectLogic(this)">
+            <div class="logic-card-title">Disagreement</div>
+            <div class="logic-card-desc">Push back constructively</div>
+            <div class="logic-card-flow">Acknowledge → Reframe → Evidence → Propose</div>
+          </div>
+          <div class="logic-card" onclick="selectLogic(this)">
+            <div class="logic-card-title">Onboarding someone</div>
+            <div class="logic-card-desc">Explain a complex system</div>
+            <div class="logic-card-flow">Big picture → Parts → Why → Try it</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num active">2</div>
+          <div class="step-title">Equip structures</div>
+        </div>
+        <div class="step-sub">Pick 2–3 syntactic patterns you want to force yourself to use. These are locked — you can't edit them.</div>
+        <div class="struct-list">
+          <div class="struct-item selected" onclick="toggleStruct(this)">
+            <div class="struct-check">✓</div>
+            <div class="struct-text">The problem isn't [A], but rather [B]</div>
+            <div class="struct-tags"><span class="tag tag-purple">contrast</span><span class="tag tag-teal">reframing</span></div>
+          </div>
+          <div class="struct-item selected" onclick="toggleStruct(this)">
+            <div class="struct-check">✓</div>
+            <div class="struct-text">Given [premise], the [decision] was to [action]</div>
+            <div class="struct-tags"><span class="tag tag-amber">justifying</span></div>
+          </div>
+          <div class="struct-item" onclick="toggleStruct(this)">
+            <div class="struct-check"></div>
+            <div class="struct-text">The upshot of all this is [conclusion]</div>
+            <div class="struct-tags"><span class="tag tag-teal">summarizing</span></div>
+          </div>
+          <div class="struct-item" onclick="toggleStruct(this)">
+            <div class="struct-check"></div>
+            <div class="struct-text">What I would say is [position] — and here's why</div>
+            <div class="struct-tags"><span class="tag tag-amber">hedging</span><span class="tag tag-purple">discourse</span></div>
+          </div>
+          <div class="struct-item" onclick="toggleStruct(this)">
+            <div class="struct-check"></div>
+            <div class="struct-text">To be clear, I'm not saying [A] — I'm saying [B]</div>
+            <div class="struct-tags"><span class="tag tag-purple">clarifying</span></div>
+          </div>
+        </div>
+        <div class="struct-limit" id="structLimit">2 / 3 selected</div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">
+          <div class="step-num inactive">3</div>
+          <div class="step-title">Load your chunks</div>
+        </div>
+        <div class="step-sub">Pick up to 5 expressions from your corpus. Click to add to a skill slot. These are your "active vocabulary" for this mission.</div>
+        <div class="chunk-library">
+          <div class="chunk-item slotted" id="ci1">
+            <div class="chunk-add">+</div>
+            <div class="chunk-item-text">"to be fair" — conceding before a counterpoint</div>
+            <div class="chunk-item-tags"><span class="tag tag-gray">softening</span><span class="tag tag-teal">acknowledging</span></div>
+            <div class="chunk-item-src">Building Anthropic · 1:18</div>
+          </div>
+          <div class="chunk-item slotted" id="ci2">
+            <div class="chunk-add">+</div>
+            <div class="chunk-item-text">"genuinely uncertain" — calibrated hedging</div>
+            <div class="chunk-item-tags"><span class="tag tag-amber">hedging</span></div>
+            <div class="chunk-item-src">Building Anthropic · 1:31</div>
+          </div>
+          <div class="chunk-item" id="ci3" onclick="addChunk(this,'a real tension here','framing')">
+            <div class="chunk-add">+</div>
+            <div class="chunk-item-text">"a real tension here" — naming the conflict</div>
+            <div class="chunk-item-tags"><span class="tag tag-amber">framing</span><span class="tag tag-teal">acknowledging</span></div>
+            <div class="chunk-item-src">Building Anthropic · 1:45</div>
+          </div>
+          <div class="chunk-item" id="ci4" onclick="addChunk(this,'what I would say is','hedging')">
+            <div class="chunk-add">+</div>
+            <div class="chunk-item-text">"what I would say is" — buying thinking time</div>
+            <div class="chunk-item-tags"><span class="tag tag-amber">hedging</span><span class="tag tag-purple">discourse</span></div>
+            <div class="chunk-item-src">Building Anthropic · 2:02</div>
+          </div>
+          <div class="chunk-item" id="ci5" onclick="addChunk(this,'I guess','hedging')">
+            <div class="chunk-add">+</div>
+            <div class="chunk-item-text">"I guess" — softening certainty</div>
+            <div class="chunk-item-tags"><span class="tag tag-amber">hedging</span></div>
+            <div class="chunk-item-src">Building Anthropic · 0:49</div>
+          </div>
+          <div class="chunk-item" id="ci6" onclick="addChunk(this,'at the end of the day','summarizing')">
+            <div class="chunk-add">+</div>
+            <div class="chunk-item-text">"at the end of the day" — closing a point</div>
+            <div class="chunk-item-tags"><span class="tag tag-teal">summarizing</span></div>
+            <div class="chunk-item-src">YC Talks · 8:22</div>
+          </div>
+        </div>
+        <div class="chunk-limit" id="chunkLimit">2 / 5 slots filled</div>
+      </div>
+
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-label">Loadout preview</div>
+
+      <div class="sstitle">Logic</div>
+      <div style="font-size:13px;font-weight:500;color:#3C3489;background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);padding:8px 12px;margin-bottom:16px">
+        Persuasive pitch
+        <div style="font-size:10px;font-family:var(--font-mono);color:#534AB7;margin-top:3px">Context → Tension → Proposal → Defend</div>
+      </div>
+
+      <div class="sstitle">Structures</div>
+      <div class="struct-slots">
+        <div class="sslot filled" id="ss1">The problem isn't [A], but rather [B]</div>
+        <div class="sslot filled" id="ss2">Given [premise], the [decision] was to [action]</div>
+        <div class="sslot" id="ss3">slot 3 — pick one above</div>
+      </div>
+
+      <div class="sstitle">Skill slots</div>
+      <div class="skill-slots" id="skillSlots">
+        <div class="slot filled">
+          <div class="slot-num">1</div>
+          <div>
+            <div class="slot-text">"to be fair"</div>
+            <span class="slot-tag tag tag-gray">softening</span>
+          </div>
+          <div class="slot-remove" onclick="">×</div>
+        </div>
+        <div class="slot filled">
+          <div class="slot-num">2</div>
+          <div>
+            <div class="slot-text">"genuinely uncertain"</div>
+            <span class="slot-tag tag tag-amber">hedging</span>
+          </div>
+          <div class="slot-remove">×</div>
+        </div>
+        <div class="slot" id="slot3"><span class="slot-num">3</span><span class="slot-empty">empty slot</span></div>
+        <div class="slot" id="slot4"><span class="slot-num">4</span><span class="slot-empty">empty slot</span></div>
+        <div class="slot" id="slot5"><span class="slot-num">5</span><span class="slot-empty">empty slot</span></div>
+      </div>
+
+      <button class="start-btn" onclick="sendPrompt('Stage 3 Mission Loadout 配置完成，开始 AI Sandbox 对话界面的设计')">Start mission ↗</button>
+      <div class="readiness" id="readiness"><span>2 chunks</span> + <span>2 structures</span> ready</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let slotCount=2;
+let structCount=2;
+
+function selectLogic(el){
+  document.querySelectorAll('.logic-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleStruct(el){
+  const isSelected=el.classList.contains('selected');
+  if(!isSelected && structCount>=3) return;
+  el.classList.toggle('selected');
+  const check=el.querySelector('.struct-check');
+  if(el.classList.contains('selected')){
+    structCount++;
+    check.textContent='✓';
+    const text=el.querySelector('.struct-text').textContent;
+    const emptySlot=['ss1','ss2','ss3'].find(id=>!document.getElementById(id).classList.contains('filled'));
+    if(emptySlot){const s=document.getElementById(emptySlot);s.classList.add('filled');s.textContent=text}
+  } else {
+    structCount--;
+    check.textContent='';
+    const text=el.querySelector('.struct-text').textContent;
+    ['ss1','ss2','ss3'].forEach(id=>{const s=document.getElementById(id);if(s.textContent===text){s.classList.remove('filled');s.textContent='slot '+(id.slice(-1))+' — pick one above'}});
+  }
+  document.getElementById('structLimit').textContent=structCount+' / 3 selected';
+  updateReadiness();
+}
+
+function addChunk(el,text,tag){
+  if(slotCount>=5) return;
+  el.classList.add('slotted');
+  el.onclick=null;
+  slotCount++;
+  const slotId='slot'+slotCount;
+  const slot=document.getElementById(slotId);
+  if(slot){
+    slot.classList.add('filled');
+    const tagColors={'hedging':'tag-amber','softening':'tag-gray','framing':'tag-amber','discourse':'tag-purple','summarizing':'tag-teal','acknowledging':'tag-teal'};
+    slot.innerHTML='<div class="slot-num">'+slotCount+'</div><div><div class="slot-text">"'+text+'"</div><span class="slot-tag tag '+(tagColors[tag]||'tag-gray')+'">'+tag+'</span></div><div class="slot-remove">×</div>';
+  }
+  document.getElementById('chunkLimit').textContent=slotCount+' / 5 slots filled';
+  updateReadiness();
+}
+
+function updateReadiness(){
+  document.getElementById('readiness').innerHTML='<span>'+slotCount+' chunks</span> + <span>'+structCount+' structures</span> ready';
+}
+</script>
