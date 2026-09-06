@@ -71,8 +71,8 @@ def test_response_normalizes_evidenced_chunk_format_variance() -> None:
 def test_truncated_response_retries_with_larger_output_budget(monkeypatch) -> None:
     client = _FakeClient(
         [
-            _stream_response("{", "length", 16000),
             _stream_response("{", "length", 32000),
+            _stream_response("{", "length", 64000),
         ]
     )
     monkeypatch.setattr(deepseek, "get_settings", lambda: _settings())
@@ -84,9 +84,9 @@ def test_truncated_response_retries_with_larger_output_budget(monkeypatch) -> No
 
     assert raised.value.code == "analysis_response_truncated"
     assert raised.value.diagnostic == (
-        "finish_reason=length;completion_tokens=32000;max_tokens=32000"
+        "finish_reason=length;completion_tokens=64000;max_tokens=64000"
     )
-    assert [call["max_tokens"] for call in client.payloads] == [16000, 32000]
+    assert [call["max_tokens"] for call in client.payloads] == [32000, 64000]
     assert all(call["stream"] is True for call in client.payloads)
 
 
@@ -137,6 +137,25 @@ def test_stream_emits_validated_partial_analysis_preview(monkeypatch) -> None:
     assert len(previews[-1].logic_flow) == 1
     assert [item.text for item in previews[-1].corpus_items] == ["to be fair"]
     assert previews[-1].transcript_lines == []
+
+
+def test_retry_preview_never_regresses_to_an_empty_partial_object() -> None:
+    previous = deepseek._build_analysis_preview(
+        '{"summary":"Already visible.","chapters":["Opening"],'
+        '"logic_flow":[{"title":"Framing the idea","subtitle":"The premise.","timestamp":"0:01"}]}',
+        "0:01\tThe premise is already visible.",
+    )
+    restarted = deepseek._build_analysis_preview(
+        '{',
+        "0:01\tThe premise is already visible.",
+    )
+
+    merged = deepseek._merge_analysis_preview(previous, restarted)
+
+    assert merged.summary == "Already visible."
+    assert merged.chapters == ["Opening"]
+    assert len(merged.logic_flow) == 1
+    assert merged.output_chars == previous.output_chars
 
 
 def test_incomplete_json_exposes_only_closed_semantic_fields() -> None:
@@ -282,7 +301,7 @@ def _settings() -> SimpleNamespace:
         deepseek_api_key="test-key",
         deepseek_model="deepseek-v4-flash",
         deepseek_max_input_chars=240_000,
-        deepseek_max_output_tokens=16_000,
+        deepseek_max_output_tokens=32_000,
         deepseek_max_attempts=2,
     )
 

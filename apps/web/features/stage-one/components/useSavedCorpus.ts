@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { createCorpusRemote } from "../api/corpus-api";
+import type { CorpusSelectionAnalysis, CorpusSelectionContext } from "@libitu/types/stage-one";
 import { CORPUS_STORAGE_KEY, CorpusStorage, type SavedCorpusRecord } from "../api/corpus-storage";
 
 export function useSavedCorpus() {
@@ -38,6 +39,11 @@ export function useSavedCorpus() {
     error: current ? state.error : null,
     signedIn: Boolean(owner),
     save: (record: SavedCorpusRecord) => current ? storage.save(record) : Promise.resolve(false),
+    hydrate: (
+      record: SavedCorpusRecord,
+      context: CorpusSelectionContext,
+      analyze: () => Promise<CorpusSelectionAnalysis>,
+    ) => current ? storage.hydrate(record, context, analyze) : Promise.resolve(null),
     remove: (record: SavedCorpusRecord) => current ? storage.remove(record) : Promise.resolve(false),
     retry: () => setRetry((value) => value + 1)
   };

@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
-import { Check, Pin, PinOff, Plus, Trash2 } from "lucide-react";
-import type { CorpusFilter, CorpusItem, CorpusKind, CorpusSelectionAnalysis, FunctionalTag, StageOneBlueprint } from "@libitu/types/stage-one";
+import { Check, Pin, PinOff, Plus, Trash2, Volume2, X } from "lucide-react";
+import type {
+  CorpusFilter,
+  CorpusItem,
+  CorpusItemAnalysisDetail,
+  CorpusKind,
+  CorpusSelectionAnalysis,
+  CorpusSelectionContext,
+  FunctionalTag,
+  StageOneBlueprint
+} from "@libitu/types/stage-one";
 import type { LearnerLevel } from "@libitu/types/stage-one";
 import { AuthControls } from "@/features/auth/components/AuthControls";
 import {
@@ -17,7 +26,8 @@ import {
 } from "../api/stage-one-api";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
 import { useSavedCorpus } from "./useSavedCorpus";
-import { savedCorpusKey } from "../api/corpus-storage";
+import { savedCorpusKey, type SavedCorpusRecord } from "../api/corpus-storage";
+import { findCurrentTimedItem, parseTimestamp } from "../timeline";
 
 const tagClass: Record<CorpusItem["tags"][number], string> = {
   acknowledging: "tag-teal",
@@ -43,6 +53,8 @@ const editableKinds: CorpusKind[] = ["chunk", "idiom", "structure"];
 const editableTags: FunctionalTag[] = ["discourse", "softening", "hedging", "clarifying", "contrast", "justifying", "reframing", "proposing"];
 const editableLevels: LearnerLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const editableRegisters: NonNullable<CorpusItem["register"]>[] = ["casual", "neutral", "professional", "formal"];
+const TRANSCRIPT_AUTO_ALIGN_PAUSE_MS = 6000;
+const PROGRAMMATIC_SCROLL_SETTLE_MS = 450;
 
 type SelectionCardState = {
   id: string;
@@ -53,15 +65,19 @@ type SelectionCardState = {
   tab: "explain" | "syntax";
   status: "loading" | "ready";
   position: { x: number; y: number };
-  context: AnalyzeSelectionContext;
+  context: CorpusSelectionContext;
 };
 
-type AnalyzeSelectionContext = {
-  selectedText: string;
-  currentSentence: string;
-  contextBefore?: string;
-  contextAfter?: string;
-  timestamp?: string;
+type CorpusDetailState = {
+  id: string;
+  key: string;
+  item: CorpusItem;
+  record?: SavedCorpusRecord;
+  context: CorpusSelectionContext;
+  detail?: CorpusItemAnalysisDetail;
+  status: "loading" | "ready" | "error";
+  tab: "explain" | "syntax";
+  error?: string;
 };
 
 function LibraryIcon() {
@@ -82,14 +98,21 @@ export function StageOneReader() {
   const [activeTab, setActiveTab] = useState<CorpusFilter>("chunks");
   const corpus = useSavedCorpus();
   const [selectionCard, setSelectionCard] = useState<SelectionCardState | null>(null);
+  const [corpusDetail, setCorpusDetail] = useState<CorpusDetailState | null>(null);
   const closeSelectionCard = useCallback(() => setSelectionCard(null), []);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScrollPausedUntil, setAutoScrollPausedUntil] = useState<number | null>(null);
+  const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
   const [highlightActive, setHighlightActive] = useState(true);
   const [sourceTitle, setSourceTitle] = useState("Loading Stage 1 content");
   const [source, setSource] = useState<StageOneSource | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const loadControllerRef = useRef<AbortController | null>(null);
+  const resolvedSourceRef = useRef<StageOneSource | null>(null);
   const playerRef = useRef<YouTubePlayerHandle>(null);
+  const programmaticScrollTimeoutRef = useRef<number | null>(null);
+  const resumeAutoScrollTimeoutRef = useRef<number | null>(null);
+  const detailCacheRef = useRef(new Map<string, CorpusItemAnalysisDetail>());
 
   const sourceKey = blueprint?.contentId ?? source?.contentId ?? source?.sourceUrl ?? "";
   const sourceUrl = blueprint?.sourceUrl ?? source?.sourceUrl;
@@ -116,7 +139,7 @@ export function StageOneReader() {
   useEffect(() => {
     if (!source) return;
 
-    const activeSource = source;
+    const activeSource = resolvedSourceRef.current ?? source;
     const controller = new AbortController();
     loadControllerRef.current = controller;
 
@@ -133,7 +156,6 @@ export function StageOneReader() {
       if (controller.signal.aborted) return;
       setStatus("loading");
       setErrorMessage(null);
-      setAnalysisPreview(null);
 
       try {
         const nextBlueprint = await loadStageOneBlueprint(activeSource, (message) => {
@@ -141,6 +163,18 @@ export function StageOneReader() {
         }, {
           signal: controller.signal,
           resumeFailedJob: loadAttempt > 0,
+          onResolved: (ids) => {
+            if (controller.signal.aborted) return;
+            resolvedSourceRef.current = { ...activeSource, ...ids, handoffId: undefined };
+            const url = new URL(window.location.href);
+            if (url.searchParams.get("contentId") === ids.contentId && url.searchParams.get("jobId") === ids.jobId
+              && !url.searchParams.has("handoffId") && !url.searchParams.has("transcriptText")) return;
+            url.searchParams.set("contentId", ids.contentId);
+            url.searchParams.set("jobId", ids.jobId);
+            url.searchParams.delete("handoffId");
+            url.searchParams.delete("transcriptText");
+            window.history.replaceState(window.history.state, "", url);
+          },
           onPreview: (preview) => {
             if (!controller.signal.aborted) setAnalysisPreview(preview);
           }
@@ -168,28 +202,88 @@ export function StageOneReader() {
     [analysisPreview?.logicNodes, blueprint?.logicNodes]
   );
   const transcriptTimeline = useMemo(
-    () => transcript.map((line) => ({ line, seconds: parseTimestamp(line.time) })).filter((entry) => entry.seconds !== null),
+    () => transcript.map((line) => ({ item: line, seconds: parseTimestamp(line.time) })),
     [transcript]
   );
+  const logicTimeline = useMemo(
+    () => logicNodes.map((node) => ({ item: node, seconds: parseTimestamp(node.time) })),
+    [logicNodes]
+  );
+
+  const syncActiveMoment = useCallback((seconds: number) => {
+    const currentLine = findCurrentTimedItem(transcriptTimeline, seconds);
+    if (currentLine) setActiveTranscriptTime((current) => current === currentLine.time ? current : currentLine.time);
+    const currentNode = findCurrentTimedItem(logicTimeline, seconds, true);
+    if (currentNode) setActiveNode((current) => current === currentNode.id ? current : currentNode.id);
+  }, [logicTimeline, transcriptTimeline]);
 
   const handlePlayerTimeChange = useCallback((seconds: number) => {
-    const currentLine = findCurrentTranscriptLine(transcriptTimeline, seconds);
-    if (currentLine) setActiveTranscriptTime((current) => current === currentLine.time ? current : currentLine.time);
-  }, [transcriptTimeline]);
+    syncActiveMoment(seconds);
+  }, [syncActiveMoment]);
+
+  const autoScrollPaused = autoScrollPausedUntil !== null && Date.now() < autoScrollPausedUntil;
+  const manualAutoAlignPaused = isPlayerPlaying && autoScrollPaused;
+  const shouldAutoAlignTranscript = autoScroll && !autoScrollPaused && isPlayerPlaying;
+
+  const markProgrammaticScroll = useCallback(() => {
+    if (programmaticScrollTimeoutRef.current !== null) window.clearTimeout(programmaticScrollTimeoutRef.current);
+    programmaticScrollTimeoutRef.current = window.setTimeout(() => {
+      programmaticScrollTimeoutRef.current = null;
+    }, PROGRAMMATIC_SCROLL_SETTLE_MS);
+  }, []);
+
+  const pauseAutoAlignForManualScroll = useCallback(() => {
+    if (!autoScroll) return;
+    const pausedUntil = Date.now() + TRANSCRIPT_AUTO_ALIGN_PAUSE_MS;
+    setAutoScrollPausedUntil(pausedUntil);
+    if (resumeAutoScrollTimeoutRef.current !== null) window.clearTimeout(resumeAutoScrollTimeoutRef.current);
+    resumeAutoScrollTimeoutRef.current = window.setTimeout(() => {
+      setAutoScrollPausedUntil((current) => current === pausedUntil ? null : current);
+      resumeAutoScrollTimeoutRef.current = null;
+    }, TRANSCRIPT_AUTO_ALIGN_PAUSE_MS);
+  }, [autoScroll]);
+
+  const resumeAutoAlignNow = useCallback(() => {
+    if (resumeAutoScrollTimeoutRef.current !== null) {
+      window.clearTimeout(resumeAutoScrollTimeoutRef.current);
+      resumeAutoScrollTimeoutRef.current = null;
+    }
+    setAutoScrollPausedUntil(null);
+  }, []);
 
   useEffect(() => {
-    if (!autoScroll || !activeTranscriptTime) return;
-    document.getElementById(transcriptElementId(activeTranscriptTime))?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [activeTranscriptTime, autoScroll]);
+    return () => {
+      if (programmaticScrollTimeoutRef.current !== null) window.clearTimeout(programmaticScrollTimeoutRef.current);
+      if (resumeAutoScrollTimeoutRef.current !== null) window.clearTimeout(resumeAutoScrollTimeoutRef.current);
+    };
+  }, []);
 
-  function selectNode(nodeId: string, time: string | null) {
-    setActiveNode(nodeId);
-    seekToMoment(time, transcript.find((line) => line.id === nodeId)?.time);
+  useEffect(() => {
+    if (!shouldAutoAlignTranscript || !activeTranscriptTime) return;
+    const activeLine = document.getElementById(transcriptElementId(activeTranscriptTime));
+    if (!activeLine) return;
+    markProgrammaticScroll();
+    activeLine.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [activeTranscriptTime, markProgrammaticScroll, shouldAutoAlignTranscript]);
+
+  function handleTranscriptViewportScroll() {
+    if (programmaticScrollTimeoutRef.current !== null) return;
+    pauseAutoAlignForManualScroll();
   }
 
-  function selectTranscriptLine(time: string, nodeId?: string) {
-    if (nodeId) setActiveNode(nodeId);
-    setActiveTranscriptTime(time);
+  function toggleAutoScroll() {
+    resumeAutoAlignNow();
+    setAutoScroll((value) => !value);
+  }
+
+  function selectNode(nodeId: string, time: string | null) {
+    resumeAutoAlignNow();
+    seekToMoment(time, transcript.find((line) => line.id === nodeId)?.time);
+    setActiveNode(nodeId);
+  }
+
+  function selectTranscriptLine(time: string) {
+    resumeAutoAlignNow();
     seekToMoment(time);
   }
 
@@ -198,12 +292,15 @@ export function StageOneReader() {
     const seconds = parseTimestamp(time);
     if (seconds === null) return;
     playerRef.current?.seekTo(seconds);
-    setActiveTranscriptTime(findCurrentTranscriptLine(transcriptTimeline, seconds)?.time ?? time);
+    syncActiveMoment(seconds);
   }
 
   function saveCorpusItem(item: CorpusItem) {
+    const key = corpusKey(item);
+    const analysisDetail = item.analysisDetail ?? detailCacheRef.current.get(key);
     return corpus.save({
-      key: corpusKey(item), item,
+      key,
+      item: analysisDetail ? { ...item, analysisDetail } : item,
       contentId: blueprint?.contentId ?? source?.contentId,
       sourceUrl: blueprint?.sourceUrl ?? source?.sourceUrl ?? "",
       sourceTitle: blueprint?.title ?? sourceTitle
@@ -226,7 +323,8 @@ export function StageOneReader() {
     const currentLine = transcript[lineIndex];
     if (!currentLine) return;
 
-    const context: AnalyzeSelectionContext = {
+    const context: CorpusSelectionContext = {
+      contentId: blueprint?.contentId ?? source?.contentId,
       selectedText,
       currentSentence: transcriptLineText(currentLine),
       contextBefore: transcript[lineIndex - 1] ? transcriptLineText(transcript[lineIndex - 1]) : undefined,
@@ -255,10 +353,7 @@ export function StageOneReader() {
       context
     });
 
-    const analysis = await analyzeCorpusSelection({
-      contentId: blueprint?.contentId,
-      ...context
-    });
+    const analysis = await analyzeCorpusSelection(context);
     setSelectionCard((current) => current?.id === selectionId
       ? {
         ...current,
@@ -282,6 +377,10 @@ export function StageOneReader() {
     const kind = kindOverride ?? selectionCard.fieldDraft.kind;
     const text = textOverride ?? selectionCard.analysis.recommendedText;
     const id = `manual-${Date.now()}-${Math.round(Math.random() * 1000)}`;
+    const savedAnalysis = {
+      ...selectionCard.analysis,
+      fields: { ...selectionCard.fieldDraft, kind }
+    };
     const item: CorpusItem = {
       id,
       kind,
@@ -296,11 +395,73 @@ export function StageOneReader() {
       register: selectionCard.fieldDraft.register,
       scenarioTags: selectionCard.analysis.explanation.usageChips,
       patternFamily: slots ? Object.keys(slots).join(", ") : undefined,
-      slots
+      slots,
+      analysisDetail: {
+        context: selectionCard.context,
+        analysis: savedAnalysis
+      }
     };
     if (!await saveCorpusItem(item)) return;
     setSelectionCard((current) => current?.id === selectionCard.id ? null : current);
     setActiveTab("saved");
+  }
+
+  async function openCorpusDetail(key: string, item: CorpusItem, record?: SavedCorpusRecord) {
+    const context = buildCorpusSelectionContext(
+      item,
+      transcript,
+      blueprint?.contentId ?? source?.contentId
+    );
+    const cached = item.analysisDetail ?? detailCacheRef.current.get(key);
+    const detailId = crypto.randomUUID();
+    setCorpusDetail({
+      id: detailId,
+      key,
+      item,
+      record,
+      context: cached?.context ?? context,
+      detail: cached,
+      status: cached ? "ready" : "loading",
+      tab: "explain"
+    });
+    if (cached) return;
+
+    const analyze = () => analyzeCorpusSelection(context);
+    let enrichedItem: CorpusItem;
+    let enrichedRecord = record;
+    if (record) {
+      const saved = await corpus.hydrate(record, context, analyze);
+      if (!saved?.item.analysisDetail) {
+        setCorpusDetail((current) => current?.id === detailId
+          ? { ...current, status: "error", error: "The full analysis could not be loaded. Please retry." }
+          : current
+        );
+        return;
+      }
+      enrichedRecord = saved;
+      enrichedItem = saved.item;
+    } else {
+      enrichedItem = { ...item, analysisDetail: { context, analysis: await analyze() } };
+    }
+    const detail = enrichedItem.analysisDetail;
+    if (!detail) {
+      setCorpusDetail((current) => current?.id === detailId
+        ? { ...current, status: "error", error: "The full analysis could not be loaded. Please retry." }
+        : current
+      );
+      return;
+    }
+    detailCacheRef.current.set(key, detail);
+    setCorpusDetail((current) => current?.id === detailId
+      ? { ...current, item: enrichedItem, record: enrichedRecord, detail, context: detail.context, status: "ready" }
+      : current
+    );
+  }
+
+  function retryCorpusDetail() {
+    if (!corpusDetail) return;
+    detailCacheRef.current.delete(corpusDetail.key);
+    void openCorpusDetail(corpusDetail.key, corpusDetail.item, corpusDetail.record);
   }
 
   function retryLoad() {
@@ -334,7 +495,7 @@ export function StageOneReader() {
         <aside className="left-panel" aria-label="Logic flow" aria-busy={!isReady}>
           <section className="logic-flow">
             <div className="section-label">Logic flow</div>
-            {logicNodes.map((node, index) => (
+            {logicNodes.map((node) => (
               <div className="logic-step" key={node.id}>
                 <button
                   className={`logic-node ${activeNode === node.id ? "active" : ""}`}
@@ -348,20 +509,25 @@ export function StageOneReader() {
                   </span>
                   <span className="logic-time">{node.time}</span>
                 </button>
-                {index < logicNodes.length - 1 ? <span className="logic-connector" aria-hidden="true" /> : null}
+                {/* {index < logicNodes.length - 1 ? <span className="logic-connector" aria-hidden="true" /> : null} */}
               </div>
             ))}
           </section>
 
         </aside>
 
-        <section className="center-panel" aria-label="Video and transcript">
+        <section
+          className="center-panel"
+          aria-label="Video and transcript"
+          onScroll={handleTranscriptViewportScroll}
+        >
           <div className="video-frame">
             {displaySourceUrl ? (
               <YouTubePlayer
                 ref={playerRef}
                 sourceUrl={displaySourceUrl}
                 title={displayTitle}
+                onPlaybackChange={setIsPlayerPlaying}
                 onTimeChange={handlePlayerTimeChange}
               />
             ) : source ? (
@@ -391,10 +557,16 @@ export function StageOneReader() {
                   className={`toggle-control ${autoScroll ? "on" : ""}`}
                   type="button"
                   aria-pressed={autoScroll}
-                  onClick={() => setAutoScroll((value) => !value)}
+                  aria-label={manualAutoAlignPaused ? "Auto-scroll paused after manual scroll" : "Auto-scroll"}
+                  title={!isPlayerPlaying
+                    ? "Auto-scroll will apply when the video plays"
+                    : manualAutoAlignPaused
+                      ? "Auto-scroll paused after manual scroll"
+                      : "Auto-scroll"}
+                  onClick={toggleAutoScroll}
                 >
                   <span className="toggle-track"><span /></span>
-                  Auto-scroll
+                  {manualAutoAlignPaused ? "Auto-scroll paused" : "Auto-scroll"}
                 </button>
                 <button
                   className={`toggle-control ${highlightActive ? "on" : ""}`}
@@ -411,14 +583,21 @@ export function StageOneReader() {
                 </button>
               </div>
 
-              <article className="transcript-area" aria-label="Annotated transcript" aria-busy={!isReady} onMouseUp={handleTranscriptSelection}>
+              <article
+                className="transcript-area"
+                aria-label="Annotated transcript"
+                aria-busy={!isReady}
+                onMouseUp={handleTranscriptSelection}
+                onWheel={pauseAutoAlignForManualScroll}
+                onTouchMove={pauseAutoAlignForManualScroll}
+              >
                 {transcript.map((line, lineIndex) => (
                   <div
                     className={`transcript-line ${highlightActive && line.time === activeTranscriptTime ? "active-line" : ""}`}
                     data-index={lineIndex}
                     id={transcriptElementId(line.time)}
                     key={`${line.time}-${lineIndex}`}
-                    onClick={() => selectTranscriptLine(line.time, line.id)}
+                    onClick={() => selectTranscriptLine(line.time)}
                   >
                     <button className="transcript-time" type="button" aria-label={`Play from ${line.time}`}>{line.time}</button>
                     <span className="transcript-text">
@@ -441,7 +620,7 @@ export function StageOneReader() {
                   </div>
                 ))}
               </article>
-              {selectionCard ? (
+              {selectionCard && !corpusDetail ? (
                 <SelectionAnalysisCard
                   key={selectionCard.id}
                   state={selectionCard}
@@ -512,6 +691,23 @@ export function StageOneReader() {
                 return (
                   <article className={`corpus-card ${saved ? "saved" : ""}`} key={key}>
                     <button
+                      className="corpus-detail-trigger"
+                      type="button"
+                      aria-label={`Open full analysis for ${corpusSelectedText(item)}`}
+                      onClick={() => void openCorpusDetail(key, item, record)}
+                    >
+                      <span className={item.kind === "structure" ? "structure-text" : "corpus-text"}>{item.text}</span>
+                      {item.usageNote ? <span className="corpus-note">{item.usageNote}</span> : null}
+                      <span className="corpus-tags">
+                        {item.tags.map((tag) => (
+                          <span className={`tag ${tagClass[tag]}`} key={tag}>
+                            {tag}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="corpus-meta">{item.meta.replace(/\s*-\s*(click \+ to save|saved locally|saved to corpus|analyzing)$/, "")}{saved ? ` - ${corpus.signedIn ? record?.serverId ? "Saved to account" : "Pending sync" : "Saved on this device"}` : ""}</span>
+                    </button>
+                    <button
                       className={`save-button ${saved ? "saved" : ""}`}
                       type="button"
                       disabled={(!isReady && !saved) || !corpus.ready || corpus.busy}
@@ -522,16 +718,6 @@ export function StageOneReader() {
                     >
                       {saved ? activeTab === "saved" ? <Trash2 /> : <Check /> : <Plus />}
                     </button>
-                    <p className={item.kind === "structure" ? "structure-text" : "corpus-text"}>{item.text}</p>
-                    {item.usageNote ? <p className="corpus-note">{item.usageNote}</p> : null}
-                    <div className="corpus-tags">
-                      {item.tags.map((tag) => (
-                        <span className={`tag ${tagClass[tag]}`} key={tag}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="corpus-meta">{item.meta.replace(/\s*-\s*(click \+ to save|saved locally|saved to corpus|analyzing)$/, "")}{saved ? ` - ${corpus.signedIn ? record?.serverId ? "Saved to account" : "Pending sync" : "Saved on this device"}` : ""}</div>
                   </article>
                 );
               })}
@@ -547,6 +733,15 @@ export function StageOneReader() {
           </div>
         </aside>
       </section>
+      {corpusDetail ? (
+        <CorpusDetailDialog
+          state={corpusDetail}
+          onClose={() => setCorpusDetail(null)}
+          onRetry={retryCorpusDetail}
+          onSeek={seekToMoment}
+          onTabChange={(tab) => setCorpusDetail((current) => current ? { ...current, tab } : current)}
+        />
+      ) : null}
     </main>
   );
 }
@@ -559,6 +754,7 @@ function readStageOneSource(): StageOneSource {
   const language = params.get("language") ?? undefined;
   const contentId = params.get("contentId") ?? undefined;
   const jobId = params.get("jobId") ?? undefined;
+  const handoffId = params.get("handoffId") ?? undefined;
   const learnerLevel = parseLearnerLevel(params.get("learnerLevel") ?? params.get("level"));
 
   return {
@@ -567,6 +763,7 @@ function readStageOneSource(): StageOneSource {
     title,
     contentId,
     jobId,
+    handoffId,
     transcriptText,
     language,
     learnerLevel: learnerLevel ?? defaultStageOneSource.learnerLevel
@@ -580,27 +777,8 @@ function parseLearnerLevel(value: string | null): LearnerLevel | undefined {
     : undefined;
 }
 
-function parseTimestamp(timestamp: string | null): number | null {
-  if (!timestamp) return null;
-  const parts = timestamp.split(":").map(Number);
-  if (parts.some((part) => !Number.isFinite(part))) return null;
-  return parts.reduce((total, part) => total * 60 + part, 0);
-}
-
 function transcriptElementId(time: string) {
   return `transcript-${time.replaceAll(":", "-")}`;
-}
-
-function findCurrentTranscriptLine(
-  timeline: Array<{ line: StageOneBlueprint["transcript"][number]; seconds: number | null }>,
-  currentTime: number
-) {
-  let current: StageOneBlueprint["transcript"][number] | null = null;
-  for (const entry of timeline) {
-    if (entry.seconds === null || entry.seconds > currentTime) break;
-    current = entry.line;
-  }
-  return current;
 }
 
 
@@ -613,7 +791,34 @@ function transcriptLineText(line: StageOneBlueprint["transcript"][number]) {
   return line.parts.map((part) => typeof part === "string" ? part : part.text).join("").replace(/\s+/g, " ").trim();
 }
 
-function buildLoadingSelectionAnalysis(context: AnalyzeSelectionContext): CorpusSelectionAnalysis {
+function corpusSelectedText(item: CorpusItem) {
+  if (item.sourceText) return item.sourceText;
+  if (item.kind === "structure") return item.text;
+  return item.text.match(/^["“'](.+?)["”']\s*[-–—]/)?.[1] ?? item.text;
+}
+
+function buildCorpusSelectionContext(
+  item: CorpusItem,
+  transcript: StageOneBlueprint["transcript"],
+  contentId?: string,
+): CorpusSelectionContext {
+  const selectedText = corpusSelectedText(item);
+  const selected = selectedText.toLocaleLowerCase();
+  const timestamp = item.meta.match(/^\s*(\d{1,2}:\d{2}(?::\d{2})?)/)?.[1];
+  let lineIndex = transcript.findIndex((line) => transcriptLineText(line).toLocaleLowerCase().includes(selected));
+  if (lineIndex < 0 && timestamp) lineIndex = transcript.findIndex((line) => line.time === timestamp);
+  const line = lineIndex >= 0 ? transcript[lineIndex] : undefined;
+  return {
+    contentId,
+    selectedText,
+    currentSentence: line ? transcriptLineText(line) : selectedText,
+    contextBefore: lineIndex > 0 ? transcriptLineText(transcript[lineIndex - 1]) : undefined,
+    contextAfter: lineIndex >= 0 && transcript[lineIndex + 1] ? transcriptLineText(transcript[lineIndex + 1]) : undefined,
+    timestamp: line?.time ?? timestamp
+  };
+}
+
+function buildLoadingSelectionAnalysis(context: CorpusSelectionContext): CorpusSelectionAnalysis {
   return {
     analysisSource: "ai",
     selectionType: /[.!?]$/.test(context.selectedText) ? "sentence" : "phrase",
@@ -656,6 +861,130 @@ function buildLoadingSelectionAnalysis(context: AnalyzeSelectionContext): Corpus
       evidence: [context.contextBefore, context.currentSentence, context.contextAfter].filter((value): value is string => Boolean(value))
     }
   };
+}
+
+type CorpusDetailDialogProps = {
+  state: CorpusDetailState;
+  onClose: () => void;
+  onRetry: () => void;
+  onSeek: (time: string | null) => void;
+  onTabChange: (tab: "explain" | "syntax") => void;
+};
+
+function CorpusDetailDialog({ state, onClose, onRetry, onSeek, onTabChange }: CorpusDetailDialogProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const analysis = state.detail?.analysis;
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    return () => {
+      if (dialog.open) dialog.close();
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="corpus-detail-dialog"
+      aria-labelledby="corpus-detail-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="corpus-detail-shell">
+        <header className="corpus-detail-header">
+          <div>
+            <span className="section-label">Corpus detail</span>
+            <h1 id="corpus-detail-title">{analysis?.recommendedText ?? corpusSelectedText(state.item)}</h1>
+          </div>
+          <button className="dialog-close" type="button" aria-label="Close corpus detail" title="Close" onClick={onClose}>
+            <X aria-hidden="true" />
+          </button>
+        </header>
+
+        <section className="source-context" aria-label="Original source context">
+          <div className="source-context-heading">
+            <div>
+              <span>Original context</span>
+              {state.record?.sourceTitle ? <strong>{state.record.sourceTitle}</strong> : null}
+            </div>
+            {state.context.timestamp ? (
+              <button type="button" className="inline-command" onClick={() => onSeek(state.context.timestamp ?? null)}>
+                {state.context.timestamp}
+              </button>
+            ) : null}
+          </div>
+          {state.context.contextBefore ? <p className="context-neighbor">{state.context.contextBefore}</p> : null}
+          <p className="context-current">{highlightSelection(state.context.currentSentence, state.context.selectedText)}</p>
+          {state.context.contextAfter ? <p className="context-neighbor">{state.context.contextAfter}</p> : null}
+        </section>
+
+        <div className="corpus-detail-tabs" role="tablist" aria-label="Full corpus analysis">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={state.tab === "explain"}
+            className={state.tab === "explain" ? "active" : ""}
+            onClick={() => onTabChange("explain")}
+          >
+            Explain
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={state.tab === "syntax"}
+            className={state.tab === "syntax" ? "active" : ""}
+            onClick={() => onTabChange("syntax")}
+          >
+            Syntax
+          </button>
+        </div>
+
+        <div className="corpus-detail-body" aria-live="polite">
+          {state.status === "loading" ? (
+            <div className="detail-status" role="status">
+              <span className="status-indicator loading" aria-hidden="true" />
+              <div>
+                <h2>Preparing the full analysis</h2>
+                <p>{state.item.meaning ?? "Reading the selected expression in its original context."}</p>
+              </div>
+            </div>
+          ) : state.status === "error" || !analysis ? (
+            <div className="detail-status" role="alert">
+              <span className="status-indicator failed" aria-hidden="true">!</span>
+              <div>
+                <h2>Analysis could not be loaded</h2>
+                <p>{state.error ?? "Please retry."}</p>
+                <button className="inline-command" type="button" onClick={onRetry}>Retry</button>
+              </div>
+            </div>
+          ) : state.tab === "explain" ? (
+            <ExplainPanel analysis={analysis} isLoading={false} />
+          ) : (
+            <SyntaxPanel analysis={analysis} isLoading={false} saveDisabled />
+          )}
+        </div>
+      </div>
+    </dialog>
+  );
+}
+
+function highlightSelection(sentence: string, selectedText: string) {
+  const index = sentence.toLocaleLowerCase().indexOf(selectedText.toLocaleLowerCase());
+  if (index < 0) return sentence;
+  return (
+    <>
+      {sentence.slice(0, index)}
+      <mark>{sentence.slice(index, index + selectedText.length)}</mark>
+      {sentence.slice(index + selectedText.length)}
+    </>
+  );
 }
 
 type SelectionAnalysisCardProps = {
@@ -791,6 +1120,7 @@ function ExplainPanel({ analysis, isLoading }: { analysis: CorpusSelectionAnalys
         <p><strong>{analysis.explanation.pronunciation.ipa}</strong></p>
         <p>{analysis.explanation.pronunciation.connectedSpeech}</p>
         <button className="inline-command" type="button" disabled={isLoading} onClick={() => speakText(analysis.explanation.pronunciation.audioText)}>
+          <Volume2 size={13} aria-hidden="true" />
           Play
         </button>
       </section>
@@ -831,7 +1161,7 @@ function SyntaxPanel({
 }: {
   analysis: CorpusSelectionAnalysis;
   isLoading: boolean;
-  onSavePattern: (kindOverride?: CorpusKind, textOverride?: string, slots?: Record<string, string>) => void;
+  onSavePattern?: (kindOverride?: CorpusKind, textOverride?: string, slots?: Record<string, string>) => void;
   saveDisabled: boolean;
 }) {
   return (
@@ -854,9 +1184,11 @@ function SyntaxPanel({
           <article className="pattern-row" key={pattern.template}>
             <code>{pattern.template}</code>
             <p>{pattern.rationale}</p>
-            <button className="inline-command" type="button" disabled={isLoading || saveDisabled} onClick={() => onSavePattern("structure", pattern.template, pattern.slots)}>
-              Save structure
-            </button>
+            {onSavePattern ? (
+              <button className="inline-command" type="button" disabled={isLoading || saveDisabled} onClick={() => onSavePattern("structure", pattern.template, pattern.slots)}>
+                Save structure
+              </button>
+            ) : null}
           </article>
         ))}
         {analysis.syntaxAnalysis.reusablePatterns.length === 0 ? <p>Preparing reusable patterns.</p> : null}

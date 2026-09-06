@@ -7,8 +7,15 @@ from fastapi import HTTPException
 from app.config import get_settings
 from app.integrations.supabase_repository import get_supabase_repository
 
-from app.schemas.corpus import CorpusItem, CorpusItemCreate, CorpusItemUpdate
+from app.schemas.corpus import (
+    CorpusItem,
+    CorpusItemAnalysisDetail,
+    CorpusItemCreate,
+    CorpusItemUpdate,
+    CorpusSelectionAnalysisRequest,
+)
 from app.services import store
+from app.services.corpus_selection_service import analyze_corpus_selection
 
 
 def _repository():
@@ -39,10 +46,47 @@ def create_corpus_item(user_id: str, payload: CorpusItemCreate) -> CorpusItem:
     if repository := _repository():
         return _call(repository.create_corpus_item, user_id, item_id, payload)
     if item_id in store.corpus_items:
-        return store.corpus_items[item_id]
+        current = store.corpus_items[item_id]
+        if current.analysis_detail is None and payload.analysis_detail is not None:
+            return update_corpus_item(
+                user_id,
+                item_id,
+                CorpusItemUpdate(analysis_detail=payload.analysis_detail),
+            ) or current
+        return current
     item = CorpusItem(id=item_id, user_id=user_id, **payload.model_dump())
     store.corpus_items[item.id] = item
     return item
+
+
+def get_corpus_item(user_id: str, item_id: str) -> CorpusItem | None:
+    if repository := _repository():
+        return _call(repository.get_corpus_item, user_id, item_id)
+    item = store.corpus_items.get(item_id)
+    return item if item is not None and item.user_id == user_id else None
+
+
+def hydrate_corpus_analysis_detail(
+    user_id: str,
+    item_id: str,
+    payload: CorpusSelectionAnalysisRequest,
+) -> CorpusItem | None:
+    current = get_corpus_item(user_id, item_id)
+    if current is None:
+        return None
+    if current.analysis_detail is not None:
+        return current
+
+    context = payload.model_copy(update={"content_id": current.content_id})
+    detail = CorpusItemAnalysisDetail(
+        context=context,
+        analysis=analyze_corpus_selection(context),
+    )
+    return update_corpus_item(
+        user_id,
+        item_id,
+        CorpusItemUpdate(analysis_detail=detail),
+    )
 
 
 def update_corpus_item(user_id: str, item_id: str, payload: CorpusItemUpdate) -> CorpusItem | None:
@@ -51,8 +95,8 @@ def update_corpus_item(user_id: str, item_id: str, payload: CorpusItemUpdate) ->
     current = store.corpus_items.get(item_id)
     if current is None or current.user_id != user_id:
         return None
-    data = current.model_dump()
-    data.update(payload.model_dump(exclude_unset=True))
+    data = current.model_dump(mode="json", by_alias=True)
+    data.update(payload.model_dump(mode="json", by_alias=True, exclude_unset=True))
     updated = CorpusItem(**data)
     store.corpus_items[item_id] = updated
     return updated

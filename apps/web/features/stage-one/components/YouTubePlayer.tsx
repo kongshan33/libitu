@@ -20,6 +20,7 @@ type YouTubeApi = {
       events: {
         onError: (event: YouTubePlayerEvent) => void;
         onReady: () => void;
+        onStateChange: (event: YouTubePlayerEvent) => void;
       };
     }
   ) => YouTubePlayerInstance;
@@ -39,18 +40,20 @@ export type YouTubePlayerHandle = {
 type YouTubePlayerProps = {
   sourceUrl: string;
   title: string;
+  onPlaybackChange(isPlaying: boolean): void;
   onTimeChange(time: number): void;
 };
 
 let apiPromise: Promise<YouTubeApi> | null = null;
 
 export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(function YouTubePlayer(
-  { sourceUrl, title, onTimeChange },
+  { sourceUrl, title, onPlaybackChange, onTimeChange },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayerInstance | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
+  const onPlaybackChangeRef = useRef(onPlaybackChange);
   const onTimeChangeRef = useRef(onTimeChange);
   const titleRef = useRef(title);
   const [origin, setOrigin] = useState<string | null>(null);
@@ -62,11 +65,12 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
   }, []);
 
   useEffect(() => {
+    onPlaybackChangeRef.current = onPlaybackChange;
     onTimeChangeRef.current = onTimeChange;
     titleRef.current = title;
     const iframe = containerRef.current?.querySelector("iframe");
     if (iframe) iframe.title = `${title} on YouTube`;
-  }, [onTimeChange, title]);
+  }, [onPlaybackChange, onTimeChange, title]);
 
   useImperativeHandle(ref, () => ({
     seekTo(seconds: number) {
@@ -77,6 +81,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
       }
       player.seekTo(seconds, true);
       player.playVideo();
+      onPlaybackChangeRef.current(true);
       onTimeChangeRef.current(seconds);
     }
   }), []);
@@ -100,12 +105,17 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
 
       playerRef.current = new api.Player(iframe, {
         events: {
-          onError: (event) => setPlayerError(youtubeErrorMessage(event.data)),
+          onError: (event) => {
+            onPlaybackChangeRef.current(false);
+            setPlayerError(youtubeErrorMessage(event.data));
+          },
           onReady: () => {
+            onPlaybackChangeRef.current(false);
             const pendingSeek = pendingSeekRef.current;
             if (pendingSeek !== null && playerRef.current) {
               playerRef.current.seekTo(pendingSeek, true);
               playerRef.current.playVideo();
+              onPlaybackChangeRef.current(true);
               pendingSeekRef.current = null;
             }
             intervalId = window.setInterval(() => {
@@ -114,6 +124,13 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
               const currentTime = player.getCurrentTime();
               if (Number.isFinite(currentTime)) onTimeChangeRef.current(currentTime);
             }, 500);
+          },
+          onStateChange: (event) => {
+            if (event.data === 1) {
+              onPlaybackChangeRef.current(true);
+            } else if (event.data === -1 || event.data === 0 || event.data === 2 || event.data === 5) {
+              onPlaybackChangeRef.current(false);
+            }
           }
         }
       });

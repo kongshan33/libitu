@@ -168,7 +168,10 @@ def create_blueprint_from_analysis(
         if formatted_transcript_text
         else merge_transcript_fragments(parsed_lines)
     )
-    analyzed_corpus_items = _evidenced_analysis_items(analysis.corpus_items, parsed_lines)
+    analyzed_corpus_items = _evidenced_analysis_items(
+        analysis.corpus_items,
+        readable_lines,
+    )
     logic_flow = [
         LogicNode(
             id=f"logic-{index + 1}",

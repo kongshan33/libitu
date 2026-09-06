@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     upstash_redis_rest_token: str | None = None
 
     processing_mode: Literal["inline", "queue"] = "inline"
-    analysis_version: str = "mvp-v6"
+    analysis_version: str = "mvp-v9"
     processing_queue_name: str = "libitu:queue:blueprints"
     processing_state_ttl_seconds: int = 86400
     processing_lock_ttl_seconds: int = 900
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     deepseek_timeout_seconds: float = 90.0
     deepseek_max_attempts: int = 2
     deepseek_max_input_chars: int = 240000
-    deepseek_max_output_tokens: int = 16000
+    deepseek_max_output_tokens: int = 32000
 
     punctuation_model_path: str | None = None
     punctuation_bpe_vocab_path: str | None = None

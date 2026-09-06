@@ -16,19 +16,34 @@ class ParsedTranscriptLine:
 @dataclass(frozen=True)
 class SourceToken:
     text: str
+    model_text: str
     time: str
 
 
 TranscriptProgressCallback = Callable[[list[ParsedTranscriptLine]], None]
 
 TIMESTAMP_PATTERN = re.compile(r"^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\t ]+(.+)$")
+TIMESTAMP_ONLY_PATTERN = re.compile(r"^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})$")
 SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
 SENTENCE_END = re.compile(r"[.!?][\"')\]]?$")
+SOURCE_SENTENCE_END = re.compile(r"[.!?][\"')\]]?(?:\s|$)")
 PUNCTUATION_ONLY = re.compile(r"^[,.;:!?]+$")
-INITIAL_DISCOURSE_MARKER = re.compile(
-    r"^(to be fair|that said|having said that|even so|in other words|for example|"
-    r"frankly|interestingly enough|broadly speaking|for the most part|above all)\b(?!,)",
-    re.I,
+WORD_TOKEN = re.compile(r"\b\w+(?:['’]\w+)*\b", re.UNICODE)
+FILLER_TOKENS = frozenset({"um", "uh", "er", "ah"})
+MAX_WORDS_PER_RELIABLE_SENTENCE = 45
+DISCOURSE_MARKERS = (
+    "on the other hand",
+    "to be fair",
+    "that said",
+    "having said that",
+    "even so",
+    "in other words",
+    "for example",
+    "frankly",
+    "interestingly enough",
+    "broadly speaking",
+    "for the most part",
+    "above all",
 )
 
 
@@ -39,12 +54,21 @@ def format_transcript(
     engine: PunctuationEngine | None = None,
 ) -> list[ParsedTranscriptLine]:
     source_lines = parse_transcript(transcript_text)
+    if language is None or language.split("-", maxsplit=1)[0].casefold() == "en":
+        source_lines = filter_filler_tokens(source_lines)
     if not source_lines:
         return []
 
+    if _has_reliable_source_punctuation(source_lines):
+        formatted = _finalize_transcript(
+            merge_transcript_fragments(source_lines, respect_source_sentences=True)
+        )
+        _emit_progress(on_progress, formatted)
+        return formatted
+
     punctuation_engine = engine or get_punctuation_engine(language)
     if punctuation_engine is None:
-        formatted = merge_transcript_fragments(source_lines)
+        formatted = _finalize_transcript(merge_transcript_fragments(source_lines))
         _emit_progress(on_progress, formatted)
         return formatted
 
@@ -60,6 +84,7 @@ def format_transcript(
             ),
             on_progress=on_progress,
         )
+        formatted = _finalize_transcript(formatted)
     except Exception as error:
         print(
             json.dumps(
@@ -71,7 +96,7 @@ def format_transcript(
             ),
             flush=True,
         )
-        formatted = merge_transcript_fragments(source_lines)
+        formatted = _finalize_transcript(merge_transcript_fragments(source_lines))
         _emit_progress(on_progress, formatted)
     return formatted
 
@@ -86,19 +111,52 @@ def parse_transcript(transcript_text: str) -> list[ParsedTranscriptLine]:
         ]
 
     parsed: list[ParsedTranscriptLine] = []
+    active_time: str | None = None
     for raw_line in raw_lines:
         match = TIMESTAMP_PATTERN.match(raw_line)
         if match:
             hours, minutes, seconds, text = match.groups()
-            time = (
-                f"{int(minutes)}:{seconds}"
-                if hours is None
-                else f"{int(hours)}:{int(minutes):02d}:{seconds}"
-            )
-            parsed.append(ParsedTranscriptLine(time=time, text=text.strip()))
+            active_time = _format_parsed_timestamp(hours, minutes, seconds)
+            _append_or_merge_line(parsed, active_time, text.strip())
+            continue
+
+        timestamp_match = TIMESTAMP_ONLY_PATTERN.match(raw_line)
+        if timestamp_match:
+            active_time = _format_parsed_timestamp(*timestamp_match.groups())
+            continue
+
+        if active_time is not None:
+            _append_or_merge_line(parsed, active_time, raw_line)
         else:
             parsed.append(ParsedTranscriptLine(time="--:--", text=raw_line))
     return parsed
+
+
+def filter_filler_tokens(
+    lines: list[ParsedTranscriptLine],
+) -> list[ParsedTranscriptLine]:
+    filtered: list[ParsedTranscriptLine] = []
+    for line in lines:
+        text = _remove_filler_tokens(line.text)
+        if text:
+            filtered.append(ParsedTranscriptLine(time=line.time, text=text))
+    return filtered
+
+
+def merge_transcript_lines_by_timestamp(
+    lines: list[ParsedTranscriptLine],
+) -> list[ParsedTranscriptLine]:
+    merged: list[ParsedTranscriptLine] = []
+    for line in lines:
+        if merged and line.time != "--:--" and merged[-1].time == line.time:
+            previous = merged[-1]
+            merged[-1] = ParsedTranscriptLine(
+                time=previous.time,
+                text=_merge_caption_text(previous.text, line.text),
+            )
+        else:
+            merged.append(line)
+    return merged
 
 
 def serialize_transcript(lines: list[ParsedTranscriptLine]) -> str:
@@ -107,6 +165,8 @@ def serialize_transcript(lines: list[ParsedTranscriptLine]) -> str:
 
 def merge_transcript_fragments(
     lines: list[ParsedTranscriptLine],
+    *,
+    respect_source_sentences: bool = False,
 ) -> list[ParsedTranscriptLine]:
     if not lines:
         return []
@@ -141,7 +201,10 @@ def merge_transcript_fragments(
         should_start_new = bool(pending) and (
             word_count + len(words) > 30
             or (gap >= 4 and word_count >= 12)
-            or (SENTENCE_END.search(pending[-1]) is not None and word_count >= 6)
+            or (
+                SENTENCE_END.search(pending[-1]) is not None
+                and (respect_source_sentences or word_count >= 6)
+            )
         )
         if should_start_new:
             flush()
@@ -152,7 +215,9 @@ def merge_transcript_fragments(
         pending.append(line.text)
         word_count += len(words)
         previous_seconds = seconds if seconds is not None else previous_seconds
-        if SENTENCE_END.search(line.text) is not None and word_count >= 6:
+        if SENTENCE_END.search(line.text) is not None and (
+            respect_source_sentences or word_count >= 6
+        ):
             flush()
 
     flush()
@@ -160,24 +225,28 @@ def merge_transcript_fragments(
 
 
 def punctuate_sentence(value: str, end_punctuation: str | None = None) -> str:
-    text = " ".join(value.split())
+    text = normalize_punctuation(value)
     text = re.sub(r"\bi\b", "I", text)
-    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
-    text = re.sub(r"\b(uh|um)\b", r", \1,", text, flags=re.I)
-    text = re.sub(r"\s*,\s*,\s*", ", ", text)
-    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
-    text = re.sub(r"\s{2,}", " ", text).strip(" ,")
-    text = INITIAL_DISCOURSE_MARKER.sub(r"\1,", text)
-    first_letter = re.search(r"[A-Za-z]", text)
-    if first_letter is not None:
-        index = first_letter.start()
-        text = f"{text[:index]}{text[index].upper()}{text[index + 1:]}"
+    text = _capitalize_sentence_start(text)
     if text and end_punctuation is not None:
-        text = re.sub(r"[.!?]+$", "", text).rstrip()
-        text = f"{text}{end_punctuation}"
+        text = _set_terminal_punctuation(text, end_punctuation)
     elif text and SENTENCE_END.search(text) is None:
         text = f"{text}."
-    return text
+    return normalize_punctuation(text)
+
+
+def normalize_punctuation(value: str) -> str:
+    text = " ".join(value.split())
+    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
+    text = re.sub(r"([,;:])(?:\s*[,;:])+", r"\1", text)
+    text = re.sub(r"[,;:]+(?=\s*[.!?])", "", text)
+    text = re.sub(r"\.{2,}", ".", text)
+    text = re.sub(r"!{2,}", "!", text)
+    text = re.sub(r"\?{2,}", "?", text)
+    text = re.sub(r"([.!?])(?:\s*[.!?])+", r"\1", text)
+    text = _normalize_initial_discourse_marker(text)
+    text = re.sub(r"([,;:!?])(?=[A-Za-z])", r"\1 ", text)
+    return re.sub(r"\s{2,}", " ", text).strip(" ,;:")
 
 
 def timestamp_seconds(timestamp: str) -> int | None:
@@ -193,6 +262,92 @@ def timestamp_seconds(timestamp: str) -> int | None:
     )
 
 
+def _format_parsed_timestamp(
+    hours: str | None,
+    minutes: str,
+    seconds: str,
+) -> str:
+    if hours is None:
+        return f"{int(minutes)}:{seconds}"
+    return f"{int(hours)}:{int(minutes):02d}:{seconds}"
+
+
+def _append_or_merge_line(
+    lines: list[ParsedTranscriptLine],
+    time: str,
+    text: str,
+) -> None:
+    if lines and time != "--:--" and lines[-1].time == time:
+        previous = lines[-1]
+        lines[-1] = ParsedTranscriptLine(
+            time=time,
+            text=_merge_caption_text(previous.text, text),
+        )
+        return
+    lines.append(ParsedTranscriptLine(time=time, text=text))
+
+
+def _merge_caption_text(previous: str, current: str) -> str:
+    previous = " ".join(previous.split())
+    current = " ".join(current.split())
+    previous_folded = previous.casefold()
+    current_folded = current.casefold()
+    if (
+        not previous
+        or previous_folded == current_folded
+        or previous_folded.startswith(current_folded)
+    ):
+        return previous or current
+    if current_folded.startswith(previous_folded):
+        return current
+    return f"{previous} {current}"
+
+
+def _remove_filler_tokens(text: str) -> str:
+    filler_spans = [
+        match.span()
+        for match in WORD_TOKEN.finditer(text)
+        if match.group().casefold() in FILLER_TOKENS
+    ]
+    if not filler_spans:
+        return " ".join(text.split())
+
+    pieces: list[str] = []
+    cursor = 0
+    for start, end in filler_spans:
+        pieces.append(text[cursor:start])
+        cursor = end
+    pieces.append(text[cursor:])
+    cleaned = "".join(pieces)
+    cleaned = re.sub(r"\s+([,.;:!?])", r"\1", cleaned)
+    cleaned = re.sub(r"([,;:])(?:\s*[,;:])+", r"\1", cleaned)
+    cleaned = re.sub(r"[,;:]+(?=[.!?])", "", cleaned)
+    cleaned = re.sub(r"^[\s,.;:!?]+|[\s,;:]+$", "", cleaned)
+    return " ".join(cleaned.split())
+
+
+def _has_reliable_source_punctuation(
+    lines: list[ParsedTranscriptLine],
+) -> bool:
+    text = " ".join(line.text for line in lines)
+    word_count = len(WORD_TOKEN.findall(text))
+    sentence_end_count = len(SOURCE_SENTENCE_END.findall(text))
+    return bool(sentence_end_count) and (
+        word_count <= sentence_end_count * MAX_WORDS_PER_RELIABLE_SENTENCE
+    )
+
+
+def _finalize_transcript(
+    lines: list[ParsedTranscriptLine],
+) -> list[ParsedTranscriptLine]:
+    merged = merge_transcript_lines_by_timestamp(lines)
+    return [
+        ParsedTranscriptLine(time=line.time, text=text)
+        for line in merged
+        if (text := normalize_punctuation(line.text))
+    ]
+
+
 def _format_with_engine(
     source_lines: list[ParsedTranscriptLine],
     engine: PunctuationEngine,
@@ -201,11 +356,7 @@ def _format_with_engine(
     overlap_words: int,
     on_progress: TranscriptProgressCallback | None,
 ) -> list[ParsedTranscriptLine]:
-    source_tokens = [
-        SourceToken(text=word, time=line.time)
-        for line in source_lines
-        for word in line.text.split()
-    ]
+    source_tokens = _build_source_tokens(source_lines)
     if not source_tokens:
         return []
 
@@ -215,7 +366,7 @@ def _format_with_engine(
         window_start = max(0, cursor - overlap_words)
         window_end = min(len(source_tokens), cursor + window_words)
         window = source_tokens[window_start:window_end]
-        output = engine.add_punctuation(" ".join(token.text for token in window))
+        output = engine.add_punctuation(" ".join(token.model_text for token in window))
         formatted_tokens = _align_formatted_tokens(window, output)
         if formatted_tokens is None:
             raise ValueError("The punctuation model changed the source word sequence.")
@@ -307,7 +458,7 @@ def _align_formatted_tokens(
     if len(output_tokens) != len(source_tokens):
         return None
     if any(
-        _normalized_token(source.text) != _normalized_token(output_token)
+        _normalized_token(source.model_text) != _normalized_token(output_token)
         for source, output_token in zip(source_tokens, output_tokens, strict=True)
     ):
         return None
@@ -324,21 +475,18 @@ def _append_sentence(
     *,
     force_terminal: bool = False,
 ) -> None:
-    words = formatted_tokens[start - window_start : end - window_start + 1]
+    words = [
+        _apply_predicted_punctuation(
+            source_tokens[index].text,
+            formatted_tokens[index - window_start],
+        )
+        for index in range(start, end + 1)
+    ]
     text = " ".join(words)
-    text = re.sub(
-        r"([,;:]\s+)(Uh|Um)(?=[,.;!?])",
-        lambda match: f"{match.group(1)}{match.group(2).lower()}",
-        text,
-    )
     if force_terminal:
         text = punctuate_sentence(text)
     else:
-        text = re.sub(r"\s+([,.;:!?])", r"\1", text).strip()
-        first_letter = re.search(r"[A-Za-z]", text)
-        if first_letter is not None:
-            index = first_letter.start()
-            text = f"{text[:index]}{text[index].upper()}{text[index + 1:]}"
+        text = _capitalize_sentence_start(normalize_punctuation(text))
     result.append(ParsedTranscriptLine(time=source_tokens[start].time, text=text))
 
 
@@ -373,6 +521,91 @@ def _normalized_token(value: str) -> str:
     return "".join(re.findall(r"[a-z0-9]+", value.casefold()))
 
 
+def _build_source_tokens(
+    lines: list[ParsedTranscriptLine],
+) -> list[SourceToken]:
+    tokens: list[SourceToken] = []
+    for line in lines:
+        for word in line.text.split():
+            source_text = _strip_external_punctuation(word)
+            model_text = re.sub(r"[,.;:!?]", "", source_text)
+            if not _normalized_token(model_text):
+                continue
+            tokens.append(
+                SourceToken(
+                    text=source_text,
+                    model_text=model_text,
+                    time=line.time,
+                )
+            )
+    return tokens
+
+
+def _strip_external_punctuation(value: str) -> str:
+    text = re.sub(r"^[,.;:!?]+", "", value)
+    return re.sub(r"[,.;:!?]+(?=[\"')\]]*$)", "", text)
+
+
+def _apply_predicted_punctuation(source_text: str, formatted_token: str) -> str:
+    match = re.search(r"([,.;:!?]+)(?=[\"')\]]*$)", formatted_token)
+    if match is None:
+        return source_text
+    punctuation = _normalize_punctuation_run(match.group(1))
+    closing_match = re.search(r"[\"')\]]+$", source_text)
+    if closing_match is None:
+        return f"{source_text}{punctuation}"
+    index = closing_match.start()
+    return f"{source_text[:index]}{punctuation}{source_text[index:]}"
+
+
+def _normalize_punctuation_run(value: str) -> str:
+    terminal = [character for character in value if character in ".!?"]
+    if terminal:
+        return terminal[0]
+    separators = [character for character in value if character in ",;:"]
+    return separators[0] if separators else ""
+
+
+def _normalize_initial_discourse_marker(value: str) -> str:
+    text = value
+    for marker in DISCOURSE_MARKERS:
+        words = [re.escape(word) for word in marker.split()]
+        flexible_marker = r"\s*,?\s+".join(words)
+        pattern = re.compile(
+            rf"(?P<prefix>^|(?<=[.!?])\s+)"
+            rf"(?P<marker>{flexible_marker})(?:\s*,)*(?!\w)",
+            re.I,
+        )
+
+        def replace(match: re.Match[str]) -> str:
+            normalized_marker = re.sub(r"\s*,\s*", " ", match.group("marker"))
+            return f"{match.group('prefix')}{normalized_marker},"
+
+        text = pattern.sub(replace, text)
+    return text
+
+
+def _capitalize_sentence_start(value: str) -> str:
+    first_word = WORD_TOKEN.search(value)
+    if first_word is None:
+        return value
+    word = first_word.group()
+    if word.casefold() == "i":
+        replacement = "I"
+    elif word.islower():
+        replacement = f"{word[0].upper()}{word[1:]}"
+    else:
+        return value
+    return f"{value[:first_word.start()]}{replacement}{value[first_word.end():]}"
+
+
+def _set_terminal_punctuation(value: str, punctuation: str) -> str:
+    match = re.search(r"(?P<terminal>[.!?]+)?(?P<closing>[\"')\]]*)$", value)
+    if match is None:
+        return f"{value}{punctuation}"
+    return f"{value[:match.start()]}{punctuation}{match.group('closing')}"
+
+
 def _emit_progress(
     callback: TranscriptProgressCallback | None,
     lines: list[ParsedTranscriptLine],
@@ -381,7 +614,7 @@ def _emit_progress(
         return
     limit = get_settings().transcript_preview_limit
     try:
-        callback(lines[:limit])
+        callback(merge_transcript_lines_by_timestamp(lines)[:limit])
     except Exception as error:
         print(
             json.dumps(

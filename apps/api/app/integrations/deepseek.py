@@ -80,6 +80,17 @@ def analyze_transcript(
     }
 
     last_error: Exception | None = None
+    best_preview: BlueprintAnalysisPreview | None = None
+
+    def emit_monotonic_preview(preview: BlueprintAnalysisPreview) -> None:
+        nonlocal best_preview
+        merged = _merge_analysis_preview(best_preview, preview)
+        if merged == best_preview:
+            return
+        best_preview = merged
+        if on_progress is not None:
+            on_progress(merged)
+
     max_attempts = max(1, settings.deepseek_max_attempts)
     base_output_tokens = min(settings.deepseek_max_output_tokens, 32_000)
     for attempt in range(max_attempts):
@@ -96,7 +107,7 @@ def analyze_transcript(
                 transcript_text,
                 attempt=attempt + 1,
                 max_attempts=max_attempts,
-                on_progress=on_progress,
+                on_progress=emit_monotonic_preview if on_progress is not None else None,
             )
         except (
             AnalysisProviderError,
@@ -117,6 +128,23 @@ def analyze_transcript(
     if isinstance(last_error, AnalysisProviderError):
         raise last_error
     raise AnalysisProviderError("DeepSeek could not generate the blueprint. Please retry.") from last_error
+
+
+def _merge_analysis_preview(
+    previous: BlueprintAnalysisPreview | None,
+    current: BlueprintAnalysisPreview,
+) -> BlueprintAnalysisPreview:
+    if previous is None:
+        return current
+    return current.model_copy(
+        update={
+            "output_chars": max(previous.output_chars, current.output_chars),
+            "summary": previous.summary or current.summary,
+            "chapters": current.chapters if len(current.chapters) > len(previous.chapters) else previous.chapters,
+            "logic_flow": current.logic_flow if len(current.logic_flow) > len(previous.logic_flow) else previous.logic_flow,
+            "corpus_items": current.corpus_items if len(current.corpus_items) > len(previous.corpus_items) else previous.corpus_items,
+        }
+    )
 
 
 def _stream_analysis_response(

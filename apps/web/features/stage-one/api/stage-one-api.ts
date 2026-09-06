@@ -1,4 +1,5 @@
 import { selectCorpusItems } from "@libitu/core/stage-one";
+import { readExtensionTranscript } from "./extension-handoff.ts";
 import type {
   CorpusItem,
   CorpusSelectionAnalysis,
@@ -14,7 +15,7 @@ import type {
 const DEFAULT_API_BASE_URL = "http://localhost:8000";
 const REQUEST_TIMEOUT_MS = 15_000;
 const JOB_POLL_INTERVAL_MS = 1_500;
-const JOB_WAIT_TIMEOUT_MS = 210_000;
+const JOB_WAIT_TIMEOUT_MS = 10 * 60_000;
 
 const allowedTags = new Set<FunctionalTag>([
   "acknowledging",
@@ -42,6 +43,7 @@ export type StageOneSource = {
   title: string;
   contentId?: string;
   jobId?: string;
+  handoffId?: string;
   transcriptText?: string;
   language?: string;
   learnerLevel?: LearnerLevel;
@@ -146,7 +148,7 @@ type ApiBlueprint = {
   corpus_items: ApiCorpusItem[];
 };
 
-type ApiCorpusSelectionAnalysis = {
+export type ApiCorpusSelectionAnalysis = {
   analysis_source: "ai" | "fallback";
   provider_notice?: string | null;
   selection_type: "phrase" | "sentence";
@@ -265,6 +267,7 @@ export async function loadStageOneBlueprint(
     signal?: AbortSignal;
     resumeFailedJob?: boolean;
     onPreview?: (preview: StageOneAnalysisPreview) => void;
+    onResolved?: (ids: { contentId: string; jobId: string }) => void;
   } = {}
 ): Promise<StageOneBlueprint> {
   const { signal } = options;
@@ -306,6 +309,7 @@ export async function loadStageOneBlueprint(
           body: JSON.stringify({ content_id: source.contentId })
         });
       }
+      options.onResolved?.({ contentId: source.contentId, jobId: job.id });
       job = await waitForJob(job, onProgress, onPreview, signal);
       assertReadyJob(job);
     }
@@ -320,6 +324,7 @@ export async function loadStageOneBlueprint(
         method: "POST",
         body: JSON.stringify({ content_id: source.contentId })
       });
+      options.onResolved?.({ contentId: source.contentId, jobId: currentJob.id });
       currentJob = await waitForJob(currentJob, onProgress, onPreview, signal);
       assertReadyJob(currentJob);
       blueprint = await loadRequest<ApiBlueprint>(blueprintPath(source.contentId, source.learnerLevel));
@@ -333,13 +338,19 @@ export async function loadStageOneBlueprint(
     });
   }
 
-  onProgress?.("Saving the source transcript.");
+  let transcriptText = source.transcriptText;
+  if (source.handoffId && !transcriptText) {
+    onProgress?.("Reading captions from YouTube.");
+    transcriptText = await readExtensionTranscript(source.handoffId, signal);
+    signal?.throwIfAborted();
+  }
+  onProgress?.(transcriptText ? "Saving the source transcript." : "Checking available captions.");
   const content = await loadRequest<ApiContentResolveResponse>("/api/content/resolve", {
     method: "POST",
     body: JSON.stringify({
       kind: source.kind,
       source_url: source.sourceUrl,
-      transcript_text: source.transcriptText,
+      transcript_text: transcriptText,
       language: source.language,
       title: source.title
     })
@@ -353,6 +364,7 @@ export async function loadStageOneBlueprint(
     })
   });
 
+  options.onResolved?.({ contentId: content.content_id, jobId: job.id });
   job = await waitForJob(job, onProgress, onPreview, signal);
   assertReadyJob(job);
 
@@ -687,7 +699,7 @@ function toCorpusItem(item: ApiCorpusItem): CorpusItem {
   };
 }
 
-function toCorpusSelectionAnalysis(analysis: ApiCorpusSelectionAnalysis): CorpusSelectionAnalysis {
+export function toCorpusSelectionAnalysis(analysis: ApiCorpusSelectionAnalysis): CorpusSelectionAnalysis {
   return {
     analysisSource: analysis.analysis_source,
     providerNotice: analysis.provider_notice ?? undefined,
@@ -737,6 +749,48 @@ function toCorpusSelectionAnalysis(analysis: ApiCorpusSelectionAnalysis): Corpus
       translationNotes: analysis.syntax_analysis.translation_notes,
       backgroundContext: analysis.syntax_analysis.background_context ?? undefined,
       evidence: analysis.syntax_analysis.evidence
+    }
+  };
+}
+
+export function toApiCorpusSelectionAnalysis(analysis: CorpusSelectionAnalysis): ApiCorpusSelectionAnalysis {
+  return {
+    analysis_source: analysis.analysisSource,
+    provider_notice: analysis.providerNotice,
+    selection_type: analysis.selectionType,
+    completeness: analysis.completeness,
+    selected_text: analysis.selectedText,
+    recommended_text: analysis.recommendedText,
+    recommendation_reason: analysis.recommendationReason,
+    fields: analysis.fields,
+    note_placeholder: analysis.notePlaceholder,
+    explanation: {
+      pronunciation: {
+        ipa: analysis.explanation.pronunciation.ipa,
+        connected_speech: analysis.explanation.pronunciation.connectedSpeech,
+        audio_text: analysis.explanation.pronunciation.audioText
+      },
+      meaning: analysis.explanation.meaning,
+      pragmatic_function: analysis.explanation.pragmaticFunction,
+      similar_expressions: analysis.explanation.similarExpressions,
+      examples: analysis.explanation.examples,
+      usage_chips: analysis.explanation.usageChips
+    },
+    syntax_analysis: {
+      sentence_type: analysis.syntaxAnalysis.sentenceType,
+      main_clause: analysis.syntaxAnalysis.mainClause,
+      structure_breakdown: analysis.syntaxAnalysis.structureBreakdown,
+      logic_relations: analysis.syntaxAnalysis.logicRelations,
+      information_hierarchy: analysis.syntaxAnalysis.informationHierarchy,
+      style_features: analysis.syntaxAnalysis.styleFeatures,
+      usage_scenarios: analysis.syntaxAnalysis.usageScenarios,
+      grammar_points: analysis.syntaxAnalysis.grammarPoints,
+      wording_notes: analysis.syntaxAnalysis.wordingNotes,
+      reusable_patterns: analysis.syntaxAnalysis.reusablePatterns,
+      translations: analysis.syntaxAnalysis.translations,
+      translation_notes: analysis.syntaxAnalysis.translationNotes,
+      background_context: analysis.syntaxAnalysis.backgroundContext,
+      evidence: analysis.syntaxAnalysis.evidence
     }
   };
 }

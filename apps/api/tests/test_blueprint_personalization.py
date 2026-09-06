@@ -233,7 +233,7 @@ def test_local_formatting_rebuilds_transcript_without_repeating_text() -> None:
     assert [line.time for line in blueprint.transcript] == ["0:01", "0:05"]
 
 
-def test_local_formatter_can_split_inside_a_caption_fragment() -> None:
+def test_local_formatter_groups_sentences_with_the_same_caption_timestamp() -> None:
     content = ContentResolveResponse(
         content_id="content-inline-boundary",
         kind=ContentKind.youtube,
@@ -261,8 +261,48 @@ def test_local_formatter_can_split_inside_a_caption_fragment() -> None:
         "".join(part if isinstance(part, str) else part.text for part in line.parts)
         for line in blueprint.transcript
     ]
-    assert rendered_lines == ["So let's begin now.", "Here comes another complete thought at last!"]
-    assert [line.time for line in blueprint.transcript] == ["0:01", "0:01"]
+    assert rendered_lines == [
+        "So let's begin now. Here comes another complete thought at last!"
+    ]
+    assert [line.time for line in blueprint.transcript] == ["0:01"]
+
+
+def test_analysis_evidence_uses_the_cleaned_display_transcript() -> None:
+    content = ContentResolveResponse(
+        content_id="content-cleaned-evidence",
+        kind=ContentKind.youtube,
+        normalized_key="youtube:cleaned-evidence",
+        title="Cleaned evidence",
+    )
+    analysis = BlueprintAnalysis(
+        summary="A filler-removal evidence test.",
+        chapters=["Claim"],
+        logic_flow=[
+            AnalysisLogicNode(
+                title="Claim",
+                subtitle="The speaker states a view.",
+                timestamp="0:01",
+            )
+        ],
+        corpus_items=[_analysis_item("chunk", "we should", "we should", "B1")],
+        key_points=["Cleaned evidence remains selectable."],
+        scenario_suggestions=["State an opinion"],
+    )
+
+    blueprint = create_blueprint_from_analysis(
+        content,
+        "0:01\tWe um should discuss this.",
+        analysis,
+        formatted_transcript_text="0:01\tWe should discuss this.",
+    )
+
+    assert [item.source_text for item in blueprint.corpus_items] == ["we should"]
+    highlighted = [
+        part
+        for part in blueprint.transcript[0].parts
+        if not isinstance(part, str)
+    ]
+    assert [part.text for part in highlighted] == ["We should"]
 
 
 def test_missing_formatted_transcript_falls_back_to_local_merging() -> None:

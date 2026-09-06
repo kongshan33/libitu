@@ -133,7 +133,11 @@ def process_job(
             queued_content.content.language,
             update_transcript_preview,
         )
-        formatted_transcript = serialize_transcript(formatted_lines) or transcript
+        formatted_transcript = serialize_transcript(formatted_lines)
+        if not formatted_transcript:
+            raise TranscriptUnavailableError(
+                "No meaningful transcript remains after subtitle normalization."
+            )
         current_job = _record_timing(
             current_job,
             ProcessingStage.formatting_transcript,

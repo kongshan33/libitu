@@ -5,14 +5,12 @@ const root = new URL("..", import.meta.url).pathname;
 const manifestPath = join(root, "manifest.json");
 
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-const sidePanelSource = readFileSync(join(root, "src/sidepanel.js"), "utf8");
+const backgroundSource = readFileSync(join(root, manifest.background.service_worker), "utf8");
 
 const requiredFiles = [
   manifest.background?.service_worker,
-  manifest.side_panel?.default_path,
   ...(manifest.content_scripts ?? []).flatMap((script) => script.js ?? []),
-  "src/sidepanel.js",
-  "src/sidepanel.css"
+  ...(manifest.web_accessible_resources ?? []).flatMap((group) => group.resources ?? []),
 ].filter(Boolean);
 
 const errors = [];
@@ -21,20 +19,28 @@ if (manifest.manifest_version !== 3) {
   errors.push("manifest_version must be 3.");
 }
 
-if (!manifest.permissions?.includes("sidePanel")) {
-  errors.push("sidePanel permission is required.");
-}
-
 if (!manifest.permissions?.includes("scripting")) {
   errors.push("scripting permission is required to recover missing content-script receivers.");
 }
 
-if (!sidePanelSource.includes("chrome.scripting.executeScript")) {
-  errors.push("The side panel must recover when a YouTube tab has no content-script receiver.");
+if (!backgroundSource.includes("chrome.scripting.executeScript")) {
+  errors.push("The launcher must recover when a YouTube tab has no content-script receiver.");
 }
 
-if (sidePanelSource.includes("analysis_version") || sidePanelSource.includes("ANALYSIS_VERSION")) {
+if (/analysis_version|ANALYSIS_VERSION/.test(backgroundSource)) {
   errors.push("The API server, not the extension, must own the analysis version.");
+}
+
+if (manifest.permissions?.includes("sidePanel") || manifest.side_panel || /chrome\.sidePanel/.test(backgroundSource)) {
+  errors.push("The extension must not expose a side panel.");
+}
+
+if (manifest.action?.default_popup || !backgroundSource.includes("chrome.action.onClicked")) {
+  errors.push("The toolbar action must launch Stage 1 directly.");
+}
+
+if (!backgroundSource.includes("SUPPORTED_LANGUAGE_BASES") || !backgroundSource.includes("LIBITU_GET_VIDEO_LANGUAGE_SUPPORT")) {
+  errors.push("Both extension entries must use the explicit video-language support gate.");
 }
 
 for (const file of requiredFiles) {

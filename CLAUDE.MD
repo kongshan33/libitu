@@ -136,15 +136,15 @@ Data infrastructure:
 - `apps/api/app/integrations/youtube_transcript.py` wraps the unofficial caption provider; browser captions remain preferred.
 - `apps/api/app/integrations/deepseek.py` requests and validates DeepSeek JSON output with timeout and retry controls.
 - `apps/api/app/integrations/supabase_repository.py` activates only when `SUPABASE_SECRET_KEY` is configured.
-- The local server repository, YouTube transcript fallback, Upstash worker, sherpa-onnx subtitle formatting, DeepSeek V4 Flash SSE analysis, and validated Stage 1 job previews are wired; live quality evaluation remains required for the `mvp-v5` extraction contract.
+- The local server repository, YouTube transcript fallback, Upstash worker, source-aware sherpa-onnx subtitle formatting, DeepSeek V4 Flash SSE analysis, and monotonic Stage 1 job previews are wired; live quality evaluation remains required for the bounded `mvp-v9` extraction contract.
 - Local ignored environment files point web and API development at Clerk and Supabase. Never commit or print their values.
 - Hosted Supabase Third-Party Auth still needs its final dashboard confirmation, and FastAPI storage remains in memory.
 
 Extension:
 
 - `apps/extension` contains a loadable Manifest V3 extension.
-- The extension has a YouTube content script, side panel, background service worker, and manifest validation script.
-- It attempts to open YouTube's transcript panel, sends timestamped captions and metadata to FastAPI, then opens Stage 1 with the created `contentId` and `jobId`.
+- The extension has a language-gated YouTube player-control action, a one-click toolbar action, a background service worker, and manifest validation.
+- It enables launch only for verified English videos, opens Stage 1 with lightweight video metadata before acquiring captions, and shows an English-only reason instead of launching unsupported languages. A short-lived session handoff delivers browser captions to the web app, which creates the FastAPI content/job and updates its URL with `contentId` and `jobId`.
 - Stage 1 embeds the selected YouTube video and reads the exact blueprint created by the extension; missing captions fail explicitly.
 
 ## Code Organization Rules

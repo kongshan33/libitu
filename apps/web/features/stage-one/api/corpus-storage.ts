@@ -1,4 +1,4 @@
-import type { CorpusItem } from "@libitu/types/stage-one";
+import type { CorpusItem, CorpusSelectionAnalysis, CorpusSelectionContext } from "@libitu/types/stage-one";
 
 export type SavedCorpusRecord = {
   key: string;
@@ -18,6 +18,7 @@ export type CorpusStorageState = {
 export type CorpusRemote = {
   list(signal: AbortSignal): Promise<SavedCorpusRecord[]>;
   save(record: SavedCorpusRecord, signal: AbortSignal): Promise<SavedCorpusRecord>;
+  hydrate(record: SavedCorpusRecord, context: CorpusSelectionContext, signal: AbortSignal): Promise<SavedCorpusRecord>;
   remove(id: string, signal: AbortSignal): Promise<void>;
 };
 type Envelope = { version: 1; guest: SavedCorpusRecord[]; pending: Record<string, SavedCorpusRecord[]> };
@@ -162,6 +163,42 @@ export class CorpusStorage {
     } catch (error) {
       this.fail(error, signal);
       return false;
+    }
+  }
+
+  async hydrate(
+    record: SavedCorpusRecord,
+    context: CorpusSelectionContext,
+    analyze: () => Promise<CorpusSelectionAnalysis>,
+  ): Promise<SavedCorpusRecord | null> {
+    if (record.item.analysisDetail || !this.state.ready || this.state.busy) return record.item.analysisDetail ? record : null;
+    const { owner } = this.state;
+    const signal = this.controller.signal;
+    const remote = this.remote;
+    this.publish({ busy: true, error: null });
+    try {
+      const enriched = owner && remote && record.serverId
+        ? await remote.hydrate(record, context, signal)
+        : { ...record, item: { ...record.item, analysisDetail: { context, analysis: await analyze() } } };
+      signal.throwIfAborted();
+      if (!owner || !record.serverId) {
+        await this.mutate(signal, (value) => {
+          if (owner) {
+            value.pending[owner] = mergeRecords((value.pending[owner] ?? []).map((item) => item.key === record.key ? enriched : item));
+          } else {
+            value.guest = mergeRecords(value.guest.map((item) => item.key === record.key ? enriched : item));
+          }
+        });
+      }
+      signal.throwIfAborted();
+      this.publish({
+        records: this.state.records.map((item) => item.key === record.key ? enriched : item),
+        busy: false
+      });
+      return enriched;
+    } catch (error) {
+      this.fail(error, signal);
+      return null;
     }
   }
 

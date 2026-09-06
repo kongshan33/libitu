@@ -12,6 +12,26 @@ function record(text = "double down on") {
   const item = { id: text, kind: "idiom", text, meaning: "Increase commitment.", tags: ["idiom"], meta: "0:01 - B2", level: "B2", slots: {} };
   return { key: savedCorpusKey("video", item), item, sourceUrl: "https://www.youtube.com/watch?v=video", sourceTitle: "Video" };
 }
+function analysis(selectedText = "double down on") {
+  return {
+    analysisSource: "ai", selectionType: "phrase", completeness: "complete",
+    selectedText, recommendedText: selectedText, recommendationReason: "Complete expression.",
+    fields: { kind: "idiom", tags: ["idiom"], level: "B2", register: "professional" },
+    notePlaceholder: "Note", explanation: {
+      pronunciation: { ipa: "/test/", connectedSpeech: "Link the words.", audioText: selectedText },
+      meaning: "Increase commitment.", pragmaticFunction: "Signals stronger commitment.",
+      similarExpressions: ["commit further"], examples: [{ english: "We doubled down.", chinese: "我们加大了投入。", typical: true }],
+      usageChips: ["workplace"]
+    }, syntaxAnalysis: {
+      sentenceType: "phrase", mainClause: selectedText, structureBreakdown: [], logicRelations: [],
+      informationHierarchy: [], styleFeatures: [], usageScenarios: [], grammarPoints: [], wordingNotes: [],
+      reusablePatterns: [], translations: [], translationNotes: [], evidence: [selectedText]
+    }
+  };
+}
+function context(selectedText = "double down on") {
+  return { selectedText, currentSentence: `We should ${selectedText} this plan.`, contextBefore: "The first attempt worked.", timestamp: "0:01" };
+}
 function remote(initial = []) {
   const rows = new Map(initial.map((row) => [row.key, row]));
   let saves = 0;
@@ -23,6 +43,11 @@ function remote(initial = []) {
       const saved = rows.get(row.key) ?? { ...row, serverId: `server-${rows.size}` };
       rows.set(row.key, saved);
       return saved;
+    },
+    hydrate: async (row, sourceContext) => {
+      const enriched = { ...row, item: { ...row.item, analysisDetail: { context: sourceContext, analysis: analysis(row.item.text) } } };
+      rows.set(row.key, enriched);
+      return enriched;
     },
     remove: async (id) => { for (const [key, row] of rows) if (row.serverId === id) rows.delete(key); }
   };
@@ -144,6 +169,27 @@ test("failed remote deletion keeps the saved record visible", async () => {
   assert.equal(store.state.records.length, 1);
 });
 
+test("guest detail analysis is cached in memory and persisted locally", async () => {
+  const f = fixture();
+  const store = f.open();
+  await store.open(null);
+  await store.save(record());
+  let calls = 0;
+  const enriched = await store.hydrate(record(), context(), async () => {
+    calls++;
+    return analysis();
+  });
+  assert.equal(calls, 1);
+  assert.equal(enriched.item.analysisDetail.analysis.explanation.meaning, "Increase commitment.");
+  assert.equal(f.envelope().guest[0].item.analysisDetail.context.contextBefore, "The first attempt worked.");
+  const cached = await store.hydrate(enriched, context(), async () => {
+    calls++;
+    return analysis();
+  });
+  assert.equal(cached, enriched);
+  assert.equal(calls, 1);
+});
+
 test("corrupt local data is not overwritten", async () => {
   const f = fixture();
   f.storage.setItem(CORPUS_STORAGE_KEY, "broken");
@@ -166,7 +212,10 @@ test("reopening an unchanged account does not trigger cross-tab storage write lo
 
 test("authenticated API preserves learning metadata and uses the captured account token", async (t) => {
   const token = `header.${Buffer.from(JSON.stringify({ sub: "user-a" })).toString("base64url")}.signature`;
-  const original = { ...record(), item: { ...record().item, sourceText: "doubled down on", register: "professional", slots: { OBJECT: "plan" } } };
+  const original = { ...record(), item: {
+    ...record().item, sourceText: "doubled down on", register: "professional", slots: { OBJECT: "plan" },
+    analysisDetail: { context: context("doubled down on"), analysis: analysis("doubled down on") }
+  } };
   const requests = [];
   t.mock.method(globalThis, "fetch", async (_url, options) => {
     requests.push(options);
@@ -180,6 +229,11 @@ test("authenticated API preserves learning metadata and uses the captured accoun
   assert.equal(saved.item.sourceText, original.item.sourceText);
   assert.equal(saved.item.register, original.item.register);
   assert.deepEqual(saved.item.slots, original.item.slots);
+  assert.equal(saved.item.analysisDetail.context.currentSentence, original.item.analysisDetail.context.currentSentence);
+  assert.equal(saved.item.analysisDetail.analysis.explanation.meaning, original.item.analysisDetail.analysis.explanation.meaning);
+  const payload = JSON.parse(requests[0].body);
+  assert.equal(payload.analysis_detail.context.selected_text, "doubled down on");
+  assert.equal(payload.analysis_detail.analysis.explanation.pragmatic_function, "Signals stronger commitment.");
   const switched = createCorpusRemote("user-b", async () => token);
   await assert.rejects(switched.list(new AbortController().signal), /Account changed/);
   assert.equal(requests.length, 1);

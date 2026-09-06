@@ -186,12 +186,21 @@ class SupabaseRepository:
         item = CorpusItem.model_validate(rows[0]) if rows else self.get_corpus_item(user_id, item_id)
         if item is None or item.user_id != user_id:
             raise PermissionError("Corpus item is unavailable to this user.")
+        if item.analysis_detail is None and payload.analysis_detail is not None:
+            enriched = self.update_corpus_item(
+                user_id,
+                item_id,
+                CorpusItemUpdate(analysis_detail=payload.analysis_detail),
+            )
+            if enriched is not None:
+                return enriched
         return item
 
     def update_corpus_item(self, user_id: str, item_id: str, payload: CorpusItemUpdate) -> CorpusItem | None:
         rows = self._request("PATCH", "/corpus_items", params={
             "user_id": f"eq.{user_id}", "id": f"eq.{item_id}",
-        }, headers={"Prefer": "return=representation"}, json=payload.model_dump(exclude_unset=True)).json()
+        }, headers={"Prefer": "return=representation"},
+            json=payload.model_dump(mode="json", by_alias=True, exclude_unset=True)).json()
         return CorpusItem.model_validate(rows[0]) if rows else None
 
     def delete_corpus_item(self, user_id: str, item_id: str) -> bool:

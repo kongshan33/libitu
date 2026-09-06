@@ -58,7 +58,9 @@ Deliver:
 - Loadable Manifest V3 extension
 - YouTube page detection and metadata normalization
 - Browser-side caption acquisition for supported videos
-- Side panel or web handoff
+- Player-control and toolbar one-click entry; immediate web handoff with asynchronous caption capture
+- Video-language detection with an expandable support list, initially English only
+- Disabled player entry and explicit toolbar feedback for non-English or unknown-language videos, without an additional extension surface
 - Local snapshot restoration
 - Explicit unsupported and permission states
 
@@ -88,6 +90,7 @@ Goal: move one extracted item through corpus and speaking feedback.
 Deliver:
 
 - Corpus management UI
+- Corpus detail modal with persisted source context and on-demand cached analysis
 - Speaking loadout with visible limits
 - Scenario role-play and turn history
 - Selected-item detection with evidence

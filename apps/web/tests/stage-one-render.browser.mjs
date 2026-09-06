@@ -10,10 +10,17 @@ const item = {
   tags: ["idiom"], timestamp: "0:01", level: "B2", register: "professional",
   naturalness_score: 4, transferability_score: 4, learning_value_score: 4
 };
+const previewTranscriptLines = [
+  { time: "0:01", text: "They doubled down on the plan." },
+  { time: "0:08", text: "The team waited before changing direction." }
+];
 const preview = {
   output_chars: 1000, summary: "A discussion of commitment.", chapters: ["Commitment"],
-  logic_flow: [{ title: "Explaining commitment", subtitle: "Support the plan.", timestamp: "0:01" }],
-  corpus_items: [item], transcript_lines: [{ time: "0:01", text: "They doubled down on the plan." }]
+  logic_flow: [
+    { title: "Explaining commitment", subtitle: "Support the plan.", timestamp: "0:01" },
+    { title: "Changing direction", subtitle: "Reconsider the plan.", timestamp: "0:08" }
+  ],
+  corpus_items: [item], transcript_lines: previewTranscriptLines
 };
 const job = {
   id: "render-test", content_id: "render-content", status: "processing", analysis_version: "mvp-v6",
@@ -22,9 +29,15 @@ const job = {
 const blueprint = {
   id: "render-blueprint", content_id: job.content_id, title: "Rendering regression test",
   source_url: "https://www.youtube.com/watch?v=render-test", summary: preview.summary, chapters: preview.chapters,
-  logic_flow: [{ id: "logic-1", title: preview.logic_flow[0].title, subtitle: "Support the plan.", time: "0:01" }],
+  logic_flow: preview.logic_flow.map((node, index) => ({
+    id: `logic-${index + 1}`, title: node.title, subtitle: node.subtitle, time: node.timestamp
+  })),
   corpus_items: [{ ...item, id: "idiom-9", text: `"${item.text}" - ${item.meaning}`, meta: "0:01 - B2 - click + to save" }],
-  transcript: [{ id: "logic-1", time: "0:01", parts: [preview.transcript_lines[0].text] }]
+  transcript: previewTranscriptLines.map((line, index) => ({
+    id: `caption-${index + 1}`,
+    time: line.time,
+    parts: [line.text]
+  }))
 };
 
 const selectionAnalysis = (text, index) => ({
@@ -110,16 +123,28 @@ try {
     });
     await page.addInitScript(() => {
       window.__streams = [];
+      window.__scrollIntoViewCalls = [];
+      const originalScrollIntoView = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = function(options) {
+        window.__scrollIntoViewCalls.push({ id: this.id, options });
+        return originalScrollIntoView.call(this, options);
+      };
       window.EventSource = class extends EventTarget {
         closed = false;
         constructor() { super(); window.__streams.push(this); }
         close() { this.closed = true; }
       };
       window.YT = { Player: class {
-        constructor(_element, { events }) { queueMicrotask(() => events.onReady()); }
-        getCurrentTime() { return 0; }
-        seekTo() {}
-        playVideo() {}
+        constructor(_element, { events }) {
+          window.__ytPlayerEvents = events;
+          queueMicrotask(() => {
+            events.onReady();
+            events.onStateChange({ data: 1 });
+          });
+        }
+        getCurrentTime() { return window.__ytTime ?? 0; }
+        seekTo(seconds) { window.__lastSeek = seconds; }
+        playVideo() { window.__ytPlayerEvents.onStateChange({ data: 1 }); }
         destroy() {}
       } };
     });
@@ -132,10 +157,10 @@ try {
     await page.locator(".corpus-card").waitFor();
     await page.locator(".youtube-player iframe").waitFor();
     const card = await page.locator(".corpus-card").elementHandle();
-    const logic = await page.locator(".logic-node").elementHandle();
-    const transcript = await page.locator(".transcript-line").elementHandle();
+    const logic = await page.locator(".logic-node").first().elementHandle();
+    const transcript = await page.locator(".transcript-line").first().elementHandle();
     const iframe = await page.locator(".youtube-player iframe").elementHandle();
-    await page.locator(".logic-node").click();
+    await page.locator(".logic-node").first().click();
     await page.evaluate((ready) => {
       window.__streams[0].dispatchEvent(Object.assign(new Event("job"), { data: JSON.stringify(ready) }));
     }, { ...job, status: "ready", processing_stage: "completed", analysis_preview: null });
@@ -169,10 +194,61 @@ try {
       assert.equal(await node.evaluate((element, css) => element.isConnected && element === document.querySelector(css), selector), true, `${selector} must survive finalization`);
     }
     assert.equal(await page.locator(".logic-node.active").count(), 1);
+    await page.locator(".transcript-line").nth(1).click();
+    await page.getByRole("button", { name: /Changing direction/ }).waitFor();
+    assert.equal(await page.getByRole("button", { name: /Changing direction/ }).evaluate((node) => node.classList.contains("active")), true);
+    assert.equal(await page.evaluate(() => window.__lastSeek), 8);
     assert.deepEqual(counts, { jobs: 1, blueprints: 1 });
     assert.equal(await page.evaluate(() => window.__streams.length === 1 && window.__streams[0].closed), true);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
     assert.equal(await page.getByText("Chapters", { exact: true }).count(), 0);
+    await page.evaluate(() => { window.__scrollIntoViewCalls = []; });
+    await page.locator(".transcript-area").dispatchEvent("wheel");
+    await page.getByRole("button", { name: "Auto-scroll paused after manual scroll", exact: true }).waitFor();
+    await page.evaluate(() => { window.__ytTime = 8; });
+    await page.waitForFunction(() => document.querySelector(".transcript-line.active-line")?.id === "transcript-0-08");
+    await page.waitForTimeout(700);
+    assert.equal(
+      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-08")),
+      false,
+      "manual transcript scrolling temporarily suspends automatic active-line alignment"
+    );
+    const manuallyPausedAutoScroll = page.locator(".toggle-control").first();
+    await manuallyPausedAutoScroll.click();
+    assert.equal(await manuallyPausedAutoScroll.getAttribute("aria-pressed"), "false");
+    assert.equal(
+      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-08")),
+      false,
+      "clicking auto-scroll during manual pause toggles it off instead of being swallowed"
+    );
+    await page.getByRole("button", { name: "Auto-scroll", exact: true }).click();
+    assert.equal(await page.getByRole("button", { name: "Auto-scroll", exact: true }).getAttribute("aria-pressed"), "true");
+    await page.waitForFunction(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-08"));
+    await page.evaluate(() => {
+      window.__scrollIntoViewCalls = [];
+      window.__ytPlayerEvents.onStateChange({ data: 2 });
+      window.__ytTime = 0;
+    });
+    await page.waitForFunction(() => document.querySelector(".toggle-control")?.title.includes("video plays"));
+    await page.evaluate(() => { window.__scrollIntoViewCalls = []; });
+    const pausedAutoScroll = page.getByRole("button", { name: "Auto-scroll", exact: true });
+    await pausedAutoScroll.waitFor();
+    assert.equal(await pausedAutoScroll.isEnabled(), true, "video pause keeps the auto-scroll control interactive");
+    await pausedAutoScroll.click();
+    assert.equal(await pausedAutoScroll.getAttribute("aria-pressed"), "false");
+    await page.locator(".transcript-line").first().click();
+    await page.waitForFunction(() => document.querySelector(".transcript-line.active-line")?.id === "transcript-0-01");
+    await page.waitForTimeout(700);
+    assert.equal(
+      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-01")),
+      false,
+      "paused playback never realigns the transcript"
+    );
+    await pausedAutoScroll.click();
+    assert.equal(await pausedAutoScroll.getAttribute("aria-pressed"), "true");
+    await page.evaluate(() => window.__ytPlayerEvents.onStateChange({ data: 1 }));
+    await page.getByRole("button", { name: "Auto-scroll", exact: true }).waitFor();
+    await page.waitForFunction(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-01"));
 
     await selectText(page, "doubled down on");
     await page.mouse.click(3, 3);
@@ -208,9 +284,32 @@ try {
     await page.screenshot({ path: `/tmp/libitu-selection-${viewport.width}.png`, fullPage: true });
     await page.mouse.click(3, 3);
     assert.equal(await page.locator(".selection-card").count(), 0, "unpin restores outside dismissal");
+    await page.getByRole("button", { name: "Open full analysis for doubled down on", exact: true }).click();
+    await page.getByRole("dialog", { name: "doubled down on" }).waitFor();
+    await page.getByText("Selection result 5", { exact: true }).waitFor();
+    assert.equal(await page.locator(".context-current mark").textContent(), "doubled down on");
+    assert.equal(await page.locator(".context-neighbor").filter({ hasText: "changing direction" }).count(), 1);
+    await page.getByRole("tab", { name: "Syntax", exact: true }).click();
+    await page.getByText("Phrase", { exact: true }).waitFor();
+    assert.equal(await page.locator(".corpus-detail-dialog").evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.left >= 0 && rect.right <= window.innerWidth && rect.top >= 0 && rect.bottom <= window.innerHeight;
+    }), true, "detail dialog stays inside the viewport");
+    await page.screenshot({ path: `/tmp/libitu-corpus-detail-${viewport.width}.png`, fullPage: true });
+    await page.getByRole("button", { name: "Close corpus detail", exact: true }).click();
+    await page.getByRole("button", { name: "Open full analysis for doubled down on", exact: true }).click();
+    await page.getByText("Selection result 5", { exact: true }).waitFor();
+    assert.equal(selectionCount, 5, "reopening a candidate uses the session cache");
+    await page.keyboard.press("Escape");
     await page.getByRole("button", { name: "Save to corpus", exact: true }).click();
+    assert.equal(await page.getByRole("dialog").count(), 0, "the save control does not open corpus detail");
     await page.getByRole("button", { name: "Saved", exact: true }).click();
     await page.getByRole("button", { name: "Remove from corpus", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Open full analysis for doubled down on", exact: true }).click();
+    await page.getByText("Selection result 5", { exact: true }).waitFor();
+    assert.equal(selectionCount, 5, "saving preserves the cached full analysis");
+    await page.getByRole("button", { name: "Close corpus detail", exact: true }).click();
+    assert.equal(await page.evaluate(() => Boolean(JSON.parse(localStorage.getItem("libitu:corpus:v1")).guest[0].item.analysisDetail)), true);
     assert.match(await page.locator(".save-button svg").getAttribute("class"), /trash/);
     assert.equal(await page.locator(".save-button .lucide-plus").count(), 0);
     const panelLayout = await page.locator(".right-panel").evaluate((panel) => ({
@@ -230,6 +329,7 @@ try {
       record.key = JSON.stringify(key);
       delete record.contentId;
       value.guest[0].item.text = "Edited saved expression";
+      delete value.guest[0].item.analysisDetail;
       localStorage.setItem("libitu:corpus:v1", JSON.stringify(value));
     });
     await page.reload({ waitUntil: "domcontentloaded" });
@@ -238,6 +338,10 @@ try {
     await page.getByRole("button", { name: "Remove from corpus", exact: true }).waitFor();
     assert.equal(await page.getByText("Edited saved expression", { exact: true }).count(), 1);
     assert.match(await page.locator(".save-button svg").getAttribute("class"), /trash/);
+    await page.getByRole("button", { name: "Open full analysis for doubled down on", exact: true }).click();
+    await page.getByText(`Selection result ${selectionCount}`, { exact: true }).waitFor();
+    await page.getByRole("button", { name: "Close corpus detail", exact: true }).click();
+    assert.equal(await page.evaluate(() => Boolean(JSON.parse(localStorage.getItem("libitu:corpus:v1")).guest[0].item.analysisDetail)), true, "legacy saved detail is persisted after hydration");
     await page.getByRole("button", { name: "Remove from corpus", exact: true }).click();
     await page.waitForFunction(() => document.querySelectorAll(".corpus-card").length === 0);
     await page.reload({ waitUntil: "domcontentloaded" });

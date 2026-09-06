@@ -7,8 +7,10 @@ from app.services import transcript_formatter
 class FixedPunctuationEngine:
     def __init__(self, output: str) -> None:
         self.output = output
+        self.inputs: list[str] = []
 
-    def add_punctuation(self, _text: str) -> str:
+    def add_punctuation(self, text: str) -> str:
+        self.inputs.append(text)
         return self.output
 
 
@@ -21,7 +23,7 @@ def test_local_model_splits_sentences_and_keeps_source_timestamps(monkeypatch) -
         "0:12\tthen we'll go to their larger issues"
     )
     engine = FixedPunctuationEngine(
-        "So let's humanize, uh, Peter. See if we can get them to answer "
+        "So let's humanize Peter. See if we can get them to answer "
         "a little bit of a personal question? Then we'll go to their larger issues."
     )
 
@@ -29,11 +31,131 @@ def test_local_model_splits_sentences_and_keeps_source_timestamps(monkeypatch) -
 
     assert [line.time for line in lines] == ["0:04", "0:07", "0:12"]
     assert [line.text for line in lines] == [
-        "So let's humanize, uh, Peter.",
+        "So let's humanize Peter.",
         "See if we can get them to answer a little bit of a personal question?",
         "Then we'll go to their larger issues.",
     ]
-    assert _words(" ".join(line.text for line in lines)) == _transcript_words(transcript)
+    assert _words(" ".join(line.text for line in lines)) == [
+        word for word in _transcript_words(transcript) if word != "uh"
+    ]
+    assert engine.inputs == [
+        "so let's humanize Peter see if we can get them to answer "
+        "a little bit of a personal question then we'll go to their larger issues"
+    ]
+
+
+def test_filler_filter_removes_only_complete_tokens(monkeypatch) -> None:
+    _use_test_settings(monkeypatch)
+    transcript = (
+        "0:01\tUm, this umbrella is useful, uh.\n"
+        "0:03\tWe need er clarity and ah context."
+    )
+    engine = FixedPunctuationEngine(
+        "This umbrella is useful. We need clarity and context."
+    )
+
+    lines = transcript_formatter.format_transcript(transcript, "en", engine=engine)
+
+    assert [line.text for line in lines] == [
+        "This umbrella is useful.",
+        "We need clarity and context.",
+    ]
+    assert "umbrella" in lines[0].text
+    assert not (
+        {"um", "uh", "er", "ah"}
+        & set(_words(" ".join(line.text for line in lines)))
+    )
+
+
+def test_filler_filter_does_not_change_non_english_transcripts(monkeypatch) -> None:
+    _use_test_settings(monkeypatch)
+    transcript = "0:01\tah bon this phrase keeps its source words"
+    engine = FixedPunctuationEngine("Ah bon, this phrase keeps its source words.")
+
+    lines = transcript_formatter.format_transcript(transcript, "fr", engine=engine)
+
+    assert lines == [
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:01",
+            text="Ah bon, this phrase keeps its source words.",
+        )
+    ]
+
+
+def test_parser_merges_same_timestamp_and_untimestamped_continuations() -> None:
+    transcript = (
+        "0:01\tfirst caption line\n"
+        "second visual line\n"
+        "0:01\tthird visual line\n"
+        "0:03\n"
+        "timestamp-only continuation\n"
+        "0:05\tnext caption"
+    )
+
+    lines = transcript_formatter.parse_transcript(transcript)
+
+    assert lines == [
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:01",
+            text="first caption line second visual line third visual line",
+        ),
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:03",
+            text="timestamp-only continuation",
+        ),
+        transcript_formatter.ParsedTranscriptLine(time="0:05", text="next caption"),
+    ]
+
+
+def test_formatter_groups_sentences_that_share_a_source_timestamp(monkeypatch) -> None:
+    _use_test_settings(monkeypatch)
+    transcript = "0:01\tfirst thought ends here and another thought follows now"
+    engine = FixedPunctuationEngine(
+        "First thought ends here. And another thought follows now."
+    )
+
+    lines = transcript_formatter.format_transcript(transcript, "en", engine=engine)
+
+    assert lines == [
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:01",
+            text="First thought ends here. And another thought follows now.",
+        )
+    ]
+
+
+def test_reliable_source_punctuation_bypasses_model_and_is_normalized(monkeypatch) -> None:
+    _use_test_settings(monkeypatch)
+    transcript = "0:01\ton, the other hand,, we can proceed,, now."
+    engine = FixedPunctuationEngine("This model output must not be used.")
+
+    lines = transcript_formatter.format_transcript(transcript, "en", engine=engine)
+
+    assert lines == [
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:01",
+            text="On the other hand, we can proceed, now.",
+        )
+    ]
+    assert engine.inputs == []
+
+
+def test_unpunctuated_source_uses_clean_model_input_and_source_word_case(monkeypatch) -> None:
+    _use_test_settings(monkeypatch)
+    transcript = "0:01\ton, the other hand,, iPhone works well today"
+    engine = FixedPunctuationEngine(
+        "ON, the other hand,, IPHONE works well today."
+    )
+
+    lines = transcript_formatter.format_transcript(transcript, "en", engine=engine)
+
+    assert engine.inputs == ["on the other hand iPhone works well today"]
+    assert lines == [
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:01",
+            text="On the other hand, iPhone works well today.",
+        )
+    ]
 
 
 def test_model_rewrite_falls_back_without_losing_source_words(monkeypatch) -> None:

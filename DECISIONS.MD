@@ -4,7 +4,7 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-09-04
+  updated: 2026-09-06
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
@@ -65,7 +65,7 @@ This log records decisions that constrain product behavior or architecture. Add 
 - **Status**: accepted
 - **Decision**: implement the first Chrome extension increment with native MV3 files and a manifest validation script instead of a bundled React/Vite app
 - **Reason**: the immediate milestone needs a loadable YouTube entry and API handoff, not a complex extension UI stack
-- **Consequence**: `apps/extension` can be loaded directly as an unpacked extension; introduce build tooling only when side panel complexity or shared UI reuse justifies it
+- **Consequence**: `apps/extension` can be loaded directly as an unpacked extension; introduce build tooling only when browser UI complexity or shared UI reuse justifies it
 
 ### 2026-09-01: Use Supabase Postgres for durable data
 
@@ -180,6 +180,48 @@ This log records decisions that constrain product behavior or architecture. Add 
 - **Decision**: capture the current browser URL when opening authentication and supply it as the forced redirect for both login and registration, including transfers between them
 - **Reason**: Stage 1 context lives in query parameters; returning to the default home URL loses the active source and job
 - **Consequence**: preserve the full same-origin browser URL, including query parameters and fragment, using Clerk's modal options. Do not derive the return target from an arbitrary query-string redirect or read browser state during server rendering
+
+### 2026-09-05: Bound long-video output and preserve retry previews
+
+- **Status**: accepted
+- **Decision**: version the compact semantic contract as `mvp-v7`, impose word limits on every generated field, start output at 32K with one 64K retry, and merge streamed retry previews monotonically
+- **Reason**: a 54,852-character production transcript fit comfortably within model and application input limits, but both locally bounded output attempts truncated after 230.952 seconds of analysis. The 251.5-second job also exceeded the browser's former 210-second deadline, while a provider retry restarted partial JSON from the beginning and temporarily erased visible fields
+- **Consequence**: cached `mvp-v6` blueprints remain immutable while new reads resolve `mvp-v7`; long active jobs may remain connected for up to ten minutes. A provider retry can add preview fields but cannot clear prior summary, logic, chapters, or candidates. Explicit browser Retry retains the latest preview. Inputs above 240,000 characters still fail explicitly until split analysis is implemented
+
+### 2026-09-05: Open Stage 1 from two entries before caption and API work
+
+- **Status**: accepted
+- **Decision**: use a button in the YouTube player's lower-right control bar and the browser toolbar action as equivalent one-click entries; open Stage 1 immediately after validating lightweight video metadata, and hand browser captions to the web app asynchronously
+- **Reason**: caption polling and sequential content/job requests delayed the entire visible experience; placing the entry with the player controls keeps the action attached to the video and removes the mandatory side-panel interaction
+- **Consequence**: the control uses the Libitu icon, follows YouTube's control dimensions, and reattaches after player-control redraws. A random ID references a 15-minute browser-session handoff with origin/source checks. Stage 1 owns content/job creation and replaces the temporary URL with durable IDs for refresh and retry. Missing captions use the existing backend fallback; missing videos never launch processing. YouTube SPA navigation invalidates in-flight caption capture, and repeated entry clicks reuse the open Stage 1 tab. The extension has no side panel; unsupported toolbar clicks use the action badge and title. Faster page visibility does not imply faster model completion
+
+### 2026-09-06: Normalize fillers and shared timestamps before analysis
+
+- **Status**: accepted
+- **Decision**: after parsing English captions, deterministically remove only standalone `um`, `uh`, `er`, and `ah` tokens, merge caption continuations, and group consecutive formatted lines that share a source timestamp. Use the normalized transcript for punctuation, DeepSeek, Stage 1 display, and corpus evidence validation while retaining the raw caption payload.
+- **Reason**: filler-free display text is easier to read, and one downstream transcript keeps generated `source_text` evidence identical to what learners can see and select. Token equality prevents false removals inside words such as `umbrella`.
+- **Consequence**: `mvp-v8` invalidates `mvp-v7` blueprint caches. Punctuation alignment preserves all remaining source words, same-timestamp sentences share one playback row, and filler-only inputs fail explicitly instead of reverting to the raw transcript.
+
+### 2026-09-06: Make subtitle punctuation source-aware
+
+- **Status**: accepted
+- **Decision**: treat captions with consistent sentence-ending punctuation as authoritative and skip sherpa-onnx. For captions that need punctuation, remove external sentence marks from the model input, reuse the original source words and casing, and apply only normalized model punctuation. Normalize duplicate or conflicting marks and a small set of high-confidence opening discourse markers on every path.
+- **Reason**: YouTube can supply either manually punctuated or automatic unpunctuated tracks. Sending both through the same punctuation pass can duplicate marks, accept incorrect model casing, and produce errors such as `ON, the other hand,,`.
+- **Consequence**: `mvp-v9` invalidates `mvp-v8` blueprint caches. Reliable source sentence boundaries are preserved, model alignment still rejects changed word sequences, and DeepSeek, evidence validation, and Stage 1 display continue to share the same finalized transcript.
+
+### 2026-09-06: Gate extension launch on verified video language
+
+- **Status**: accepted
+- **Decision**: classify the active YouTube video from its own audio/video and caption-track metadata against an explicit supported-language list, initially English (`en`) only. Do not use browser UI language or title text as evidence.
+- **Reason**: the current formatter, analysis prompt, and learning experience are English-specific. Rejecting unsupported input before Stage 1 avoids misleading results while keeping the entry ready for additional languages later.
+- **Consequence**: the player button is disabled while language is being checked and whenever the language is non-English or unknown, with a hover explanation. The toolbar action applies the same gate and reports failure through its badge/title plus an in-player message. Language detection runs in parallel with lightweight metadata validation, normalized English codes are passed to Stage 1, and captions/API work remain deferred until after launch.
+
+### 2026-09-06: Persist corpus detail and hydrate legacy saves on demand
+
+- **Status**: accepted
+- **Decision**: store the complete explanation, syntax analysis, and captured subtitle context with saved corpus items; request and persist this detail only when an existing saved item lacks it
+- **Reason**: a summary card is sufficient for scanning but not for later study, while eagerly analyzing every extracted candidate spends model time on language the learner may never inspect or save
+- **Consequence**: corpus card bodies open a full detail modal and save/delete icons remain independent actions. Unsaved candidates use a page-session cache and are not added by viewing. New saves carry cached detail into localStorage or Supabase; owner-authenticated legacy hydration uses `POST /api/corpus/{item_id}/analysis-detail`, and the nullable `analysis_detail` JSONB column preserves backward compatibility. Repeated opens are cache hits
 
 ## Pending decisions
 

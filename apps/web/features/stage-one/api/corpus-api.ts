@@ -1,5 +1,24 @@
-import type { CorpusItem } from "@libitu/types/stage-one";
+import type { CorpusItem, CorpusSelectionContext } from "@libitu/types/stage-one";
 import { savedCorpusKey, type CorpusRemote, type SavedCorpusRecord } from "./corpus-storage.ts";
+import {
+  toApiCorpusSelectionAnalysis,
+  toCorpusSelectionAnalysis,
+  type ApiCorpusSelectionAnalysis
+} from "./stage-one-api.ts";
+
+type ApiSelectionContext = {
+  content_id?: string | null;
+  selected_text: string;
+  current_sentence: string;
+  context_before?: string | null;
+  context_after?: string | null;
+  timestamp?: string | null;
+};
+
+type ApiAnalysisDetail = {
+  context: ApiSelectionContext;
+  analysis: ApiCorpusSelectionAnalysis;
+};
 
 type ApiRecord = {
   id: string;
@@ -10,6 +29,7 @@ type ApiRecord = {
   usage_context: string | null;
   tags: CorpusItem["tags"];
   slots: Record<string, string>;
+  analysis_detail?: ApiAnalysisDetail | null;
   source_locator?: {
     client_key?: string;
     source_url?: string;
@@ -24,6 +44,10 @@ function toPayload(record: SavedCorpusRecord) {
   return {
     content_id: record.contentId ?? null, kind: item.kind, text, meaning: item.meaning ?? null,
     usage_context: item.usageNote ?? null, tags: item.tags, slots: item.slots ?? {},
+    analysis_detail: item.analysisDetail ? {
+      context: toApiContext(item.analysisDetail.context),
+      analysis: toApiCorpusSelectionAnalysis(item.analysisDetail.analysis)
+    } : null,
     source_locator: {
       client_key: record.key, source_url: record.sourceUrl, source_title: record.sourceTitle,
       snapshot: {
@@ -51,12 +75,38 @@ function fromApi(row: ApiRecord): SavedCorpusRecord {
     patternFamily: snapshot.pattern_family as string | undefined, phonologyNote: snapshot.phonology_note as string | undefined,
     naturalnessScore: snapshot.naturalness_score as number | undefined,
     transferabilityScore: snapshot.transferability_score as number | undefined,
-    learningValueScore: snapshot.learning_value_score as number | undefined, slots: row.slots
+    learningValueScore: snapshot.learning_value_score as number | undefined, slots: row.slots,
+    analysisDetail: row.analysis_detail ? {
+      context: fromApiContext(row.analysis_detail.context),
+      analysis: toCorpusSelectionAnalysis(row.analysis_detail.analysis)
+    } : undefined
   };
   return {
     key: locator.client_key ?? savedCorpusKey(row.content_id ?? locator.source_url ?? "", item),
     contentId: row.content_id ?? undefined, sourceUrl: locator.source_url ?? "",
     sourceTitle: locator.source_title ?? "", item, serverId: row.id
+  };
+}
+
+function toApiContext(context: CorpusSelectionContext): ApiSelectionContext {
+  return {
+    content_id: context.contentId,
+    selected_text: context.selectedText,
+    current_sentence: context.currentSentence,
+    context_before: context.contextBefore,
+    context_after: context.contextAfter,
+    timestamp: context.timestamp
+  };
+}
+
+function fromApiContext(context: ApiSelectionContext): CorpusSelectionContext {
+  return {
+    contentId: context.content_id ?? undefined,
+    selectedText: context.selected_text,
+    currentSentence: context.current_sentence,
+    contextBefore: context.context_before ?? undefined,
+    contextAfter: context.context_after ?? undefined,
+    timestamp: context.timestamp ?? undefined
   };
 }
 
@@ -86,6 +136,13 @@ export function createCorpusRemote(owner: string, getToken: () => Promise<string
   return {
     list: async (signal) => (await request<ApiRecord[]>("", signal)).map(fromApi),
     save: async (record, signal) => fromApi(await request<ApiRecord>("", signal, { method: "POST", body: JSON.stringify(toPayload(record)) })),
+    hydrate: async (record, context, signal) => {
+      if (!record.serverId) throw new Error("This corpus item is still waiting to sync.");
+      return fromApi(await request<ApiRecord>(`/${encodeURIComponent(record.serverId)}/analysis-detail`, signal, {
+        method: "POST",
+        body: JSON.stringify(toApiContext(context))
+      }));
+    },
     remove: (id, signal) => request<void>(`/${encodeURIComponent(id)}`, signal, { method: "DELETE" })
   };
 }

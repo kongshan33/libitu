@@ -7,7 +7,7 @@ from app.routers import health, jobs as jobs_router
 from app.schemas.analysis import AnalysisTranscriptPreviewLine, BlueprintAnalysisPreview
 from app.schemas.corpus import CorpusSelectionAnalysis
 from app.schemas.job import ProcessingJob, ProcessingStage, ProcessingStatus
-from app.services import corpus_selection_service
+from app.services import corpus_selection_service, corpus_service
 
 
 client = TestClient(app)
@@ -419,6 +419,44 @@ def test_corpus_and_speaking_flow() -> None:
         )
         assert turn_response.status_code == 200
         assert turn_response.json()["session_id"] == session_id
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_saved_corpus_analysis_is_generated_once_and_persisted(monkeypatch) -> None:
+    calls = 0
+
+    def analyze(payload):
+        nonlocal calls
+        calls += 1
+        return selection_analysis_result(payload.selected_text)
+
+    monkeypatch.setattr(corpus_service, "analyze_corpus_selection", analyze)
+    app.dependency_overrides[require_user] = lambda: AuthenticatedUser(id="corpus_detail_owner")
+    try:
+        created = client.post(
+            "/api/corpus",
+            json={"kind": "idiom", "text": "that escapes me", "tags": ["idiom"]},
+        )
+        assert created.status_code == 201
+        item_id = created.json()["id"]
+        context = {
+            "selected_text": "that escapes me",
+            "current_sentence": "For some reason that escapes me, it remains there.",
+            "context_before": "The artifact came from Babylon.",
+            "context_after": "Its location surprises the author.",
+            "timestamp": "0:12",
+        }
+
+        first = client.post(f"/api/corpus/{item_id}/analysis-detail", json=context)
+        second = client.post(f"/api/corpus/{item_id}/analysis-detail", json=context)
+
+        assert first.status_code == 200
+        assert second.status_code == 200
+        assert calls == 1
+        assert second.json()["analysis_detail"] == first.json()["analysis_detail"]
+        assert second.json()["analysis_detail"]["context"]["context_before"] == context["context_before"]
+        assert second.json()["analysis_detail"]["analysis"]["explanation"]["meaning"]
     finally:
         app.dependency_overrides.clear()
 

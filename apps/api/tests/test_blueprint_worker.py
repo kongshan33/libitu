@@ -23,7 +23,7 @@ def test_worker_fetches_missing_transcript_and_saves_ai_blueprint(monkeypatch) -
         id="db52e189-ad0e-4c62-af48-a8178bbd66cc",
         content_id=content.content_id,
         status=ProcessingStatus.pending,
-        analysis_version="mvp-v6",
+        analysis_version="mvp-v9",
     )
     jobs = {job.id: job}
     saved_jobs = []
@@ -196,7 +196,7 @@ def test_worker_persists_provider_error_code_and_analysis_timing(monkeypatch) ->
         id="job-provider-error",
         content_id=content.content_id,
         status=ProcessingStatus.pending,
-        analysis_version="mvp-v6",
+        analysis_version="mvp-v9",
     )
     jobs = {job.id: job}
     monkeypatch.setattr(blueprint_worker.processing_queue, "get_job", jobs.get)

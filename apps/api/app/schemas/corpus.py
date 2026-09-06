@@ -12,30 +12,6 @@ class CorpusSourceLocator(BaseModel):
     snapshot: CorpusSnapshot | None = None
 
 
-class CorpusItemCreate(BaseModel):
-    content_id: str | None = None
-    kind: str = Field(pattern="^(chunk|idiom|structure)$")
-    text: str = Field(min_length=1, max_length=2000)
-    meaning: str | None = None
-    usage_context: str | None = None
-    tags: list[str] = Field(default_factory=list)
-    slots: dict[str, str] = Field(default_factory=dict)
-    source_locator: CorpusSourceLocator = Field(default_factory=CorpusSourceLocator)
-
-
-class CorpusItem(CorpusItemCreate):
-    id: str
-    user_id: str
-
-
-class CorpusItemUpdate(BaseModel):
-    text: str | None = Field(default=None, min_length=1)
-    meaning: str | None = None
-    usage_context: str | None = None
-    tags: list[str] | None = None
-    slots: dict[str, str] | None = None
-
-
 class CorpusSelectionAnalysisRequest(BaseModel):
     content_id: str | None = None
     selected_text: str = Field(min_length=1, max_length=800)
@@ -114,3 +90,34 @@ class CorpusSelectionAnalysis(BaseModel):
     note_placeholder: str
     explanation: CorpusSelectionExplanation
     syntax_analysis: CorpusSelectionSyntaxAnalysis
+
+
+class CorpusItemAnalysisDetail(BaseModel):
+    context: CorpusSelectionAnalysisRequest
+    analysis: CorpusSelectionAnalysis
+
+
+class CorpusItemCreate(BaseModel):
+    content_id: str | None = None
+    kind: str = Field(pattern="^(chunk|idiom|structure)$")
+    text: str = Field(min_length=1, max_length=2000)
+    meaning: str | None = None
+    usage_context: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    slots: dict[str, str] = Field(default_factory=dict)
+    source_locator: CorpusSourceLocator = Field(default_factory=CorpusSourceLocator)
+    analysis_detail: CorpusItemAnalysisDetail | None = None
+
+
+class CorpusItem(CorpusItemCreate):
+    id: str
+    user_id: str
+
+
+class CorpusItemUpdate(BaseModel):
+    text: str | None = Field(default=None, min_length=1)
+    meaning: str | None = None
+    usage_context: str | None = None
+    tags: list[str] | None = None
+    slots: dict[str, str] | None = None
+    analysis_detail: CorpusItemAnalysisDetail | None = None

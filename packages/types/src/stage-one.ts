@@ -47,6 +47,7 @@ export type CorpusItem = {
   transferabilityScore?: number;
   learningValueScore?: number;
   slots?: Record<string, string>;
+  analysisDetail?: CorpusItemAnalysisDetail;
 };
 
 export type HighlightedTranscriptPart = {
@@ -78,6 +79,15 @@ export type StageOneBlueprint = {
 };
 
 export type SelectionCompleteness = "complete" | "needs_expansion" | "structure_candidate";
+
+export type CorpusSelectionContext = {
+  contentId?: string;
+  selectedText: string;
+  currentSentence: string;
+  contextBefore?: string;
+  contextAfter?: string;
+  timestamp?: string;
+};
 
 export type CorpusSelectionAnalysis = {
   analysisSource: "ai" | "fallback";
@@ -134,4 +144,9 @@ export type CorpusSelectionAnalysis = {
     backgroundContext?: string;
     evidence: string[];
   };
+};
+
+export type CorpusItemAnalysisDetail = {
+  context: CorpusSelectionContext;
+  analysis: CorpusSelectionAnalysis;
 };

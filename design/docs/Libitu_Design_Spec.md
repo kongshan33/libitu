@@ -6,7 +6,7 @@ meta:
   version: 1.1
   status: active
   audience: product, design, engineering, coding agents
-  updated: 2026-09-04
+  updated: 2026-09-06
 ```
 
 This specification defines the current Libitu MVP product and interaction model. Use it for product behavior and user experience. Use `MVP_SYSTEM_DESIGN.md` for system boundaries, `BACKEND_SYSTEM_DESIGN.md` for API implementation, and `DESIGN.md` for visual direction.
@@ -69,7 +69,11 @@ The former Stage 1 to Stage 5 names remain useful inside the YouTube intensive f
 
 ### YouTube extension entry
 
-The extension adds a Libitu action to supported YouTube watch pages. It reads page metadata and available captions, then opens the Stage 1 experience.
+The extension adds a Libitu icon button to the lower-right control bar inside the player on supported YouTube watch pages. This button and the browser toolbar action both validate the active video and its language before opening Stage 1. Language support is an explicit expandable list and contains only English (`en`) for the current product. Detection uses YouTube's video/audio language metadata and caption-track metadata; it must not infer content language from the browser interface language or title text. The player button stays disabled while checking and for non-English or unknown languages, with a concise hover reason. A toolbar click on an unsupported language shows an action badge/title and the same reason near the player without opening Stage 1.
+
+For verified English videos, the player button follows the native control dimensions and returns after YouTube redraws its controls. The page shows the video and processing state while browser caption capture runs; language detection and lightweight page validation run together, and neither caption polling nor content/job creation blocks opening the page. YouTube in-site navigation must update the entry, rerun language validation, and invalidate captures from the previous video. Repeated clicks reuse the existing Stage 1 tab.
+
+Browser captions use a short-lived handoff rather than URL text. Stage 1 owns content/job creation and retains the resulting IDs for refresh and retry. The extension includes the verified normalized language code in the handoff URL and content request. It has no side panel. Missing browser captions on a supported-language video may use the existing caption-text provider; unavailable captions show an explicit unsupported state in Stage 1.
 
 The extension sends only:
 
@@ -145,6 +149,11 @@ Use Logic Flow as the single navigation region. Chapters summarize topic divisio
 - Show meaning and functional tag in a tooltip or details popover
 - Mark the active transcript line without changing layout dimensions
 - Support keyboard focus for every interactive annotation
+- When auto-scroll is enabled, align the active line only while the video is playing. Pausing or ending playback suspends transcript alignment, but the auto-scroll control remains available so the learner can change the setting before resuming. Manual transcript scrolling temporarily pauses automatic alignment so the learner can read; the auto-scroll control still toggles the setting in this paused state, and turning it back on resumes alignment immediately when playback is active. Explicit timestamp or logic-node navigation resumes alignment once playback starts.
+- Keep Logic Flow aligned to playback time. Clicking a transcript row seeks the video and immediately activates the latest logic node at or before that timestamp; normal playback updates the same logic selection as the active transcript advances.
+- Before punctuation and analysis, remove only standalone English filler tokens `um`, `uh`, `er`, and `ah`; never remove those character sequences inside another word. Use this same normalized transcript for DeepSeek, evidence validation, and display.
+- Preserve reliable source sentence punctuation without running the punctuation model. For captions that need punctuation, send a punctuation-free copy to the local model, attach its sentence marks to the original source words without accepting model casing, then deterministically normalize duplicate or conflicting marks and high-confidence opening discourse markers on every path.
+- Merge caption continuation lines and consecutive formatted lines that share one source timestamp into a single transcript row. Keep the earliest shared timestamp as the row's playback target.
 
 ### Corpus candidates
 
@@ -177,6 +186,8 @@ On login, bind guest saves to that account locally before uploading. Merge by st
 | Unsupported | Explain that captions or source content are unavailable |
 
 Progressive previews and final results must reuse stable logic and corpus identities. Both phases use the same learner-level filtering and result limit. New evidence may change the visible subset, but finalization must not remount unchanged cards or reset the learner's selected logic node. Leaving or retrying the page cancels the previous client loading chain; a cached ready result does not replay an obsolete preview.
+
+A provider-level retry must not clear already rendered summary, logic, corpus, or transcript. Keep the best validated preview visible and allow a later attempt only to extend it. An explicit learner Retry also keeps the last preview while restarting processing. The browser wait budget must exceed the backend's bounded provider attempts; expiry must not report failure while a healthy worker is still generating.
 
 ## Intensive listening
 
@@ -230,12 +241,15 @@ The corpus is the shared bridge between input and output. A corpus item remains 
 | `slots` | Named placeholders for a structure |
 | `content_id` | Optional source content reference |
 | Source locator | Timestamp or text position when available |
+| `analysis_detail` | Optional persisted selection context plus complete explanation and syntax analysis |
 
 ### Corpus actions
 
 Learners can list, filter, create, edit, and delete items. Filters should support type, functional tag, source, and recency when persistence is implemented.
 
 Transcript selection cards are transient by default: clicking outside closes the card, while clicking or editing inside keeps it open. A top-right pin toggle keeps the card open across outside clicks; toggling it off restores outside dismissal. A new transcript selection always destroys the previous card, even if pinned, and opens a fresh unpinned card with an empty note and the explanation tab. Late responses from a destroyed card must never update or close its replacement.
+
+Clicking the body of an extracted or saved corpus card opens a modal with the full explanation, syntax analysis, exact selected text, current source sentence, adjacent context, and timestamp when available. Saving/removing remains a separate icon action and must not open the modal. Unsaved candidates may request analysis on first open and cache it only for the current page; viewing alone must never add an item to the corpus. A save made after that request includes the cached detail. Saved items persist the complete detail locally or in the authenticated corpus record. For a legacy saved item with no detail, first open requests AI analysis from its stored source evidence and writes the result back; subsequent opens use the persisted result.
 
 When a learner selects text in the transcript, Libitu should treat the exact selection as the learner's point of confusion and primary explanation target. On mouseup, show a compact analysis card and send the selected text plus the current, previous, and next subtitle lines for context. A short or grammatically dependent phrase is not automatically incomplete: keep the learner's boundary by default, and recommend a larger exact subtitle span only when the selection has an objectively broken lexical or syntactic edge. Do not show a boundary-status message when the selection is already complete; show the suggested unit and reason only for `needs_expansion`. The default view is explanation because learners usually first need a concise context-specific meaning and discourse function. The syntax view remains available for both phrases and sentences; it should identify a phrase's internal structure and sentence role, or give a seven-module sentence analysis covering syntax, grammatical function, logic, information hierarchy, wording, style and usage scenarios, and direct/natural translations. Reusable slot patterns remain a separate product action. If a reusable pattern is saved from syntax analysis, save it as `structure`. If the model is unavailable, label the result as a fallback and do not fabricate a meaning, IPA, or boundary completion.
 

@@ -21,18 +21,15 @@ Read the root `CLAUDE.MD` before editing this app.
 manifest.json
 src/background.js
 src/content-script.js
-src/sidepanel.html
-src/sidepanel.css
-src/sidepanel.js
+src/stage-one-bridge.js
 scripts/validate-extension.mjs
 ```
 
-The first extension increment is implemented without a bundler. Keep it directly loadable from `apps/extension` until side panel complexity justifies build tooling.
+The extension is implemented without a bundler. Keep it directly loadable from `apps/extension` until browser UI complexity justifies build tooling.
 
 Current behavior:
 
-- Enables the side panel for YouTube watch pages.
-- Reads video metadata and transcript text that is already visible in the YouTube DOM.
-- Sends metadata and optional transcript text to the local FastAPI API.
-- Opens the local Next.js Stage 1 page with source parameters.
-- Stores the last handoff snapshot in `chrome.storage.local`.
+- Adds a Libitu action to the YouTube player's lower-right controls, reattaches it after player redraws, and enables it only when YouTube video metadata verifies a supported language.
+- Uses the browser toolbar action as the same language-gated Stage 1 entry. The supported-language list currently contains only English; unsupported clicks explain the limit without opening Stage 1.
+- Opens the local Next.js Stage 1 page before caption or API work.
+- Reads video metadata and transcript text from the YouTube DOM and passes captions through a short-lived session handoff.

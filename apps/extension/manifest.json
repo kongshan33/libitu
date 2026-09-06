@@ -3,18 +3,40 @@
   "name": "Libitu",
   "description": "Start a Libitu Stage 1 blueprint from supported YouTube videos.",
   "version": "0.1.0",
-  "action": {
-    "default_title": "Open Libitu"
+  "icons": {
+    "16": "icons/l.png",
+    "32": "icons/l.png",
+    "48": "icons/l.png",
+    "128": "icons/l.png"
   },
+  "action": {
+    "default_title": "Open Libitu",
+    "default_icon": {
+      "16": "icons/l.png",
+      "32": "icons/l.png"
+    }
+  },
+
   "background": {
     "service_worker": "src/background.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/watch*"],
+      "matches": ["https://www.youtube.com/*"],
       "js": ["src/content-script.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://localhost:3000/*"],
+      "js": ["src/stage-one-bridge.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/l.png"],
+      "matches": ["https://www.youtube.com/*"]
     }
   ],
   "host_permissions": [
@@ -22,8 +44,5 @@
     "http://localhost:3000/*",
     "https://www.youtube.com/*"
   ],
-  "permissions": ["activeTab", "scripting", "sidePanel", "storage", "tabs"],
-  "side_panel": {
-    "default_path": "src/sidepanel.html"
-  }
+  "permissions": ["activeTab", "scripting", "storage", "tabs"]
 }
