@@ -1,0 +1,241 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.wrap{padding:20px;max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h2{font-size:14px;font-weight:600;margin-bottom:10px}
+
+/* Timeline flow */
+.flow{display:flex;flex-direction:column;gap:0;position:relative}
+.flow-row{display:grid;grid-template-columns:100px 1fr;gap:0;min-height:80px}
+.fl-time{padding:12px 14px 0;font-size:11px;font-weight:600;color:var(--color-text-tertiary);text-align:right;position:relative}
+.fl-time::after{content:'';position:absolute;right:-1px;top:18px;width:8px;height:8px;border-radius:50%;background:var(--color-border-secondary);border:2px solid var(--color-background-primary)}
+.fl-time.active::after{background:#534AB7}
+.fl-time.done::after{background:#1D9E75}
+.fl-body{border-left:1.5px solid var(--color-border-tertiary);padding:12px 16px 20px;position:relative}
+.fl-body.active{border-left-color:#534AB7}
+.fl-body.done{border-left-color:#1D9E75}
+.fl-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.fl-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.55}
+.fl-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:6px;font-weight:500}
+.ft-bg{background:#EEEDFE;color:#3C3489}
+.ft-ext{background:#E1F5EE;color:#085041}
+.ft-srv{background:#FAEEDA;color:#633806}
+.ft-cache{background:#F1EFE8;color:#44403C}
+
+/* Tab capture detail */
+.tc-detail{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.tc-hdr{padding:9px 14px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px}
+.tc-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.tc-col{padding:12px 14px}
+.tc-col:first-child{border-right:0.5px solid var(--color-border-tertiary)}
+.tc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-tertiary);margin-bottom:8px}
+.tc-item{font-size:12px;color:var(--color-text-secondary);line-height:1.55;padding:4px 0;display:flex;gap:6px}
+.tc-item::before{content:'•';color:#534AB7;flex-shrink:0}
+
+/* Code block */
+.code-block{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.cb-hdr{padding:7px 14px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:600;color:var(--color-text-tertiary);display:flex;align-items:center;gap:8px}
+.cb-body{padding:12px 14px;font-family:var(--font-mono);font-size:11px;line-height:1.8;color:var(--color-text-secondary);overflow-x:auto}
+.ck{color:#534AB7;font-weight:600}
+.cs{color:#085041}
+.cc{color:#1D9E75}
+.co{color:var(--color-text-tertiary);font-style:italic}
+
+/* Cache strategy */
+.cache-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.cg-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px;display:flex;flex-direction:column;gap:6px}
+.cgc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.cgc-title{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.cgc-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+.cgc-tag{font-size:10px;padding:2px 8px;border-radius:20px;width:fit-content;font-weight:500}
+
+/* MFA integration */
+.mfa-compare{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.mfa-row{display:grid;grid-template-columns:120px 1fr;border-bottom:0.5px solid var(--color-border-tertiary)}
+.mfa-row:last-child{border-bottom:none}
+.mfa-lbl{padding:10px 12px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);font-size:11px;font-weight:600;display:flex;align-items:center}
+.mfa-body{padding:10px 14px;font-size:11px;color:var(--color-text-secondary);line-height:1.6}
+.mfa-body strong{color:var(--color-text-primary)}
+</style>
+
+<div class="wrap">
+
+<!-- Timeline -->
+<div>
+  <h2>核心流程：Stage 1 期间后台录制</h2>
+  <div class="flow">
+    <div class="flow-row">
+      <div class="fl-time done">用户在 Stage 1</div>
+      <div class="fl-body done">
+        <div class="fl-title">Extension 静默录制 Tab 音频</div>
+        <div class="fl-desc">用户正常看视频、读字幕。Extension 后台用 <code>chrome.tabCapture</code> 录制整段 Tab 音频——用户完全感知不到。视频自然播到哪里，音频就录到哪里。</div>
+        <span class="fl-tag ft-ext">Extension background</span>
+        <span class="fl-tag ft-bg">用户无感知</span>
+      </div>
+    </div>
+    <div class="flow-row">
+      <div class="fl-time done">用户选择片段</div>
+      <div class="fl-body done">
+        <div class="fl-title">检查录制覆盖率</div>
+        <div class="fl-desc">用户点"选这段练习"。Extension 检查录制缓冲区是否已覆盖所选片段的时间范围。<br><br>
+        <strong>已覆盖</strong>（用户已经看过这段）→ 直接裁剪，上传处理，Stage 2 准备中。<br>
+        <strong>未覆盖</strong>（跳过去的）→ 进入补录流程（见下方）。</div>
+        <span class="fl-tag ft-ext">Extension logic</span>
+      </div>
+    </div>
+    <div class="flow-row">
+      <div class="fl-time active">后台处理</div>
+      <div class="fl-body active">
+        <div class="fl-title">上传音频 → 服务器处理管道</div>
+        <div class="fl-desc">Extension 把录制的 WebM/Opus 音频 blob POST 到后端。服务器同时收到 json3 词级时间戳（Stage 1 已拉取）。MFA 用 json3 时间戳作为词边界约束，只做音素级细化，速度和准确度大幅提升。</div>
+        <span class="fl-tag ft-srv">FastAPI worker</span>
+        <span class="fl-tag ft-cache">Supabase Storage</span>
+      </div>
+    </div>
+    <div class="flow-row">
+      <div class="fl-time">Stage 2 就绪</div>
+      <div class="fl-body">
+        <div class="fl-title">逐句推送就绪状态</div>
+        <div class="fl-desc">服务器逐句处理完成后通过 Supabase Realtime 推送。前端第一句处理完即解锁，不等待整段。用户可以立刻开始练习第一句，后几句在练习过程中继续准备。</div>
+        <span class="fl-tag ft-bg">Realtime push</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 未覆盖时的补录 -->
+<div>
+  <h2>未覆盖时的补录流程（用户跳转到未听过的片段）</h2>
+  <div class="tc-detail">
+    <div class="tc-hdr">
+      <div style="width:8px;height:8px;border-radius:50%;background:#EF9F27"></div>
+      用户选了一个没有播放过的片段 — 需要显式补录
+    </div>
+    <div class="tc-body">
+      <div class="tc-col">
+        <div class="tc-lbl">方案 A · 自动补录（推荐）</div>
+        <div class="tc-item">Extension 弹出 overlay："正在为你准备这段练习…"</div>
+        <div class="tc-item">IFrame API 自动 seek 到片段起点，以 1.3× 速度静默播放</div>
+        <div class="tc-item">Tab Capture 同步录制，完成后立刻上传</div>
+        <div class="tc-item">一个 2.5 分钟片段约等待 2 分钟，期间可展示 Stage 1 语料卡</div>
+        <div class="tc-item">用户体验：等待时间明确，有进度展示</div>
+      </div>
+      <div class="tc-col">
+        <div class="tc-lbl">方案 B · 引导用户自然听</div>
+        <div class="tc-item">提示用户"先听一遍这段，再开始练习"</div>
+        <div class="tc-item">用户主动播放 → Extension 录制 → 听完即就绪</div>
+        <div class="tc-item">更符合"精听"学习理念（听懂了再 shadow）</div>
+        <div class="tc-item">等待时间等于片段时长，但用户在"做事"不是"等待"</div>
+        <div class="tc-item">适合 精听 用户路径；泛听用户用方案 A</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 代码 -->
+<div>
+  <h2>Extension 录制核心代码</h2>
+  <div class="code-block">
+    <div class="cb-hdr">background.js — Tab Capture 录制逻辑</div>
+    <div class="cb-body"><span class="co">// 在 Extension background service worker 里</span>
+
+<span class="ck">let</span> captureStream = <span class="ck">null</span>;
+<span class="ck">let</span> mediaRecorder = <span class="ck">null</span>;
+<span class="ck">let</span> audioChunks = [];
+<span class="ck">let</span> recordedRanges = [];  <span class="co">// [{start_ms, end_ms, blob_url}]</span>
+
+<span class="co">// Stage 1 开始时自动启动录制</span>
+<span class="ck">async function</span> <span class="cs">startPassiveCapture</span>(tabId) {
+  captureStream = <span class="ck">await</span> chrome.tabCapture.capture({
+    audio: <span class="ck">true</span>, video: <span class="ck">false</span>
+  });
+
+  mediaRecorder = <span class="ck">new</span> MediaRecorder(captureStream, {
+    mimeType: <span class="cs">'audio/webm;codecs=opus'</span>,
+    audioBitsPerSecond: <span class="ck">128000</span>
+  });
+
+  <span class="ck">let</span> segmentStart = Date.now();
+  mediaRecorder.ondataavailable = (e) => {
+    <span class="ck">if</span> (e.data.size > 0) audioChunks.push(e.data);
+  };
+
+  mediaRecorder.start(<span class="ck">1000</span>); <span class="co">// 每 1s 触发 ondataavailable</span>
+}
+
+<span class="co">// 用户选择片段后，从缓冲区裁剪出目标范围</span>
+<span class="ck">async function</span> <span class="cs">extractSegment</span>(startMs, endMs) {
+  <span class="co">// 用 Web Audio API 或 FFmpeg WASM 裁剪</span>
+  <span class="ck">const</span> fullBlob = <span class="ck">new</span> Blob(audioChunks, {type: <span class="cs">'audio/webm'</span>});
+  <span class="ck">const</span> segmentBlob = <span class="ck">await</span> <span class="cs">trimAudio</span>(fullBlob, startMs, endMs);
+
+  <span class="co">// 上传到后端，带上 json3 时间戳</span>
+  <span class="ck">const</span> formData = <span class="ck">new</span> FormData();
+  formData.append(<span class="cs">'audio'</span>, segmentBlob, <span class="cs">'segment.webm'</span>);
+  formData.append(<span class="cs">'word_timestamps'</span>, JSON.stringify(wordTimestamps)); <span class="co">// json3 数据</span>
+  formData.append(<span class="cs">'segment_start_ms'</span>, startMs);
+
+  <span class="ck">return</span> <span class="ck">await</span> fetch(<span class="cs">'/api/stage2/process'</span>, {
+    method: <span class="cs">'POST'</span>, body: formData,
+    headers: {Authorization: <span class="cs">`Bearer ${token}`</span>}
+  });
+}
+
+<span class="co">// 音频裁剪（用 OfflineAudioContext，无需 FFmpeg）</span>
+<span class="ck">async function</span> <span class="cs">trimAudio</span>(blob, startMs, endMs) {
+  <span class="ck">const</span> arrayBuffer = <span class="ck">await</span> blob.arrayBuffer();
+  <span class="ck">const</span> audioCtx = <span class="ck">new</span> OfflineAudioContext(1, 44100 * 300, 44100);
+  <span class="ck">const</span> decoded = <span class="ck">await</span> audioCtx.decodeAudioData(arrayBuffer);
+  <span class="ck">const</span> startSample = Math.floor(startMs / 1000 * decoded.sampleRate);
+  <span class="ck">const</span> endSample = Math.floor(endMs / 1000 * decoded.sampleRate);
+  <span class="co">// ... 裁剪并重新编码为 WebM 返回</span>
+}</div>
+  </div>
+</div>
+
+<!-- json3 + MFA 整合 -->
+<div>
+  <h2>json3 时间戳如何加速 MFA</h2>
+  <div class="mfa-compare">
+    <div class="mfa-row">
+      <div class="mfa-lbl" style="color:var(--color-text-tertiary)">传统 MFA</div>
+      <div class="mfa-body">从零开始对整段音频做强制对齐：先找词边界，再找音素边界。词边界误差 ±30ms，整段 2.5 分钟音频需要 <strong>8–15 秒</strong>处理时间。</div>
+    </div>
+    <div class="mfa-row">
+      <div class="mfa-lbl" style="color:#085041">json3 + MFA</div>
+      <div class="mfa-body">json3 已给出每个词的 start/end 时间（精度 ±50ms）。把这些时间作为 MFA 的词边界约束（<code>--use_word_timestamps</code> 或直接分割音频）。MFA 只需在每个词的已知时间窗口内找音素边界，任务变为 N 个独立小问题。<strong>速度提升 3–5 倍，准确度也更高</strong>（搜索空间缩小）。</div>
+    </div>
+    <div class="mfa-row">
+      <div class="mfa-lbl" style="color:#534AB7">实现方式</div>
+      <div class="mfa-body">用 json3 时间戳把整段音频按词切成小片段，每片加 ±80ms 边界余量。对每个小片段分别跑 MFA 的音素对齐（<code>align</code> 模式，不做转录）。结果拼回全段时间轴。这完全兼容现有 MFA 工具链，不需要修改 MFA 本身。</div>
+    </div>
+  </div>
+</div>
+
+<!-- 缓存策略 -->
+<div>
+  <h2>缓存策略——同一视频第二个用户零等待</h2>
+  <div class="cache-grid">
+    <div class="cg-card">
+      <div class="cgc-lbl" style="color:#E24B4A">冷缓存</div>
+      <div class="cgc-title">首次请求该片段</div>
+      <div class="cgc-desc">用户录制音频 → 上传 → MFA + Parselmouth → 结果写入 Supabase Storage。处理约 3–8 秒，逐句推送。</div>
+      <span class="cgc-tag" style="background:#FCEBEB;color:#7F1D1D">用户等待</span>
+    </div>
+    <div class="cg-card">
+      <div class="cgc-lbl" style="color:#EF9F27">暖缓存</div>
+      <div class="cgc-title">有缓存，音频版本不同</div>
+      <div class="cgc-desc">缓存 key = video_id + segment_start_ms + segment_end_ms。不同用户录制的音频质量不同，但 json3 时间戳完全一致，可复用 MFA 结果。</div>
+      <span class="cgc-tag" style="background:#FAEEDA;color:#633806">复用标注</span>
+    </div>
+    <div class="cg-card">
+      <div class="cgc-lbl" style="color:#1D9E75">热缓存</div>
+      <div class="cgc-title">同片段已完整处理</div>
+      <div class="cgc-desc">MFA TextGrid + Parselmouth 特征 + CREPE F0 + 句子边界全部缓存。第二个用户选同一片段：无需任何处理，直接加载，&lt;500ms 就绪。</div>
+      <span class="cgc-tag" style="background:#E1F5EE;color:#085041">即时就绪</span>
+    </div>
+  </div>
+</div>
+
+</div>

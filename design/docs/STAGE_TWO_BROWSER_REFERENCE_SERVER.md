@@ -1,0 +1,44 @@
+# Browser reference analysis and the compact three-layer workspace
+
+Updated: 2026-09-29. This increment supersedes the default local-only reference alignment flow described in `STAGE_TWO_LOCAL_ALIGNMENT.md` and the duplicate measurement/score-sidebar workspace in `STAGE_TWO_SOUND_COMPARISON.md`.
+
+## Implemented behavior
+
+A signed-in learner can enable server analysis of captured reference audio. Browser tab capture/buffer acquisition is unchanged: the extension must have its existing tab-capture permission and the selected sentence must be fully covered. This reference upload does **not** require an operator-registered file-source grant. Registered file adapters remain available independently.
+
+The browser decodes and crops the selected sentence to mono PCM WAV, hashes the bytes and registers an immutable reference snapshot (`POST /api/references/captures`). The server checks content access, the current sentence ID/text/bounds, upload size/hash/duration and the consent version. It normalizes the audio, stores a private asset and queues the existing acoustic worker. Captures support sentences up to 60 seconds and inputs up to 32 MiB; raw queued browser clips are limited to three. Private reference audio expires after 30 days or can be deleted earlier.
+
+The reference worker independently checks recognized words before forcing alignment to the expected text. Usable inputs then receive MFA word/phone timing and VAD/F0 measurements. Verified `VoiceProsody` is cached per reference sentence with sentence-relative times. Learner jobs reuse compatible cached prosody instead of repeatedly transcribing and aligning the same reference. Engine and ASR identity must match; failed or uncertain content never gets a fabricated word comparison. Old registered references without this cache retain the prior analysis fallback.
+
+Reference upload ownership survives sentence/stage navigation within the signed-in page. Retries retain the same bytes and reference identity. Recording captures the reference resolver at take start; subsequent navigation cannot substitute another sentence's reference. The learner's durable queue waits for a pending reference without consuming its three worker attempts. Failed, revoked, expired or deleted references allow learner-only results. Pending raw uploads are page-memory only; the user must keep the page open until they complete. Previously uploaded references recover through `GET /api/references/captures/latest`, including when future-upload consent is off.
+
+The default browser reference cache still provides quick local VAD/F0 previews, but no longer starts the large local phoneme-alignment model. The local alignment engine and its isolated tests remain available; its prior paired UI is superseded by server-verified pairing.
+
+## Three layers
+
+Video and shared practice controls stay above the three-layer workspace, following the prototype.
+
+- **Sound:** a top strip contains All plus Linking, Weak, Flap-T, Elision, Assim., Glottal, Drop-D, H-drop, Vowel len. and Voicing. Below it, Reference and Your voice use compact wrapping text flows with inline colored badges, linking arcs and a matching legend. Filtering highlights exact candidate occurrences and fades unrelated words; IPA appears on reference-word hover/focus. The five existing rules supply conditional text suggestions, learner targets carry `?`, and vowel-duration/pause measurements retain their units. Unsupported categories show an explicit unavailable state. No illustrative correctness ticks/crosses are copied from the prototype. Hide/individual reveal applies to both rows and conceals IPA and candidate marks too. Filters and revealed positions survive layer changes; sentence/take changes reset them. A guide must match the sentence and full displayed token sequence before its candidate indices are used. Dictionary targets and forced phone timing are not observed pronunciation realizations.
+- **Rhythm:** the same two rows with dictionary syllable-stress dots, measured word durations and text-positioned pause marks. Dots are not measured sentence emphasis.
+- **Melody:** one shared chart, purple Reference and red Your voice. Both voices use their own median voiced F0 as the zero baseline: `12 × log2(F0 / median F0)`. Aligned results resample five bins per word into a shared word axis. Each full word appears below its corresponding curve interval. Pointer, click, arrow keys, Home/End and playback highlight the same word/curve interval. Unvoiced/missing bins remain gaps, not interpolated evidence. Before paired alignment is available, usable local curves use normalized sentence speech time and explicitly indicate that word alignment is pending.
+
+Only the selected take's bound reference is used for saved comparisons. A fresh reference cannot silently replace missing reference evidence in a historical take. Sound phenomenon filters are retained; duplicate measurement panels and the experimental score sidebar are removed from the central workspace. Existing server assessments remain in saved result data, but are not shown as validated pronunciation scores.
+
+## Operations and verification
+
+Apply `20260929101849_browser_reference_analysis.sql`. Run the API, `app.workers.acoustic_worker` and `app.workers.practice_analysis_worker` with the same provisioned acoustic/ASR model identities. `pnpm dev` includes both acoustic workers. General remote media download adapters and validated Sound realization/stress classifiers remain outside this increment.
+
+Regression coverage includes browser capture without a file grant, current-boundary/hash/duration validation, ownership, independent reference content rejection, cached-prosody reuse and engine mismatch; upload retry/deletion races, outbox binding, shared curve gaps and word intervals; and SQL lease/ownership/deletion plus reference-wait behavior. The end-to-end storage/model smoke is `scripts/verify_practice_analysis.py --run-live --browser-capture --audio <synthetic.wav> --text <expected text>`. It uses only explicitly supplied synthetic speech, creates isolated rows, leases only its own work and removes its rows/assets afterward.
+
+Browser acceptance uses `tests/browser-reference-server.browser.mjs` (capture/upload/wait/two voices/recovery/deletion) and `tests/server-reference.browser.mjs` (registered files, pointer/keyboard/playback, saved-take isolation and partial evidence) at 1440 and 390 px. The extension, player, identity and server results in these browser tests are fixtures. Actual Chrome WAV decoding, capture upload encoding, microphone encoding and local acoustic inference run locally. These tests do not establish live third-party playback capture, physical-phone performance or pronunciation accuracy.
+
+### Acceptance completed
+
+On 2026-09-29, root lint/build/test passed: 238 web, 453 API and 112 extension tests (803 total). Both browser suites above passed at desktop and narrow widths; screenshots were inspected. Local PostgreSQL reference/practice queues and the new wait behavior passed, and the migration was applied to the connected Libitu project. The real synthetic-voice smoke passed reference content verification and cached prosody, learner comparison, mismatched-content abstention, private storage, ownership, cleanup and deletion. Synthetic fixture rows and objects were removed. Experimental similarity values from a synthetic self-comparison are not pronunciation accuracy validation.
+
+The same-day Sound/order correction passed root lint/build/test (805 tests, including 240 web tests) and both desktop/mobile browser suites. Additional coverage verifies the video above the layers, ten phenomenon filters, exact-range word highlights, linking arcs and inline badges, unsupported-category states, tab persistence, hide/reveal and keyboard IPA access. Desktop/mobile Sound screenshots were inspected. No new sound-realization detector was added.
+
+
+2026-09-30 layer guidance correction: restore the right-side Layer focus, Feedback and Tip cards for Sound, Rhythm and Melody. Sound guidance follows the selected phenomenon and uses the current sentence’s rule suggestions; conceal mode also hides word-specific sidebar text. Desktop places guidance beside the layer canvas; narrow screens place it below. The video remains above the workspace. Removing the experimental score sidebar did not authorize removing instructional guidance; no illustrative scores or detected-error claims are restored.
+
+Verification for the September 30 correction: root lint/build/test passed (805 tests). Desktop 1440 px and mobile 390 px browser regression passed, including focus-card positioning, Sound filter synchronization, concealed-text protection, all three layer tips and saved-take recovery. Screenshots were inspected. The upload test now waits for observable state instead of assuming hashing completes within 10 ms.

@@ -1,16 +1,37 @@
 import json
 import re
+from bisect import bisect_right
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from app.config import get_settings
 from app.integrations.local_punctuation import PunctuationEngine, get_punctuation_engine
+from app.schemas.captions import CaptionTrack, CaptionWordTiming
 
 
 @dataclass(frozen=True)
 class ParsedTranscriptLine:
     time: str
     text: str
+    id: str | None = field(default=None, compare=False)
+    segmentation_version: str | None = field(default=None, compare=False)
+    source_token_start: int | None = field(default=None, compare=False)
+    source_token_end: int | None = field(default=None, compare=False)
+    start_ms: int | None = field(default=None, compare=False)
+    end_ms: int | None = field(default=None, compare=False)
+    boundary_source: str | None = field(default=None, compare=False)
+    boundary_confidence: str | None = field(default=None, compare=False)
+    timing_source: str | None = field(default=None, compare=False)
+    word_timings: list[CaptionWordTiming] | None = field(default=None, compare=False)
+
+    def metadata(self) -> dict:
+        result = {name: getattr(self, name) for name in (
+            "id", "segmentation_version", "source_token_start", "source_token_end",
+            "start_ms", "end_ms", "boundary_source", "boundary_confidence", "timing_source", "word_timings",
+        ) if getattr(self, name) is not None}
+        if self.word_timings is not None:
+            result["word_timings"] = [word.model_dump() for word in self.word_timings]
+        return result
 
 
 @dataclass(frozen=True)
@@ -22,8 +43,8 @@ class SourceToken:
 
 TranscriptProgressCallback = Callable[[list[ParsedTranscriptLine]], None]
 
-TIMESTAMP_PATTERN = re.compile(r"^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})[\t ]+(.+)$")
-TIMESTAMP_ONLY_PATTERN = re.compile(r"^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})$")
+TIMESTAMP_PATTERN = re.compile(r"^(?:(\d{1,3}):)?(\d{1,2}):(\d{2}(?:\.\d{1,3})?)[\t ]+(.+)$")
+TIMESTAMP_ONLY_PATTERN = re.compile(r"^(?:(\d{1,3}):)?(\d{1,2}):(\d{2}(?:\.\d{1,3})?)$")
 SENTENCE_BOUNDARY = re.compile(r"(?<=[.!?])\s+")
 SENTENCE_END = re.compile(r"[.!?][\"')\]]?$")
 SOURCE_SENTENCE_END = re.compile(r"[.!?][\"')\]]?(?:\s|$)")
@@ -47,7 +68,27 @@ DISCOURSE_MARKERS = (
 )
 
 
+_AUTO_SYNTAX = object()
+
+
 def format_transcript(
+    transcript_text: str,
+    language: str | None = None,
+    on_progress: TranscriptProgressCallback | None = None,
+    engine: PunctuationEngine | None = None,
+    *,
+    syntax_engine: object = _AUTO_SYNTAX,
+    caption_track: CaptionTrack | None = None,
+) -> list[ParsedTranscriptLine]:
+    from app.services.sentence_formatter import format_sentences
+
+    return format_sentences(
+        transcript_text, language, on_progress, engine,
+        syntax_engine=syntax_engine, caption_track=caption_track,
+    )
+
+
+def format_legacy_transcript(
     transcript_text: str,
     language: str | None = None,
     on_progress: TranscriptProgressCallback | None = None,
@@ -101,7 +142,9 @@ def format_transcript(
     return formatted
 
 
-def parse_transcript(transcript_text: str) -> list[ParsedTranscriptLine]:
+def parse_transcript(
+    transcript_text: str, *, preserve_rows: bool = False,
+) -> list[ParsedTranscriptLine]:
     raw_lines = [line.strip() for line in transcript_text.splitlines() if line.strip()]
     if len(raw_lines) == 1:
         raw_lines = [
@@ -117,7 +160,10 @@ def parse_transcript(transcript_text: str) -> list[ParsedTranscriptLine]:
         if match:
             hours, minutes, seconds, text = match.groups()
             active_time = _format_parsed_timestamp(hours, minutes, seconds)
-            _append_or_merge_line(parsed, active_time, text.strip())
+            if preserve_rows:
+                parsed.append(ParsedTranscriptLine(time=active_time, text=text.strip()))
+            else:
+                _append_or_merge_line(parsed, active_time, text.strip())
             continue
 
         timestamp_match = TIMESTAMP_ONLY_PATTERN.match(raw_line)
@@ -126,7 +172,10 @@ def parse_transcript(transcript_text: str) -> list[ParsedTranscriptLine]:
             continue
 
         if active_time is not None:
-            _append_or_merge_line(parsed, active_time, raw_line)
+            if preserve_rows:
+                parsed.append(ParsedTranscriptLine(time=active_time, text=raw_line))
+            else:
+                _append_or_merge_line(parsed, active_time, raw_line)
         else:
             parsed.append(ParsedTranscriptLine(time="--:--", text=raw_line))
     return parsed
@@ -249,17 +298,159 @@ def normalize_punctuation(value: str) -> str:
     return re.sub(r"\s{2,}", " ", text).strip(" ,;:")
 
 
-def timestamp_seconds(timestamp: str) -> int | None:
-    try:
-        components = [int(component) for component in timestamp.split(":")]
-    except ValueError:
+def timestamp_seconds(timestamp: str) -> float | None:
+    if not re.fullmatch(r"\d+(?::\d{2}){1,2}(?:\.\d{1,3})?", timestamp):
         return None
-    if len(components) not in (2, 3):
-        return None
+    components = [float(component) for component in timestamp.split(":")]
     return sum(
         component * (60**index)
         for index, component in enumerate(reversed(components))
     )
+
+
+def format_timestamp_ms(milliseconds: int) -> str:
+    total_seconds, remainder_ms = divmod(max(0, milliseconds), 1000)
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    time = f"{hours}:{minutes:02d}:{seconds:02d}" if hours else f"{minutes}:{seconds:02d}"
+    return f"{time}.{remainder_ms:03d}" if remainder_ms else time
+
+
+def caption_track_to_text(track: CaptionTrack) -> str:
+    """Source text only: never infer words, discard repeated speech, or strip fillers."""
+    return "\n".join(
+        f"{format_timestamp_ms(event.tStartMs)}\t{text}"
+        for event in track.events
+        if (text := " ".join("".join(segment.utf8 for segment in event.segs).split()))
+    )
+
+
+def caption_track_matches_text(track: CaptionTrack, text: str, language: str | None = None) -> bool:
+    """Compare ordered normalized lexical content, ignoring timestamps/case/punctuation.
+
+    This only permits rebuilding an existing text view from its own source.
+    Repeated words remain repeated; no fuzzy matching or subsequence acceptance.
+    """
+    def words(value: str) -> list[str]:
+        lines = parse_transcript(value, preserve_rows=True)
+        if not language or language.replace("_", "-").split("-", 1)[0].casefold() == "en":
+            lines = filter_filler_tokens(lines)
+        return [word.group().casefold().replace("’", "'") for line in lines for word in WORD_TOKEN.finditer(line.text)]
+
+    return words(caption_track_to_text(track)) == words(text)
+
+
+def parse_caption_track(track: CaptionTrack, language: str | None = None) -> list[ParsedTranscriptLine]:
+    """Retain event timing and only structurally supported single-word offsets.
+
+    JSON3 identifies a representation, not a timing capability. No timestamp
+    difference here is interpreted as acoustic silence. Uncertain source data
+    always keeps its text and event-level navigation fallback.
+    """
+    english = not language or language.replace("_", "-").split("-", 1)[0].casefold() == "en"
+    rows: list[ParsedTranscriptLine] = []
+    token_index = 0
+    text_events = [
+        (index, event, "".join(segment.utf8 for segment in event.segs))
+        for index, event in enumerate(track.events)
+        if any(segment.utf8.strip() for segment in event.segs)
+    ]
+    # Explicit rolling updates do not define a one-to-one spoken-word sequence.
+    # Keep their text intact; do not guess which repeated tokens were spoken twice.
+    unsafe_events = {index for index, event, _ in text_events if event.aAppend == 1}
+    for previous, current in zip(text_events, text_events[1:]):
+        previous_index, prior, prior_text = previous
+        index, event, text = current
+        if event.tStartMs <= prior.tStartMs or prior.aAppend == 1 or event.aAppend == 1:
+            unsafe_events.update((previous_index, index))
+        if (prior.wWinId is not None and prior.wWinId == event.wWinId
+                and prior.dDurationMs and event.tStartMs < prior.tStartMs + prior.dDurationMs
+                and " ".join(text.split()).startswith(" ".join(prior_text.split()))):
+            unsafe_events.update((previous_index, index))
+
+    for event_index, event, raw in text_events:
+        text = _remove_filler_tokens(raw) if english else " ".join(raw.split())
+        if not text:
+            continue
+        raw_words = list(re.finditer(r"\S+", raw))
+        # Associate a whitespace word with exactly one segment that itself
+        # contains exactly that word. Split contractions and multiword segments
+        # deliberately have no word-offset claim.
+        segment_ranges = []
+        cursor = 0
+        for segment_index, segment in enumerate(event.segs):
+            segment_ranges.append((cursor, cursor + len(segment.utf8), segment_index, segment))
+            cursor += len(segment.utf8)
+        segment_starts = [item[0] for item in segment_ranges]
+        nonempty_segments = [(i, segment) for i, segment in enumerate(event.segs) if segment.utf8.strip()]
+        explicit_offsets = [segment.tOffsetMs for _, segment in nonempty_segments if segment.tOffsetMs is not None]
+        valid_offsets = all(offset >= 0 and (event.dDurationMs is None or offset < event.dDurationMs) for offset in explicit_offsets)
+        valid_offsets = valid_offsets and all(left < right for left, right in zip(explicit_offsets, explicit_offsets[1:]))
+        can_use_words = track.version == "youtube-json3-v1" and event_index not in unsafe_events and valid_offsets
+        first_segment_index = nonempty_segments[0][0] if nonempty_segments else None
+        proves_fine_grained = len(nonempty_segments) > 1 and any(offset > 0 for offset in explicit_offsets)
+        candidates: list[tuple[int, int] | None] = []
+        normalized_words: list[str] = []
+        normalized_raw_indexes: list[int] = []
+        for raw_index, word in enumerate(raw_words):
+            segment_position = bisect_right(segment_starts, word.start()) - 1
+            source_segment = segment_ranges[segment_position] if segment_position >= 0 else None
+            candidate = None
+            if can_use_words and source_segment is not None and source_segment[1] >= word.end():
+                _, _, segment_index, segment = source_segment
+                if len(segment.utf8.split()) == 1 and len(WORD_TOKEN.findall(word.group())) == 1:
+                    offset = segment.tOffsetMs
+                    if offset is None and segment_index == first_segment_index and proves_fine_grained:
+                        offset = 0
+                    if offset is not None:
+                        candidate = (event.tStartMs + offset, segment_index)
+            candidates.append(candidate)
+            cleaned = _remove_filler_tokens(word.group()) if english else word.group()
+            if cleaned:
+                normalized_words.append(cleaned)
+                normalized_raw_indexes.append(raw_index)
+        word_timings = []
+        if normalized_words == text.split():
+            for index, (word, raw_index) in enumerate(zip(normalized_words, normalized_raw_indexes)):
+                candidate = candidates[raw_index]
+                # Removing a filler inside a token changes which sound began
+                # at its offset; only unchanged lexical tokens retain starts.
+                if candidate is None or _normalized_token(word) != _normalized_token(raw_words[raw_index].group()):
+                    continue
+                start_ms, segment_index = candidate
+                end_ms = None
+                end_source = None
+                following = candidates[raw_index + 1] if raw_index + 1 < len(candidates) else None
+                if following and following[0] > start_ms:
+                    end_ms, end_source = following[0], "next_word_estimate"
+                elif raw_index == len(raw_words) - 1 and event.dDurationMs and event.tStartMs + event.dDurationMs > start_ms:
+                    end_ms, end_source = event.tStartMs + event.dDurationMs, "event_end_estimate"
+                word_timings.append(CaptionWordTiming(
+                    source_token_index=token_index + index, text=word, start_ms=start_ms,
+                    end_ms=end_ms, end_source=end_source,
+                    source_event_index=event_index, source_seg_index=segment_index,
+                ))
+        event_end = event.tStartMs + event.dDurationMs if event.dDurationMs else None
+        rows.append(ParsedTranscriptLine(
+            time=format_timestamp_ms(event.tStartMs), text=text,
+            source_token_start=token_index, source_token_end=token_index + len(text.split()),
+            start_ms=event.tStartMs, end_ms=event_end,
+            timing_source="caption_event_estimate", word_timings=word_timings or None,
+        ))
+        token_index += len(text.split())
+    # Cross-event repetitions/overlaps can pass per-event checks. Never sort
+    # words into a new source sequence or expose nonmonotonic starts as precise.
+    affected: set[int] = set()
+    previous: tuple[int, CaptionWordTiming] | None = None
+    for row_index, row in enumerate(rows):
+        for word in row.word_timings or []:
+            if previous and word.start_ms <= previous[1].start_ms:
+                affected.update((previous[0], row_index))
+            previous = (row_index, word)
+    return [
+        ParsedTranscriptLine(**{**row.__dict__, "word_timings": None}) if index in affected else row
+        for index, row in enumerate(rows)
+    ]
 
 
 def _format_parsed_timestamp(

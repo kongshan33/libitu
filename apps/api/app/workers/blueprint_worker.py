@@ -10,7 +10,7 @@ import httpx
 from app.config import get_settings
 from app.integrations import processing_queue
 from app.integrations.deepseek import AnalysisProviderError, analyze_transcript
-from app.integrations.youtube_transcript import TranscriptUnavailableError, fetch_youtube_transcript
+from app.integrations.youtube_transcript import TranscriptUnavailableError, fetch_youtube_caption_track
 from app.integrations.supabase_repository import get_supabase_repository
 from app.schemas.analysis import (
     AnalysisTranscriptPreviewLine,
@@ -18,14 +18,17 @@ from app.schemas.analysis import (
     BlueprintAnalysisPreview,
 )
 from app.schemas.content import ContentKind, ContentResolveResponse
+from app.schemas.captions import CaptionTrack
 from app.schemas.job import ProcessingJob, ProcessingStage, ProcessingStatus
 from app.services.blueprint_service import (
     create_blueprint_from_analysis,
 )
+from app.services.caption_source import caption_fingerprint
 from app.services.transcript_formatter import (
     ParsedTranscriptLine,
     format_transcript,
     serialize_transcript,
+    caption_track_to_text,
 )
 
 
@@ -33,7 +36,7 @@ Analyzer = Callable[
     [ContentResolveResponse, str, Callable[[BlueprintAnalysisPreview], None] | None],
     BlueprintAnalysis,
 ]
-TranscriptFetcher = Callable[[str, str | None], str]
+TranscriptFetcher = Callable[[str, str | None], str | CaptionTrack]
 TranscriptFormatter = Callable[
     [str, str | None, Callable[[list[ParsedTranscriptLine]], None] | None],
     list[ParsedTranscriptLine],
@@ -43,7 +46,7 @@ TranscriptFormatter = Callable[
 def process_job(
     job_id: str,
     analyzer: Analyzer = analyze_transcript,
-    transcript_fetcher: TranscriptFetcher = fetch_youtube_transcript,
+    transcript_fetcher: TranscriptFetcher = fetch_youtube_caption_track,
     transcript_formatter: TranscriptFormatter = format_transcript,
 ) -> None:
     job = processing_queue.get_job(job_id)
@@ -88,7 +91,10 @@ def process_job(
             return
         current_job = _record_timing(current_job, ProcessingStage.loading_content, load_started)
 
+        caption_track = queued_content.caption_track
         transcript = queued_content.transcript_text
+        if not transcript and caption_track is not None:
+            transcript = caption_track_to_text(caption_track)
         if not transcript:
             current_job = _transition(current_job, ProcessingStage.fetching_transcript)
             transcript_started = perf_counter()
@@ -97,8 +103,13 @@ def process_job(
                 _fail(current_job, "transcript_unavailable", "No source text is available for analysis.")
                 return
             video_id = content.normalized_key.removeprefix("youtube:")
-            transcript = transcript_fetcher(video_id, content.language)
-            _save_content(content, transcript)
+            fetched = transcript_fetcher(video_id, content.language)
+            if isinstance(fetched, CaptionTrack):
+                caption_track = fetched
+                transcript = caption_track_to_text(fetched)
+            else:
+                transcript = fetched
+            _save_content(content, transcript, caption_track)
             current_job = _record_timing(
                 current_job,
                 ProcessingStage.fetching_transcript,
@@ -115,7 +126,7 @@ def process_job(
             if last_transcript_preview_at is not None and now - last_transcript_preview_at < 0.4:
                 return
             transcript_lines = [
-                AnalysisTranscriptPreviewLine(time=line.time, text=line.text)
+                AnalysisTranscriptPreviewLine(time=line.time, text=line.text, **line.metadata())
                 for line in lines
             ]
             current_job = current_job.model_copy(
@@ -128,11 +139,16 @@ def process_job(
             processing_queue.save_job(current_job)
             last_transcript_preview_at = now
 
-        formatted_lines = transcript_formatter(
-            transcript,
-            queued_content.content.language,
-            update_transcript_preview,
-        )
+        if caption_track is not None:
+            formatted_lines = transcript_formatter(
+                transcript, queued_content.content.language, update_transcript_preview,
+                caption_track=caption_track,
+            )
+        else:
+            # Preserve the injected/plain formatter contract for legacy providers.
+            formatted_lines = transcript_formatter(
+                transcript, queued_content.content.language, update_transcript_preview,
+            )
         formatted_transcript = serialize_transcript(formatted_lines)
         if not formatted_transcript:
             raise TranscriptUnavailableError(
@@ -144,7 +160,7 @@ def process_job(
             formatting_started,
         )
         initial_transcript_lines = [
-            AnalysisTranscriptPreviewLine(time=line.time, text=line.text)
+            AnalysisTranscriptPreviewLine(time=line.time, text=line.text, **line.metadata())
             for line in formatted_lines[: settings.transcript_preview_limit]
         ]
         if initial_transcript_lines and (
@@ -181,7 +197,10 @@ def process_job(
             analysis,
             current_job.analysis_version,
             formatted_transcript,
+            formatted_lines=formatted_lines,
         )
+        if caption_track is not None:
+            blueprint = blueprint.model_copy(update={"caption_fingerprint": caption_fingerprint(caption_track)})
         current_job = _record_timing(current_job, ProcessingStage.building_blueprint, build_started)
 
         current_job = _transition(current_job, ProcessingStage.persisting)
@@ -236,6 +255,10 @@ def run_worker() -> None:
     stop_event = Event()
     heartbeat = Thread(target=_heartbeat_loop, args=(stop_event,), daemon=True)
     heartbeat.start()
+    # Load the CPU pipeline once before accepting work, outside page/SSE requests.
+    from app.integrations.sentence_syntax import get_sentence_syntax
+
+    get_sentence_syntax("en")
     executor = ThreadPoolExecutor(
         max_workers=max(1, settings.processing_worker_concurrency),
         thread_name_prefix="blueprint-job",
@@ -293,12 +316,18 @@ def _save_job(job) -> None:
             print(f"Supabase job persistence failed: {type(error).__name__}", flush=True)
 
 
-def _save_content(content: ContentResolveResponse, transcript: str) -> None:
-    processing_queue.save_content(content, transcript)
+def _save_content(content: ContentResolveResponse, transcript: str, caption_track: CaptionTrack | None = None) -> None:
+    if caption_track is None:
+        processing_queue.save_content(content, transcript)
+    else:
+        processing_queue.save_content(content, transcript, caption_track)
     repository = get_supabase_repository()
     if repository is not None:
         try:
-            repository.save_content(content, transcript)
+            if caption_track is None:
+                repository.save_content(content, transcript)
+            else:
+                repository.save_content(content, transcript, caption_track)
         except httpx.HTTPError as error:
             print(f"Supabase content persistence failed: {type(error).__name__}", flush=True)
 

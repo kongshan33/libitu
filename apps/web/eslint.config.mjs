@@ -12,6 +12,7 @@ const eslintConfig = [
     ".next-build/**",
     "out/**",
     "build/**",
+    "public/acoustic-assets/**",
     "next-env.d.ts",
   ]),
 ];

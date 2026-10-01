@@ -3,8 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/prepare-acoustics.mjs && node scripts/prepare-alignment.mjs && next dev",
+    "build": "node scripts/prepare-acoustics.mjs && node scripts/prepare-alignment.mjs && next build",
+    "prepare:acoustics": "node scripts/prepare-acoustics.mjs",
+    "prepare:alignment": "node scripts/prepare-alignment.mjs --download",
     "lint": "eslint .",
     "test": "node --experimental-transform-types --test tests/*.test.mjs"
   },
@@ -13,8 +15,12 @@
     "@libitu/core": "workspace:*",
     "@libitu/types": "workspace:*",
     "@libitu/ui": "workspace:*",
+    "@radix-ui/react-select": "2.3.7",
+    "@ricky0123/vad-web": "0.0.29",
     "lucide-react": "^1.41.0",
     "next": "^15.3.3",
+    "onnxruntime-web": "1.22.0",
+    "pitchy": "4.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

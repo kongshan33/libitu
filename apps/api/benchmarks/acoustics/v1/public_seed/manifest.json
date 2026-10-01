@@ -1,0 +1,1576 @@
+{
+  "schema_version": "acoustic-benchmark.v1",
+  "dataset_id": "libitu-public-acoustic-seed",
+  "dataset_version": "seed-2026-09-13-v1",
+  "dataset_kind": "human_speech",
+  "samples": [
+    {
+      "sample_id": "cmu-arctic-bdl-arctic_a0001",
+      "speaker_id": "cmu-arctic-bdl",
+      "source_group_id": "cmu-arctic-bdl",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/bdl/arctic_a0001.wav",
+        "sha256": "2594562568c97203d6c3c2c2ff87b9a7c62389100a014934ab0ad39d15af0384",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 51761
+      },
+      "transcript": {
+        "text": "Author of the danger trail, Philip Steels, etc.",
+        "sha256": "b9d8518183d3b115625220d7e24fc96b56c94114c4752b92c35658bc94216b6c",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "bdl:arctic_a0001",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/wav/arctic_a0001.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-bdl-arctic_a0002",
+      "speaker_id": "cmu-arctic-bdl",
+      "source_group_id": "cmu-arctic-bdl",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/bdl/arctic_a0002.wav",
+        "sha256": "88b2c3f29f696637ec34f8a031964920d7e187a903ba88fd720d3cb1b0d50c2a",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 54001
+      },
+      "transcript": {
+        "text": "Not at this particular case, Tom, apologized Whittemore.",
+        "sha256": "4ded085f0207172ea73d4cea412d5e59833205d0deac4a96a06ac0ea1d2f2716",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "bdl:arctic_a0002",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/wav/arctic_a0002.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-bdl-arctic_a0003",
+      "speaker_id": "cmu-arctic-bdl",
+      "source_group_id": "cmu-arctic-bdl",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/bdl/arctic_a0003.wav",
+        "sha256": "6bf2ec5e40a8a01a690d7aa5d1aa3a1489baae614850c7a716bf00092b005028",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 53841
+      },
+      "transcript": {
+        "text": "For the twentieth time that evening the two men shook hands.",
+        "sha256": "5c9ffad8d79716e1fa7b79b41df2bf86ab9efbcaffad518d9df0b355374da94e",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "bdl:arctic_a0003",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/wav/arctic_a0003.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-bdl-arctic_a0004",
+      "speaker_id": "cmu-arctic-bdl",
+      "source_group_id": "cmu-arctic-bdl",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/bdl/arctic_a0004.wav",
+        "sha256": "9014c7af0c450ffab8a64f211559ed6eb61d1eb6c8a8288cca40325e64f702e7",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 41201
+      },
+      "transcript": {
+        "text": "Lord, but I'm glad to see you again, Phil.",
+        "sha256": "c55001bb5ba1d0cb60c72bad26f13a43eb07707437dad61d5f55473b78dabec5",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "bdl:arctic_a0004",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/wav/arctic_a0004.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-slt-arctic_a0005",
+      "speaker_id": "cmu-arctic-slt",
+      "source_group_id": "cmu-arctic-slt",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/slt/arctic_a0005.wav",
+        "sha256": "f93c823f955875d2389ae0f731a95128afb1ee096df7614e063e8b4b5695801d",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 23761
+      },
+      "transcript": {
+        "text": "Will we ever forget it.",
+        "sha256": "7ec062284f3f5d875815a7325b547d22a51c2a4ca57074a0ab5fdd37a459aee5",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "slt:arctic_a0005",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_slt_arctic/wav/arctic_a0005.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-slt-arctic_a0006",
+      "speaker_id": "cmu-arctic-slt",
+      "source_group_id": "cmu-arctic-slt",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/slt/arctic_a0006.wav",
+        "sha256": "69b800a69455e35d05162b78b69446294ace69be903693ffd02ccd0150f17d66",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 47441
+      },
+      "transcript": {
+        "text": "God bless 'em, I hope I'll go on seeing them forever.",
+        "sha256": "e3465bba8af9d1587adfc7885484902a0488e621b890d1630020f526b85d1889",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "slt:arctic_a0006",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_slt_arctic/wav/arctic_a0006.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-slt-arctic_a0007",
+      "speaker_id": "cmu-arctic-slt",
+      "source_group_id": "cmu-arctic-slt",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/slt/arctic_a0007.wav",
+        "sha256": "3c10caa9c2b5434f64c393a85a70aba57adf2858628d7983a8fd4f98a19a83d6",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 48081
+      },
+      "transcript": {
+        "text": "And you always want to see it in the superlative degree.",
+        "sha256": "5be4b8af304ef4d62be0eb3fd459ed62799caa526306917397ea74bab394f015",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "slt:arctic_a0007",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_slt_arctic/wav/arctic_a0007.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "cmu-arctic-slt-arctic_a0008",
+      "speaker_id": "cmu-arctic-slt",
+      "source_group_id": "cmu-arctic-slt",
+      "split": "dev",
+      "role": "reference",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "cmu_arctic/slt/arctic_a0008.wav",
+        "sha256": "603ac9585ddb5022d9c973bde867d7957fa1b8c1f44b2ee40fbbafedde8b5f0e",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 36560
+      },
+      "transcript": {
+        "text": "Gad, your letter came just in time.",
+        "sha256": "064a5c633a6dee8d057c845d936d3bbbbfc225a7d9c9d00dc30415babc813080",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "cmu_arctic",
+        "record_id": "slt:arctic_a0008",
+        "url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_slt_arctic/wav/arctic_a0008.wav",
+        "license": "LicenseRef-CMU-ARCTIC",
+        "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+        "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-000360013",
+      "speaker_id": "speechocean762-0036",
+      "source_group_id": "speechocean762-0036",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/0036/000360013.wav",
+        "sha256": "57d1ad6a8745d2338820dd176b0523536b48056c446aa69def3266acc1c740fd",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 52800
+      },
+      "transcript": {
+        "text": "IT'S JUST SO HARD TO PICTURE",
+        "sha256": "5ed92b35f49dc2661d4a11999dc1eb86c181425e7e1febdeeb1b4328b9db3063",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "0036:000360013",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER0036/000360013.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-000360034",
+      "speaker_id": "speechocean762-0036",
+      "source_group_id": "speechocean762-0036",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/0036/000360034.wav",
+        "sha256": "d0f66e64ce3d896bc26c9febf32af7eb71ae43998e8cdc89eebdf38860572153",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 67520
+      },
+      "transcript": {
+        "text": "WE SPEAK OUT WHEN WE FEEL WE SHOULD SPEAK OUT",
+        "sha256": "d4c82c93491fd2486a377caa85306635fa3b04e5c49e46387376804df9f7b2a9",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "0036:000360034",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER0036/000360034.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-000360036",
+      "speaker_id": "speechocean762-0036",
+      "source_group_id": "speechocean762-0036",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/0036/000360036.wav",
+        "sha256": "253d9d7faa568b471e8881c3c0081dbd7099b04162983a9de408602755687a96",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 47312
+      },
+      "transcript": {
+        "text": "I COULD DO WITH A BREAK",
+        "sha256": "15d9e35e7e489a6c8980e8ffe6c89a5209385cd500ff61217f61772b2bb2373b",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "0036:000360036",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER0036/000360036.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-000360132",
+      "speaker_id": "speechocean762-0036",
+      "source_group_id": "speechocean762-0036",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/0036/000360132.wav",
+        "sha256": "33ad6d5f46637c9a2981b6029b9e15da52fc173a906e2974131423f1e8c75282",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 52480
+      },
+      "transcript": {
+        "text": "IT IS ALWAYS SO NICE TO SEE YOU",
+        "sha256": "7be48e0540940e5c3ec79b0a9f528076ed3a71dc64aadcedd524ef8103cc18e8",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "0036:000360132",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER0036/000360132.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-010270117",
+      "speaker_id": "speechocean762-1027",
+      "source_group_id": "speechocean762-1027",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/1027/010270117.wav",
+        "sha256": "aefc94f3be9e8d810457fb62b46dc033eff27d61dc774b9a17291b6ce9fc0678",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 44544
+      },
+      "transcript": {
+        "text": "YELL THE VERY SAME THING",
+        "sha256": "cafb71be487d904963aad2fdb2562557ce5bffdb0ee5e8fc0c6310fb011ce4fd",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "1027:010270117",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER1027/010270117.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-010270124",
+      "speaker_id": "speechocean762-1027",
+      "source_group_id": "speechocean762-1027",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/1027/010270124.wav",
+        "sha256": "fa3fbab4be0d7a1cc603a458e5ad785d15293e83399d009356ce75318a1889d1",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 65440
+      },
+      "transcript": {
+        "text": "HOW CAN THEY BE ALLOWED TO TRADE",
+        "sha256": "1c0cb4dbf3e63379075e9cfd6e8c1fee0d783ae486e26268354e375f46b1a01c",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "1027:010270124",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER1027/010270124.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-010270131",
+      "speaker_id": "speechocean762-1027",
+      "source_group_id": "speechocean762-1027",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/1027/010270131.wav",
+        "sha256": "4ae59dd69dda5d569965a390a9abd0f36fca1cc9420a92231dba2692676bed8f",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 39520
+      },
+      "transcript": {
+        "text": "TIME TO BUY A NEW HOME",
+        "sha256": "706b4b756897007f22d63b8f5ab21881596a58752bc79362b53a681cc771ff54",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "1027:010270131",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER1027/010270131.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    },
+    {
+      "sample_id": "speechocean762-010270140",
+      "speaker_id": "speechocean762-1027",
+      "source_group_id": "speechocean762-1027",
+      "split": "dev",
+      "role": "learner",
+      "reference_sample_id": null,
+      "audio": {
+        "path": "speechocean762/1027/010270140.wav",
+        "sha256": "b1f0f0c8f11da2c0e6c32c804c139b77d035618f46d8c1c7b35efcbbdce954d9",
+        "sample_rate_hz": 16000,
+        "channels": 1,
+        "frame_count": 59456
+      },
+      "transcript": {
+        "text": "WE HAVE TO GET IT OUT OF OR CULTURE",
+        "sha256": "e7f7958323449b7ed8fe74a307d4e06209bb686c2a893320c40d2e60c9157594",
+        "provenance": "provided",
+        "language": "en"
+      },
+      "source": {
+        "corpus": "speechocean762",
+        "record_id": "1027:010270140",
+        "url": "https://raw.githubusercontent.com/jimbozhang/speechocean762/613968e3b0b789fc33936fb5eba1973176ba7d11/WAVE/SPEAKER1027/010270140.WAV",
+        "license": "CC-BY-4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+        "usage": "benchmark_only",
+        "training_allowed": false
+      },
+      "conditions": [
+        "source_read_speech",
+        "quality_unreviewed"
+      ],
+      "target_accent": "en-US",
+      "targets": [
+        {
+          "target_id": "pause-review",
+          "phenomenon": "pause",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "f0-review",
+          "phenomenon": "f0",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "vowel_length-review",
+          "phenomenon": "vowel_length",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        },
+        {
+          "target_id": "linking_gap-review",
+          "phenomenon": "linking_gap",
+          "word_start": null,
+          "word_end": null,
+          "interval": null,
+          "rule_candidate": null,
+          "annotation": {
+            "status": "pending",
+            "label": null,
+            "measurements": [],
+            "annotator_ids": [],
+            "notes": "Pending human target selection and independent annotation; no occurrence inferred."
+          }
+        }
+      ]
+    }
+  ]
+}

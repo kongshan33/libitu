@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi.testclient import TestClient
 
 from app.auth import AuthenticatedUser, require_user
@@ -407,11 +409,16 @@ def test_corpus_and_speaking_flow() -> None:
 
         session_response = client.post(
             "/api/speaking/sessions",
-            json={"scenario_type": "workplace", "goal": "Align with a stakeholder"},
+            json={
+                "client_id": str(uuid4()), "scenario_type": "workplace", "goal": "Align with a stakeholder",
+                "corpus_item_ids": [corpus_response.json()["id"]],
+            },
         )
         assert session_response.status_code == 201
         assert session_response.json()["user_id"] == "user_test_one"
         session_id = session_response.json()["id"]
+        assert session_response.json()["items"][0]["text"] == "to be fair"
+        assert client.get(f"/api/speaking/sessions/{session_id}").json() == session_response.json()
 
         turn_response = client.post(
             f"/api/speaking/sessions/{session_id}/turns",

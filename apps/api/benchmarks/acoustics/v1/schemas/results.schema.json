@@ -1,0 +1,319 @@
+{
+  "$defs": {
+    "Gate": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "default": "not_checked",
+          "enum": [
+            "passed",
+            "failed",
+            "not_checked"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "reasons": {
+          "items": {
+            "maxLength": 12000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "title": "Gate",
+      "type": "object"
+    },
+    "Interval": {
+      "additionalProperties": false,
+      "properties": {
+        "start_seconds": {
+          "minimum": 0,
+          "title": "Start Seconds",
+          "type": "number"
+        },
+        "end_seconds": {
+          "minimum": 0,
+          "title": "End Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start_seconds",
+        "end_seconds"
+      ],
+      "title": "Interval",
+      "type": "object"
+    },
+    "Measurement": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "duration_ms",
+            "pause_duration_ms",
+            "boundary_gap_ms",
+            "closure_duration_ms",
+            "f0_hz",
+            "f0_semitones",
+            "voicing_ratio",
+            "f1_hz",
+            "f2_hz",
+            "intensity_db"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "enum": [
+            "ms",
+            "Hz",
+            "semitones",
+            "ratio",
+            "dB"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "interval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Interval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "unit"
+      ],
+      "title": "Measurement",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "description": "Confidence is the calibrated probability this detector decision is true.\n\nFor not_detected, P(present) = 1 - confidence. The v1 contract stores one\nscalar per measurement name and target, not unaligned frame sequences.",
+      "properties": {
+        "target_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Target Id",
+          "type": "string"
+        },
+        "phenomenon": {
+          "enum": [
+            "vowel_length",
+            "linking_gap",
+            "pause",
+            "f0",
+            "flap_t",
+            "weak_form",
+            "h_drop",
+            "final_voicing",
+            "elision",
+            "assimilation",
+            "glottal_stop",
+            "drop_d"
+          ],
+          "title": "Phenomenon",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "measured",
+            "detected",
+            "not_detected",
+            "uncertain",
+            "not_evaluated",
+            "not_supported",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "measurements": {
+          "items": {
+            "$ref": "#/$defs/Measurement"
+          },
+          "title": "Measurements",
+          "type": "array"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "reasons": {
+          "items": {
+            "maxLength": 12000,
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "target_id",
+        "phenomenon",
+        "status"
+      ],
+      "title": "Observation",
+      "type": "object"
+    },
+    "SampleResult": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "audio_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Audio Sha256",
+          "type": "string"
+        },
+        "transcript_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Transcript Sha256",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "reference",
+            "learner"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "quality": {
+          "$ref": "#/$defs/Gate"
+        },
+        "content": {
+          "$ref": "#/$defs/Gate"
+        },
+        "alignment": {
+          "$ref": "#/$defs/Gate"
+        },
+        "observations": {
+          "items": {
+            "$ref": "#/$defs/Observation"
+          },
+          "title": "Observations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sample_id",
+        "audio_sha256",
+        "transcript_sha256",
+        "role"
+      ],
+      "title": "SampleResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "acoustic-results.v1",
+      "default": "acoustic-results.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "dataset_id": {
+      "maxLength": 240,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "dataset_version": {
+      "maxLength": 240,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Dataset Version",
+      "type": "string"
+    },
+    "run_id": {
+      "maxLength": 240,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "versions": {
+      "patternProperties": {
+        "^[A-Za-z0-9][A-Za-z0-9._:-]*$": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        }
+      },
+      "propertyNames": {
+        "maxLength": 240,
+        "minLength": 1
+      },
+      "title": "Versions",
+      "type": "object"
+    },
+    "calibration_id": {
+      "anyOf": [
+        {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calibration Id"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/SampleResult"
+      },
+      "title": "Results",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "dataset_version",
+    "run_id",
+    "versions",
+    "results"
+  ],
+  "title": "ResultFile",
+  "type": "object"
+}

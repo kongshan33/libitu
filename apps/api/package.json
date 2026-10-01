@@ -8,8 +8,16 @@
     "dev:worker": "uv run python -m app.workers.blueprint_worker",
     "worker": "uv run python -m app.workers.blueprint_worker",
     "setup:punctuation": "uv run python -m scripts.download_punctuation_model",
+    "benchmark:acoustics": ".venv/bin/python -m scripts.acoustic_benchmark",
+    "benchmark:seed": ".venv/bin/python -m scripts.download_acoustic_seed",
+    "benchmark:prepare-seed": ".venv/bin/python -m scripts.prepare_acoustic_seed",
     "build": "python3 -m compileall app tests",
     "lint": "python3 -m compileall app tests",
-    "test": ".venv/bin/pytest tests"
+    "test": ".venv/bin/pytest tests",
+    "worker:acoustics": "uv run --extra acoustics python -m app.workers.acoustic_worker",
+    "reference:source": "uv run python -m scripts.reference_source",
+    "worker:practice": "uv run --extra acoustics python -m app.workers.practice_analysis_worker",
+    "dev:practice-worker": "uv run --extra acoustics python -m app.workers.practice_analysis_worker",
+    "dev:reference-worker": "uv run --extra acoustics python -m app.workers.acoustic_worker"
   }
 }

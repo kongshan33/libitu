@@ -1,6 +1,7 @@
 import { selectCorpusItems } from "@libitu/core/stage-one";
-import { readExtensionTranscript } from "./extension-handoff.ts";
+import { readCaptionTrack, readExtensionCaptions } from "./extension-handoff.ts";
 import type {
+  CaptionTrack,
   CorpusItem,
   CorpusSelectionAnalysis,
   CorpusKind,
@@ -8,6 +9,7 @@ import type {
   HighlightedTranscriptPart,
   LearnerLevel,
   LogicNode,
+  StageOneSegment,
   StageOneBlueprint,
   TranscriptLine
 } from "@libitu/types/stage-one";
@@ -16,6 +18,8 @@ const DEFAULT_API_BASE_URL = "http://localhost:8000";
 const REQUEST_TIMEOUT_MS = 15_000;
 const JOB_POLL_INTERVAL_MS = 1_500;
 const JOB_WAIT_TIMEOUT_MS = 10 * 60_000;
+// Matches the API's maximum configurable transcript_preview_limit.
+const MAX_STREAM_WORD_TIMING_ROWS = 2000;
 
 const allowedTags = new Set<FunctionalTag>([
   "acknowledging",
@@ -45,6 +49,7 @@ export type StageOneSource = {
   jobId?: string;
   handoffId?: string;
   transcriptText?: string;
+  captionTrack?: CaptionTrack;
   language?: string;
   learnerLevel?: LearnerLevel;
 };
@@ -84,7 +89,8 @@ type ApiAnalysisPreview = {
   chapters: string[];
   logic_flow: Array<{ title: string; subtitle: string; timestamp: string | null }>;
   corpus_items: ApiPreviewCorpusItem[];
-  transcript_lines: Array<{ time: string; text: string }>;
+  segmentation_version?: string | null;
+  transcript_lines: Array<ApiSentenceMetadata & { time: string; text: string }>;
 };
 
 type ApiLogicNode = {
@@ -100,8 +106,24 @@ type ApiHighlightedTranscriptPart = {
   kind: string;
 };
 
-type ApiTranscriptLine = {
+type ApiSentenceMetadata = {
   id?: string | null;
+  segmentation_version?: string | null;
+  source_token_start?: number | null;
+  source_token_end?: number | null;
+  start_ms?: number | null;
+  end_ms?: number | null;
+  boundary_source?: TranscriptLine["boundarySource"] | null;
+  boundary_confidence?: TranscriptLine["boundaryConfidence"] | null;
+  timing_source?: TranscriptLine["timingSource"] | null;
+  word_timings?: Array<{
+    source_token_index: number; text: string; start_ms: number; end_ms: number | null;
+    start_source: "caption_offset"; end_source: "next_word_estimate" | "event_end_estimate" | null;
+    source_event_index: number; source_seg_index: number;
+  }> | null;
+};
+
+type ApiTranscriptLine = ApiSentenceMetadata & {
   time: string;
   parts: Array<string | ApiHighlightedTranscriptPart>;
 };
@@ -139,6 +161,7 @@ type ApiPreviewCorpusItem = Omit<ApiCorpusItem, "id" | "meta" | "saved"> & {
 type ApiBlueprint = {
   id: string;
   content_id: string;
+  segmentation_version?: string | null;
   title: string;
   source_url: string | null;
   summary: string;
@@ -146,6 +169,27 @@ type ApiBlueprint = {
   chapters: string[];
   transcript: ApiTranscriptLine[];
   corpus_items: ApiCorpusItem[];
+  segments?: ApiBlueprintSegment[] | null;
+};
+
+type ApiBlueprintSegment = {
+  id: string;
+  sequence?: number | null;
+  title: string;
+  summary: string;
+  logic_node_id?: string | null;
+  timestamp_ms?: number | null;
+  start_ms?: number | null;
+  end_ms?: number | null;
+  duration_ms?: number | null;
+  transcript_start_index?: number | null;
+  transcript_end_index?: number | null;
+  source_text?: string | null;
+  quote?: string | null;
+  word_count?: number | null;
+  phonology_tags?: string[];
+  difficulty?: "easy" | "medium" | "dense" | null;
+  recommended?: boolean;
 };
 
 export type ApiCorpusSelectionAnalysis = {
@@ -215,6 +259,7 @@ export type AnalyzeCorpusSelectionInput = {
 };
 
 export type StageOneAnalysisPreview = {
+  segmentationVersion?: string;
   summary?: string;
   logicNodes: LogicNode[];
   chapters: string[];
@@ -281,7 +326,7 @@ export async function loadStageOneBlueprint(
     const next = {
       ...preview,
       corpusItems,
-      transcriptLines: preview.transcriptLines.map((line) => toTranscriptLine(line, corpusItems))
+      transcriptLines: preview.transcriptLines.map((line) => annotateTranscriptLine(line, corpusItems))
     };
     const signature = JSON.stringify(next);
     if (signature === lastPreview) return;
@@ -339,9 +384,12 @@ export async function loadStageOneBlueprint(
   }
 
   let transcriptText = source.transcriptText;
-  if (source.handoffId && !transcriptText) {
+  let captionTrack = readCaptionTrack(source.captionTrack);
+  if (source.handoffId && (!transcriptText || !captionTrack)) {
     onProgress?.("Reading captions from YouTube.");
-    transcriptText = await readExtensionTranscript(source.handoffId, signal);
+    const captions = await readExtensionCaptions(source.handoffId, signal);
+    transcriptText ??= captions.transcriptText;
+    captionTrack ??= captions.captionTrack;
     signal?.throwIfAborted();
   }
   onProgress?.(transcriptText ? "Saving the source transcript." : "Checking available captions.");
@@ -351,6 +399,7 @@ export async function loadStageOneBlueprint(
       kind: source.kind,
       source_url: source.sourceUrl,
       transcript_text: transcriptText,
+      caption_track: captionTrack,
       language: source.language,
       title: source.title
     })
@@ -371,6 +420,26 @@ export async function loadStageOneBlueprint(
   onProgress?.("Loading the completed blueprint.");
   const blueprint = await loadRequest<ApiBlueprint>(blueprintPath(content.content_id, source.learnerLevel));
   return toStageOneBlueprint(blueprint, content);
+}
+
+/** Upgrade a cached caption view without resolving content or starting semantic analysis. */
+export async function updateCaptionTiming(contentId: string, captionTrack: CaptionTrack, options: {
+  signal?: AbortSignal; learnerLevel?: LearnerLevel;
+} = {}): Promise<{ status: "updated" | "unchanged"; blueprint: StageOneBlueprint }> {
+  const query = new URLSearchParams();
+  if (options.learnerLevel) query.set("learner_level", options.learnerLevel);
+  const suffix = query.size ? `?${query}` : "";
+  const result = await request<{ status: "updated" | "unchanged"; blueprint: ApiBlueprint }>(
+    `/api/content/${encodeURIComponent(contentId)}/caption-timing${suffix}`,
+    { method: "POST", body: JSON.stringify({ caption_track: captionTrack }), signal: options.signal }, 45_000
+  );
+  if (!["updated", "unchanged"].includes(result.status) || result.blueprint?.content_id !== contentId) {
+    throw new StageOneApiError("The recovered captions belong to a different source. Reload this content before retrying.");
+  }
+  return { status: result.status, blueprint: toStageOneBlueprint(result.blueprint, {
+    content_id: contentId, kind: "youtube", normalized_key: `youtube:${captionTrack.video_id}`,
+    source_url: null, title: null
+  }) };
 }
 
 async function waitForJob(
@@ -402,7 +471,8 @@ function waitForJobStream(
   return new Promise((resolve, reject) => {
     signal?.throwIfAborted();
     let settled = false;
-    const stream = new EventSource(`${apiBaseUrl()}/api/jobs/${initialJob.id}/events`);
+    let previousWords = new Map<string, NonNullable<ApiSentenceMetadata["word_timings"]>>();
+    const stream = new EventSource(`${apiBaseUrl()}/api/jobs/${initialJob.id}/events?compact_word_timings=true`);
     const timeout = window.setTimeout(() => finish(() => reject(new Error("Job stream timed out."))), Math.max(0, deadline - Date.now()));
 
     function finish(action: () => void) {
@@ -410,6 +480,7 @@ function waitForJobStream(
       settled = true;
       window.clearTimeout(timeout);
       signal?.removeEventListener("abort", abort);
+      previousWords.clear();
       stream.close();
       action();
     }
@@ -422,7 +493,23 @@ function waitForJobStream(
     stream.addEventListener("job", (event) => {
       if (settled) return;
       try {
-        const job = JSON.parse(event.data) as ApiProcessingJob;
+        let job = JSON.parse(event.data) as ApiProcessingJob;
+        if (job.analysis_preview) {
+          // SSE alone can omit unchanged word payloads. This cache belongs to one
+          // connection, holds only its latest bounded snapshot and never affects polling/final data.
+          const nextWords = new Map<string, NonNullable<ApiSentenceMetadata["word_timings"]>>();
+          const transcript_lines = job.analysis_preview.transcript_lines.map((line) => {
+            if (!line.id || !line.segmentation_version || !Number.isInteger(line.source_token_start)
+              || !Number.isInteger(line.source_token_end)) return line;
+            const key = JSON.stringify([job.id, job.content_id, line.id, line.segmentation_version,
+              line.source_token_start, line.source_token_end, line.text, line.timing_source, line.start_ms, line.end_ms]);
+            const words = line.word_timings === undefined ? previousWords.get(key) : line.word_timings;
+            if (Array.isArray(words) && words.length && nextWords.size < MAX_STREAM_WORD_TIMING_ROWS) nextWords.set(key, words);
+            return line.word_timings === undefined && words ? { ...line, word_timings: words } : line;
+          });
+          previousWords = nextWords;
+          job = { ...job, analysis_preview: { ...job.analysis_preview, transcript_lines } };
+        }
         notifyJobUpdate(job, onProgress, onPreview);
         if (!["pending", "processing"].includes(job.status)) {
           finish(() => resolve(job));
@@ -539,6 +626,8 @@ async function readErrorMessage(response: Response): Promise<string> {
   try {
     const payload = (await response.json()) as { detail?: unknown };
     if (typeof payload.detail === "string") return payload.detail;
+    if (payload.detail && typeof payload.detail === "object" && "message" in payload.detail
+      && typeof payload.detail.message === "string") return payload.detail.message;
   } catch {
     return `API request failed with status ${response.status}.`;
   }
@@ -561,13 +650,37 @@ function toStageOneBlueprint(blueprint: ApiBlueprint, content: ApiContentResolve
   return {
     id: blueprint.id,
     contentId: blueprint.content_id,
+    segmentationVersion: blueprint.segmentation_version ?? undefined,
     sourceUrl: blueprint.source_url ?? content.source_url ?? undefined,
     title: blueprint.title || content.title || "Untitled content",
     summary: blueprint.summary,
     logicNodes: blueprint.logic_flow.map(toLogicNode),
     chapters: blueprint.chapters,
     transcript: blueprint.transcript.map((line) => toTranscriptLine(line, corpusItems)),
-    corpusItems
+    corpusItems,
+    segments: (blueprint.segments ?? []).map(toStageOneSegment)
+  };
+}
+
+function toStageOneSegment(segment: ApiBlueprintSegment): StageOneSegment {
+  return {
+    id: segment.id,
+    sequence: segment.sequence ?? undefined,
+    title: segment.title,
+    summary: segment.summary,
+    logicNodeId: segment.logic_node_id ?? undefined,
+    timestampMs: segment.timestamp_ms ?? undefined,
+    startMs: segment.start_ms ?? undefined,
+    endMs: segment.end_ms ?? undefined,
+    durationMs: segment.duration_ms ?? undefined,
+    transcriptStartIndex: segment.transcript_start_index ?? undefined,
+    transcriptEndIndex: segment.transcript_end_index ?? undefined,
+    sourceText: segment.source_text ?? undefined,
+    quote: segment.quote ?? undefined,
+    wordCount: segment.word_count ?? undefined,
+    phonologyTags: segment.phonology_tags ?? [],
+    difficulty: segment.difficulty ?? undefined,
+    recommended: segment.recommended ?? false
   };
 }
 
@@ -597,6 +710,7 @@ function toStageOneAnalysisPreview(preview: ApiAnalysisPreview): StageOneAnalysi
   );
 
   return {
+    segmentationVersion: preview.segmentation_version ?? undefined,
     summary: preview.summary ?? undefined,
     chapters: preview.chapters,
     logicNodes,
@@ -604,7 +718,8 @@ function toStageOneAnalysisPreview(preview: ApiAnalysisPreview): StageOneAnalysi
     transcriptLines: (preview.transcript_lines ?? []).map((line) =>
       toTranscriptLine(
         {
-          id: logicNodes.find((node) => node.time === line.time)?.id,
+          ...line,
+          id: line.id ?? logicNodes.find((node) => node.time === line.time)?.id,
           time: line.time,
           parts: [line.text]
         },
@@ -616,9 +731,29 @@ function toStageOneAnalysisPreview(preview: ApiAnalysisPreview): StageOneAnalysi
 }
 
 function toTranscriptLine(line: ApiTranscriptLine, corpusItems: CorpusItem[]): TranscriptLine {
-  return {
+  return annotateTranscriptLine({
     id: line.id ?? undefined,
+    segmentationVersion: line.segmentation_version ?? undefined,
+    sourceTokenStart: line.source_token_start ?? undefined,
+    sourceTokenEnd: line.source_token_end ?? undefined,
+    startMs: line.start_ms ?? undefined,
+    endMs: line.end_ms ?? undefined,
+    boundarySource: line.boundary_source ?? undefined,
+    boundaryConfidence: line.boundary_confidence ?? undefined,
+    timingSource: line.timing_source ?? undefined,
+    wordTimings: Array.isArray(line.word_timings) ? line.word_timings.filter((word) => word && typeof word === "object").map((word) => ({
+      sourceTokenIndex: word.source_token_index, text: word.text, startMs: word.start_ms, endMs: word.end_ms,
+      startSource: word.start_source, endSource: word.end_source,
+      sourceEventIndex: word.source_event_index, sourceSegIndex: word.source_seg_index
+    })) : undefined,
     time: line.time,
+    parts: line.parts.map((part) => typeof part === "string" ? part : part.text)
+  }, corpusItems);
+}
+
+function annotateTranscriptLine(line: TranscriptLine, corpusItems: CorpusItem[]): TranscriptLine {
+  return {
+    ...line,
     parts: annotateTranscriptText(
       line.parts.map((part) => typeof part === "string" ? part : part.text).join(""),
       corpusItems

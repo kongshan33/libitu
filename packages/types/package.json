@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./stage-one": "./src/stage-one.ts"
+    "./stage-one": "./src/stage-one.ts",
+    "./stage-two": "./src/stage-two.ts",
+    "./speaking": "./src/speaking.ts"
   }
 }

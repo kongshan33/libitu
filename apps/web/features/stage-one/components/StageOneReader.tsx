@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
-import { Check, Pin, PinOff, Plus, Trash2, Volume2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Target, Trash2, Volume2, X } from "lucide-react";
 import type {
   CorpusFilter,
   CorpusItem,
@@ -12,7 +14,8 @@ import type {
   CorpusSelectionAnalysis,
   CorpusSelectionContext,
   FunctionalTag,
-  StageOneBlueprint
+  StageOneBlueprint,
+  StageOneSegment
 } from "@libitu/types/stage-one";
 import type { LearnerLevel } from "@libitu/types/stage-one";
 import { AuthControls } from "@/features/auth/components/AuthControls";
@@ -25,9 +28,25 @@ import {
   type StageOneSource
 } from "../api/stage-one-api";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
-import { useSavedCorpus } from "./useSavedCorpus";
-import { savedCorpusKey, type SavedCorpusRecord } from "../api/corpus-storage";
+import { useSavedCorpus } from "../../corpus/useSavedCorpus";
+import { savedCorpusKey, type SavedCorpusRecord } from "../../corpus/corpus-storage";
 import { findCurrentTimedItem, parseTimestamp } from "../timeline";
+import { CaptionTimedText } from "../../playback/CaptionTimedText";
+import { CaptionWordClock } from "../../playback/caption-word-clock";
+import { WordTimingNotice } from "../../playback/WordTimingNotice";
+import { CaptionTimingRecoveryNotice } from "../../playback/CaptionTimingRecoveryNotice";
+import { useCaptionTimingRecovery } from "./use-caption-timing-recovery";
+import { buildSentenceUnits } from "../../stage-two/sentences";
+import { readStageTwoLocation, replaceStageTwoLocation } from "../../stage-two/location";
+import { BufferedReferenceProvider, useBufferedReference } from "../../stage-two/reference/use-buffered-reference";
+import { BufferedReferencePanel } from "../../stage-two/components/BufferedReferencePanel";
+import { useReferenceAnalysis } from "../../stage-two/analysis/use-reference-analysis";
+import { useBufferedAnalysis } from "../../stage-two/analysis/use-buffered-analysis";
+import { buildReferenceKey, type ReferenceAnalysisCache } from "../../stage-two/analysis/reference-analysis-cache";
+import { LoadoutLink } from "../../navigation/LoadoutLink";
+
+const StageTwoShadowing = dynamic(() => import("../../stage-two/components/StageTwoShadowing").then((module) => module.StageTwoShadowing),
+  { loading: () => <p role="status">Opening practice…</p> });
 
 const tagClass: Record<CorpusItem["tags"][number], string> = {
   acknowledging: "tag-teal",
@@ -80,6 +99,13 @@ type CorpusDetailState = {
   error?: string;
 };
 
+type StageOneReaderProps = {
+  onChooseSegment?: () => void;
+  onStartStageTwo?: (segment: StageOneSegment) => void;
+};
+
+type StageOneView = "reader" | "picker" | "preparing" | "shadow";
+
 function LibraryIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 16 16">
@@ -88,13 +114,15 @@ function LibraryIcon() {
   );
 }
 
-export function StageOneReader() {
+export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneReaderProps = {}) {
+  const { isLoaded: authLoaded, userId } = useAuth();
+  const clerk = useClerk();
   const [blueprint, setBlueprint] = useState<StageOneBlueprint | null>(null);
   const [analysisPreview, setAnalysisPreview] = useState<StageOneAnalysisPreview | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "failed" | "unsupported">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activeNode, setActiveNode] = useState<string | null>(null);
-  const [activeTranscriptTime, setActiveTranscriptTime] = useState<string | null>(null);
+  const [activeTranscriptIdentity, setActiveTranscriptIdentity] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CorpusFilter>("chunks");
   const corpus = useSavedCorpus();
   const [selectionCard, setSelectionCard] = useState<SelectionCardState | null>(null);
@@ -103,19 +131,46 @@ export function StageOneReader() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [autoScrollPausedUntil, setAutoScrollPausedUntil] = useState<number | null>(null);
   const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
+  const playingRef = useRef(false);
   const [highlightActive, setHighlightActive] = useState(true);
   const [sourceTitle, setSourceTitle] = useState("Loading Stage 1 content");
   const [source, setSource] = useState<StageOneSource | null>(null);
+  const [stageOneView, setStageOneView] = useState<StageOneView>("reader");
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const loadControllerRef = useRef<AbortController | null>(null);
   const resolvedSourceRef = useRef<StageOneSource | null>(null);
   const playerRef = useRef<YouTubePlayerHandle>(null);
+  const [wordClock] = useState(() => new CaptionWordClock());
   const programmaticScrollTimeoutRef = useRef<number | null>(null);
   const resumeAutoScrollTimeoutRef = useRef<number | null>(null);
   const detailCacheRef = useRef(new Map<string, CorpusItemAnalysisDetail>());
+  const handlePlaybackChange = useCallback((playing: boolean) => {
+    playingRef.current = playing;
+    setIsPlayerPlaying(playing);
+  }, []);
+  const applyRecoveredBlueprint = useCallback((next: StageOneBlueprint) => {
+    if (playingRef.current) return false;
+    setBlueprint(next);
+    return true;
+  }, []);
+  const timingRecovery = useCaptionTimingRecovery(blueprint, {
+    ready: status === "ready", applyWhenPaused: stageOneView === "reader" && !isPlayerPlaying,
+    language: source?.language, learnerLevel: source?.learnerLevel, onApply: applyRecoveredBlueprint
+  });
 
   const sourceKey = blueprint?.contentId ?? source?.contentId ?? source?.sourceUrl ?? "";
   const sourceUrl = blueprint?.sourceUrl ?? source?.sourceUrl;
+  const bufferedReference = useBufferedReference(blueprint?.contentId ?? source?.contentId ?? null, sourceUrl ?? null);
+  const sharedReferenceAnalysis = useReferenceAnalysis(null, null);
+  const sharedReferenceCache = sharedReferenceAnalysis.cache;
+  const captureGeneration = useRef(0);
+  const suspendBuffered = bufferedReference.suspend;
+  useEffect(() => { sharedReferenceCache.clear(); }, [sourceKey, sourceUrl, sharedReferenceCache]);
+  const suspendReference = useCallback(() => {
+    suspendBuffered();
+    captureGeneration.current++;
+  }, [suspendBuffered]);
   const savedRecords = corpus.records.filter((record) => (record.contentId ?? record.sourceUrl) === sourceKey
     || Boolean(sourceUrl && record.sourceUrl === sourceUrl));
   const savedByKey = new Map(savedRecords.map((record) => [record.key, record]));
@@ -202,7 +257,10 @@ export function StageOneReader() {
     [analysisPreview?.logicNodes, blueprint?.logicNodes]
   );
   const transcriptTimeline = useMemo(
-    () => transcript.map((line) => ({ item: line, seconds: parseTimestamp(line.time) })),
+    () => transcript.map((line, index) => ({
+      item: { identity: transcriptIdentity(line, index) },
+      seconds: transcriptStartSeconds(line)
+    })),
     [transcript]
   );
   const logicTimeline = useMemo(
@@ -212,7 +270,7 @@ export function StageOneReader() {
 
   const syncActiveMoment = useCallback((seconds: number) => {
     const currentLine = findCurrentTimedItem(transcriptTimeline, seconds);
-    if (currentLine) setActiveTranscriptTime((current) => current === currentLine.time ? current : currentLine.time);
+    if (currentLine) setActiveTranscriptIdentity((current) => current === currentLine.identity ? current : currentLine.identity);
     const currentNode = findCurrentTimedItem(logicTimeline, seconds, true);
     if (currentNode) setActiveNode((current) => current === currentNode.id ? current : currentNode.id);
   }, [logicTimeline, transcriptTimeline]);
@@ -259,12 +317,12 @@ export function StageOneReader() {
   }, []);
 
   useEffect(() => {
-    if (!shouldAutoAlignTranscript || !activeTranscriptTime) return;
-    const activeLine = document.getElementById(transcriptElementId(activeTranscriptTime));
+    if (!shouldAutoAlignTranscript || !activeTranscriptIdentity) return;
+    const activeLine = document.getElementById(transcriptElementId(activeTranscriptIdentity));
     if (!activeLine) return;
     markProgrammaticScroll();
     activeLine.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [activeTranscriptTime, markProgrammaticScroll, shouldAutoAlignTranscript]);
+  }, [activeTranscriptIdentity, markProgrammaticScroll, shouldAutoAlignTranscript]);
 
   function handleTranscriptViewportScroll() {
     if (programmaticScrollTimeoutRef.current !== null) return;
@@ -282,16 +340,20 @@ export function StageOneReader() {
     setActiveNode(nodeId);
   }
 
-  function selectTranscriptLine(time: string) {
+  function selectTranscriptLine(line: StageOneBlueprint["transcript"][number], index: number) {
     resumeAutoAlignNow();
-    seekToMoment(time);
+    const seconds = transcriptStartSeconds(line);
+    if (seconds === null) return;
+    playerRef.current?.seekTo(seconds, { autoplay: true });
+    syncActiveMoment(seconds);
+    setActiveTranscriptIdentity(transcriptIdentity(line, index));
   }
 
   function seekToMoment(primaryTime: string | null, fallbackTime?: string) {
     const time = primaryTime ?? fallbackTime ?? null;
     const seconds = parseTimestamp(time);
     if (seconds === null) return;
-    playerRef.current?.seekTo(seconds);
+    playerRef.current?.seekTo(seconds, { autoplay: true });
     syncActiveMoment(seconds);
   }
 
@@ -472,11 +534,63 @@ export function StageOneReader() {
   }
 
   const isReady = status === "ready" && blueprint !== null;
+  const playableSegments = useMemo(
+    () => (blueprint?.segments ?? []).filter(isPlayableSegment),
+    [blueprint?.segments]
+  );
   const displaySourceUrl = blueprint?.sourceUrl ?? source?.sourceUrl;
   const displayTitle = blueprint?.title ?? sourceTitle;
   const displaySummary = blueprint?.summary ?? analysisPreview?.summary;
+  const selectedSegment = playableSegments.find((segment) => segment.id === selectedSegmentId) ?? null;
+
+  const openSegmentPicker = useCallback(() => {
+    if (playableSegments.length === 0) return;
+    suspendReference();
+    playerRef.current?.pause();
+    onChooseSegment?.();
+    setStageOneView("picker");
+  }, [onChooseSegment, playableSegments.length, suspendReference]);
+
+  const closeSegmentPicker = useCallback(() => {
+    suspendReference();
+    replaceStageTwoLocation(null);
+    if (stageOneView !== "reader") handlePlaybackChange(false);
+    setStageOneView("reader");
+  }, [handlePlaybackChange, stageOneView, suspendReference]);
+
+  const beginStageTwoPreparation = useCallback((segment: StageOneSegment) => {
+    suspendReference();
+    setSelectedSegmentId(segment.id);
+    setStageOneView("preparing");
+  }, [suspendReference]);
+
+  const launchStageTwo = useCallback((segment: StageOneSegment) => {
+    suspendReference();
+    const firstSentence = blueprint ? buildSentenceUnits(blueprint.contentId, segment, blueprint.transcript)[0] : null;
+    replaceStageTwoLocation({ segmentId: segment.id, sentenceId: firstSentence?.id });
+    setSelectedSegmentId(segment.id);
+    setStageOneView("shadow");
+    if (userId) onStartStageTwo?.(segment);
+    else if (authLoaded) {
+      const returnUrl = window.location.href;
+      clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
+    }
+  }, [onStartStageTwo, suspendReference, blueprint, userId, authLoaded, clerk]);
+
+  useEffect(() => {
+    if (!blueprint) return;
+    const location = readStageTwoLocation(new URL(window.location.href));
+    if (!location) return;
+    if (!playableSegments.some((segment) => segment.id === location.segmentId)) {
+      replaceStageTwoLocation(null);
+      return;
+    }
+    setSelectedSegmentId(location.segmentId);
+    setStageOneView("shadow");
+  }, [blueprint, playableSegments]);
 
   return (
+    <BufferedReferenceProvider value={bufferedReference}>
     <main className="stage-page">
       <section className="reader-shell" aria-label="Libitu stage 1 ingest reader">
         <header className="topbar">
@@ -485,13 +599,77 @@ export function StageOneReader() {
           </Link>
           <div className="topbar-title">{blueprint?.title ?? sourceTitle}</div>
           <div className="stage-pills" aria-label="Learning stages">
-            <span className="stage-pill active">Stage 1 - Ingest</span>
-            <button className="stage-pill" type="button">Stage 2 - Shadow</button>
-            <button className="stage-pill" type="button">Stage 3 - Mission</button>
+            <button
+              className={`stage-pill ${stageOneView === "reader" || stageOneView === "picker" ? "active" : ""}`}
+              type="button"
+              onClick={closeSegmentPicker}
+            >
+              Stage 1 - Ingest
+            </button>
+            <button
+              className={`stage-pill ${stageOneView === "preparing" || stageOneView === "shadow" ? "active" : ""}`}
+              type="button"
+              disabled={stageOneView !== "shadow"}
+            >
+              Stage 2 - Shadow
+            </button>
+            <LoadoutLink className="stage-pill">Stage 3 - Mission</LoadoutLink>
           </div>
           <AuthControls />
         </header>
 
+        {stageOneView === "picker" ? (
+          <StageOneSegmentPicker
+            segments={playableSegments}
+            logicNodes={logicNodes}
+            selectedSegmentId={selectedSegmentId}
+            title={displayTitle}
+            onBack={closeSegmentPicker}
+            onSelect={setSelectedSegmentId}
+            onBegin={beginStageTwoPreparation}
+          />
+        ) : stageOneView === "preparing" && selectedSegment ? (
+          <StageTwoPreparation
+            contentId={blueprint!.contentId}
+            segment={selectedSegment}
+            logicNodes={logicNodes}
+            transcript={transcript}
+            sourceUrl={displaySourceUrl ?? ""}
+            capture={bufferedReference}
+            captureGeneration={captureGeneration.current}
+            cache={sharedReferenceCache}
+            onStart={launchStageTwo}
+          />
+        ) : stageOneView === "shadow" && selectedSegment && (!authLoaded || !userId) ? (
+          <section className="shadow-sign-in" aria-label="Sign in to Shadow">
+            <h1>Sign in to start Shadow</h1>
+            <p>Save your practice history to your account. You choose whether to keep recordings for later playback.</p>
+            <p>{selectedSegment.title} · Your selected sentence will be kept.</p>
+            <button type="button" disabled={!authLoaded} onClick={() => {
+              const returnUrl = window.location.href;
+              clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
+            }}>{authLoaded ? "Sign in or create account" : "Checking sign-in…"}</button>
+            <button type="button" onClick={closeSegmentPicker}>Back to Stage 1</button>
+          </section>
+        ) : stageOneView === "shadow" && selectedSegment && authLoaded && userId ? (
+          <StageTwoShadowing
+            key={JSON.stringify([userId, blueprint!.contentId, selectedSegment.id, displaySourceUrl])}
+            contentId={blueprint!.contentId}
+            segment={selectedSegment}
+            sourceUrl={displaySourceUrl}
+            title={displayTitle}
+            transcript={transcript}
+            timingRecovery={<CaptionTimingRecoveryNotice state={timingRecovery.state} inPractice onRetry={timingRecovery.retry} />}
+            sharedReferenceCache={sharedReferenceCache}
+            captureGeneration={captureGeneration.current}
+            onBack={() => {
+              suspendReference();
+              replaceStageTwoLocation(null);
+              setStageOneView("picker");
+            }}
+          />
+        ) : (
+          <>
         <aside className="left-panel" aria-label="Logic flow" aria-busy={!isReady}>
           <section className="logic-flow">
             <div className="section-label">Logic flow</div>
@@ -524,16 +702,20 @@ export function StageOneReader() {
           <div className="video-frame">
             {displaySourceUrl ? (
               <YouTubePlayer
+                wordClock={wordClock}
                 ref={playerRef}
                 sourceUrl={displaySourceUrl}
                 title={displayTitle}
-                onPlaybackChange={setIsPlayerPlaying}
+                onPlaybackChange={handlePlaybackChange}
                 onTimeChange={handlePlayerTimeChange}
+                onTelemetry={(sample) => bufferedReference.sample(
+                  sample.blockedByPausedSeek ? { ...sample, state: 2 } : sample, captureGeneration.current)}
               />
             ) : source ? (
               <p className="empty-state">The source video URL is unavailable.</p>
             ) : null}
           </div>
+          {displaySourceUrl && blueprint?.contentId ? <BufferedReferencePanel capture={bufferedReference} playable /> : null}
           <div className="video-summary" aria-live="polite">
             <h1>{displayTitle}</h1>
             <p className={displaySummary ? undefined : "summary-pending"}>
@@ -583,6 +765,8 @@ export function StageOneReader() {
                 </button>
               </div>
 
+              <WordTimingNotice rows={transcript} enabled={highlightActive} pending={status === "loading"} />
+              <CaptionTimingRecoveryNotice state={timingRecovery.state} onRetry={timingRecovery.retry} />
               <article
                 className="transcript-area"
                 aria-label="Annotated transcript"
@@ -593,30 +777,16 @@ export function StageOneReader() {
               >
                 {transcript.map((line, lineIndex) => (
                   <div
-                    className={`transcript-line ${highlightActive && line.time === activeTranscriptTime ? "active-line" : ""}`}
+                    className={`transcript-line ${highlightActive && transcriptIdentity(line, lineIndex) === activeTranscriptIdentity ? "active-line" : ""}`}
                     data-index={lineIndex}
-                    id={transcriptElementId(line.time)}
-                    key={`${line.time}-${lineIndex}`}
-                    onClick={() => selectTranscriptLine(line.time)}
+                    id={transcriptElementId(transcriptIdentity(line, lineIndex))}
+                    key={line.segmentationVersion && line.id ? line.id : `${line.time}-${lineIndex}`}
+                    onClick={() => selectTranscriptLine(line, lineIndex)}
                   >
                     <button className="transcript-time" type="button" aria-label={`Play from ${line.time}`}>{line.time}</button>
-                    <span className="transcript-text">
-                      {line.parts.map((part, index) =>
-                        typeof part === "string" ? (
-                          part
-                        ) : (
-                          <button
-                            className={`highlight ${part.kind}`}
-                            data-tag={part.tag}
-                            key={`${part.text}-${index}`}
-                            type="button"
-                            aria-label={`${part.kind}: ${part.text}. ${part.tag}`}
-                          >
-                            {part.text}
-                          </button>
-                        )
-                      )}
-                    </span>
+                    <CaptionTimedText className="transcript-text" parts={line.parts} clock={wordClock}
+                      enabled={highlightActive}
+                      sourceTokenStart={line.sourceTokenStart} timingSource={line.timingSource} wordTimings={line.wordTimings} />
                   </div>
                 ))}
               </article>
@@ -726,12 +896,21 @@ export function StageOneReader() {
 
           <div className="mission-box">
             <div>
-              <span>Ready for Stage 3</span>
-              <strong>{savedRecords.length} items selected</strong>
+              <span>Your saved language</span>
+              <strong>{savedRecords.length} items saved from this source</strong>
             </div>
-            <button className="mission-button" type="button">Open loadout</button>
+            <LoadoutLink className="mission-button">Open loadout</LoadoutLink>
           </div>
         </aside>
+
+        {isReady ? (
+          <StageOneStageCta
+            segmentCount={playableSegments.length}
+            onChooseSegment={openSegmentPicker}
+          />
+        ) : null}
+          </>
+        )}
       </section>
       {corpusDetail ? (
         <CorpusDetailDialog
@@ -743,7 +922,367 @@ export function StageOneReader() {
         />
       ) : null}
     </main>
+    </BufferedReferenceProvider>
   );
+}
+
+function isPlayableSegment(segment: StageOneBlueprint["segments"][number]) {
+  return typeof segment.startMs === "number"
+    && typeof segment.endMs === "number"
+    && segment.endMs > segment.startMs;
+}
+
+type StageOneStageCtaProps = {
+  segmentCount: number;
+  onChooseSegment?: () => void;
+};
+
+function StageOneStageCta({ segmentCount, onChooseSegment }: StageOneStageCtaProps) {
+  const canChooseSegment = segmentCount > 0;
+
+  return (
+    <footer className="stage-one-cta" aria-label="Stage 2 entry point">
+      <div className="stage-one-cta-status" role="status" aria-live="polite">
+        <span className={`stage-one-cta-dot ${canChooseSegment ? "ready" : "unavailable"}`} aria-hidden="true" />
+        {canChooseSegment
+          ? `Analysis complete · ${segmentCount} practice segment${segmentCount === 1 ? "" : "s"} ready`
+          : "Analysis complete · Practice segments unavailable"}
+      </div>
+      <span className="stage-one-cta-spacer" aria-hidden="true" />
+      <span className="stage-one-cta-hint">
+        {canChooseSegment ? "All segments under 5 minutes" : "Playable segment timing is required"}
+      </span>
+      <button
+        className="stage-one-cta-button"
+        type="button"
+        disabled={!canChooseSegment}
+        onClick={onChooseSegment}
+      >
+        {canChooseSegment ? "Choose a segment to shadow" : "Segments unavailable"}
+        <ArrowRight aria-hidden="true" />
+      </button>
+    </footer>
+  );
+}
+
+const segmentLogicColors = ["#1d9e75", "#ef9f27", "#534ab7", "#3b82f6"];
+
+function StageOneSegmentPicker({
+  segments,
+  logicNodes,
+  selectedSegmentId,
+  title,
+  onBack,
+  onSelect,
+  onBegin
+}: {
+  segments: StageOneSegment[];
+  logicNodes: StageOneBlueprint["logicNodes"];
+  selectedSegmentId: string | null;
+  title: string;
+  onBack: () => void;
+  onSelect: (segmentId: string) => void;
+  onBegin?: (segment: StageOneSegment) => void;
+}) {
+  const totalDurationMs = Math.max(...segments.map((segment) => segment.endMs ?? 0), 0);
+  const allUnderFiveMinutes = segments.every((segment) => segmentDurationMs(segment) <= 5 * 60_000);
+  const selectedSegment = segments.find((segment) => segment.id === selectedSegmentId) ?? null;
+
+  return (
+    <section className="stage-one-picker" aria-label="Choose a segment to shadow">
+      <header className="stage-one-picker-header">
+        <button className="stage-one-picker-back" type="button" onClick={onBack}>
+          <ArrowLeft aria-hidden="true" />
+          Back
+        </button>
+        <div className="stage-one-picker-heading">
+          <h1>Choose a segment to shadow</h1>
+          <p>AI divided {title} into {segments.length} segments aligned to the logic flow.</p>
+        </div>
+        <span className="stage-one-picker-rule">
+          <Clock3 aria-hidden="true" />
+          {allUnderFiveMinutes ? "All under 5 min" : "Some segments over 5 min"}
+        </span>
+      </header>
+
+      <div className="stage-one-picker-timeline">
+        <div className="stage-one-picker-timeline-label">
+          <span>Video timeline · {formatSegmentClock(totalDurationMs)} total</span>
+          <span>Click a segment to select</span>
+        </div>
+        <div className="stage-one-picker-timeline-scroll">
+          <div
+            className="stage-one-picker-timeline-track"
+            style={{ minWidth: `${Math.max(segments.length * 112, 560)}px` }}
+          >
+            <div className="stage-one-picker-timeline-bar" role="group" aria-label="Video segments">
+              {segments.map((segment, index) => {
+                const logic = segmentLogicFor(segment, logicNodes, index);
+                const selected = segment.id === selectedSegmentId;
+                return (
+                  <button
+                    className={`stage-one-picker-timeline-segment ${selected ? "selected" : ""}`}
+                    key={segment.id}
+                    type="button"
+                    aria-label={`${segment.title}, ${formatSegmentClock(segment.startMs ?? 0)} to ${formatSegmentClock(segment.endMs ?? 0)}`}
+                    aria-pressed={selected}
+                    style={{
+                      flex: Math.max(segmentDurationMs(segment), 1),
+                      background: logic.color
+                    }}
+                    onClick={() => onSelect(segment.id)}
+                  >
+                    <span className="stage-one-picker-timeline-number">S{segment.sequence ?? index + 1}</span>
+                    <span className="stage-one-picker-timeline-title">{segment.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="stage-one-picker-timeline-boundaries" aria-label="Segment boundary times">
+              {segments.map((segment, index) => (
+                <time
+                  className={index === 0 ? "first" : ""}
+                  dateTime={`PT${Math.round((segment.startMs ?? 0) / 1000)}S`}
+                  key={`${segment.id}-start`}
+                  style={{ left: `${totalDurationMs > 0 ? (segment.startMs ?? 0) / totalDurationMs * 100 : 0}%` }}
+                >
+                  {formatSegmentClock(segment.startMs ?? 0)}
+                </time>
+              ))}
+              <time className="last" dateTime={`PT${Math.round(totalDurationMs / 1000)}S`}>
+                {formatSegmentClock(totalDurationMs)}
+              </time>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="stage-one-picker-scroll">
+        <div className="stage-one-picker-grid">
+          {segments.map((segment, index) => (
+            <StageOneSegmentCard
+              key={segment.id}
+              segment={segment}
+              logic={segmentLogicFor(segment, logicNodes, index)}
+              selected={segment.id === selectedSegmentId}
+              onSelect={() => onSelect(segment.id)}
+            />
+          ))}
+        </div>
+      </div>
+
+      <footer className="stage-one-picker-footer">
+        <div className="stage-one-picker-selection">
+          <span>{selectedSegment ? "Selected segment" : "Select a segment above to begin"}</span>
+          {selectedSegment ? (
+            <strong>{selectedSegment.title} · {formatSegmentDuration(selectedSegment)} · {segmentLogicFor(selectedSegment, logicNodes, 0).node?.title ?? "Logic flow"}</strong>
+          ) : null}
+        </div>
+        <button
+          className="stage-one-picker-begin"
+          type="button"
+          disabled={!selectedSegment}
+          onClick={() => selectedSegment && onBegin?.(selectedSegment)}
+        >
+          Begin Stage 2{selectedSegment ? ` · ${selectedSegment.title}` : ""}
+          <ArrowRight aria-hidden="true" />
+        </button>
+      </footer>
+    </section>
+  );
+}
+
+function StageTwoPreparation({
+  contentId,
+  segment,
+  logicNodes,
+  transcript,
+  sourceUrl,
+  capture,
+  captureGeneration,
+  cache,
+  onStart
+}: {
+  contentId: string;
+  segment: StageOneSegment;
+  logicNodes: StageOneBlueprint["logicNodes"];
+  transcript: StageOneBlueprint["transcript"];
+  sourceUrl: string;
+  capture: ReturnType<typeof useBufferedReference>;
+  captureGeneration: number;
+  cache: ReferenceAnalysisCache;
+  onStart?: (segment: StageOneSegment) => void;
+}) {
+  const logic = segmentLogicFor(segment, logicNodes, Math.max((segment.sequence ?? 1) - 1, 0));
+  const sentences = useMemo(() => buildSentenceUnits(contentId, segment, transcript), [contentId, segment, transcript]);
+  const player = useRef<YouTubePlayerHandle>(null);
+  const [playing, setPlaying] = useState(false);
+  const suspend = capture.suspend;
+  const observed = useReferenceAnalysis(null, null, undefined, cache);
+  const preparation = useBufferedAnalysis(contentId, sourceUrl, sentences, capture, cache);
+  const keyOf = (sentence: typeof sentences[number]) => buildReferenceKey(contentId, sourceUrl, sentence.id, sentence.startMs, sentence.endMs);
+  const covered = sentences.filter((sentence) => capture.covers({ start: sentence.startMs / 1000, end: sentence.endMs / 1000 }));
+  const analyzed = sentences.filter((sentence) => observed.isReady(keyOf(sentence)));
+  const missing = sentences.find((sentence) => !capture.covers({ start: sentence.startMs / 1000, end: sentence.endMs / 1000 })
+    && !observed.isReady(keyOf(sentence)));
+  useEffect(() => {
+    const handle = player.current;
+    return () => { handle?.pause(); suspend(); };
+  }, [suspend]);
+  function prepareMissing() {
+    if (playing) { player.current?.pause(); capture.suspend(); return; }
+    const start = Math.max(0, (missing?.startMs ?? segment.startMs ?? 0) / 1000 - 0.5);
+    const end = (segment.endMs ?? 0) / 1000 + 0.3;
+    player.current?.setPlaybackRate(1);
+    player.current?.playRange(start, end, { loop: false });
+  }
+  const steps = ["Practice segment selected", sentences.length
+    ? `${sentences.length} sentences ready for practice`
+    : "Sentence text unavailable · segment playback available"];
+
+  return (
+    <section className="stage-two-preparation" aria-label="Preparing Stage 2" aria-live="polite">
+      <div className="stage-two-preparation-heading">
+        <h1>Ready to practice</h1>
+        <p>Listen one sentence at a time, then repeat aloud.</p>
+      </div>
+      <div className="stage-two-preparation-segment">
+        <span className="stage-two-preparation-icon" aria-hidden="true"><Target /></span>
+        <span>
+          <strong>{segment.title}</strong>
+          <small>
+            {formatSegmentClock(segment.startMs ?? 0)} – {formatSegmentClock(segment.endMs ?? 0)} · {formatSegmentDuration(segment)} · {logic.node?.title ?? "Logic flow"}
+          </small>
+        </span>
+      </div>
+      <div className="stage-two-preparation-steps" role="list" aria-label="Stage 2 preparation steps">
+        {steps.map((step) => {
+          return (
+            <div className="stage-two-preparation-step done" key={step} role="listitem">
+              <span className="stage-two-preparation-step-icon" aria-hidden="true" />
+              {step}
+            </div>
+          );
+        })}
+      </div>
+      <div className="stage-two-buffer-preparation">
+        {sourceUrl ? <YouTubePlayer ref={player} sourceUrl={sourceUrl} title="Prepare selected practice audio"
+          onPlaybackChange={setPlaying} onTimeChange={() => {}}
+          onTelemetry={(sample) => capture.sample(sample.blockedByPausedSeek ? { ...sample, state: 2 } : sample, captureGeneration)} /> : null}
+        <BufferedReferencePanel capture={capture} playable={Boolean(sourceUrl)}>
+          <p role="status">{covered.length} of {sentences.length} sentence audio ranges available on this device. {analyzed.length} references analyzed.</p>
+          <p className="stage-two-recording-note">Already heard sentences can be prepared from the buffer. Listen at 1× to fill missing ranges. The first three available references are analyzed here; the next ones are prepared as you practice.</p>
+          {capture.state.phase === "enabled" && (missing || playing) ? <button type="button" onClick={prepareMissing}>
+            {playing ? "Pause preparation" : "Listen to prepare missing audio"}
+          </button> : null}
+          {preparation.error ? <p role="alert">{preparation.error} <button type="button" onClick={preparation.retry}>Retry preparation</button></p> : null}
+        </BufferedReferencePanel>
+      </div>
+      <button
+        className="stage-two-preparation-start visible"
+        type="button"
+        onClick={() => { player.current?.pause(); capture.suspend(); onStart?.(segment); }}
+      >
+        <ArrowRight aria-hidden="true" />
+        Start shadowing
+      </button>
+      <p>Listening and recording remain available while reference analysis is preparing. Sound detection is not evaluated.</p>
+    </section>
+  );
+}
+
+
+function StageOneSegmentCard({
+  segment,
+  logic,
+  selected,
+  onSelect
+}: {
+  segment: StageOneSegment;
+  logic: SegmentLogic;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const difficulty = segment.difficulty ?? "medium";
+  const difficultyDots = difficulty === "easy" ? 1 : difficulty === "dense" ? 3 : 2;
+  const duration = segmentDurationMs(segment);
+  const quote = segment.quote ?? segment.sourceText ?? segment.summary;
+
+  return (
+    <button
+      className={`stage-one-segment-card ${selected ? "selected" : ""}`}
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+    >
+      <span className="stage-one-segment-accent" style={{ background: logic.color }} aria-hidden="true" />
+      <span className="stage-one-segment-body">
+        <span className="stage-one-segment-heading">
+          <strong className="stage-one-segment-title">{segment.title}</strong>
+          {segment.recommended ? (
+            <span className="stage-one-segment-recommended">
+              <Star aria-hidden="true" />
+              Recommended
+            </span>
+          ) : null}
+        </span>
+        <span className="stage-one-segment-time">
+          {formatSegmentClock(segment.startMs ?? 0)}–{formatSegmentClock(segment.endMs ?? 0)} · {formatSegmentDuration(segment)} · {segment.wordCount ?? "--"} words
+        </span>
+        <span className="stage-one-segment-duration-bar" aria-hidden="true">
+          <span style={{ width: `${Math.min(duration / (5 * 60_000) * 100, 100)}%` }} />
+        </span>
+        <span className="stage-one-segment-quote">“{quote}”</span>
+        <span className="stage-one-segment-footer">
+          <span className="stage-one-segment-phonology">
+            {segment.phonologyTags.map((tag) => <span key={tag}>{tag.toUpperCase()}</span>)}
+          </span>
+          <span className="stage-one-segment-difficulty">
+            {[1, 2, 3].map((dot) => <i className={dot <= difficultyDots ? "filled" : ""} key={dot} style={{ background: dot <= difficultyDots ? difficultyColor(difficulty) : undefined }} aria-hidden="true" />)}
+            {difficulty}
+          </span>
+        </span>
+      </span>
+      <span className="stage-one-segment-check" aria-hidden="true"><Check /></span>
+    </button>
+  );
+}
+
+type SegmentLogic = {
+  node?: StageOneBlueprint["logicNodes"][number];
+  color: string;
+};
+
+function segmentLogicFor(segment: StageOneSegment, logicNodes: StageOneBlueprint["logicNodes"], index: number): SegmentLogic {
+  const node = segment.logicNodeId ? logicNodes.find((candidate) => candidate.id === segment.logicNodeId) : undefined;
+  const fallbackNode = node ?? logicNodes[Math.min(segment.sequence ? segment.sequence - 1 : index, logicNodes.length - 1)];
+  const colorIndex = Math.max(logicNodes.indexOf(fallbackNode), 0) % segmentLogicColors.length;
+  return {
+    node: fallbackNode,
+    color: segmentLogicColors[colorIndex]
+  };
+}
+
+function segmentDurationMs(segment: StageOneSegment) {
+  return Math.max((segment.durationMs ?? ((segment.endMs ?? 0) - (segment.startMs ?? 0))), 0);
+}
+
+function formatSegmentClock(milliseconds: number) {
+  const totalSeconds = Math.max(Math.round(milliseconds / 1000), 0);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function formatSegmentDuration(segment: StageOneSegment) {
+  const totalSeconds = Math.round(segmentDurationMs(segment) / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+}
+
+function difficultyColor(difficulty: NonNullable<StageOneSegment["difficulty"]>) {
+  return difficulty === "easy" ? "#1d9e75" : difficulty === "dense" ? "#e24b4a" : "#ef9f27";
 }
 
 function readStageOneSource(): StageOneSource {
@@ -777,8 +1316,16 @@ function parseLearnerLevel(value: string | null): LearnerLevel | undefined {
     : undefined;
 }
 
-function transcriptElementId(time: string) {
-  return `transcript-${time.replaceAll(":", "-")}`;
+function transcriptIdentity(line: StageOneBlueprint["transcript"][number], index: number) {
+  return line.segmentationVersion ? line.id ?? `${line.time}-${index}` : line.time;
+}
+
+function transcriptStartSeconds(line: StageOneBlueprint["transcript"][number]): number | null {
+  return Number.isFinite(line.startMs) && line.startMs! >= 0 ? line.startMs! / 1000 : parseTimestamp(line.time);
+}
+
+function transcriptElementId(identity: string) {
+  return `transcript-${identity.replaceAll(":", "-")}`;
 }
 
 

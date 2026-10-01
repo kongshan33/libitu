@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.schemas.sentence import SentenceMetadata
+
 
 LearnerLevel = Literal["A1", "A2", "B1", "B2", "C1", "C2"]
 CorpusKind = Literal["chunk", "idiom", "structure"]
@@ -28,9 +30,10 @@ class AnalysisLogicNode(BaseModel):
     timestamp: str | None = None
 
 
-class AnalysisTranscriptPreviewLine(BaseModel):
+class AnalysisTranscriptPreviewLine(SentenceMetadata):
     time: str = Field(min_length=1, max_length=16)
-    text: str = Field(min_length=1, max_length=1000)
+    # A source sentence can cross many processing windows without being split.
+    text: str = Field(min_length=1, max_length=240000)
 
 
 class AnalysisCorpusItem(BaseModel):

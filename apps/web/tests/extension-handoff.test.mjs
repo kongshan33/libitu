@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, mock, test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
-import { readExtensionTranscript } from "../features/stage-one/api/extension-handoff.ts";
+import { readCaptionTrack, readExtensionCaptions, readExtensionTranscript } from "../features/stage-one/api/extension-handoff.ts";
 import { loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
 
 let listeners;
@@ -22,6 +22,36 @@ function reply(data, overrides = {}) {
     data: { ...request, type: "LIBITU_HANDOFF_RESPONSE", ...data }, ...overrides
   });
 }
+
+const captionTrack = {
+  version: "youtube-json3-v1", video_id: "abcdefghijk", language: null, kind: "asr",
+  events: [{ tStartMs: 1000, dDurationMs: 1000, segs: [{ utf8: "From ", tOffsetMs: 0 }, { utf8: "captions.", tOffsetMs: 400 }] }]
+};
+
+test("optional structured captions survive handoff, while malformed tracks keep text fallback", async () => {
+  const loading = readExtensionCaptions("rich");
+  reply({ phase: "ready", transcriptText: "0:01\tFrom captions.", captionTrack });
+  assert.deepEqual(await loading, { transcriptText: "0:01\tFrom captions.", captionTrack });
+  const fallback = readExtensionCaptions("invalid");
+  reply({ phase: "ready", transcriptText: "From captions.", captionTrack: { ...captionTrack, events: [{ tStartMs: -1 }] } });
+  assert.deepEqual(await fallback, { transcriptText: "From captions.", captionTrack: undefined });
+});
+
+test("caption track bounds reject oversized events, segments, text and payloads", () => {
+  assert.deepEqual(readCaptionTrack(captionTrack), captionTrack);
+  assert.deepEqual(readCaptionTrack({ ...captionTrack, signedUrl: "secret", events: captionTrack.events.map((event) => ({
+    ...event, unknown: "private", segs: event.segs.map((seg) => ({ ...seg, private: "not caption text" }))
+  })) }), captionTrack, "unknown provider fields never leave the browser");
+  assert.equal(readCaptionTrack({ ...captionTrack, events: Array(10_001).fill(captionTrack.events[0]) }), undefined);
+  assert.equal(readCaptionTrack({ ...captionTrack, events: [{ tStartMs: 0, segs: Array(50_001).fill({ utf8: "" }) }] }), undefined);
+  assert.equal(readCaptionTrack({ ...captionTrack, events: [{ tStartMs: 0, segs: [{ utf8: "x".repeat(240_001) }] }] }), undefined);
+  assert.equal(readCaptionTrack({ ...captionTrack, extra: "x".repeat(2 * 1024 * 1024) }), undefined);
+  assert.equal(readCaptionTrack({ ...captionTrack, events: [{ tStartMs: 0, segs: [{ utf8: "word", tOffsetMs: NaN }] }] }), undefined);
+  for (const extra of [{ tStartMs: 0.5 }, { tStartMs: 604_800_001 }, { dDurationMs: -1 }, { dDurationMs: 0.5 },
+    { aAppend: 2 }, { wWinId: 1.5 }, { segs: Array(12_001).fill({ utf8: "" }) }, { segs: [{ utf8: "word", tOffsetMs: -1 }] }]) {
+    assert.equal(readCaptionTrack({ ...captionTrack, events: [{ ...captionTrack.events[0], ...extra }] }), undefined);
+  }
+});
 
 test("only matching same-window handoff responses are accepted", async () => {
   const loading = readExtensionTranscript("handoff");
@@ -71,9 +101,10 @@ test("handoff captions are resolved once, and job IDs are exposed before analysi
   const loading = loadStageOneBlueprint(source, undefined, { onResolved: (ids) => resolved.push(ids) });
   await nextTurn();
   assert.equal(calls.length, 0);
-  reply({ phase: "ready", transcriptText: "0:01\tFrom the browser." });
+  reply({ phase: "ready", transcriptText: "0:01\tFrom the browser.", captionTrack });
   assert.equal((await loading).contentId, "content");
   assert.equal(calls[0][1].transcript_text, "0:01\tFrom the browser.");
+  assert.deepEqual(calls[0][1].caption_track, captionTrack);
   assert.deepEqual(calls.map(([path]) => path), ["/api/content/resolve", "/api/jobs", "/api/blueprints/content"]);
   assert.deepEqual(resolved, [{ contentId: "content", jobId: "job" }]);
 });

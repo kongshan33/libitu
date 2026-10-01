@@ -9,11 +9,26 @@ const backgroundSource = readFileSync(join(root, manifest.background.service_wor
 
 const requiredFiles = [
   manifest.background?.service_worker,
+  "src/reference-capture.js",
+  "src/buffer-capture.js",
+  "src/buffer-pcm.js",
+  "src/buffer-offscreen.js",
+  "src/buffer-worklet.js",
+  "src/youtube-captions.js",
+  "src/fresh-captions.js",
+  "src/reference-offscreen.html",
+  "src/reference-offscreen.js",
   ...(manifest.content_scripts ?? []).flatMap((script) => script.js ?? []),
   ...(manifest.web_accessible_resources ?? []).flatMap((group) => group.resources ?? []),
 ].filter(Boolean);
 
 const errors = [];
+
+const captionObserver = manifest.content_scripts?.find((script) => script.js?.includes("src/youtube-caption-observer.js"));
+if (!captionObserver || captionObserver.world !== "MAIN" || captionObserver.run_at !== "document_start"
+  || !captionObserver.matches?.includes("https://www.youtube.com/*") || captionObserver.all_frames) {
+  errors.push("Caption observation requires an early, top-frame MAIN script across YouTube SPA entry pages.");
+}
 
 if (manifest.manifest_version !== 3) {
   errors.push("manifest_version must be 3.");
@@ -21,6 +36,10 @@ if (manifest.manifest_version !== 3) {
 
 if (!manifest.permissions?.includes("scripting")) {
   errors.push("scripting permission is required to recover missing content-script receivers.");
+}
+
+if (!manifest.permissions?.includes("tabCapture") || !manifest.permissions?.includes("offscreen") || Number(manifest.minimum_chrome_version) < 116) {
+  errors.push("Local reference capture requires tabCapture, offscreen, and Chrome 116 or later.");
 }
 
 if (!backgroundSource.includes("chrome.scripting.executeScript")) {

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, mock, test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
 import { loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
 import { selectCorpusItems } from "@libitu/core/stage-one";
+import { buildSentenceUnits } from "../features/stage-two/sentences.ts";
 
 const source = {
   kind: "youtube", sourceUrl: "https://www.youtube.com/watch?v=test-video",
@@ -24,7 +25,7 @@ const job = (status = "processing", analysis = preview()) => ({
   processing_stage: status === "ready" ? "completed" : "analyzing",
   error_message: null, analysis_preview: analysis
 });
-const blueprint = (items = [candidate(1)]) => ({
+const blueprint = (items = [candidate(1)], segments) => ({
   id: "blueprint", content_id: source.contentId, title: source.title, source_url: source.sourceUrl,
   summary: "A test summary.", chapters: ["Opening"],
   logic_flow: [{ id: "logic-1", title: "Framing the idea", subtitle: "An explanation.", time: "0:01" }],
@@ -32,7 +33,8 @@ const blueprint = (items = [candidate(1)]) => ({
     ...item, id: `server-id-${index + 50}`, text: item.kind === "structure" ? item.text : `"${item.text}" - ${item.meaning}`,
     meta: "0:01 - B1 - click + to save"
   })),
-  transcript: [{ time: "0:01", parts: ["A useful expression 1."] }]
+  transcript: [{ time: "0:01", parts: ["A useful expression 1."] }],
+  ...(segments === undefined ? {} : { segments })
 });
 const response = (body) => new Response(JSON.stringify(body), { status: 200 });
 
@@ -148,6 +150,58 @@ test("cached ready jobs skip stale previews and never open SSE", async () => {
   assert.equal(fetch.mock.callCount(), 2);
 });
 
+test("final blueprint maps playable segments and defaults legacy responses to an empty list", async () => {
+  const segments = [{
+    id: "segment-1",
+    sequence: 1,
+    title: "Opening context",
+    summary: "The speaker establishes the context.",
+    logic_node_id: "logic-1",
+    timestamp_ms: 0,
+    start_ms: 0,
+    end_ms: 105000,
+    duration_ms: 105000,
+    transcript_start_index: 0,
+    transcript_end_index: 4,
+    source_text: "The speaker establishes the context.",
+    quote: "The speaker establishes the context.",
+    word_count: 6,
+    phonology_tags: ["wk", "lk"],
+    difficulty: "easy",
+    recommended: true
+  }];
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
+    ? blueprint([candidate(1)], segments) : job("ready")));
+
+  const result = await loadStageOneBlueprint(source);
+
+  assert.deepEqual(result.segments, [{
+    id: "segment-1",
+    sequence: 1,
+    title: "Opening context",
+    summary: "The speaker establishes the context.",
+    logicNodeId: "logic-1",
+    timestampMs: 0,
+    startMs: 0,
+    endMs: 105000,
+    durationMs: 105000,
+    transcriptStartIndex: 0,
+    transcriptEndIndex: 4,
+    sourceText: "The speaker establishes the context.",
+    quote: "The speaker establishes the context.",
+    wordCount: 6,
+    phonologyTags: ["wk", "lk"],
+    difficulty: "easy",
+    recommended: true
+  }]);
+  assert.equal(fetch.mock.callCount(), 2);
+
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
+    ? blueprint() : job("ready")));
+  const legacyResult = await loadStageOneBlueprint(source);
+  assert.deepEqual(legacyResult.segments, []);
+});
+
 test("preview and final result share identities, selected order, and annotations", async () => {
   const items = [
     ...Array.from({ length: 8 }, (_, i) => candidate(i)),
@@ -175,6 +229,70 @@ test("preview and final result share identities, selected order, and annotations
   assert.equal(previews.length, 1);
 });
 
+test("sentence metadata and text survive streamed preview, annotation reconstruction, finalization and Stage 2", async () => {
+  const rows = [
+    {
+      id: "sentence-v2-source-0-9", segmentation_version: "sentence-v2",
+      time: "0:01", text: "A useful expression 1. Even with a candidate stop.",
+      source_token_start: 0, source_token_end: 10, start_ms: 1000.5, end_ms: 7800.25,
+      boundary_source: "syntax_merge", boundary_confidence: "medium", timing_source: "caption_word_offsets",
+      word_timings: [
+        { source_token_index: 0, text: "A", start_ms: 1000.5, end_ms: 1150, start_source: "caption_offset",
+          end_source: "next_word_estimate", source_event_index: 0, source_seg_index: 0 },
+        { source_token_index: 1, text: "useful", start_ms: 1150, end_ms: null, start_source: "caption_offset",
+          end_source: null, source_event_index: 0, source_seg_index: 1 }
+      ]
+    },
+    {
+      id: "sentence-v2-source-10-12", segmentation_version: "sentence-v2",
+      time: "0:01", text: "We agree.",
+      source_token_start: 10, source_token_end: 12, start_ms: 7800.25, end_ms: 9500,
+      boundary_source: "source_punctuation", boundary_confidence: "high"
+    }
+  ];
+  const streamed = { ...preview(), segmentation_version: "sentence-v2", transcript_lines: rows };
+  const finished = {
+    ...blueprint(), segmentation_version: "sentence-v2",
+    transcript: rows.map(({ text, ...metadata }) => ({
+      ...metadata,
+      parts: [text]
+    }))
+  };
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
+    ? finished : job("processing", streamed)));
+  const previews = [];
+  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  await nextTurn();
+  FakeEventSource.instances[0].emit(job("ready", null));
+  const final = await loading;
+  assert.equal(previews[0].segmentationVersion, "sentence-v2");
+  assert.equal(final.segmentationVersion, "sentence-v2");
+  assert.deepEqual(previews[0].transcriptLines, final.transcript);
+  assert.equal(typeof final.transcript[0].parts[1], "object", "corpus highlight was reconstructed");
+  const units = buildSentenceUnits(source.contentId, {
+    id: "segment-1", startMs: 1000, endMs: 9500, transcriptStartIndex: 0, transcriptEndIndex: 2
+  }, final.transcript);
+  assert.equal(units.length, 2);
+  rows.forEach((row, index) => {
+    assert.equal(final.transcript[index].id, row.id);
+    assert.equal(units[index].id, row.id);
+    assert.equal(units[index].text, row.text);
+    assert.equal(units[index].sourceTokenStart, row.source_token_start);
+    assert.equal(units[index].sourceTokenEnd, row.source_token_end);
+    assert.equal(units[index].startMs, row.start_ms);
+    assert.equal(units[index].endMs, row.end_ms);
+    assert.equal(units[index].boundarySource, row.boundary_source);
+    assert.equal(units[index].boundaryConfidence, row.boundary_confidence);
+    assert.deepEqual(units[index].wordTimings, final.transcript[index].wordTimings);
+  });
+  assert.equal(units[0].timingSource, "caption_word_offsets");
+  assert.deepEqual(final.transcript[0].wordTimings[0], {
+    sourceTokenIndex: 0, text: "A", startMs: 1000.5, endMs: 1150, startSource: "caption_offset",
+    endSource: "next_word_estimate", sourceEventIndex: 0, sourceSegIndex: 0
+  });
+  assert.equal(final.transcript[0].wordTimings[1].endMs, null, "a missing end is not invented by either stage");
+});
+
 test("ranking follows learner level without modifying the source pool", () => {
   const items = ["B1", "B2", "C1"].flatMap((level) => ["chunk", "structure"].map((kind) => ({
     id: `${kind}-${level}`, kind, level, text: kind, tags: [], meta: "",
@@ -183,4 +301,126 @@ test("ranking follows learner level without modifying the source pool", () => {
   assert.deepEqual(selectCorpusItems(items, "B1", 4).map((x) => x.level), ["B1", "B1", "B2", "B2"]);
   assert.deepEqual(selectCorpusItems(items, "C1", 4).map((x) => x.level), ["C1", "C1", "B2", "B2"]);
   assert.equal(items[0].level, "B1");
+});
+
+test("SSE omitted words inherit only from the same complete identity and explicit clears survive later omissions", async () => {
+  const word = { source_token_index: 0, text: "Hello.", start_ms: 1000, end_ms: 1500,
+    start_source: "caption_offset", end_source: "event_end_estimate", source_event_index: 0, source_seg_index: 0 };
+  const row = { id: "sentence-v3-a", segmentation_version: "sentence-v3", time: "0:01", text: "Hello.",
+    source_token_start: 0, source_token_end: 1, start_ms: 1000, end_ms: 1500,
+    timing_source: "caption_word_offsets" };
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
+    : job("processing", { ...preview(), transcript_lines: [] })));
+  const previews = [];
+  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  await nextTurn();
+  const stream = FakeEventSource.instances[0];
+  let output = 1;
+  assert.equal(new URL(stream.url).searchParams.get("compact_word_timings"), "true");
+  const emit = (line) => stream.emit(job("processing", { ...preview(), output_chars: output++, transcript_lines: [line] }));
+  const latest = () => previews.at(-1).transcriptLines[0].wordTimings;
+  emit({ ...row, word_timings: [word] });
+  const expected = latest();
+  emit(row);
+  assert.deepEqual(latest(), expected);
+  emit({ ...row, word_timings: null });
+  assert.equal(latest(), undefined);
+  emit(row);
+  assert.equal(latest(), undefined);
+  emit({ ...row, word_timings: [word] });
+  emit({ ...row, word_timings: [] });
+  assert.deepEqual(latest(), []);
+  emit(row);
+  assert.equal(latest(), undefined);
+  for (const change of [{ id: "sentence-v3-b" }, { segmentation_version: "sentence-v4" },
+    { text: "Goodbye." }, { source_token_start: 1, source_token_end: 2 }, { timing_source: "caption_event_estimate" }]) {
+    emit({ ...row, word_timings: [word] });
+    emit({ ...row, ...change });
+    assert.equal(latest(), undefined, `changed identity never inherits: ${JSON.stringify(change)}`);
+  }
+  emit({ ...row, word_timings: [word] });
+  stream.emit(job("ready", null));
+  const final = await loading;
+  assert.equal(final.transcript[0].wordTimings, undefined, "final blueprint is authoritative, not merged with SSE");
+});
+
+test("aborted/reconnected loads cannot reuse another connection's word timing cache", async () => {
+  const row = { id: "sentence-v3-a", segmentation_version: "sentence-v3", time: "0:01", text: "Hello.",
+    source_token_start: 0, source_token_end: 1, start_ms: 1000, end_ms: 1500, timing_source: "caption_word_offsets" };
+  const full = { ...row, word_timings: [{ source_token_index: 0, text: "Hello.", start_ms: 1000, end_ms: 1500,
+    start_source: "caption_offset", end_source: "event_end_estimate", source_event_index: 0, source_seg_index: 0 }] };
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
+    : job("processing", { ...preview(), transcript_lines: [] })));
+  const abort = new AbortController();
+  const first = loadStageOneBlueprint(source, undefined, { signal: abort.signal, onPreview() {} });
+  await nextTurn();
+  FakeEventSource.instances[0].emit(job("processing", { ...preview(), transcript_lines: [full] }));
+  const rejected = assert.rejects(first, { name: "AbortError" });
+  abort.abort();
+  await rejected;
+  const previews = [];
+  const second = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  await nextTurn();
+  const fresh = FakeEventSource.instances[1];
+  fresh.emit(job("processing", { ...preview(), transcript_lines: [row] }));
+  assert.equal(previews.at(-1).transcriptLines[0].wordTimings, undefined);
+  fresh.emit(job("processing", { ...preview(), transcript_lines: [full] }));
+  assert.equal(previews.at(-1).transcriptLines[0].wordTimings.length, 1, "reconnection's first complete snapshot restores words");
+  fresh.emit(job("ready", null));
+  await second;
+});
+
+test("compact SSE restores every word row through the API's 2000-row preview maximum", async () => {
+  const rows = Array.from({ length: 2000 }, (_, index) => ({
+    id: `sentence-v3-large-${index}`, segmentation_version: "sentence-v3", time: "0:01", text: `Word${index}.`,
+    source_token_start: index, source_token_end: index + 1,
+    start_ms: 1000 + index * 1000, end_ms: 1500 + index * 1000, timing_source: "caption_word_offsets",
+    word_timings: [{ source_token_index: index, text: `Word${index}.`, start_ms: 1000 + index * 1000,
+      end_ms: 1500 + index * 1000, start_source: "caption_offset", end_source: "event_end_estimate",
+      source_event_index: index, source_seg_index: 0 }]
+  }));
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
+    : job("processing", { ...preview(), transcript_lines: [] })));
+  const previews = [];
+  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  await nextTurn();
+  const stream = FakeEventSource.instances[0];
+  stream.emit(job("processing", { ...preview(), output_chars: 1, transcript_lines: rows }));
+  const full = previews.at(-1).transcriptLines;
+  stream.emit(job("processing", { ...preview(), output_chars: 2,
+    transcript_lines: rows.map((row) => {
+      const compact = { ...row };
+      delete compact.word_timings;
+      return compact;
+    }) }));
+  const compact = previews.at(-1).transcriptLines;
+  assert.equal(compact.length, 2000);
+  assert.equal(compact[1000].wordTimings?.[0].sourceTokenIndex, 1000, "row 1001 survives field omission");
+  assert.equal(compact[1999].wordTimings?.[0].sourceTokenIndex, 1999, "the last allowed preview row survives field omission");
+  assert.deepEqual(compact, full);
+  stream.emit(job("ready", null));
+  await loading;
+});
+
+test("polling fallback is a complete snapshot and cannot inherit compact SSE words", async () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  const row = { id: "sentence-v3-a", segmentation_version: "sentence-v3", time: "0:01", text: "Hello.",
+    source_token_start: 0, source_token_end: 1, start_ms: 1000, end_ms: 1500, timing_source: "caption_word_offsets" };
+  let reads = 0;
+  fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
+    : job(++reads === 1 ? "processing" : "ready", { ...preview(), transcript_lines: [row] })));
+  const previews = [];
+  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  await nextTurn();
+  const stream = FakeEventSource.instances[0];
+  stream.emit(job("processing", { ...preview(), transcript_lines: [{ ...row, word_timings: [{
+    source_token_index: 0, text: "Hello.", start_ms: 1000, end_ms: 1500,
+    start_source: "caption_offset", end_source: "event_end_estimate", source_event_index: 0, source_seg_index: 0
+  }] }] }));
+  assert.equal(previews.at(-1).transcriptLines[0].wordTimings.length, 1);
+  stream.onerror();
+  await nextTurn();
+  assert.equal(previews.at(-1).transcriptLines[0].wordTimings, undefined);
+  mock.timers.tick(1500);
+  await loading;
 });

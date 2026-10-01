@@ -52,6 +52,19 @@ class Settings(BaseSettings):
     punctuation_overlap_words: int = Field(default=20, ge=5, le=100)
     transcript_preview_limit: int = Field(default=1000, ge=20, le=2000)
 
+    # Optional, server-managed source grants. Never accept file paths from clients.
+    acoustic_sources_path: str | None = None
+    practice_asr_model_path: str | None = None
+    practice_asr_model_sha256: str | None = None
+    acoustic_mfa_binary: str = "mfa"
+    acoustic_mfa_dictionary: str | None = None
+    acoustic_mfa_model: str | None = None
+    acoustic_mfa_dictionary_sha256: str | None = None
+    acoustic_mfa_model_sha256: str | None = None
+    acoustic_silero_path: str | None = None
+    acoustic_lease_seconds: int = Field(default=120, ge=30, le=900)
+    acoustic_poll_seconds: float = Field(default=3, ge=0.5, le=60)
+
     @property
     def authorized_parties(self) -> list[str]:
         return [

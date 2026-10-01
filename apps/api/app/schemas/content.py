@@ -1,6 +1,8 @@
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, model_validator
+
+from app.schemas.captions import CaptionTrack
 
 
 class ContentKind(StrEnum):
@@ -14,8 +16,28 @@ class ContentResolveRequest(BaseModel):
     source_url: HttpUrl | None = None
     pasted_text: str | None = Field(default=None, min_length=1)
     transcript_text: str | None = Field(default=None, min_length=1)
+    caption_track: CaptionTrack | None = None
     language: str | None = None
     title: str | None = None
+
+    @model_validator(mode="after")
+    def validate_caption_source(self) -> "ContentResolveRequest":
+        if self.caption_track is not None:
+            from urllib.parse import parse_qs, urlparse
+
+            source = urlparse(str(self.source_url or ""))
+            host = (source.hostname or "").lower()
+            video_id = source.path.strip("/") if host == "youtu.be" else (
+                parse_qs(source.query).get("v", [None])[0]
+                if host in {"youtube.com", "www.youtube.com", "m.youtube.com"} else None
+            )
+            if self.kind != ContentKind.youtube or video_id != self.caption_track.video_id:
+                raise ValueError("Caption track must belong to the requested YouTube video.")
+            if self.language and self.caption_track.language and (
+                self.language.split("-")[0].lower() != self.caption_track.language.split("-")[0].lower()
+            ):
+                raise ValueError("Caption track must match the requested language.")
+        return self
 
 
 class ContentResolveResponse(BaseModel):

@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "minimum_chrome_version": "116",
   "name": "Libitu",
   "description": "Start a Libitu Stage 1 blueprint from supported YouTube videos.",
   "version": "0.1.0",
@@ -24,12 +25,18 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
+      "js": ["src/youtube-caption-observer.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
       "js": ["src/content-script.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["http://localhost:3000/*"],
-      "js": ["src/stage-one-bridge.js"],
+      "js": ["src/stage-one-bridge.js", "src/stage-two-bridge.js", "src/buffer-bridge.js"],
       "run_at": "document_start"
     }
   ],
@@ -44,5 +51,5 @@
     "http://localhost:3000/*",
     "https://www.youtube.com/*"
   ],
-  "permissions": ["activeTab", "scripting", "storage", "tabs"]
+  "permissions": ["activeTab", "scripting", "storage", "tabs", "tabCapture", "offscreen"]
 }

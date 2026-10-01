@@ -1,0 +1,120 @@
+{
+  "plan_version": "acoustic-collection-plan-v1",
+  "created_on": "2026-09-13",
+  "status": "planned_not_collected",
+  "description": "首轮离线声学开发采集计划；本文件不是样本 manifest，没有实际录音、人工标签或已招募参加者。",
+  "target_recordings": 256,
+  "target_speakers": 8,
+  "prompts_per_speaker": 32,
+  "takes_per_prompt": 1,
+  "actual_recordings_from_this_plan": 0,
+  "actual_recruited_speakers": 0,
+  "roles": [
+    {"role": "reference", "target_speakers": 2, "target_recordings": 64, "recruitment_description": "计划招募熟练使用 General American 的自愿说话人；reference 是音频用途，不是完美发音或自动金标资格。"},
+    {"role": "learner", "target_speakers": 6, "target_recordings": 192, "recruitment_description": "计划招募普通话背景的自愿英语学习者，覆盖不同自述学习经历；不将自述水平视为已验证 CEFR。"}
+  ],
+  "phenomena": ["vowel_length", "linking_gap", "pause", "f0", "flap_t", "weak_form", "h_drop", "final_voicing", "elision", "assimilation", "glottal_stop", "drop_d"],
+  "phenomenon_relationships": [{"child": "drop_d", "parent": "elision", "aggregate_policy": "同一实际删除事件计一次；子类与父类结果可以分别列出，不相加为独立事件。"}],
+  "priority_measurements": ["pause", "f0", "vowel_length", "linking_gap"],
+  "candidate_policy": "所有提示与现象关联都只是采集候选，不保证现象发生；不存在预置金标或阳性配额。实际音频需两位标注者独立听辨，再仲裁。",
+  "prompt_origin": {"kind": "original_elicitation_text", "description": "为 Libitu 本轮计划自编的短句，未摘自公开语音种子、字幕或第三方作品。", "source_group": "libitu_acoustic_elicitation_v1"},
+  "split_policy": {
+    "allowed_splits": ["train", "dev", "test"],
+    "initial_split": "dev",
+    "target_counts": {"train": 0, "dev": 256, "test": 0},
+    "group_fields": ["speaker_id", "source_group"],
+    "assignment_rule": "对共享实际 speaker 或 source_group 的记录建立连通分量，整个分量只能进入一个 split；原件、切片、重复录音、同源提示与所有派生版本继承该分配。",
+    "shared_source_group": "libitu_acoustic_elicitation_v1",
+    "rationale": "8 位说话人共享自编提示组，本轮全部用于 dev 协议与测量开发，不虚构 speaker/source-disjoint held-out 集。",
+    "future_test_requirement": "使用新增、未参与开发的说话人和独立来源/提示组；在查看 test 结果前冻结协议与阈值。不能把已调参的 dev 录音改名为 test。"
+  },
+  "conditions": [
+    {"id": "quiet_natural", "order": 0, "room": "安静室内", "rate_instruction": "用舒适自然语速读。", "target_recordings": 64},
+    {"id": "quiet_slow", "order": 1, "room": "安静室内", "rate_instruction": "比平时稍慢，保持自然语句，不逐音节拆读。", "target_recordings": 64},
+    {"id": "quiet_fast", "order": 2, "room": "安静室内", "rate_instruction": "在仍然舒适清楚的范围内比平时稍快。", "target_recordings": 64},
+    {"id": "ordinary_room_natural", "order": 3, "room": "普通室内实际环境；不播放人工噪声或音乐", "rate_instruction": "用舒适自然语速读。", "target_recordings": 64}
+  ],
+  "condition_assignment": {
+    "prompt_order_base": 0,
+    "block_size": 8,
+    "formula": "conditions[(floor(prompt_index / 8) + speaker.condition_offset) % 4]",
+    "per_speaker_per_condition": 8,
+    "rationale": "每位说话人各条件 8 句；相邻配对提示在同一条件，四种 offset 各安排两位，每条提示在四种条件下各有两位说话人。",
+    "collection_order": "可在条件块内随机化提示顺序，但 condition 根据原始 prompt order 分配；配对短句保持相同房间、设备和语速指令。记录实际顺序、设备、条件与偏离情况。",
+    "rate_caveat": "语速是提示条件，实际语速待采集后测量；不预填精确 WPM，也不采用人工时间拉伸替代真实语速。"
+  },
+  "planned_speakers": [
+    {"plan_speaker_id": "planned_reference_01", "role": "reference", "condition_offset": 0, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_reference_02", "role": "reference", "condition_offset": 2, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_learner_01", "role": "learner", "condition_offset": 0, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_learner_02", "role": "learner", "condition_offset": 1, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_learner_03", "role": "learner", "condition_offset": 1, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_learner_04", "role": "learner", "condition_offset": 2, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_learner_05", "role": "learner", "condition_offset": 3, "split": "dev", "status": "not_recruited", "target_recordings": 32},
+    {"plan_speaker_id": "planned_learner_06", "role": "learner", "condition_offset": 3, "split": "dev", "status": "not_recruited", "target_recordings": 32}
+  ],
+  "recording_protocol": {
+    "participant_instruction": "先理解句意，再自然朗读；不要求发出或避免某种 flap、删除或同化。问句按自然理解表达，不强制升降调。",
+    "minimum_context": "保留自然起音和收尾及少量前后环境声，不能紧贴音素剪切。",
+    "audio_capture": "保留设备原始音频并记录实际采样率、通道、编码、麦克风和系统音频处理开关；如需转换，另存派生文件并关联原件。",
+    "quality_goal": "单一说话人、目标完整、可懂；安静是采集目标，需实测复核，不能提前标记 passed。",
+    "retakes": "只有错读、截断或技术失败时建议重录；保留失败原因和已授权原件，最终选用规则不依赖模型预测。额外 take 单独清点，不伪装成新的说话人或补充独立测试。",
+    "authorization": "招募和录音尚未执行；执行前记录自愿参与、离线标注使用、存储期限与删除方式等授权。不得从普通产品录音自动转入训练或人工审核。"
+  },
+  "annotation_protocol": {
+    "document": "ANNOTATION.md",
+    "initial_status_for_actual_audio": "pending",
+    "independent_reviewers": 2,
+    "hide_model_predictions_until_adjudicated": true,
+    "reference_and_learner_independent": true,
+    "measurement_and_classification_separate": true,
+    "gold_sources_excluded": ["asr_prediction", "subtitle_timestamps", "dictionary_prediction", "forced_alignment_output_without_human_review", "rule_candidate", "elicitation_prompt_expectation"],
+    "unresolved_label": "uncertain"
+  },
+  "public_seed_policy": {
+    "counts_toward_this_plan": false,
+    "description": "许可公开语音种子另有真实 manifest、来源、许可和校验和记录；可以启动工具开发，但不代表本计划参加者或录音已经存在。未经独立人工标注的真实语音也保持 pending。",
+    "synthetic_policy": "TTS、正弦波、人工停顿和叠噪/变速派生测试分开记录；合成信号只进入 synthetic_smoke，不参与真实检测准确率。"
+  },
+  "reporting_limits": [
+    "本文件只承诺计划目标，当前实际录音和实际招募数均为 0。",
+    "256 是计划录音条数，不是阳性现象数、独立说话人数或金标目标数。",
+    "8 位说话人与 dev-only 分配不足以发布产品准确率、泛化到所有口音或验证 CEFR。",
+    "连续测量误差与现象二分类分别报告，uncertain/not_applicable/pending 不作为 absent。",
+    "首轮优先 pause/f0/vowel_length/linking_gap；其余项人工研究标签不意味着已上线用户检测或评分。"
+  ],
+  "prompts": [
+    {"id": "p01", "text": "When the rain stops, we can leave.", "candidate_phenomena": ["pause", "f0", "weak_form"], "candidate_focus": "短语边界与 can"},
+    {"id": "p02", "text": "If you finish early, call me.", "candidate_phenomena": ["pause", "f0", "linking_gap"], "candidate_focus": "early 后短语边界与 finish early"},
+    {"id": "p03", "text": "Maya sent the final note.", "candidate_phenomena": ["f0", "pause", "final_voicing"], "candidate_focus": "整句语调和 note 的词尾辅音；不预设降调"},
+    {"id": "p04", "text": "Did Maya send the final note?", "candidate_phenomena": ["f0", "weak_form", "drop_d", "elision"], "candidate_focus": "问句语调与 send the；不预设升调或删除"},
+    {"id": "p05", "text": "I said bead.", "candidate_phenomena": ["vowel_length", "final_voicing"], "candidate_focus": "bead 的元音和词尾 /d/", "comparison_pair": "bead_beat"},
+    {"id": "p06", "text": "I said beat.", "candidate_phenomena": ["vowel_length", "final_voicing"], "candidate_focus": "beat 的元音和词尾 /t/", "comparison_pair": "bead_beat"},
+    {"id": "p07", "text": "I said bag.", "candidate_phenomena": ["vowel_length", "final_voicing"], "candidate_focus": "bag 的元音和词尾 /g/", "comparison_pair": "bag_back"},
+    {"id": "p08", "text": "I said back.", "candidate_phenomena": ["vowel_length", "final_voicing"], "candidate_focus": "back 的元音和词尾 /k/", "comparison_pair": "bag_back"},
+    {"id": "p09", "text": "Please turn it on.", "candidate_phenomena": ["linking_gap", "flap_t", "f0"], "candidate_focus": "turn it、it on"},
+    {"id": "p10", "text": "We can send it over.", "candidate_phenomena": ["linking_gap", "weak_form", "flap_t"], "candidate_focus": "send it、it over 与 can"},
+    {"id": "p11", "text": "Take a seat outside.", "candidate_phenomena": ["linking_gap", "weak_form", "flap_t"], "candidate_focus": "take a、seat outside"},
+    {"id": "p12", "text": "Keep it in a small box.", "candidate_phenomena": ["linking_gap", "weak_form", "flap_t"], "candidate_focus": "keep it、it in 与 a"},
+    {"id": "p13", "text": "Nina bought a little ladder.", "candidate_phenomena": ["flap_t", "linking_gap", "weak_form"], "candidate_focus": "little 的 /t/ 与 bought a；ladder 只作对比上下文"},
+    {"id": "p14", "text": "The meeting starts at eleven.", "candidate_phenomena": ["flap_t", "linking_gap", "weak_form"], "candidate_focus": "meeting、at eleven"},
+    {"id": "p15", "text": "I can bring a cup of tea.", "candidate_phenomena": ["weak_form", "linking_gap", "f0"], "candidate_focus": "can、a、of 与 cup of"},
+    {"id": "p16", "text": "It was for a friend of mine.", "candidate_phenomena": ["weak_form", "linking_gap", "f0"], "candidate_focus": "was、for、a、of"},
+    {"id": "p17", "text": "Tell him I will be there.", "candidate_phenomena": ["h_drop", "linking_gap", "weak_form"], "candidate_focus": "tell him；必须听辨实际 /h/"},
+    {"id": "p18", "text": "We gave her a quiet room.", "candidate_phenomena": ["h_drop", "linking_gap", "weak_form"], "candidate_focus": "gave her、her a"},
+    {"id": "p19", "text": "I have heard his story.", "candidate_phenomena": ["h_drop", "weak_form", "final_voicing"], "candidate_focus": "have、his；heard 不预设 h 删除"},
+    {"id": "p20", "text": "Ask Harry about the house.", "candidate_phenomena": ["h_drop", "linking_gap", "f0"], "candidate_focus": "Harry 与 house 的内容词 /h/ 对照；不预填 absent"},
+    {"id": "p21", "text": "I said leave.", "candidate_phenomena": ["vowel_length", "final_voicing"], "candidate_focus": "leave 的元音和词尾 /v/", "comparison_pair": "leave_leaf"},
+    {"id": "p22", "text": "I said leaf.", "candidate_phenomena": ["vowel_length", "final_voicing"], "candidate_focus": "leaf 的元音和词尾 /f/", "comparison_pair": "leave_leaf"},
+    {"id": "p23", "text": "We kept six red pens.", "candidate_phenomena": ["final_voicing", "drop_d", "elision", "assimilation"], "candidate_focus": "red pens 与 kept six；是否删除需独立声学证据"},
+    {"id": "p24", "text": "We packed six bright cups.", "candidate_phenomena": ["final_voicing", "elision", "glottal_stop"], "candidate_focus": "packed six、bright cups；不把不爆破当省音"},
+    {"id": "p25", "text": "We met next Tuesday.", "candidate_phenomena": ["elision", "pause", "f0"], "candidate_focus": "next Tuesday 的辅音群"},
+    {"id": "p26", "text": "I left the last box upstairs.", "candidate_phenomena": ["elision", "glottal_stop", "linking_gap"], "candidate_focus": "left the、last box 与 box upstairs"},
+    {"id": "p27", "text": "Could you move this chair?", "candidate_phenomena": ["assimilation", "weak_form", "f0"], "candidate_focus": "could you；问句轮廓不预设固定方向"},
+    {"id": "p28", "text": "Did you write your name?", "candidate_phenomena": ["assimilation", "f0", "linking_gap"], "candidate_focus": "did you、write your"},
+    {"id": "p29", "text": "Put the kettle near the sink.", "candidate_phenomena": ["glottal_stop", "flap_t", "weak_form"], "candidate_focus": "put the 与 kettle；不同实现分别核实"},
+    {"id": "p30", "text": "That button feels loose.", "candidate_phenomena": ["glottal_stop", "elision", "final_voicing"], "candidate_focus": "button、that button 与 loose 的词尾"},
+    {"id": "p31", "text": "An old friend called today.", "candidate_phenomena": ["drop_d", "elision", "final_voicing"], "candidate_focus": "old friend、friend called、called today"},
+    {"id": "p32", "text": "We planned the trip together.", "candidate_phenomena": ["drop_d", "elision", "weak_form", "f0"], "candidate_focus": "planned the 与整句语调；同一删除不重复计数"}
+  ]
+}

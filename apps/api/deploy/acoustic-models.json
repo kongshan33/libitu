@@ -1,0 +1,21 @@
+{
+  "mfa_version": "3.3.9",
+  "models": [
+    {
+      "file": "english_us_arpa.zip",
+      "kind": "acoustic",
+      "version": "3.0.0",
+      "url": "https://github.com/MontrealCorpusTools/mfa-models/releases/download/acoustic-english_us_arpa-v3.0.0/english_us_arpa.zip",
+      "bytes": 91928208,
+      "sha256": "d35ce271ded357d833d2f4b8d1041dc3748b9538567ba13f2c697f4e4126711b"
+    },
+    {
+      "file": "english_us_arpa.dict",
+      "kind": "dictionary",
+      "version": "3.0.0",
+      "url": "https://github.com/MontrealCorpusTools/mfa-models/releases/download/dictionary-english_us_arpa-v3.0.0/english_us_arpa.dict",
+      "bytes": 7186498,
+      "sha256": "e8c6c7b036ae2b7c78d2768b8dc6b1f9359175b842956d00b48c53c9c332e6b0"
+    }
+  ]
+}

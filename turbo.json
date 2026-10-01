@@ -7,7 +7,7 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next-build/**", "!.next-build/cache/**", "dist/**"]
+      "outputs": [".next-build/**", "!.next-build/cache/**", "dist/**", "public/acoustic-assets/**"]
     },
     "lint": {
       "dependsOn": ["^lint"]

@@ -1,0 +1,40 @@
+Local English phonetic alignment model and algorithm attribution
+
+Upstream model: charsiu/en_w2v2_fc_10ms
+https://huggingface.co/charsiu/en_w2v2_fc_10ms
+Model configuration revision: e9bf8dd314313fc57f6e4d0b5425bde4bbeac80f
+Original Charsiu project: https://github.com/lingjzhu/charsiu
+
+INT8 ONNX export:
+https://huggingface.co/mnaoizyyy/charsiu-js-models
+Pinned revision: d22b7e9b99d5fb2bed3e10fa8014917c2a4403dd
+File: en_w2v2_fc_10ms/model_quantized.onnx
+SHA-256: 53f5b163ea1f9f995ecf38bfc91994411505d8a970b912cf6b5544c8f28e916d
+The export model card expressly distributes its English/Mandarin models as MIT.
+Export implementation: https://github.com/mnaoizy/charsiu-js
+The frame-normalization and posterior-DTW approach follows Charsiu / charsiu-js.
+Libitu uses its own bounded lexicon-DAG decoder preserving phone/word identities;
+it does not distribute the charsiu-js G2P, Mandarin or Japanese resources.
+
+MIT License
+
+Copyright (c) 2021 jzhu
+Copyright (c) 2026 charsiu-js contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

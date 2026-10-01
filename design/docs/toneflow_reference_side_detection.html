@@ -1,0 +1,204 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary)}
+.wrap{padding:20px;max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h2{font-size:14px;font-weight:600;margin-bottom:10px}
+h3{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-tertiary);margin-bottom:8px}
+
+/* Pipeline */
+.pipeline{display:flex;flex-direction:column;gap:0;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.pipe-step{display:grid;grid-template-columns:140px 1fr;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pipe-step:last-child{border-bottom:none}
+.ps-left{padding:12px 14px;display:flex;flex-direction:column;justify-content:center;gap:3px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary)}
+.ps-num{font-size:10px;font-weight:700;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.06em}
+.ps-tool{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.ps-type{font-size:10px;padding:2px 7px;border-radius:10px;width:fit-content;margin-top:2px}
+.ps-right{padding:12px 14px}
+.ps-title{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.ps-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.55}
+.ps-output{font-family:var(--font-mono);font-size:10px;color:var(--color-text-tertiary);margin-top:6px;background:var(--color-background-secondary);padding:5px 8px;border-radius:var(--border-radius-md)}
+.arrow{text-align:center;padding:4px 0;font-size:16px;color:var(--color-text-tertiary);background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+
+/* Key insight box */
+.insight{background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-lg);padding:14px 16px}
+.insight-title{font-size:13px;font-weight:600;color:#3C3489;margin-bottom:6px}
+.insight-body{font-size:12px;color:#26215C;line-height:1.65}
+.insight-body code{font-family:var(--font-mono);background:#534AB720;padding:1px 5px;border-radius:3px;font-size:11px}
+
+/* Phenomenon table */
+.ph-grid{display:flex;flex-direction:column;gap:8px}
+.ph-row{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.ph-hdr{display:grid;grid-template-columns:120px 1fr 80px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.ph-name{padding:8px 12px;font-size:12px;font-weight:600;color:var(--color-text-primary);display:flex;align-items:center;gap:6px;border-right:0.5px solid var(--color-border-tertiary)}
+.ph-signal{padding:8px 12px;font-size:11px;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-tertiary)}
+.ph-conf{padding:8px 12px;display:flex;align-items:center;justify-content:center}
+.conf-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.conf-lbl{font-size:10px;font-weight:600;margin-left:4px}
+.ph-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.ph-col{padding:10px 12px;font-size:11px;line-height:1.6;color:var(--color-text-secondary)}
+.ph-col:first-child{border-right:0.5px solid var(--color-border-tertiary)}
+.ph-col-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-tertiary);margin-bottom:4px}
+.ph-col code{font-family:var(--font-mono);font-size:10px;background:var(--color-background-secondary);padding:1px 4px;border-radius:3px;color:var(--color-text-primary)}
+.tag{font-size:9px;padding:1px 5px;border-radius:8px;font-weight:600}
+.tier1{background:#E1F5EE;color:#085041}
+.tier2{background:#FAEEDA;color:#633806}
+.tier3{background:#FCEBEB;color:#7F1D1D}
+</style>
+
+<div class="wrap">
+
+<div>
+  <h2>核心原理：两步法</h2>
+  <div class="insight">
+    <div class="insight-title">MFA 给你"在哪里看"，Parselmouth 告诉你"声学上发生了什么"</div>
+    <div class="insight-body">
+      MFA 用标准发音词典强制对齐，给出每个音素的时间坐标。但 MFA 对齐的是<strong>规范发音</strong>——它会在 "met a" 的边界处标一个 /t/，不管说话人实际发的是 stop 还是 flap。<br><br>
+      你的任务是：拿到 MFA 给的位置，去<strong>测量那个位置实际的声学特征</strong>（时长、能量、共振峰、F0），再与各现象的已知声学特征匹配。<br><br>
+      举例：MFA 说 /t/ 在 1.234–1.289s → 你测这段的闭合时长：18ms，无爆破声 → 判定为 <code>flap /ɾ/</code>，不是 stop。
+    </div>
+  </div>
+</div>
+
+<div>
+  <h2>参考侧处理管道</h2>
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="ps-left"><div class="ps-num">Step 1</div><div class="ps-tool">Whisper / 字幕</div><span class="ps-type" style="background:#DBEAFE;color:#1D4ED8">已有</span></div>
+      <div class="ps-right">
+        <div class="ps-title">逐词文本 + 粗时间戳</div>
+        <div class="ps-desc">YouTube json3 字幕已经有词级时间戳，通常不需要重跑 Whisper。如果字幕质量差（非英语原生内容），用 faster-whisper large-v3 补充。</div>
+        <div class="ps-output">输出：[{word: "met", start: 0.490, end: 0.710}, {word: "a", start: 0.720, end: 0.780}, ...]</div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="pipe-step">
+      <div class="ps-left"><div class="ps-num">Step 2</div><div class="ps-tool">MFA</div><span class="ps-type" style="background:#E0E7FF;color:#3730A3">离线处理</span></div>
+      <div class="ps-right">
+        <div class="ps-title">音素级强制对齐</div>
+        <div class="ps-desc">给定音频 + 文本，MFA 输出每个词、每个音素的精确起止时间。用 English MFA 模型（在 LibriSpeech 训练）。对清晰英语对话音频，词边界误差约 ±30ms，音素边界约 ±15ms。</div>
+        <div class="ps-output">输出：TextGrid — 词层 + 音素层各自的时间区间，e.g. /m/ 0.490–0.540, /ɛ/ 0.540–0.680, /t/ 0.680–0.710</div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="pipe-step">
+      <div class="ps-left"><div class="ps-num">Step 3</div><div class="ps-tool">Parselmouth</div><span class="ps-type" style="background:#CCFBF1;color:#0F766E">离线处理</span></div>
+      <div class="ps-right">
+        <div class="ps-title">全段声学特征提取</div>
+        <div class="ps-desc">一次性提取整段音频的所有声学时间序列，后续各现象检测直接读这些值，不重复分析音频。</div>
+        <div class="ps-output">输出：F0[]（逐帧基频）、energy[]（RMS 能量）、F1[] F2[]（元音共振峰）、voicing[]（是否有声）、zcr[]（过零率）</div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="pipe-step">
+      <div class="ps-left"><div class="ps-num">Step 4</div><div class="ps-tool">规则层</div><span class="ps-type" style="background:#EEEDFE;color:#3C3489">自研逻辑</span></div>
+      <div class="ps-right">
+        <div class="ps-title">逐现象判断</div>
+        <div class="ps-desc">读取 MFA 时间坐标 + Parselmouth 特征，对每个词边界 / 每个目标音素位置运行检测规则，输出带置信度的标注。</div>
+        <div class="ps-output">输出：[{type:"flap_t", position:1.234, confidence:0.88, word_pair:["met","a"]}, {type:"weak_form", word:"of", confidence:0.73}, ...]</div>
+      </div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="pipe-step">
+      <div class="ps-left"><div class="ps-num">Step 5</div><div class="ps-tool">CREPE / Silero</div><span class="ps-type" style="background:#E1F5EE;color:#085041">已有</span></div>
+      <div class="ps-right">
+        <div class="ps-title">Melody / Rhythm 层特征</div>
+        <div class="ps-desc">CREPE 提取高精度 F0 曲线（比 Pitchy 在低能量段更稳定），Silero VAD 切停顿。这两个和上面的现象检测并行跑，互不依赖。</div>
+        <div class="ps-output">输出：pitch_contour[]、pause_segments[]、tone_unit_boundaries[]</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div>
+  <h2>逐现象检测方法</h2>
+  <div class="ph-grid">
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier1">Tier 1</span>Linking 连音</div>
+        <div class="ph-signal">词边界处 gap 时长 + 协同发音</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#1D9E75"></span><span class="conf-lbl" style="color:#085041">高 0.85</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">检测逻辑</div>在 MFA 输出里，找词尾辅音和下一个词首元音之间的间隔。<br>CV linking：间隔 <code>&lt;20ms</code> = 连读成功。<br>间隔 <code>&gt;60ms</code> = 明显断开。<br>VV linking（两个元音相邻）：看有无过渡滑音（F2 轨迹连续变化）。</div>
+        <div class="ph-col"><div class="ph-col-lbl">信号来源</div>MFA 词边界时间 → 计算 gap。<br>Parselmouth energy：gap 期间能量是否接近零。<br>边界两侧共振峰过渡是否连续（协同发音证据）。</div>
+      </div>
+    </div>
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier1">Tier 1</span>Vowel length 元音时长</div>
+        <div class="ph-signal">元音段时长直接测量</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#1D9E75"></span><span class="conf-lbl" style="color:#085041">高 0.88</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">检测逻辑</div>从 MFA 音素层读出元音的时长。<br>查词典确认词尾辅音是清音还是浊音。<br>浊音前元音 / 清音前元音时长比值期望值约 <code>1.5–2.0</code>。<br>实际比值偏低 = 说话人没有做出对比。</div>
+        <div class="ph-col"><div class="ph-col-lbl">信号来源</div>MFA 音素层：直接读元音区间时长。<br>CMU 词典：确认该词词尾的清/浊属性。<br>这个检测几乎不需要 Parselmouth，纯时间数据就够。</div>
+      </div>
+    </div>
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier2">Tier 2</span>Flap-T 闪音</div>
+        <div class="ph-signal">闭合时长 + 有无爆破</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#EF9F27"></span><span class="conf-lbl" style="color:#633806">中 0.78</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">检测逻辑</div>1. 找 MFA 中夹在两个元音之间的 /t/ 或 /d/<br>2. 测该位置闭合段时长：<code>&lt;30ms</code> = flap，<code>&gt;60ms</code> = stop<br>3. 检查有无爆破：能量突增 spike = stop；无 spike = flap<br>4. 检查闭合期间 voicing：flap 常保持轻微有声</div>
+        <div class="ph-col"><div class="ph-col-lbl">信号来源</div>MFA：/t/ 时间坐标（但 MFA 标注的是规范 /t/，可能时长已经反映了 flap）<br>Parselmouth energy：测闭合段 RMS，找爆破 spike<br>Parselmouth voicing：闭合期有无声带振动<br>主要限制：MFA 对 flap 位置的对齐本身有 ±15ms 误差</div>
+      </div>
+    </div>
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier2">Tier 2</span>Weak forms 弱读</div>
+        <div class="ph-signal">元音共振峰位置</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#EF9F27"></span><span class="conf-lbl" style="color:#633806">中 0.72</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">检测逻辑</div>功能词列表（of / to / was / that / the…）→ 找 MFA 对齐的元音位置 → 提取 F1/F2 共振峰：<br>弱读 /ə/：F1 ≈ 400–600Hz，F2 ≈ 1400–1600Hz（中央化）<br>强读 /ɒ/（of）：F1 ≈ 650Hz，F2 ≈ 900Hz（后低）<br>距离 /ə/ 目标值越近 = 弱读程度越高</div>
+        <div class="ph-col"><div class="ph-col-lbl">信号来源</div>CMU 词典：列出所有有弱读形式的功能词<br>MFA：定位该功能词的元音时段<br>Parselmouth formant：在元音中点提取 F1/F2<br>主要限制：短功能词（&lt;80ms）共振峰提取不稳定；录音有背景音时 F2 误差大</div>
+      </div>
+    </div>
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier2">Tier 2</span>H-dropping H脱落</div>
+        <div class="ph-signal">预期 /h/ 位置能量和噪声</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#EF9F27"></span><span class="conf-lbl" style="color:#633806">中 0.70</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">检测逻辑</div>规则筛选：非句首、非重读位置的 him / her / his / have / had / has / he<br>/h/ 的声学特征：气声，宽频噪声，能量低但频谱宽<br>检测：在预期 /h/ 时段，若 RMS 能量极低且无宽频噪声 → dropped<br>若有气声噪声 → /h/ 存在</div>
+        <div class="ph-col"><div class="ph-col-lbl">信号来源</div>规则层：判断是否满足 H-drop 的语境条件<br>MFA：/h/ 的时间位置（MFA 有时会对 dropped /h/ 给近零时长对齐）<br>Parselmouth energy + spectral centroid：检测噪声成分<br>限制：低音量录音中正常的 /h/ 也可能能量很低</div>
+      </div>
+    </div>
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier2">Tier 2</span>Final voicing 尾辅音浊化</div>
+        <div class="ph-signal">闭合期 voice bar</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#EF9F27"></span><span class="conf-lbl" style="color:#633806">中 0.74</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">检测逻辑</div>找词尾 stop / fricative 的 MFA 对齐位置<br>在该位置检查有无 voice bar（低频 &lt;500Hz 周期能量）<br>结合元音时长判断（浊音前元音更长 = 间接证据）<br>注意：英语 final devoicing 是真实现象，不是"发音错误"</div>
+        <div class="ph-col"><div class="ph-col-lbl">信号来源</div>MFA：词尾辅音时间坐标<br>Parselmouth voicing：逐帧判断是否有声带振动（基于 F0 置信度）<br>Parselmouth 低频能量：voice bar 检测<br>限制：英语浊音词尾本来就常 devoice，参考侧可能本身就无 voice bar</div>
+      </div>
+    </div>
+
+    <div class="ph-row">
+      <div class="ph-hdr">
+        <div class="ph-name"><span class="tag tier3">Tier 3</span>Elision / Assim. / Glottal / Drop-D</div>
+        <div class="ph-signal">参考侧标注，用户侧不评分</div>
+        <div class="ph-conf"><span class="conf-dot" style="background:#E24B4A"></span><span class="conf-lbl" style="color:#7F1D1D">低 0.55–0.62</span></div>
+      </div>
+      <div class="ph-body">
+        <div class="ph-col"><div class="ph-col-lbl">为什么难</div><strong>Elision / Drop-D：</strong>检测"声音消失"本身。MFA 可能给极短的对齐（≈0ms），也可能给正常对齐但说话人根本没发。能量检测有噪音干扰。<br><strong>Assimilation：</strong>需要识别跨词边界的音素变形（/tj/→/tʃ/），目前没有通用工具，需要专门训练分类器。<br><strong>Glottal stop：</strong>特征极细微，不同口音差异大，误判率高。</div>
+        <div class="ph-col"><div class="ph-col-lbl">实际方案</div>参考侧：用 LLM 规则推断出"这里应该发生"，标注到 UI 上，不依赖声学验证。<br>展示方式：用虚线或不同颜色区分"声学确认"和"规则预测"两类标注。<br>用户侧：第一版完全不做自动检测，展示"请对比参考侧自行判断"。<br>后续：积累用户确认数据，训练针对这几类现象的专用分类器。</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>

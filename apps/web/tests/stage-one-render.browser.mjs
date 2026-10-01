@@ -11,8 +11,21 @@ const item = {
   naturalness_score: 4, transferability_score: 4, learning_value_score: 4
 };
 const previewTranscriptLines = [
-  { time: "0:01", text: "They doubled down on the plan." },
-  { time: "0:08", text: "The team waited before changing direction." }
+  {
+    id: "sentence-v2-render-0-6", segmentation_version: "sentence-v2", time: "0:01",
+    text: "They doubled down on the plan.", source_token_start: 0, source_token_end: 6,
+    start_ms: 1000, end_ms: 8000, boundary_source: "syntax_merge", boundary_confidence: "medium",
+    timing_source: "caption_word_offsets",
+    word_timings: "They doubled down on the plan.".split(" ").map((text, index) => ({
+      source_token_index: index, text, start_ms: 1000 + index * 100, end_ms: 1100 + index * 100,
+      start_source: "caption_offset", end_source: "next_word_estimate", source_event_index: 0, source_seg_index: index
+    }))
+  },
+  {
+    id: "sentence-v2-render-6-12", segmentation_version: "sentence-v2", time: "0:01",
+    text: "The team waited before changing direction.", source_token_start: 6, source_token_end: 12,
+    start_ms: 8000, end_ms: 14000, boundary_source: "source_punctuation", boundary_confidence: "high"
+  }
 ];
 const preview = {
   output_chars: 1000, summary: "A discussion of commitment.", chapters: ["Commitment"],
@@ -33,11 +46,7 @@ const blueprint = {
     id: `logic-${index + 1}`, title: node.title, subtitle: node.subtitle, time: node.timestamp
   })),
   corpus_items: [{ ...item, id: "idiom-9", text: `"${item.text}" - ${item.meaning}`, meta: "0:01 - B2 - click + to save" }],
-  transcript: previewTranscriptLines.map((line, index) => ({
-    id: `caption-${index + 1}`,
-    time: line.time,
-    parts: [line.text]
-  }))
+  transcript: previewTranscriptLines.map(({ text, ...metadata }) => ({ ...metadata, parts: [text] }))
 };
 
 const selectionAnalysis = (text, index) => ({
@@ -143,15 +152,19 @@ try {
           });
         }
         getCurrentTime() { return window.__ytTime ?? 0; }
-        seekTo(seconds) { window.__lastSeek = seconds; }
+        seekTo(seconds) { window.__lastSeek = seconds; window.__ytTime = seconds; }
         playVideo() { window.__ytPlayerEvents.onStateChange({ data: 1 }); }
+        pauseVideo() { window.__ytPlayerEvents.onStateChange({ data: 2 }); }
+        setPlaybackRate() {}
+        getPlaybackRate() { return 1; }
+        getAvailablePlaybackRates() { return [1]; }
         destroy() {}
       } };
     });
     await page.goto(`${origin}/?${new URLSearchParams({
       sourceUrl: blueprint.source_url, title: blueprint.title,
       contentId: job.content_id, jobId: job.id, learnerLevel: "B2"
-    })}#transcript-0-01`, { waitUntil: "domcontentloaded" });
+    })}#transcript-0-01`, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await page.waitForFunction(() => window.__streams.length === 1);
     await page.getByRole("button", { name: "Idioms", exact: true }).click();
     await page.locator(".corpus-card").waitFor();
@@ -159,12 +172,49 @@ try {
     const card = await page.locator(".corpus-card").elementHandle();
     const logic = await page.locator(".logic-node").first().elementHandle();
     const transcript = await page.locator(".transcript-line").first().elementHandle();
+    const secondTranscript = await page.locator(".transcript-line").nth(1).elementHandle();
     const iframe = await page.locator(".youtube-player iframe").elementHandle();
+    const firstWord = await page.locator("[data-caption-word-index='0']").elementHandle();
+    await page.evaluate(() => { window.__ytTime = 1.05; });
+    await page.waitForFunction(() => document.querySelector(".caption-word-active")?.textContent === "They");
+    await page.evaluate(() => { window.__ytTime = 1.1; });
+    await page.waitForFunction(() => document.querySelector(".caption-word-active")?.textContent === "doubled");
+    assert.equal(await page.locator(".highlight .caption-word-active").textContent(), "doubled", "corpus and word highlights compose");
+    await page.evaluate(() => { window.__ytTime = 1.6; });
+    await page.waitForFunction(() => !document.querySelector(".caption-word-active"));
+    await page.evaluate(() => { window.__ytTime = 1.25; });
+    await page.waitForFunction(() => document.querySelector(".caption-word-active")?.textContent === "down");
+    await page.getByRole("button", { name: "Highlight active", exact: true }).click();
+    assert.equal(await page.locator(".caption-word-active").count(), 0, "the existing Highlight active toggle also disables word highlighting");
+    await page.getByRole("button", { name: "Highlight active", exact: true }).click();
+    await page.waitForFunction(() => document.querySelector(".caption-word-active")?.textContent === "down");
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    assert.equal(await page.locator(".caption-word-active").count(), 0, "hidden tabs clear the word highlight immediately");
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.waitForFunction(() => document.querySelector(".caption-word-active")?.textContent === "down");
+    await page.evaluate(() => window.__ytPlayerEvents.onStateChange({ data: 2 }));
+    assert.equal(await page.locator(".caption-word-active").count(), 0, "pause clears word highlighting without waiting for a React tick");
+    await page.evaluate(() => { window.__ytTime = 1.05; });
+    await page.waitForTimeout(150);
+    assert.equal(await page.locator(".caption-word-active").count(), 0, "paused seek cannot light a word");
+    await page.locator(".transcript-line").nth(1).click();
+    assert.equal(await page.evaluate(() => window.__lastSeek), 8, "shared caption timestamps seek using server sentence bounds");
+    assert.equal(await page.locator(".transcript-line.active-line").count(), 1);
+    assert.equal(await page.locator(".transcript-line.active-line").getAttribute("id"), "transcript-sentence-v2-render-6-12");
+    assert.equal(await page.locator(".transcript-line").nth(1).locator(".caption-word").count(), 0, "block timing retains whole-sentence fallback");
     await page.locator(".logic-node").first().click();
     await page.evaluate((ready) => {
       window.__streams[0].dispatchEvent(Object.assign(new Event("job"), { data: JSON.stringify(ready) }));
     }, { ...job, status: "ready", processing_stage: "completed", analysis_preview: null });
     await page.locator(".save-button:not([disabled])").waitFor();
+    // Keep the mobile header stationary while testing account actions, independently of playback auto-scroll.
+    await page.evaluate(() => window.__ytPlayerEvents.onStateChange({ data: 2 }));
     const returnUrl = page.url();
     await page.evaluate(() => {
       window.__authCalls = [];
@@ -173,7 +223,10 @@ try {
       window.Clerk.openSignIn = (options) => window.__authCalls.push({ mode: "sign-in", options });
       window.Clerk.openSignUp = (options) => window.__authCalls.push({ mode: "sign-up", options });
     });
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    // Keyboard activation keeps this auth assertion independent of mobile transcript scroll settling.
+    const signIn = page.getByRole("button", { name: "Sign in", exact: true });
+    await signIn.focus();
+    await signIn.press("Enter");
     const createAccount = page.getByRole("button", { name: "Create account", exact: true });
     await createAccount.hover();
     assert.deepEqual(await createAccount.evaluate((button) => ({
@@ -193,6 +246,11 @@ try {
     for (const [node, selector] of [[card, ".corpus-card"], [logic, ".logic-node"], [transcript, ".transcript-line"], [iframe, ".youtube-player iframe"]]) {
       assert.equal(await node.evaluate((element, css) => element.isConnected && element === document.querySelector(css), selector), true, `${selector} must survive finalization`);
     }
+    assert.equal(await secondTranscript.evaluate((element) => element.isConnected
+      && element === document.querySelectorAll(".transcript-line")[1]), true,
+    "a second sentence with the same caption timestamp retains its DOM identity");
+    assert.equal(await firstWord.evaluate((element) => element.isConnected
+      && element === document.querySelector("[data-caption-word-index='0']")), true, "word DOM identity survives preview finalization");
     assert.equal(await page.locator(".logic-node.active").count(), 1);
     await page.locator(".transcript-line").nth(1).click();
     await page.getByRole("button", { name: /Changing direction/ }).waitFor();
@@ -206,10 +264,10 @@ try {
     await page.locator(".transcript-area").dispatchEvent("wheel");
     await page.getByRole("button", { name: "Auto-scroll paused after manual scroll", exact: true }).waitFor();
     await page.evaluate(() => { window.__ytTime = 8; });
-    await page.waitForFunction(() => document.querySelector(".transcript-line.active-line")?.id === "transcript-0-08");
+    await page.waitForFunction(() => document.querySelector(".transcript-line.active-line")?.id === "transcript-sentence-v2-render-6-12");
     await page.waitForTimeout(700);
     assert.equal(
-      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-08")),
+      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-sentence-v2-render-6-12")),
       false,
       "manual transcript scrolling temporarily suspends automatic active-line alignment"
     );
@@ -217,13 +275,13 @@ try {
     await manuallyPausedAutoScroll.click();
     assert.equal(await manuallyPausedAutoScroll.getAttribute("aria-pressed"), "false");
     assert.equal(
-      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-08")),
+      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-sentence-v2-render-6-12")),
       false,
       "clicking auto-scroll during manual pause toggles it off instead of being swallowed"
     );
     await page.getByRole("button", { name: "Auto-scroll", exact: true }).click();
     assert.equal(await page.getByRole("button", { name: "Auto-scroll", exact: true }).getAttribute("aria-pressed"), "true");
-    await page.waitForFunction(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-08"));
+    await page.waitForFunction(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-sentence-v2-render-6-12"));
     await page.evaluate(() => {
       window.__scrollIntoViewCalls = [];
       window.__ytPlayerEvents.onStateChange({ data: 2 });
@@ -237,10 +295,10 @@ try {
     await pausedAutoScroll.click();
     assert.equal(await pausedAutoScroll.getAttribute("aria-pressed"), "false");
     await page.locator(".transcript-line").first().click();
-    await page.waitForFunction(() => document.querySelector(".transcript-line.active-line")?.id === "transcript-0-01");
+    await page.waitForFunction(() => document.querySelector(".transcript-line.active-line")?.id === "transcript-sentence-v2-render-0-6");
     await page.waitForTimeout(700);
     assert.equal(
-      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-01")),
+      await page.evaluate(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-sentence-v2-render-0-6")),
       false,
       "paused playback never realigns the transcript"
     );
@@ -248,7 +306,7 @@ try {
     assert.equal(await pausedAutoScroll.getAttribute("aria-pressed"), "true");
     await page.evaluate(() => window.__ytPlayerEvents.onStateChange({ data: 1 }));
     await page.getByRole("button", { name: "Auto-scroll", exact: true }).waitFor();
-    await page.waitForFunction(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-0-01"));
+    await page.waitForFunction(() => window.__scrollIntoViewCalls.some((call) => call.id === "transcript-sentence-v2-render-0-6"));
 
     await selectText(page, "doubled down on");
     await page.mouse.click(3, 3);

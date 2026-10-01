@@ -8,7 +8,7 @@ This document translates the MVP backend boundary into the initial FastAPI imple
 
 The backend product design is directionally complete in `MVP_SYSTEM_DESIGN.md`: it defines core modules, data entities, cache strategy, and public API boundaries.
 
-The backend has accepted provider boundaries for persistence, identity, and ephemeral caching. Supabase Postgres durably stores public processing documents, Clerk is the identity provider, and Upstash Redis provides disposable queue coordination and polling acceleration. Corpus and speaking services still use in-memory storage.
+The backend has accepted provider boundaries for persistence, identity, and ephemeral caching. Supabase Postgres durably stores public processing documents, personal corpus and speaking loadout snapshots. Clerk is the identity provider, and Upstash Redis provides disposable queue coordination and polling acceleration. Unconfigured inline development and deterministic tests may use in-memory adapters; configured persistence failures never silently fall back to memory. Real speaking turns and feedback remain planned.
 
 See `DATA_ARCHITECTURE.md` for schema ownership, RLS, credentials, and migration rules.
 
@@ -40,16 +40,18 @@ It does not own:
 | `/api/jobs/{job_id}` | `GET` | Implemented | Polls job state. |
 | `/api/jobs/{job_id}/events` | `GET` | Implemented | Streams processing stages and validated partial analysis previews as SSE. |
 | `/api/blueprints/{content_id}` | `GET` | Implemented | Returns the active-version blueprint with read-time learner-level ranking. |
-| `/api/corpus` | `GET` / `POST` | Implemented | Clerk identity required; storage remains in memory. |
-| `/api/corpus/{item_id}` | `PATCH` / `DELETE` | Implemented | Clerk identity and owner match required; storage remains in memory. |
-| `/api/speaking/sessions` | `POST` | Implemented | Clerk identity required; creates an in-memory session. |
-| `/api/speaking/sessions/{session_id}/turns` | `POST` | Implemented | Owner match required; returns deterministic placeholder AI feedback. |
+| `/api/corpus` | `GET` / `POST` | Implemented | Clerk identity required; configured Supabase persistence. |
+| `/api/corpus/{item_id}` | `PATCH` / `DELETE` | Implemented | Owner-scoped persisted edits/deletion. |
+| `/api/speaking/options` | `GET` | Implemented | Public static logic templates and selection limits. |
+| `/api/speaking/sessions` | `POST` | Implemented | Authenticated, owner-checked, idempotent atomic loadout snapshots. |
+| `/api/speaking/sessions/{session_id}` | `GET` | Implemented | Owner-scoped session settings and ordered snapshots. |
+| `/api/speaking/sessions/{session_id}/turns` | `POST` | Planned integration | Persisted sessions explicitly return 501; deterministic replies are inline fixtures only. |
 
 ## Next Implementation Decisions
 
-1. Replace corpus and speaking in-memory stores with repository interfaces backed by Supabase.
+1. Implement the real role-play adapter, turn persistence, evidence-based selected-item detection and session feedback after the saved loadout boundary.
 2. Finish hosted Clerk-Supabase trust and pass session tokens to private API calls.
-3. Define anonymous local-state import rules before implementing account merge.
+3. Keep accepted corpus import and account-bound local loadout drafts; define remaining history/progress merge rules.
 4. Add Upstash rate limits and a durable retry scheduler around real job execution.
 5. Add typed API client generation for the web app and extension.
 

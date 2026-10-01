@@ -107,7 +107,7 @@ def test_parser_merges_same_timestamp_and_untimestamped_continuations() -> None:
     ]
 
 
-def test_formatter_groups_sentences_that_share_a_source_timestamp(monkeypatch) -> None:
+def test_formatter_keeps_sentences_that_share_a_source_timestamp_independent(monkeypatch) -> None:
     _use_test_settings(monkeypatch)
     transcript = "0:01\tfirst thought ends here and another thought follows now"
     engine = FixedPunctuationEngine(
@@ -119,9 +119,15 @@ def test_formatter_groups_sentences_that_share_a_source_timestamp(monkeypatch) -
     assert lines == [
         transcript_formatter.ParsedTranscriptLine(
             time="0:01",
-            text="First thought ends here. And another thought follows now.",
+            text="First thought ends here.",
+        ),
+        transcript_formatter.ParsedTranscriptLine(
+            time="0:01",
+            text="And another thought follows now.",
         )
     ]
+    assert lines[0].id != lines[1].id
+    assert lines[0].end_ms == lines[1].start_ms
 
 
 def test_reliable_source_punctuation_bypasses_model_and_is_normalized(monkeypatch) -> None:
@@ -171,7 +177,9 @@ def test_model_rewrite_falls_back_without_losing_source_words(monkeypatch) -> No
     assert "must" in rendered
     assert "should" not in rendered
     assert _words(rendered) == _transcript_words(transcript)
-    assert rendered.endswith(".")
+    assert not rendered.endswith(".")
+    assert lines[-1].boundary_source == "unresolved"
+    assert lines[-1].boundary_confidence == "low"
 
 
 def test_progress_publishes_cumulative_sentence_batches(monkeypatch) -> None:

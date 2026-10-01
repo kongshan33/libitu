@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from app.config import get_settings
 from app.integrations.upstash import get_upstash_redis
 from app.schemas.blueprint import Blueprint
+from app.schemas.captions import CaptionTrack
 from app.schemas.content import ContentResolveResponse
 from app.schemas.job import ProcessingJob
 
@@ -13,10 +14,16 @@ from app.schemas.job import ProcessingJob
 class QueuedContent:
     content: ContentResolveResponse
     transcript_text: str | None
+    caption_track: CaptionTrack | None = None
 
 
-def save_content(content: ContentResolveResponse, transcript_text: str | None) -> None:
+def save_content(
+    content: ContentResolveResponse, transcript_text: str | None,
+    caption_track: CaptionTrack | None = None,
+) -> None:
     payload = {"content": content.model_dump(mode="json"), "transcript_text": transcript_text}
+    if caption_track is not None:
+        payload["caption_track"] = caption_track.model_dump(mode="json", exclude_none=True)
     _set_json(_content_key(content.content_id), payload)
 
 
@@ -27,6 +34,7 @@ def get_content(content_id: str) -> QueuedContent | None:
     return QueuedContent(
         content=ContentResolveResponse.model_validate(payload["content"]),
         transcript_text=payload.get("transcript_text"),
+        caption_track=CaptionTrack.model_validate(payload["caption_track"]) if payload.get("caption_track") else None,
     )
 
 

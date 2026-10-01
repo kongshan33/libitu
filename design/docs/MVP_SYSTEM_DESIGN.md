@@ -20,7 +20,7 @@ Out of scope for MVP:
 - Calendar-based review plans.
 - Cross-content recommendation engine.
 - Full mobile app.
-- YouTube audio/video server upload.
+- Server upload or retention of unlicensed YouTube audio/video.
 
 ## System Overview
 
@@ -181,18 +181,27 @@ Use backend persistence for:
 - Intensive listening progress.
 - Reading workspace progress.
 - Speaking sessions and feedback.
+- Versioned practice attempts, derived assessment evidence, and learner-level estimates.
+- Learner recordings when the signed-in learner chooses server analysis or long-term replay retention.
+
+Immediate analysis, long-term recording retention, and model training are separate processing purposes. Model training is opt-in and disabled by default. A user can keep derived progress while deleting a saved recording unless the result can no longer be supported without that evidence; the product must explain that dependency before deletion.
 
 ### Shared processing cache
 
 Use a backend cache for content-level work that is not user-private:
 
-- YouTube transcript processing result.
+- Permitted YouTube transcript processing result under the approved acquisition and retention path.
 - Article extraction result.
 - LLM blueprint result by content hash and analysis version.
+- Licensed reference sentences, audio clips, alignments, and acoustic features when Libitu received the source media directly under sufficient rights.
 
 This prevents a refresh from reprocessing the same content and prevents repeated work when multiple users study the same public video.
 
+For an ordinary YouTube source, store only the source locator, sentence identity/bounds, permitted metadata, and Libitu-owned learning results. Playback stays in the official embedded player. Do not turn a browser-captured reference clip into a durable server asset. A licensed catalogue is a separate ingestion path: the rights holder supplies the source file and captions, the server prepares one shared reference clip per sentence, and each learner attempt references that clip by ID.
+
 ## Content Processing Pipeline
+
+Stage 2 has an accepted, not-yet-implemented [file-reference target](STAGE_TWO_FILE_REFERENCE_ARCHITECTURE.md). Content entry checks permitted source capability and cached assets; the proposed default acquires/processes the selected practice segment when confirmed, rather than downloading every full video. A separate durable media pipeline publishes sentence files/features for immediate frontend use, and private learner attempts are processed asynchronously. Keep this planned pipeline distinct from the currently implemented browser capture and local acoustics. Missing file capability leaves official-player/basic practice available; it must not trigger hidden acquisition or fabricated reference results.
 
 ```mermaid
 sequenceDiagram

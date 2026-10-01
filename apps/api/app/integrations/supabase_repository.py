@@ -1,10 +1,13 @@
 from functools import lru_cache
 from hashlib import sha256
+import json
 
 import httpx
+from pydantic import ValidationError
 
 from app.config import get_settings
 from app.schemas.blueprint import Blueprint
+from app.schemas.captions import CaptionTrack
 from app.schemas.content import ContentKind, ContentResolveResponse
 from app.schemas.job import ProcessingJob
 from app.schemas.corpus import CorpusItem, CorpusItemCreate, CorpusItemUpdate
@@ -31,7 +34,10 @@ class SupabaseRepository:
             limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
         )
 
-    def save_content(self, content: ContentResolveResponse, transcript_text: str | None) -> None:
+    def save_content(
+        self, content: ContentResolveResponse, transcript_text: str | None,
+        caption_track: CaptionTrack | None = None,
+    ) -> None:
         self._request(
             "POST",
             "/contents?on_conflict=id",
@@ -49,16 +55,29 @@ class SupabaseRepository:
             },
         )
         if transcript_text:
-            self._request(
-                "POST",
-                "/rpc/upsert_content_payload",
-                json={
-                    "p_content_id": content.content_id,
-                    "p_transcript_text": transcript_text,
-                    "p_source_text": None,
-                    "p_content_sha256": sha256(transcript_text.encode("utf-8")).hexdigest(),
-                },
-            )
+            self.save_caption_source(content.content_id, transcript_text, caption_track)
+
+    def save_caption_source(
+        self, content_id: str, transcript_text: str, caption_track: CaptionTrack | None,
+    ) -> None:
+        """Update only the existing private payload, never public content metadata."""
+        # YouTube has no article source_text. Store a typed source envelope in
+        # that existing private field; never put captions or signed URLs in
+        # public contents.metadata. Existing service-only RPCs remain unchanged.
+        source_text = json.dumps({
+            "type": "libitu-caption-source-v1",
+            "caption_track": caption_track.model_dump(mode="json", exclude_none=True),
+        }, ensure_ascii=False, separators=(",", ":")) if caption_track is not None else None
+        self._request(
+            "POST",
+            "/rpc/upsert_content_payload",
+            json={
+                "p_content_id": content_id,
+                "p_transcript_text": transcript_text,
+                "p_source_text": source_text,
+                "p_content_sha256": sha256((transcript_text + (source_text or "")).encode("utf-8")).hexdigest(),
+            },
+        )
 
     def get_content(self, content_id: str) -> QueuedContent | None:
         rows = self._request(
@@ -74,6 +93,17 @@ class SupabaseRepository:
             json={"p_content_id": content_id},
         ).json()
         transcript = payload_rows[0].get("transcript_text") if payload_rows else None
+        caption_track = None
+        if row["kind"] == ContentKind.youtube.value and payload_rows:
+            try:
+                source = json.loads(payload_rows[0].get("source_text") or "null")
+                if isinstance(source, dict) and source.get("type") == "libitu-caption-source-v1":
+                    candidate = CaptionTrack.model_validate(source.get("caption_track"))
+                    if row["normalized_key"] == f"youtube:{candidate.video_id}":
+                        caption_track = candidate
+            except (ValueError, TypeError, ValidationError):
+                # An absent/legacy source envelope must not prevent plain captions.
+                pass
         return QueuedContent(
             content=ContentResolveResponse(
                 content_id=row["id"],
@@ -85,6 +115,7 @@ class SupabaseRepository:
                 has_transcript=bool(transcript),
             ),
             transcript_text=transcript,
+            caption_track=caption_track,
         )
 
     def save_job(self, job: ProcessingJob) -> None:

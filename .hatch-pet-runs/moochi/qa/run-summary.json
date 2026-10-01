@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "spriteVersionNumber": 2,
+  "run_dir": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi",
+  "spritesheet": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/final/spritesheet-extended.webp",
+  "validation": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/final/validation-extended.json",
+  "chroma_despill": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/chroma-despill-extended.json",
+  "contact_sheet": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/contact-sheet-extended.png",
+  "direction_sheet": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/look-directions.png",
+  "direction_semantics": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/direction-semantics.json",
+  "blind_direction_validation": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/direction-blind-validation.json",
+  "blind_review_resolution": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/blind-review-resolution.json",
+  "continuity": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/look-continuity.json",
+  "review": "/Users/river/Documents/Libitu/.hatch-pet-runs/moochi/qa/review.json",
+  "package": "/Users/river/.codex/pets/moochi"
+}

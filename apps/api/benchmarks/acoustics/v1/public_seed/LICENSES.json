@@ -1,0 +1,37 @@
+{
+  "checked_on": "2026-09-13",
+  "acquisition_scope": "Local offline benchmark development only; no model training or product distribution performed",
+  "licenses": [
+    {
+      "corpus": "cmu_arctic",
+      "license_id": "LicenseRef-CMU-ARCTIC",
+      "license_url": "http://festvox.org/cmu_arctic/cmu_arctic/cmu_us_bdl_arctic/COPYING",
+      "full_license_files": [
+        "licenses/cmu_arctic_bdl_COPYING.txt",
+        "licenses/cmu_arctic_slt_COPYING.txt"
+      ],
+      "attribution": "CMU ARCTIC, Carnegie Mellon University, Copyright (c) 2003. Created by John Kominek and Alan W Black; BDL and SLT speech recordings.",
+      "source_url": "http://festvox.org/cmu_arctic/",
+      "citation": "John Kominek and Alan W Black. CMU ARCTIC databases for speech synthesis. Carnegie Mellon University, Language Technologies Institute Technical Report CMU-LTI-03-177, 2003.",
+      "conditions_summary": "Retain copyright, conditions, disclaimer and original author names; mark modifications. Commercial and other purposes are permitted by the source license.",
+      "audio_changes": "None; original WAV bytes preserved",
+      "transcript_changes": "Extracted selected text from each speaker's source transcript table; words and casing unchanged"
+    },
+    {
+      "corpus": "speechocean762",
+      "license_id": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "legalcode_url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+      "license_evidence_url": "https://openslr.org/101/",
+      "permission_evidence_url": "https://github.com/jimbozhang/speechocean762/blob/613968e3b0b789fc33936fb5eba1973176ba7d11/README.md",
+      "attribution": "speechocean762, Junbo Zhang, Zhiwen Zhang, Yongqing Wang, Zhiyong Yan, Qiong Song, Yukai Huang, Ke Li, Daniel Povey and Yujun Wang, 2021. Licensed under CC BY 4.0.",
+      "source_url": "https://github.com/jimbozhang/speechocean762",
+      "source_revision": "613968e3b0b789fc33936fb5eba1973176ba7d11",
+      "requested_citation_bibtex": "@inproceedings{zhang2021speechocean762,\n  title={speechocean762: An Open-Source Non-native English Speech Corpus For Pronunciation Assessment},\n  author={Zhang, Junbo and Zhang, Zhiwen and Wang, Yongqing and Yan, Zhiyong and Song, Qiong and Huang, Yukai and Li, Ke and Povey, Daniel and Wang, Yujun},\n  booktitle={Proc. Interspeech 2021},\n  year={2021}\n}",
+      "conditions_summary": "Provide attribution and a license link, identify modifications, and do not imply endorsement or impose additional restrictions contrary to the license.",
+      "audio_changes": "None; original WAV bytes preserved",
+      "transcript_changes": "Extracted selected text from source train/text; words and casing unchanged",
+      "annotation_boundary": "Existing pronunciation scores were not imported and are not connected-speech phenomenon gold labels"
+    }
+  ]
+}

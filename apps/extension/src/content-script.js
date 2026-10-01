@@ -127,7 +127,9 @@ function readVisibleTranscriptText(includeStale = false) {
     })
     .filter(Boolean);
 
-  const text = Array.from(new Set(segments)).join("\n") || undefined;
+  // Each DOM segment is an occurrence, not a unique phrase. Repeated speech
+  // (including equal display timestamps) must not silently disappear.
+  const text = segments.join("\n") || undefined;
   return !includeStale && text === staleTranscript ? undefined : text;
 }
 
@@ -169,6 +171,7 @@ function refreshEntry() {
       button:focus-visible { outline: 2px solid #afa9ec; outline-offset: -4px; border-radius: 4px; }
       button:disabled { opacity: .55; }
       button[data-state="checking"] { cursor: wait; }
+      button[data-state="capturing"] { cursor: wait; }
       button[data-state="unsupported"], button[data-state="unknown"] { cursor: not-allowed; }
       img { display: block; width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .96);
         object-fit: contain; box-shadow: 0 0 0 1px rgba(255, 255, 255, .2); }
@@ -178,6 +181,7 @@ function refreshEntry() {
         font: 12px/16px Arial, sans-serif; letter-spacing: 0; overflow-wrap: anywhere; pointer-events: none; }
       p:empty { display: none; }
       p[data-mode="hint"] { display: none; }
+      p[data-mode="progress"] { display: block; }
       :host(:hover) p[data-mode="hint"], :host(:focus-within) p[data-mode="hint"] { display: block; }
     `;
     entryButton = document.createElement("button");
@@ -191,7 +195,10 @@ function refreshEntry() {
     entryStatus.setAttribute("role", "status");
     entryButton.addEventListener("click", async () => {
       entryButton.disabled = true;
-      entryStatus.textContent = "";
+      entryButton.dataset.state = "capturing";
+      entryButton.title = "Preparing captions before opening Libitu…";
+      entryStatus.dataset.mode = "progress";
+      entryStatus.textContent = "Waiting for YouTube captions before opening Libitu…";
       try {
         const result = await chrome.runtime.sendMessage({ type: "LIBITU_OPEN_STAGE_ONE" });
         if (!result?.opened) throw new Error(result?.error || "Could not open Libitu. Reload YouTube and try again.");

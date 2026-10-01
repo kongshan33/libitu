@@ -3,8 +3,14 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { setImmediate as nextTurn } from "node:timers/promises";
+import { readCurrentYouTubeCaptionTrack, captionTrackToTranscript } from "../src/youtube-captions.js";
+import { createFreshCaptionReader } from "../src/fresh-captions.js";
 
-const code = readFileSync(new URL("../src/background.js", import.meta.url), "utf8");
+const code = readFileSync(new URL("../src/background.js", import.meta.url), "utf8")
+  .replace('import { installReferenceCapture } from "./reference-capture.js";', "")
+  .replace('import { installBufferedCapture } from "./buffer-capture.js";', "")
+  .replace('import { readCurrentYouTubeCaptionTrack, captionTrackToTranscript } from "./youtube-captions.js";', "")
+  .replace('import { createFreshCaptionReader } from "./fresh-captions.js";', "");
 const video = { id: 1, windowId: 1, url: "https://www.youtube.com/watch?v=first-video" };
 const snapshot = { supported: true, videoId: "first-video", title: "First video", canonicalUrl: video.url };
 
@@ -17,11 +23,15 @@ function harness() {
   const state = {
     metadata: snapshot,
     captions: Promise.resolve({ ...snapshot, transcriptText: "0:01\tBrowser captions." }),
+    captionTrack: Promise.resolve({ unavailable: true }),
+    captionPreparation: { status: "automatic_track_unavailable" },
     language: { languageCode: "en", source: "automatic-caption" },
+    quickTimeout: false,
     failReceiver: false
   };
   const chrome = {
     runtime: {
+      id: "test-extension",
       onMessage: event("message"),
       getURL: (path) => `chrome-extension://test/${path}`
     },
@@ -36,6 +46,18 @@ function harness() {
           calls.push(["inject"]);
           return [];
         }
+        if (options.func === readCurrentYouTubeCaptionTrack) {
+          calls.push(["json3", options.args]);
+          return [{ result: await state.captionTrack }];
+        }
+        if (options.func?.name === "prepareYouTubeCaptions") {
+          calls.push(["prepare", options.args]);
+          return [{ result: state.captionPreparation }];
+        }
+        if (options.func?.name === "restoreYouTubeCaptions") {
+          calls.push(["restore", options.args]);
+          return [{ result: { status: "restored" } }];
+        }
         calls.push(["language", options.args?.[0]]);
         return [{ result: structuredClone(state.language) }];
       }
@@ -47,6 +69,7 @@ function harness() {
     } },
     tabs: {
       onUpdated: event("updated"),
+      query: async () => [...tabs.values()].filter((tab) => tab.url.startsWith("https://www.youtube.com/watch")),
       get: async (id) => { if (!tabs.has(id)) throw new Error("Closed tab"); return tabs.get(id); },
       update: async (id) => { calls.push(["focus", id]); return tabs.get(id); },
       create: async ({ url }) => {
@@ -62,7 +85,14 @@ function harness() {
       }
     }
   };
-  const restart = () => runInNewContext(code, { chrome, URL, URLSearchParams, crypto, setTimeout, clearTimeout });
+  const restart = () => runInNewContext(code, {
+    chrome, URL, URLSearchParams, crypto, clearTimeout,
+    setTimeout: (callback, delay) => setTimeout(callback, state.quickTimeout ? Math.min(delay, 5) : delay),
+    readCurrentYouTubeCaptionTrack, captionTrackToTranscript,
+    createFreshCaptionReader,
+    installReferenceCapture: () => ({ handlesTab: () => false }),
+    installBufferedCapture: () => ({ handlesTab: () => false })
+  });
   restart();
   const dispatch = (message, sender = { tab: video, frameId: 0, url: video.url }) => new Promise((resolve) => {
     if (!listeners.message(message, sender, resolve)) resolve(undefined);
@@ -70,13 +100,18 @@ function harness() {
   return { state, calls, tabs, records, listeners, dispatch, restart };
 }
 
-test("both entry points open Stage 1 before captions finish, with no API dependency", async () => {
+test("both entry points wait for bounded caption capture before opening Stage 1", async () => {
   const h = harness();
   let finishCaptions;
   h.state.captions = new Promise((resolve) => { finishCaptions = resolve; });
-  const opened = await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  const opening = h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  await nextTurn();
+  assert.equal(h.calls.some(([type]) => type === "open"), false);
+  finishCaptions({ ...snapshot, transcriptText: "0:01\tCaptured before the page opened." });
+  const opened = await opening;
   assert.equal(opened.opened, true);
-  assert.ok(h.calls.findIndex(([type]) => type === "open") < h.calls.findIndex(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT"));
+  await nextTurn();
+  assert.ok(h.calls.findIndex(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT") < h.calls.findIndex(([type]) => type === "open"));
   const stage = h.tabs.get(2);
   const url = new URL(stage.url);
   assert.equal(url.searchParams.get("sourceUrl"), video.url);
@@ -85,8 +120,7 @@ test("both entry points open Stage 1 before captions finish, with no API depende
   assert.equal(url.searchParams.has("contentId"), false);
   const handoffId = url.searchParams.get("handoffId");
   const reading = h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url });
-  finishCaptions({ ...snapshot, transcriptText: "0:01\tCaptured after the page opened." });
-  assert.equal((await reading).transcriptText, "0:01\tCaptured after the page opened.");
+  assert.equal((await reading).transcriptText, "0:01\tCaptured before the page opened.");
   h.listeners.click(video);
   await nextTurn();
   assert.equal(h.calls.filter(([type]) => type === "open").length, 1);
@@ -156,4 +190,120 @@ test("missing or wrong-video captions fall back without attaching unrelated text
   const stage = h.tabs.get(2);
   const handoffId = new URL(stage.url).searchParams.get("handoffId");
   assert.equal((await h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url })).transcriptText, undefined);
+});
+
+const json3Track = {
+  version: "youtube-json3-v1", video_id: "first-video", language: "en", kind: "asr",
+  events: [{ tStartMs: 1040, dDurationMs: 850, segs: [{ utf8: "A" }, { utf8: " caption.", tOffsetMs: 120 }] }]
+};
+
+test("JSON3 acquisition completes before opening Stage 1, persists safe timing, and skips DOM capture", async () => {
+  const h = harness();
+  let finish;
+  h.state.captionTrack = new Promise((resolve) => { finish = resolve; });
+  const opening = h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  await nextTurn();
+  assert.equal(h.calls.some(([type]) => type === "open"), false);
+  finish({ captionTrack: structuredClone(json3Track) });
+  assert.equal((await opening).opened, true);
+  assert.ok(h.calls.findIndex(([type]) => type === "json3") < h.calls.findIndex(([type]) => type === "open"));
+  const stage = h.tabs.get(2);
+  const handoffId = new URL(stage.url).searchParams.get("handoffId");
+  const reading = h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url });
+  const result = await reading;
+  assert.equal(result.transcriptText, "0:01.040\tA caption.");
+  assert.deepEqual(result.captionTrack, json3Track);
+  assert.equal(h.calls.some(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT"), false);
+  assert.equal(stage.url.includes("caption"), false);
+  assert.deepEqual(h.records[`libituHandoff:${handoffId}`].captionTrack, json3Track);
+  h.restart();
+  assert.deepEqual((await h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url })).captionTrack, json3Track);
+  assert.equal(h.calls.filter(([type]) => type === "json3").length, 1);
+});
+
+test("automatic caption preparation is best-effort and restores a captions-off player", async () => {
+  const h = harness();
+  h.state.captionPreparation = { status: "enabled_auto", changed: true };
+  let finish;
+  h.state.captionTrack = new Promise((resolve) => { finish = resolve; });
+  const opening = h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  await nextTurn();
+  assert.ok(h.calls.some(([type]) => type === "prepare"));
+  finish({ captionTrack: structuredClone(json3Track) });
+  assert.equal((await opening).opened, true);
+  assert.ok(h.calls.findIndex(([type]) => type === "restore") < h.calls.findIndex(([type]) => type === "open"));
+});
+
+test("block-only JSON3 remains usable without a DOM wait or invented offsets", async () => {
+  const h = harness();
+  const track = { ...json3Track, kind: "manual", events: [{ tStartMs: 40, segs: [{ utf8: "A whole caption block." }] }] };
+  h.state.captionTrack = Promise.resolve({ captionTrack: track });
+  await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  const stage = h.tabs.get(2);
+  const handoffId = new URL(stage.url).searchParams.get("handoffId");
+  const result = await h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url });
+  assert.equal(result.transcriptText, "0:00.040\tA whole caption block.");
+  assert.equal(result.captionTrack.events[0].segs[0].tOffsetMs, undefined);
+  assert.equal(h.calls.some(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT"), false);
+});
+
+test("old JSON3 captures cannot attach after A to B to A navigation", async () => {
+  const h = harness();
+  let finish;
+  h.state.captionTrack = new Promise((resolve) => { finish = resolve; });
+  const opening = h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  await nextTurn();
+  h.listeners.updated(1, { url: "https://www.youtube.com/watch?v=second-video" });
+  h.listeners.updated(1, { url: video.url });
+  finish({ captionTrack: json3Track });
+  const result = await opening;
+  assert.match(result.error, /changed while captions were loading/);
+  assert.equal(h.calls.some(([type]) => type === "open"), false);
+  assert.equal(h.calls.some(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT"), false);
+});
+
+test("navigation detected in the injected page never falls through to a new video's DOM", async () => {
+  const h = harness();
+  h.state.captionTrack = Promise.resolve({ stale: true });
+  await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  const stage = h.tabs.get(2);
+  const handoffId = new URL(stage.url).searchParams.get("handoffId");
+  assert.equal((await h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url })).transcriptText, undefined);
+  assert.equal(h.calls.some(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT"), false);
+});
+
+test("an unresponsive page-injection request has an outer bound and falls back to DOM", async () => {
+  const h = harness();
+  h.state.quickTimeout = true;
+  h.state.captionTrack = new Promise(() => {});
+  await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  const stage = h.tabs.get(2);
+  const handoffId = new URL(stage.url).searchParams.get("handoffId");
+  const result = await h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, { tab: stage, frameId: 0, url: stage.url });
+  assert.equal(result.transcriptText, "0:01\tBrowser captions.");
+  assert.equal(result.captionTrack, undefined);
+  assert.equal(h.calls.filter(([type]) => type === "json3").length, 2);
+  assert.equal(h.calls.filter(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT").length, 1);
+});
+
+test("fresh caption requests bypass old ready handoffs and duplicate-entry focus without rewriting either", async () => {
+  const h = harness();
+  await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  await nextTurn();
+  const stage = h.tabs.get(2);
+  const handoffId = new URL(stage.url).searchParams.get("handoffId");
+  const sender = { tab: stage, url: stage.url, frameId: 0, documentId: "stage-document", id: "test-extension" };
+  assert.equal((await h.dispatch({ type: "LIBITU_READ_HANDOFF", handoffId }, sender)).captionTrack, undefined);
+  const originalRecords = structuredClone(h.records);
+  await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  assert.equal(h.calls.filter(([type]) => type === "focus").length, 1);
+  h.state.captionTrack = Promise.resolve({ captionTrack: json3Track });
+  const result = await h.dispatch({ type: "LIBITU_READ_FRESH_CAPTIONS", requestId: "fresh-one",
+    sourceUrl: video.url, videoId: "first-video", language: "en" }, sender);
+  assert.equal(result.status, "ready");
+  assert.deepEqual(result.captionTrack, json3Track);
+  assert.deepEqual(h.records, originalRecords);
+  assert.equal(h.calls.filter(([type]) => type === "open").length, 1);
+  assert.equal(h.calls.filter(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT").length, 1);
+  assert.equal(h.calls.filter(([type]) => type === "json3").length, 2);
 });

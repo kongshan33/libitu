@@ -1,0 +1,557 @@
+{
+  "$defs": {
+    "Annotation": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "default": "pending",
+          "enum": [
+            "pending",
+            "single_review",
+            "adjudicated",
+            "synthetic"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "enum": [
+                "present",
+                "absent",
+                "uncertain",
+                "not_applicable"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "measurements": {
+          "items": {
+            "$ref": "#/$defs/Measurement"
+          },
+          "title": "Measurements",
+          "type": "array"
+        },
+        "annotator_ids": {
+          "items": {
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "type": "string"
+          },
+          "title": "Annotator Ids",
+          "type": "array"
+        },
+        "notes": {
+          "default": "",
+          "maxLength": 12000,
+          "title": "Notes",
+          "type": "string"
+        }
+      },
+      "title": "Annotation",
+      "type": "object"
+    },
+    "AudioAsset": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "sample_rate_hz": {
+          "exclusiveMinimum": 0,
+          "maximum": 384000,
+          "title": "Sample Rate Hz",
+          "type": "integer"
+        },
+        "channels": {
+          "exclusiveMinimum": 0,
+          "maximum": 32,
+          "title": "Channels",
+          "type": "integer"
+        },
+        "frame_count": {
+          "exclusiveMinimum": 0,
+          "title": "Frame Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "sample_rate_hz",
+        "channels",
+        "frame_count"
+      ],
+      "title": "AudioAsset",
+      "type": "object"
+    },
+    "BenchmarkSample": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "speaker_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Speaker Id",
+          "type": "string"
+        },
+        "source_group_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Source Group Id",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "train",
+            "dev",
+            "test"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "reference",
+            "learner"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "reference_sample_id": {
+          "anyOf": [
+            {
+              "maxLength": 240,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Sample Id"
+        },
+        "audio": {
+          "$ref": "#/$defs/AudioAsset"
+        },
+        "transcript": {
+          "$ref": "#/$defs/Transcript"
+        },
+        "source": {
+          "$ref": "#/$defs/Source"
+        },
+        "conditions": {
+          "items": {
+            "maxLength": 240,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+            "type": "string"
+          },
+          "title": "Conditions",
+          "type": "array"
+        },
+        "target_accent": {
+          "anyOf": [
+            {
+              "maxLength": 12000,
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Accent"
+        },
+        "targets": {
+          "items": {
+            "$ref": "#/$defs/Target"
+          },
+          "title": "Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sample_id",
+        "speaker_id",
+        "source_group_id",
+        "split",
+        "role",
+        "audio",
+        "transcript",
+        "source"
+      ],
+      "title": "BenchmarkSample",
+      "type": "object"
+    },
+    "Interval": {
+      "additionalProperties": false,
+      "properties": {
+        "start_seconds": {
+          "minimum": 0,
+          "title": "Start Seconds",
+          "type": "number"
+        },
+        "end_seconds": {
+          "minimum": 0,
+          "title": "End Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start_seconds",
+        "end_seconds"
+      ],
+      "title": "Interval",
+      "type": "object"
+    },
+    "Measurement": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "duration_ms",
+            "pause_duration_ms",
+            "boundary_gap_ms",
+            "closure_duration_ms",
+            "f0_hz",
+            "f0_semitones",
+            "voicing_ratio",
+            "f1_hz",
+            "f2_hz",
+            "intensity_db"
+          ],
+          "title": "Name",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        },
+        "unit": {
+          "enum": [
+            "ms",
+            "Hz",
+            "semitones",
+            "ratio",
+            "dB"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "interval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Interval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "value",
+        "unit"
+      ],
+      "title": "Measurement",
+      "type": "object"
+    },
+    "RuleCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_version": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Rule Version",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_version",
+        "description"
+      ],
+      "title": "RuleCandidate",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "corpus": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Corpus",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Record Id",
+          "type": "string"
+        },
+        "url": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Url",
+          "type": "string"
+        },
+        "license": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "License",
+          "type": "string"
+        },
+        "license_url": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "License Url",
+          "type": "string"
+        },
+        "attribution": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Attribution",
+          "type": "string"
+        },
+        "usage": {
+          "const": "benchmark_only",
+          "default": "benchmark_only",
+          "title": "Usage",
+          "type": "string"
+        },
+        "training_allowed": {
+          "default": false,
+          "title": "Training Allowed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "corpus",
+        "record_id",
+        "url",
+        "license",
+        "license_url",
+        "attribution"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Target": {
+      "additionalProperties": false,
+      "properties": {
+        "target_id": {
+          "maxLength": 240,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+          "title": "Target Id",
+          "type": "string"
+        },
+        "phenomenon": {
+          "enum": [
+            "vowel_length",
+            "linking_gap",
+            "pause",
+            "f0",
+            "flap_t",
+            "weak_form",
+            "h_drop",
+            "final_voicing",
+            "elision",
+            "assimilation",
+            "glottal_stop",
+            "drop_d"
+          ],
+          "title": "Phenomenon",
+          "type": "string"
+        },
+        "word_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Word Start"
+        },
+        "word_end": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Word End"
+        },
+        "interval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Interval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rule_candidate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RuleCandidate"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "annotation": {
+          "$ref": "#/$defs/Annotation"
+        }
+      },
+      "required": [
+        "target_id",
+        "phenomenon"
+      ],
+      "title": "Target",
+      "type": "object"
+    },
+    "Transcript": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Text",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "provided",
+            "human_verified",
+            "asr"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "language": {
+          "const": "en",
+          "default": "en",
+          "title": "Language",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "sha256",
+        "provenance"
+      ],
+      "title": "Transcript",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "acoustic-benchmark.v1",
+      "default": "acoustic-benchmark.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "dataset_id": {
+      "maxLength": 240,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Dataset Id",
+      "type": "string"
+    },
+    "dataset_version": {
+      "maxLength": 240,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "title": "Dataset Version",
+      "type": "string"
+    },
+    "dataset_kind": {
+      "default": "human_speech",
+      "enum": [
+        "human_speech",
+        "synthetic_smoke"
+      ],
+      "title": "Dataset Kind",
+      "type": "string"
+    },
+    "samples": {
+      "items": {
+        "$ref": "#/$defs/BenchmarkSample"
+      },
+      "title": "Samples",
+      "type": "array"
+    }
+  },
+  "required": [
+    "dataset_id",
+    "dataset_version",
+    "samples"
+  ],
+  "title": "BenchmarkManifest",
+  "type": "object"
+}

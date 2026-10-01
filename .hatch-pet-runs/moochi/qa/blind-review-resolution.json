@@ -1,0 +1,12 @@
+{
+  "decision": "accept",
+  "severity": "minor",
+  "failed_checks": [
+    "vertical-4 A (112.5) blind axis ambiguous",
+    "vertical-6 A (315) blind axis opposite",
+    "vertical-6 B (225) blind axis opposite"
+  ],
+  "labeled_evidence": "At labeled normal size, 112.5 remains a subtle down-right transition, 225 is a clear down-left diagonal with lowered head, and 315 is a clear up-left diagonal with lifted muzzle. All horizontal cues and all four cardinal axes pass blind majority.",
+  "continuity_evidence": "The ordered loop has no visible reversal; adjacent registration is stable and the only measured center warning is the reviewed 157.5-to-180 boundary.",
+  "reviewed_by": "parent"
+}

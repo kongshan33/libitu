@@ -1,0 +1,17 @@
+[Unit]
+Description=Libitu learner audio analysis
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/libitu/apps/api
+EnvironmentFile=/etc/libitu/api.env
+ExecStart=/opt/libitu/apps/api/.venv/bin/python -m app.workers.practice_analysis_worker
+Restart=on-failure
+RestartSec=5
+User=libitu
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

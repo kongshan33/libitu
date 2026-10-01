@@ -29,6 +29,7 @@ Core product references:
 - `design/docs/DATA_ARCHITECTURE.md`
 - `design/docs/DESIGN.md` (non-canonical visual reference)
 - `design/docs/DEVELOPMENT_ROADMAP.md`
+- `design/docs/STAGE_TWO_FILE_REFERENCE_ARCHITECTURE.md` (registered file adapters implemented; general remote acquisition planned)
 
 Document roles:
 
@@ -123,7 +124,7 @@ API:
 - Queue mode persists content, jobs, and blueprints through Supabase; inline mode uses deterministic in-memory storage for tests and dependency-free development.
 - Queue-mode jobs return `pending`; the separate blueprint worker fetches missing captions and calls the DeepSeek structured-analysis adapter.
 - Tests force inline deterministic processing and never use Upstash, YouTube, or a paid model.
-- Speaking turns return deterministic placeholder feedback.
+- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Real role-play remains planned. Persisted sessions reject turn submission with an explicit unavailable response; deterministic replies exist only in the inline fixture.
 - Private corpus and speaking routes require a Clerk-derived identity; no client-provided owner ID is trusted.
 
 Data infrastructure:
@@ -138,7 +139,7 @@ Data infrastructure:
 - `apps/api/app/integrations/supabase_repository.py` activates only when `SUPABASE_SECRET_KEY` is configured.
 - The local server repository, YouTube transcript fallback, Upstash worker, source-aware sherpa-onnx subtitle formatting, DeepSeek V4 Flash SSE analysis, and monotonic Stage 1 job previews are wired; live quality evaluation remains required for the bounded `mvp-v9` extraction contract.
 - Local ignored environment files point web and API development at Clerk and Supabase. Never commit or print their values.
-- Hosted Supabase Third-Party Auth still needs its final dashboard confirmation, and FastAPI storage remains in memory.
+- Hosted Supabase Third-Party Auth still needs its final dashboard confirmation for direct client Data API access. FastAPI uses its server repository for configured persistence, including corpus and speaking loadouts.
 
 Extension:
 
@@ -146,6 +147,7 @@ Extension:
 - The extension has a language-gated YouTube player-control action, a one-click toolbar action, a background service worker, and manifest validation.
 - It enables launch only for verified English videos, opens Stage 1 with lightweight video metadata before acquiring captions, and shows an English-only reason instead of launching unsupported languages. A short-lived session handoff delivers browser captions to the web app, which creates the FastAPI content/job and updates its URL with `contentId` and `jobId`.
 - Stage 1 embeds the selected YouTube video and reads the exact blueprint created by the extension; missing captions fail explicitly.
+- An early YouTube MAIN-world observer passively copies bounded player JSON3 responses; signed requests/tokens remain with the player. Handoff and timing-only recovery read sanitized current-video captions, with explicit late-installation/unobserved/failed-response states. Reload the unpacked extension and source document before verifying a new observer version; tests against intercepted fixtures are not proof of live YouTube availability.
 
 ## Code Organization Rules
 
@@ -182,10 +184,12 @@ Extension:
 ## Extension Conventions
 
 - Target Chrome Extension Manifest V3.
-- YouTube audio/video must stay in the user's browser.
-- No YouTube audio or video should be uploaded to Libitu servers.
-- Microphone and pitch work belong in the extension/browser layer.
-- Backend may receive transcript text and derived metadata, not raw media.
+- Stage 2 browser-captured references can use private server ASR/MFA/VAD/F0 analysis after purpose-specific opt-in; no operator file-source grant is required for this input adapter. See `STAGE_TWO_BROWSER_REFERENCE_SERVER.md` for the current contract.
+- Local VAD/F0 remains a preview; the large local alignment model is no longer loaded by default. Keep independently checked content, dictionary targets, forced alignment and validated pronunciation detection distinct.
+- The accepted target uses authorized file references, with selected-segment acquisition proposed as the default. Normal reference playback and analysis must not depend on a Chrome tab-capture grant.
+- Never acquire or persist third-party YouTube audiovisual media without sufficient content and platform rights. A segment-only download is subject to the same source boundary.
+- Microphone capture remains in the browser. Authenticated learner audio may use server analysis and optional history under separate purpose, retention, and deletion controls; training/human review is opt-in and off by default.
+- Follow the later practice-persistence and file-reference decisions in `DECISIONS.MD`; the former blanket no-raw-media rule is superseded within that scope.
 
 ## Git And Files
 

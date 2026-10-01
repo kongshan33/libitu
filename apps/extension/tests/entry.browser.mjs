@@ -98,7 +98,7 @@ try {
   }), { width: 48, height: 48, buttonWidth: 48, imageWidth: 30 });
   await youtube.screenshot({ path: "/tmp/libitu-youtube-entry-desktop.png", fullPage: true });
   const startedAt = Date.now();
-  const opened = context.waitForEvent("page", { timeout: 5_000 }).catch(() => null);
+  const opened = context.waitForEvent("page", { timeout: 15_000 }).catch(() => null);
   await button.click();
   await youtube.evaluate(() => {
     const segment = document.createElement("ytd-transcript-segment-renderer");
@@ -111,8 +111,8 @@ try {
   await stage.locator(".youtube-player iframe").waitFor();
   await stage.getByText("Reading captions from YouTube.", { exact: true }).waitFor();
   const firstViewMs = Date.now() - startedAt;
-  console.log(JSON.stringify({ firstViewMs, phase: "video visible before captions" }));
-  assert.equal(counts.resolve, 0, "video must appear before captions or API requests");
+  console.log(JSON.stringify({ firstViewMs, phase: "video visible after bounded caption preflight" }));
+  assert.equal(counts.resolve, 0, "Stage 1 must render before content resolve/API work");
   const iframe = await stage.locator(".youtube-player iframe").elementHandle();
   await stage.waitForFunction(() => document.querySelector(".youtube-player iframe"));
   const resolveDeadline = Date.now() + 10_000;

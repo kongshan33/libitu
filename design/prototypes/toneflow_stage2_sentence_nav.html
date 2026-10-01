@@ -1,0 +1,512 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.shell{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;font-family:var(--font-sans);font-size:14px;display:flex;flex-direction:column;height:900px}
+.topbar{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;border-bottom:0.5px solid var(--color-border-tertiary);flex-shrink:0}
+.logo{font-size:13px;font-weight:500;color:#534AB7;letter-spacing:-0.3px}
+.tbsp{flex:1}
+.pill{font-size:11px;padding:3px 9px;border-radius:20px;border:0.5px solid var(--color-border-tertiary)}
+.pill.done{color:#0F6E56;background:#E1F5EE;border-color:#5DCAA5}
+.pill.active{color:#3C3489;background:#EEEDFE;border-color:#AFA9EC;font-weight:500}
+.seg-info{font-size:11px;color:var(--color-text-tertiary)}
+
+.body{display:grid;grid-template-columns:220px 1fr 240px;flex:1;overflow:hidden}
+
+/* ── LEFT: sentence list ── */
+.left{border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;display:flex;flex-direction:column}
+.left-hdr{padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);flex-shrink:0}
+.lh-title{font-size:11px;font-weight:600;color:var(--color-text-primary)}
+.lh-prog{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.prog-bar{height:3px;background:var(--color-background-primary);border-radius:2px;overflow:hidden;margin-top:5px}
+.prog-fill{height:100%;background:#534AB7;border-radius:2px;transition:width .3s}
+.sent-list{flex:1;padding:8px 0;overflow-y:auto}
+.sent-item{padding:8px 12px;cursor:pointer;display:flex;gap:8px;align-items:flex-start;border-left:2px solid transparent;transition:all .12s}
+.sent-item:hover{background:var(--color-background-secondary)}
+.sent-item.cur{border-left-color:#534AB7;background:#EEEDFE}
+.sent-item.done-ok{border-left-color:#1D9E75}
+.sent-item.done-warn{border-left-color:#EF9F27}
+.si-num{font-size:10px;font-weight:700;color:var(--color-text-tertiary);min-width:14px;margin-top:2px;flex-shrink:0}
+.sent-item.cur .si-num{color:#534AB7}
+.si-body{flex:1;min-width:0}
+.si-text{font-size:11px;color:var(--color-text-secondary);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.sent-item.cur .si-text{color:var(--color-text-primary)}
+.si-scores{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.si-sc{font-size:9px;padding:1px 5px;border-radius:8px;font-weight:700}
+.si-icon{width:16px;height:16px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;margin-top:2px}
+.ic-done{background:#E1F5EE;color:#0F6E56}
+.ic-warn{background:#FAEEDA;color:#BA7517}
+.ic-cur{background:#EEEDFE;color:#534AB7}
+.ic-pending{background:var(--color-background-secondary);color:var(--color-text-tertiary)}
+
+/* ── CENTER ── */
+.center{display:flex;flex-direction:column;overflow:hidden;border-right:0.5px solid var(--color-border-tertiary)}
+
+/* Sentence focus area */
+.sent-focus{flex-shrink:0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sf-nav{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.nav-btn{width:28px;height:28px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-secondary);font-size:13px;transition:all .12s}
+.nav-btn:hover:not(:disabled){background:var(--color-background-secondary);border-color:var(--color-border-secondary)}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.sf-counter{font-size:12px;color:var(--color-text-secondary);flex:1;text-align:center}
+.sf-counter span{font-weight:500;color:var(--color-text-primary)}
+.next-sent-btn{padding:5px 12px;border-radius:20px;background:#534AB7;border:none;color:white;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .15s;white-space:nowrap}
+.next-sent-btn:hover{background:#3C3489}
+.next-sent-btn:disabled{background:var(--color-border-secondary);color:var(--color-text-tertiary);cursor:not-allowed}
+.finish-btn{padding:5px 12px;border-radius:20px;background:#1D9E75;border:none;color:white;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap}
+
+/* The sentence itself */
+.sf-sentence{padding:12px 16px;background:var(--color-background-primary)}
+.sf-timestamp{font-size:10px;color:var(--color-text-tertiary);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.sf-text{font-size:16px;font-weight:500;color:var(--color-text-primary);line-height:1.6;letter-spacing:.01em}
+.sf-text .hidden-word{display:inline-block;background:#888780;border-radius:3px;color:transparent;cursor:pointer;user-select:none;padding:0 2px;min-width:24px;transition:all .2s;vertical-align:middle;margin:0 1px}
+.sf-text .hidden-word.rev{background:transparent;color:var(--color-text-primary);cursor:default}
+.sf-controls{display:flex;align-items:center;gap:8px;padding:8px 16px;border-top:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.ctrl-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);font-size:11px;font-weight:500;cursor:pointer;color:var(--color-text-secondary);transition:all .12s;white-space:nowrap}
+.ctrl-btn:hover{background:var(--color-background-secondary)}
+.ctrl-btn.primary{background:#534AB7;border-color:#534AB7;color:white}
+.ctrl-btn.primary:hover{background:#3C3489}
+.ctrl-btn.recording{background:#E24B4A;border-color:#E24B4A;color:white}
+.ctrl-btn.done-btn{background:#E1F5EE;border-color:#5DCAA5;color:#085041}
+.ctrl-sp{flex:1}
+.speed-sel{display:flex;gap:3px}
+.sp-opt{font-size:10px;padding:3px 7px;border-radius:20px;border:0.5px solid var(--color-border-tertiary);cursor:pointer;color:var(--color-text-tertiary);background:transparent;transition:all .12s}
+.sp-opt.on{background:#EEEDFE;border-color:#AFA9EC;color:#3C3489;font-weight:500}
+.hide-ctrl{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-tertiary);cursor:pointer;padding:0 4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.rec-dot{width:7px;height:7px;border-radius:50%;background:#E24B4A;animation:pulse .8s ease-in-out infinite;flex-shrink:0}
+
+/* Layer tabs + analysis */
+.layer-tabs{display:flex;flex-shrink:0;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.ltab{flex:1;padding:8px 4px;text-align:center;cursor:pointer;font-size:11px;font-weight:500;color:var(--color-text-tertiary);border-bottom:2px solid transparent;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:4px}
+.ltab:hover{color:var(--color-text-secondary)}
+.ltab.on[data-l=sound]{color:#E24B4A;border-bottom-color:#E24B4A;background:var(--color-background-primary)}
+.ltab.on[data-l=rhythm]{color:#EF9F27;border-bottom-color:#EF9F27;background:var(--color-background-primary)}
+.ltab.on[data-l=melody]{color:#6366F1;border-bottom-color:#6366F1;background:var(--color-background-primary)}
+.lsc{font-size:9px;padding:1px 4px;border-radius:8px;font-weight:700}
+.ltab[data-l=sound] .lsc{background:#FCEBEB;color:#E24B4A}
+.ltab[data-l=rhythm] .lsc{background:#FAEEDA;color:#EF9F27}
+.ltab[data-l=melody] .lsc{background:#EEF2FF;color:#6366F1}
+.analysis-scroll{flex:1;overflow-y:auto;padding:12px}
+.layer-panel{display:none}
+.layer-panel.on{display:block}
+
+/* Word annotations */
+.word-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px;margin-bottom:12px}
+.wc{display:flex;align-items:center;gap:0}
+.wcard{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px;border-radius:7px;border:0.5px solid transparent}
+.wcard.issue{border-color:#FCA5A5;background:#FFF5F5}
+.wcard.ok{border-color:#5DCAA5;background:#E1F5EE}
+.wcipa{font-family:var(--font-mono);font-size:9px;color:var(--color-text-tertiary);min-height:12px;opacity:.6}
+.wctext{font-size:14px;font-weight:500;color:var(--color-text-primary);white-space:nowrap}
+.wcb{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:13px;margin-top:1px}
+.bdg{font-size:9px;padding:1px 4px;border-radius:3px;font-weight:700;white-space:nowrap}
+.bdg.miss{outline:1.5px solid #E24B4A;outline-offset:1px}
+.blink{background:#DBEAFE;color:#1D4ED8}.bweak{background:#F1EFE8;color:#44403C}
+.bflap{background:#CCFBF1;color:#0F766E}.bhd{background:#FCE7F3;color:#BE185D}
+.conn{display:flex;flex-direction:column;align-items:center;padding:0 2px;margin-bottom:12px}
+.carc{font-size:10px;font-weight:700;color:#3B82F6;line-height:1}
+.ctag{font-size:8px;background:#DBEAFE;color:#1D4ED8;padding:0 2px;border-radius:2px}
+.conn.miss .carc{color:#E24B4A}.conn.miss .ctag{background:#FEE2E2;color:#B91C1C}
+.rlbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.rlbl.ref{color:var(--color-text-tertiary)}.rlbl.usr{color:#534AB7}
+.pitch-cv{width:100%;height:70px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);overflow:hidden;margin-bottom:6px}
+.stress-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:flex-end;margin-bottom:8px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 5px;border-radius:5px}
+.sw.iss{background:#FAEEDA}
+.sdots{display:flex;gap:2px;align-items:flex-end;min-height:10px}
+.sd{border-radius:50%;display:inline-block}
+.sd.p{width:9px;height:9px;background:#EF9F27}
+.sd.s{width:6px;height:6px;background:#EF9F2780}
+.sd.u{width:5px;height:5px;background:var(--color-border-secondary)}
+.swt{font-size:13px;line-height:1;color:var(--color-text-primary)}
+.sw.fn .swt{color:var(--color-text-tertiary);font-size:12px}
+.sw.iss .swt{color:#633806}
+.swnote{font-size:9px;color:#BA7517;background:#FEF3C7;padding:1px 3px;border-radius:3px}
+
+/* Right panel */
+.right{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--color-background-secondary)}
+.rcard{background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:10px 12px;border:0.5px solid var(--color-border-tertiary)}
+.rcard-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-tertiary);margin-bottom:6px}
+.score-trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.sc-mini{text-align:center;padding:6px 4px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+.sc-mini-n{font-size:20px;font-weight:500}
+.sc-mini-l{font-size:9px;color:var(--color-text-tertiary);margin-top:1px}
+.sc-mini.sound .sc-mini-n{color:#E24B4A}
+.sc-mini.rhythm .sc-mini-n{color:#EF9F27}
+.sc-mini.melody .sc-mini-n{color:#6366F1}
+.iss-list{display:flex;flex-direction:column;gap:5px}
+.iss-item{display:flex;gap:6px;font-size:11px;line-height:1.4;color:var(--color-text-secondary)}
+.iss-ico{width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;margin-top:1px}
+.iss-ico.bad{background:#FCEBEB;color:#E24B4A}
+.iss-ico.ok{background:#E1F5EE;color:#0F6E56}
+.iss-ico.warn{background:#FAEEDA;color:#BA7517}
+.tip-blk{background:var(--color-background-primary);border-radius:var(--border-radius-md);padding:9px 12px;border-left:3px solid #534AB7}
+.tip-lbl{font-size:10px;font-weight:700;color:#534AB7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.tip-tx{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+.retry-btn{width:100%;padding:8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;font-size:11px;color:var(--color-text-secondary);cursor:pointer;text-align:center}
+.retry-btn:hover{background:var(--color-background-secondary)}
+.segment-prog{display:flex;flex-direction:column;gap:4px}
+.seg-row{display:grid;grid-template-columns:16px 1fr 28px;gap:6px;align-items:center}
+.seg-row-lbl{font-size:10px;color:var(--color-text-tertiary)}
+.seg-bar-bg{height:4px;border-radius:2px;background:var(--color-background-secondary)}
+.seg-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+.seg-pct{font-size:10px;font-weight:500;text-align:right}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <span class="logo">ToneFlow</span>
+    <span class="pill done">S1 ✓</span>
+    <span class="pill active">Stage 2 — Shadow</span>
+    <div class="tbsp"></div>
+    <span class="seg-info">Scaling breakthroughs · 2m 35s · 句 <span id="cur-idx">3</span>/8</span>
+  </div>
+
+  <div class="body">
+    <!-- LEFT: sentence list -->
+    <div class="left">
+      <div class="left-hdr">
+        <div class="lh-title">本段句子</div>
+        <div class="lh-prog" id="prog-lbl">已完成 2 / 8 句</div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:25%"></div></div>
+      </div>
+      <div class="sent-list" id="sent-list"></div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center">
+      <!-- Sentence nav -->
+      <div class="sent-focus">
+        <div class="sf-nav">
+          <button class="nav-btn" id="prev-btn" onclick="goSent(-1)">‹</button>
+          <div class="sf-counter">句子 <span id="cnt-cur">3</span> / <span id="cnt-tot">8</span></div>
+          <button class="nav-btn" id="next-btn" onclick="goSent(1)">›</button>
+          <div style="width:8px"></div>
+          <button class="next-sent-btn" id="next-sent-main" onclick="goSent(1)">下一句 →</button>
+        </div>
+
+        <!-- The sentence -->
+        <div class="sf-sentence">
+          <div class="sf-timestamp" id="sent-time">1:10</div>
+          <div class="sf-text" id="sent-text"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="sf-controls">
+          <button class="ctrl-btn" id="play-btn" onclick="togglePlay()">▶ 听原声</button>
+          <button class="ctrl-btn recording" id="rec-btn" onclick="toggleRec()"><div class="rec-dot"></div>录音中</button>
+          <button class="ctrl-btn" onclick="this.textContent='↺ 已重置'">↺ 重录</button>
+          <div class="ctrl-sp"></div>
+          <div class="hide-ctrl" onclick="toggleHide()">
+            <span id="hide-lbl">👁 显示文本</span>
+          </div>
+          <div class="speed-sel">
+            <div class="sp-opt" onclick="setSp(this)">0.7×</div>
+            <div class="sp-opt on" onclick="setSp(this)">1×</div>
+            <div class="sp-opt" onclick="setSp(this)">1.3×</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layer tabs -->
+      <div class="layer-tabs">
+        <div class="ltab on" data-l="sound" onclick="selLayer(this)">🔊 Sound <span class="lsc" id="sc-sound">72</span></div>
+        <div class="ltab" data-l="rhythm" onclick="selLayer(this)">♩ Rhythm <span class="lsc" id="sc-rhythm">88</span></div>
+        <div class="ltab" data-l="melody" onclick="selLayer(this)">〰 Melody <span class="lsc" id="sc-melody">65</span></div>
+      </div>
+
+      <!-- Analysis -->
+      <div class="analysis-scroll">
+        <!-- SOUND -->
+        <div class="layer-panel on" id="lp-sound">
+          <div class="rlbl ref">Reference</div>
+          <div class="word-row" id="ref-row"></div>
+          <div class="rlbl usr">Your recording</div>
+          <div class="word-row" id="usr-row"></div>
+        </div>
+        <!-- RHYTHM -->
+        <div class="layer-panel" id="lp-rhythm">
+          <div class="rlbl ref" style="margin-bottom:6px">Reference stress</div>
+          <div class="stress-row" id="str-ref"></div>
+          <div class="rlbl usr" style="margin-bottom:6px;margin-top:10px">Your stress</div>
+          <div class="stress-row" id="str-usr"></div>
+          <div style="margin-top:12px;font-size:12px;color:#991B1B;background:#FEE2E2;padding:8px 10px;border-radius:var(--border-radius-md);line-height:1.5">"when" was over-stressed — function word, should be quick and reduced</div>
+        </div>
+        <!-- MELODY -->
+        <div class="layer-panel" id="lp-melody">
+          <div class="rlbl ref" style="margin-bottom:6px">Pitch contour</div>
+          <div class="pitch-cv">
+            <svg width="100%" height="70" viewBox="0 0 420 70" preserveAspectRatio="none">
+              <polyline points="0,58 30,52 60,42 100,30 140,22 180,20 210,24 240,30 270,36 300,40 330,38 370,42 420,58" fill="none" stroke="#6366F1" stroke-width="2" opacity=".4"/>
+              <polyline points="0,60 30,58 60,55 100,52 140,50 180,50 210,52 240,54 270,56 300,58 330,58 370,60 420,62" fill="none" stroke="#E24B4A" stroke-width="2"/>
+            </svg>
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary)"><div style="width:16px;height:2px;background:#6366F1;opacity:.5;border-radius:2px"></div>Reference</div>
+            <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary)"><div style="width:16px;height:2px;background:#E24B4A;border-radius:2px"></div>Your voice — too flat</div>
+          </div>
+          <div style="font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:9px 12px;border-radius:var(--border-radius-md);line-height:1.55">Nuclear stress should fall on <strong style="color:var(--color-text-primary)">"frameworks"</strong> — the last content word. Your pitch arrives flat by that point.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <div class="rcard">
+        <div class="rcard-lbl">本句得分</div>
+        <div class="score-trio">
+          <div class="sc-mini sound"><div class="sc-mini-n">72</div><div class="sc-mini-l">Sound</div></div>
+          <div class="sc-mini rhythm"><div class="sc-mini-n">88</div><div class="sc-mini-l">Rhythm</div></div>
+          <div class="sc-mini melody"><div class="sc-mini-n">65</div><div class="sc-mini-l">Melody</div></div>
+        </div>
+      </div>
+
+      <div class="rcard">
+        <div class="rcard-lbl">问题</div>
+        <div class="iss-list">
+          <div class="iss-item"><div class="iss-ico bad">✗</div>"met_a" — Flap-T missing</div>
+          <div class="iss-item"><div class="iss-ico bad">✗</div>"of" — strong form /ɒv/</div>
+          <div class="iss-item"><div class="iss-ico bad">✗</div>Pitch too flat overall</div>
+          <div class="iss-item"><div class="iss-ico warn">!</div>"when" over-stressed</div>
+          <div class="iss-item"><div class="iss-ico ok">✓</div>"you" weak form correct</div>
+          <div class="iss-item"><div class="iss-ico ok">✓</div>Pause placement correct</div>
+        </div>
+      </div>
+
+      <div class="tip-blk">
+        <div class="tip-lbl">Tip</div>
+        <div class="tip-tx">"met a" should sound like one word "meta" with a flap — same sound as in "better" or "water".</div>
+      </div>
+
+      <button class="retry-btn" onclick="this.textContent='↺ 重新录音...'">↺ 重录这句</button>
+
+      <div class="rcard" style="margin-top:4px">
+        <div class="rcard-lbl">段落进度</div>
+        <div class="segment-prog" id="seg-prog"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SENTS = [
+  {time:'1:10',text:"I actually met a bunch of you when I was visiting",done:true,scores:[87,92,78],status:'ok'},
+  {time:'1:18',text:"And to be fair I think the question of whether scaling continues to work is genuinely uncertain",done:true,scores:[80,85,71],status:'warn'},
+  {time:'1:31',text:"The problem isn't that we lack the technology but rather that we lack the frameworks to deploy it safely",done:false,scores:[72,88,65],status:'cur'},
+  {time:'1:45',text:"What we decided was given everything we knew the responsible path forward was to build safety into the core",done:false,scores:null,status:'pending'},
+  {time:'2:02',text:"I think what I would say is that we've tried to resolve that tension by being extremely transparent",done:false,scores:null,status:'pending'},
+  {time:'2:19',text:"The upshot of all this is that safety and capability aren't actually opposed",done:false,scores:null,status:'pending'},
+  {time:'2:34',text:"You can race to the top instead of the bottom and we think that's what we're doing",done:false,scores:null,status:'pending'},
+  {time:'2:48',text:"That's fundamentally why we think it's worth working on this even though it's hard",done:false,scores:null,status:'pending'},
+];
+
+const WORDS = [
+  {t:'The',ipa:'/ðə/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'problem',ipa:'/ˈprɒbləm/',fn:false,ph:[],conn:{t:'CV',ok:true}},
+  {t:'isn\'t',ipa:'/ɪznt/',fn:false,ph:[],conn:{t:'CV',ok:true}},
+  {t:'that',ipa:'/ðət/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'we',ipa:'/wɪ/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'lack',ipa:'/læk/',fn:false,ph:[],conn:{t:'CV',ok:true}},
+  {t:'the',ipa:'/ðə/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'technology',ipa:'/tɛkˈnɒlədʒi/',fn:false,ph:[],conn:{t:'CV',ok:true}},
+  {t:'but',ipa:'/bət/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'rather',ipa:'/ˈrɑːðə/',fn:false,ph:[],conn:{t:'CV',ok:true}},
+  {t:'that',ipa:'/ðət/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'we',ipa:'/wɪ/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'lack',ipa:'/læk/',fn:false,ph:[],conn:{t:'CV',ok:true}},
+  {t:'the',ipa:'/ðə/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true}},
+  {t:'frameworks',ipa:'/ˈfreɪmwɜːks/',fn:false,ph:[],conn:null},
+];
+const USR_WORDS = [
+  {t:'The',ipa:'/ðə/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'problem',ipa:'/ˈprɒbləm/',fn:false,ph:[],conn:{t:'CV',ok:true},ok:true},
+  {t:'isn\'t',ipa:'/ɪznt/',fn:false,ph:[],conn:{t:'CV',ok:true},ok:true},
+  {t:'that',ipa:'/ðət/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'we',ipa:'/wɪ/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'lack',ipa:'/læk/',fn:false,ph:[{k:'FT',ok:false}],conn:{t:'CV',ok:false},ok:false},
+  {t:'the',ipa:'/ðə/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'technology',ipa:'/tɛkˈnɒlədʒi/',fn:false,ph:[],conn:{t:'CV',ok:true},ok:true},
+  {t:'but',ipa:'/bət/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'rather',ipa:'/ˈrɑːðə/',fn:false,ph:[],conn:{t:'CV',ok:true},ok:true},
+  {t:'that',ipa:'/ðət/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'we',ipa:'/wɪ/',fn:true,ph:[{k:'WK',ok:true}],conn:{t:'CV',ok:true},ok:true},
+  {t:'lack',ipa:'/læk/',fn:false,ph:[{k:'WK',miss:false}],conn:{t:'CV',ok:true},ok:true},
+  {t:'the',ipa:'/ðɪ/',fn:true,ph:[{k:'WK',ok:false}],conn:{t:'CV',ok:true},ok:false},
+  {t:'frameworks',ipa:'/ˈfreɪmwɜːks/',fn:false,ph:[],conn:null,ok:true},
+];
+const STRESS_W = [
+  {t:'The',s:[0],u:[0],fn:true,ok:true},{t:'problem',s:[2,0,0],u:[2,0,0],fn:false,ok:true},
+  {t:'isn\'t',s:[2,0],u:[2,0],fn:false,ok:true},{t:'that',s:[0],u:[0],fn:true,ok:true},
+  {t:'we',s:[0],u:[0],fn:true,ok:true},{t:'lack',s:[2],u:[2],fn:false,ok:true},
+  {t:'the',s:[0],u:[0],fn:true,ok:true},{t:'technology',s:[2,0,2,0,0],u:[2,0,2,0,0],fn:false,ok:true},
+  {t:'but',s:[0],u:[0],fn:true,ok:true},{t:'rather',s:[2,0],u:[2,0],fn:false,ok:true},
+  {t:'that',s:[0],u:[0],fn:true,ok:true},{t:'we',s:[0],u:[0],fn:true,ok:true},
+  {t:'lack',s:[2],u:[2],fn:false,ok:true},{t:'the',s:[0],u:[0],fn:true,ok:true},
+  {t:'frameworks',s:[2,0,0],u:[2,0,0],fn:false,ok:true},
+];
+
+let curIdx = 2;
+let isHidden = false;
+let isPlaying = false;
+
+function buildSentList(){
+  const el=document.getElementById('sent-list');el.innerHTML='';
+  SENTS.forEach((s,i)=>{
+    const div=document.createElement('div');
+    const isCur=i===curIdx;
+    div.className='sent-item'+(isCur?' cur':s.done?(s.status==='warn'?' done-warn':' done-ok'):'');
+    div.onclick=()=>selectSent(i);
+    let icon='';
+    if(isCur)icon='<div class="si-icon ic-cur">●</div>';
+    else if(s.done&&s.status==='ok')icon='<div class="si-icon ic-done">✓</div>';
+    else if(s.done&&s.status==='warn')icon='<div class="si-icon ic-warn">!</div>';
+    else icon='<div class="si-icon ic-pending">○</div>';
+    let scores='';
+    if(s.scores)scores=`<div class="si-scores"><span class="si-sc" style="background:#FCEBEB;color:#E24B4A">${s.scores[0]}</span><span class="si-sc" style="background:#FAEEDA;color:#633806">${s.scores[1]}</span><span class="si-sc" style="background:#EEF2FF;color:#3730A3">${s.scores[2]}</span></div>`;
+    div.innerHTML=`<div class="si-num">${i+1}</div><div class="si-body"><div class="si-text">${s.text}</div>${scores}</div>${icon}`;
+    el.appendChild(div);
+  });
+}
+
+function buildSentText(idx){
+  const s=SENTS[idx];
+  const el=document.getElementById('sent-text');
+  el.innerHTML='';
+  s.text.split(' ').forEach(w=>{
+    const span=document.createElement('span');
+    span.style.cssText='display:inline-block;margin:0 2px';
+    if(isHidden){
+      const cover=document.createElement('span');
+      cover.className='hidden-word';
+      cover.style.width=(w.length*8+8)+'px';
+      cover.textContent=w;
+      cover.onclick=()=>{cover.classList.add('rev')};
+      span.appendChild(cover);
+    } else {
+      span.textContent=w+' ';
+    }
+    el.appendChild(span);
+  });
+  document.getElementById('sent-time').textContent=s.time;
+}
+
+function buildWordFlow(id,words,isUser){
+  const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+  words.forEach((w,i)=>{
+    const col=document.createElement('div');col.className='wc';
+    const card=document.createElement('div');
+    const hasIss=isUser&&!w.ok;
+    card.className='wcard'+(hasIss?' issue':isUser&&w.ok?' ok':'');
+    const ipa=document.createElement('div');ipa.className='wcipa';ipa.textContent=w.ipa;
+    const txt=document.createElement('div');txt.className='wctext';txt.textContent=w.t;
+    const badges=document.createElement('div');badges.className='wcb';
+    if(w.ph&&w.ph.length){w.ph.forEach(p=>{
+      const b=document.createElement('span');
+      const cls={WK:'bweak',FT:'bflap',LK:'blink',HD:'bhd'}[p.k]||'';
+      b.className='bdg '+cls+(p.ok===false?' miss':'');
+      b.textContent=p.k+(p.ok===false?' ✗':' ✓');
+      badges.appendChild(b);
+    })}
+    card.appendChild(ipa);card.appendChild(txt);card.appendChild(badges);
+    col.appendChild(card);
+    if(w.conn&&i<words.length-1){
+      const cn=document.createElement('div');
+      cn.className='conn'+(w.conn.ok?'':' miss');
+      const at=document.createElement('span');at.className='carc';at.textContent=w.conn.ok?'⌢':'✗';
+      const tg=document.createElement('span');tg.className='ctag';tg.textContent=w.conn.t;
+      cn.appendChild(at);cn.appendChild(tg);col.appendChild(cn);
+    }
+    el.appendChild(col);
+  });
+}
+
+function buildStress(id,useUser){
+  const el=document.getElementById(id);if(!el)return;el.innerHTML='';
+  STRESS_W.forEach(w=>{
+    const d=document.createElement('div');
+    const iss=useUser&&!w.ok;
+    d.className='sw'+(w.fn?' fn':'')+(iss?' iss':'');
+    const dots=document.createElement('div');dots.className='sdots';
+    (useUser?w.u:w.s).forEach(v=>{const sp=document.createElement('span');sp.className='sd '+(v===2?'p':v===1?'s':'u');dots.appendChild(sp)});
+    const t=document.createElement('div');t.className='swt';t.textContent=w.t;
+    d.appendChild(dots);d.appendChild(t);
+    if(iss){const n=document.createElement('div');n.className='swnote';n.textContent='↑ over';d.appendChild(n)}
+    el.appendChild(d);
+  });
+}
+
+function buildSegProg(){
+  const el=document.getElementById('seg-prog');if(!el)return;el.innerHTML='';
+  const dims=[{l:'Sound',col:'#E24B4A'},{l:'Rhythm',col:'#EF9F27'},{l:'Melody',col:'#6366F1'}];
+  const avgs=dims.map((_,di)=>{
+    const vals=SENTS.filter(s=>s.scores).map(s=>s.scores[di]);
+    return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+  });
+  dims.forEach((d,i)=>{
+    el.innerHTML+=`<div class="seg-row"><span class="seg-row-lbl" style="font-size:9px">${d.l[0]}</span><div class="seg-bar-bg"><div class="seg-bar-fill" style="width:${avgs[i]}%;background:${d.col}"></div></div><span class="seg-pct" style="color:${d.col}">${avgs[i]||'—'}</span></div>`;
+  });
+}
+
+function selectSent(idx){
+  curIdx=idx;
+  document.getElementById('cur-idx').textContent=idx+1;
+  document.getElementById('cnt-cur').textContent=idx+1;
+  document.getElementById('cnt-tot').textContent=SENTS.length;
+  buildSentList();
+  buildSentText(idx);
+  document.getElementById('prev-btn').disabled=idx===0;
+  document.getElementById('next-btn').disabled=idx===SENTS.length-1;
+  const isLast=idx===SENTS.length-1;
+  const nb=document.getElementById('next-sent-main');
+  nb.textContent=isLast?'完成本段 ✓':'下一句 →';
+  nb.className=isLast?'next-sent-btn':'next-sent-btn';
+  const done=SENTS.filter(s=>s.done).length;
+  document.getElementById('prog-lbl').textContent=`已完成 ${done} / ${SENTS.length} 句`;
+  document.getElementById('prog-fill').style.width=(done/SENTS.length*100)+'%';
+}
+
+function goSent(dir){
+  const next=curIdx+dir;
+  if(next>=0&&next<SENTS.length)selectSent(next);
+}
+
+function togglePlay(){
+  isPlaying=!isPlaying;
+  const btn=document.getElementById('play-btn');
+  btn.textContent=isPlaying?'⏸ 暂停':'▶ 听原声';
+  btn.className='ctrl-btn'+(isPlaying?' done-btn':'');
+}
+
+function toggleRec(){
+  const btn=document.getElementById('rec-btn');
+  if(btn.classList.contains('recording')){
+    btn.className='ctrl-btn done-btn';
+    btn.innerHTML='✓ 录音完成';
+  } else {
+    btn.className='ctrl-btn recording';
+    btn.innerHTML='<div class="rec-dot"></div>录音中';
+  }
+}
+
+function toggleHide(){
+  isHidden=!isHidden;
+  document.getElementById('hide-lbl').textContent=isHidden?'👁 显示文本':'🙈 隐藏文本';
+  buildSentText(curIdx);
+}
+
+function setSp(el){document.querySelectorAll('.sp-opt').forEach(e=>e.classList.remove('on'));el.classList.add('on')}
+function selLayer(tab){
+  document.querySelectorAll('.ltab').forEach(t=>t.classList.remove('on'));
+  tab.classList.add('on');
+  document.querySelectorAll('.layer-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('lp-'+tab.dataset.l).classList.add('on');
+}
+
+// Init
+buildWordFlow('ref-row',WORDS,false);
+buildWordFlow('usr-row',USR_WORDS,true);
+buildStress('str-ref',false);
+buildStress('str-usr',true);
+buildSegProg();
+selectSent(2);
+</script>

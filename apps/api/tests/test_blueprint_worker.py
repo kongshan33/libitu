@@ -114,7 +114,12 @@ def test_worker_fetches_missing_transcript_and_saves_ai_blueprint(monkeypatch) -
 
     def fake_format(transcript: str, language: str | None, on_progress):
         assert language == "en"
-        lines = [ParsedTranscriptLine(time="0:03", text="To be fair, queue processing is useful.")]
+        lines = [ParsedTranscriptLine(
+            time="0:03", text="To be fair, queue processing is useful.",
+            id="sentence-v2-test-0-7", segmentation_version="sentence-v2-fallback",
+            source_token_start=0, source_token_end=7, start_ms=3000, end_ms=5000,
+            boundary_source="source_punctuation", boundary_confidence="high",
+        )]
         on_progress(lines)
         return lines
 
@@ -131,13 +136,19 @@ def test_worker_fetches_missing_transcript_and_saves_ai_blueprint(monkeypatch) -
         for saved_job in saved_jobs
         if saved_job.analysis_preview is not None
     ]
-    assert transcript_previews[0][0].model_dump() == {
+    assert transcript_previews[0][0].model_dump(exclude_none=True) == {
+        "id": "sentence-v2-test-0-7", "segmentation_version": "sentence-v2-fallback",
+        "source_token_start": 0, "source_token_end": 7, "start_ms": 3000, "end_ms": 5000,
+        "boundary_source": "source_punctuation", "boundary_confidence": "high",
         "time": "0:03",
         "text": "To be fair, queue processing is useful.",
     }
     assert len(saved_blueprints) == 1
     assert saved_blueprints[0].title == "Worker test video"
     assert saved_blueprints[0].transcript[0].time == "0:03"
+    assert saved_blueprints[0].transcript[0].id == transcript_previews[0][0].id
+    assert saved_blueprints[0].transcript[0].end_ms == transcript_previews[0][0].end_ms
+    assert saved_blueprints[0].segmentation_version == "sentence-v2-fallback"
     highlighted_parts = [part for part in saved_blueprints[0].transcript[0].parts if not isinstance(part, str)]
     assert [part.kind for part in highlighted_parts] == ["chunk", "structure"]
     assert jobs[job.id].status == ProcessingStatus.ready
