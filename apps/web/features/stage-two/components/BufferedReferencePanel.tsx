@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { AudioLines, Power, X } from "lucide-react";
 import type { useBufferedReference } from "../reference/use-buffered-reference";
 
@@ -31,9 +33,9 @@ export function BufferedReferencePanel({ capture, playable, children, compact = 
           <span role="status">{status}</span>
         </div>
         <div className="stage-two-recording-controls">
-          {enabled ? <button type="button" aria-label="Turn off audio preparation" onClick={capture.disable}><Power aria-hidden="true" /> Turn off</button>
-            : setup ? <button type="button" aria-label="Cancel audio setup" onClick={capture.disable}><X aria-hidden="true" /> Cancel</button>
-              : <button type="button" disabled={!playable} onClick={capture.enable}><AudioLines aria-hidden="true" /> Enable reference audio</button>}
+          {enabled ? <Button variant="secondary" size="inherit" type="button" aria-label="Turn off audio preparation" onClick={capture.disable}><Power aria-hidden="true" /> Turn off</Button>
+            : setup ? <Button variant="secondary" size="inherit" type="button" aria-label="Cancel audio setup" onClick={capture.disable}><X aria-hidden="true" /> Cancel</Button>
+              : <Button variant="secondary" size="inherit" type="button" disabled={!playable} onClick={capture.enable}><AudioLines aria-hidden="true" /> Enable reference audio</Button>}
         </div>
       </div>
       {state.error ? <p role="alert" className="stage-two-recording-error">{state.error}</p> : null}
@@ -46,9 +48,9 @@ export function BufferedReferencePanel({ capture, playable, children, compact = 
       <span>{state.recording ? "Preparing as you listen" : enabled ? "Audio enabled" : "Chrome · Libitu extension"}</span>
     </div>
     <div className="stage-two-recording-controls">
-      {enabled ? <button type="button" onClick={capture.disable}><Power aria-hidden="true" /> Turn off audio preparation</button>
-        : setup ? <button type="button" onClick={capture.disable}><X aria-hidden="true" /> Cancel audio setup</button>
-          : <button type="button" disabled={!playable} onClick={capture.enable}><AudioLines aria-hidden="true" /> Enable reference audio</button>}
+      {enabled ? <Button variant="secondary" size="inherit" type="button" onClick={capture.disable}><Power aria-hidden="true" /> Turn off audio preparation</Button>
+        : setup ? <Button variant="secondary" size="inherit" type="button" onClick={capture.disable}><X aria-hidden="true" /> Cancel audio setup</Button>
+          : <Button variant="secondary" size="inherit" type="button" disabled={!playable} onClick={capture.enable}><AudioLines aria-hidden="true" /> Enable reference audio</Button>}
     </div>
     <p role="status" className="stage-two-recording-status">{status}</p>
     {state.error ? <p role="alert" className="stage-two-recording-error">{state.error}</p> : null}

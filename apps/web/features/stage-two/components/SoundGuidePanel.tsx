@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { memo, useState } from "react";
 import { AudioLines, Eye, EyeOff } from "lucide-react";
 import type { SoundAnnotation, SoundCandidate, SoundKind } from "@libitu/types/stage-two";
@@ -38,7 +40,7 @@ export const SoundGuidePanel = memo(function SoundGuidePanel({ guide, sentenceId
     {!sentenceId ? <p className="stage-two-recording-note">Select a sentence to see its sound guide.</p> : null}
     {guide.pending ? <p role="status">Preparing this sentence’s sound guide…</p> : null}
     {guide.error ? <div className="stage-two-sound-error"><p role="alert">{guide.error}</p>
-      <button type="button" onClick={guide.retry}>Retry sound guide</button></div> : null}
+      <Button variant="secondary" size="inherit" type="button" onClick={guide.retry}>Retry sound guide</Button></div> : null}
     {guide.data ? <SoundGuide key={`${guide.data.sentence_id}:${guide.data.sentence_text}`} data={guide.data}
       reference={originalEvidence} yours={yourEvidence} textHidden={textHidden} onTextHiddenChange={onTextHiddenChange} /> : null}
   </section>;
@@ -51,7 +53,7 @@ function SoundRecordingSummary({ label, analysis }: { label: string; analysis: A
     <p>{analysis.pending ? "Analyzing timing and pitch…" : analysis.error ? "Audio analysis could not finish."
       : features?.quality.status === "usable" ? `Analysis ready · ${(features.speechDurationMs / 1000).toFixed(2)} s of speech · ${features.pauseCount} internal pauses.`
         : features ? "Too little usable speech for measurements." : label === "Reference" ? "Listen with practice audio enabled to prepare reference measurements." : "Record a take to see your measurements."}</p>
-    {analysis.error ? <p role="alert">{analysis.error}{analysis.canRetry !== false ? <button type="button" onClick={analysis.retry}>Retry audio analysis</button> : null}</p> : null}
+    {analysis.error ? <p role="alert">{analysis.error}{analysis.canRetry !== false ? <Button variant="secondary" size="inherit" type="button" onClick={analysis.retry}>Retry audio analysis</Button> : null}</p> : null}
     <small>Local timing and pitch do not identify individual sounds. Aligned word measurements appear after server analysis.</small>
   </section>;
 }
@@ -79,8 +81,8 @@ function SoundGuide({ data, reference, yours, textHidden, onTextHiddenChange }: 
     <div className="stage-two-sound-reveal">
       <span><strong>{textHidden ? "Listen & recall" : "Explore the sentence"}</strong>
         <small>{textHidden ? "Click a covered word when you need a hint." : "Select a word to explore its possible sound changes."}</small></span>
-      <div><button type="button" onClick={() => { setRevealed(new Set()); onTextHiddenChange(true); }}><EyeOff aria-hidden="true" /> Hide text</button>
-        <button type="button" onClick={() => onTextHiddenChange(false)}><Eye aria-hidden="true" /> Reveal all</button></div>
+      <div><Button variant="secondary" size="inherit" type="button" onClick={() => { setRevealed(new Set()); onTextHiddenChange(true); }}><EyeOff aria-hidden="true" /> Hide text</Button>
+        <Button variant="secondary" size="inherit" type="button" onClick={() => onTextHiddenChange(false)}><Eye aria-hidden="true" /> Reveal all</Button></div>
       {textHidden ? <small role="status">{revealed.size} of {data.tokens.length} words revealed</small> : null}
     </div>
     <div className="stage-two-wordflow-heading"><strong>Practice text</strong><span>Dictionary IPA · possible readings</span></div>

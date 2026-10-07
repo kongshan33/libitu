@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { Mic, Pause, Play, Square, Trash2, X } from "lucide-react";
 import type { useSentenceRecording } from "../recording/use-sentence-recording";
 
@@ -27,30 +29,30 @@ export function SentenceRecordingPanel({ recording, sentenceNumber, disabled = f
       </div>
       <div className="stage-two-recording-controls">
         {state.phase === "recording" ? (
-          <button type="button" className="stage-two-record-stop" aria-label="Stop recording" onClick={() => recording.recorder.stop()}>
+          <Button variant="record" size="inherit" shape="pill" recording type="button" className="stage-two-record-stop" aria-label="Stop recording" onClick={() => recording.recorder.stop()}>
             <Square aria-hidden="true" /> {compact ? "Stop" : "Stop recording"}
-          </button>
+          </Button>
         ) : (
-          <button type="button" className="stage-two-record-start" aria-label={state.clip ? "Record again" : "Record sentence"}
-            disabled={!sentenceNumber || busy || disabled} onClick={recording.start}>
+          <Button variant="record" size="inherit" shape="pill" type="button" className="stage-two-record-start" aria-label={state.clip ? "Record again" : "Record sentence"}
+            loading={state.phase === "requesting" || state.phase === "stopping"} loadingLabel={state.phase === "stopping" ? "Finishing…" : "Waiting…"} disabled={!sentenceNumber || busy || disabled} onClick={recording.start}>
             <Mic aria-hidden="true" /> {state.clip ? "Record again" : compact ? "Record" : "Record sentence"}
-          </button>
+          </Button>
         )}
         {busy ? (
-          <button type="button" className="stage-two-record-cancel" aria-label="Cancel recording"
-            onClick={() => recording.recorder.cancel()}><X aria-hidden="true" /> {compact ? "Cancel" : "Cancel recording"}</button>
+          <Button variant="secondary" size="inherit" shape="pill" type="button" className="stage-two-record-cancel" aria-label="Cancel recording"
+            onClick={() => recording.recorder.cancel()}><X aria-hidden="true" /> {compact ? "Cancel" : "Cancel recording"}</Button>
         ) : null}
         {state.clip ? (
           <>
-            <button type="button" className="stage-two-record-replay"
+            <Button variant="secondary" size="inherit" shape="pill" type="button" className="stage-two-record-replay"
               aria-label={replaying ? "Pause recording" : "Replay recording"}
               disabled={busy || disabled} onClick={() => void recording.toggleReplay()}>
               {replaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
               {replaying ? compact ? "Pause mine" : "Pause recording" : compact ? "Replay mine" : "Replay recording"}
-            </button>
-            <button type="button" className="stage-two-record-delete" aria-label="Clear local recording" title="Clear local take; saved history is kept"
+            </Button>
+            <Button variant="danger" size="inherit" type="button" className="stage-two-record-delete" aria-label="Clear local recording" title="Clear local take; saved history is kept"
               disabled={busy || disabled} onClick={recording.clear}><Trash2 aria-hidden="true" />
-              {!compact ? "Clear local recording" : null}</button>
+              {!compact ? "Clear local recording" : null}</Button>
             <audio key={state.clip.url} ref={recording.attachAudio} src={state.clip.url} preload="metadata"
               onPlay={recording.onReplayPlay} onPause={recording.onReplayPause} onEnded={recording.onReplayPause}
               onError={() => recording.onReplayError(state.clip!.url)} />

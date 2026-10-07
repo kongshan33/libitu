@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useMemo, useState } from 'react';
 import type { ComparisonView } from '../comparison/view';
 import { emptyPhenomenon, phenomena, soundMarks, type Phenomenon } from '../sound/phenomena';
@@ -20,7 +22,7 @@ export function SoundComparison({view,concealed,onConcealedChange,filter,onFilte
     </div>
     <div className="sound-reveal-bar">
       <span><strong>Shadow mode</strong> · {concealed?'click a covered word to peek':'hover a reference word for IPA'}</span>
-      <button type="button" onClick={()=>{setRevealed([]);onConcealedChange?.(!concealed);}}>{concealed?'Reveal all':'Hide text'}</button>
+      <Button variant="secondary" size="inherit" type="button" onClick={()=>{setRevealed([]);onConcealedChange?.(!concealed);}}>{concealed?'Reveal all':'Hide text'}</Button>
       {concealed?<small role="status">{revealed.length} / {count} revealed</small>:null}
     </div>
     <div className="sound-comparison-text">

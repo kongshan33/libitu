@@ -11,6 +11,10 @@ meta:
 
 This specification defines the current Libitu MVP product and interaction model. Use it for product behavior and user experience. Use `MVP_SYSTEM_DESIGN.md` for system boundaries, `BACKEND_SYSTEM_DESIGN.md` for API implementation, and `DESIGN.md` for visual direction.
 
+## Shared visual identity
+
+Existing web brand links share the landing `libitu.` wordmark, including its light-purple dot. Header-specific size and tagline placement remain intact. Shared warm-neutral surfaces, radius tiers and restrained elevation support the existing dense workspaces. Purple primary actions and learning/status semantic colors remain; retain current layout, spacing, responsive breakpoints and font stack in the first consistency pass. Interactive controls expose visible keyboard focus and respect reduced-motion preferences. `DESIGN.md` supplies reference treatments within these boundaries.
+
 ## Product goal
 
 Libitu helps English learners turn real content into language they can use in work and everyday conversations. The MVP connects three loops: input, personal corpus, and speaking output.
@@ -67,7 +71,19 @@ The former Stage 1 to Stage 5 names remain useful inside the YouTube intensive f
 
 ## Entry points
 
+### Web landing page
+
+The source-free root introduces Libitu and accepts a supported English YouTube video link without requiring authentication. The landing page follows the supplied visual prototype through independently written components. Collect and Use describe the core loop; Shadow is explicitly optional. A small language-transfer example is labelled illustrative rather than presented as a real saved result.
+
+Normalize watch, share, mobile and Shorts links to a canonical watch URL and enter the existing Stage 1 flow. Invalid links remain in the form with an accessible explanation. Do not assert spoken language or fabricate video metadata from the URL. Source/content/job/handoff links at the root continue to open the reader; unrelated marketing/auth query parameters keep the landing page.
+
+Sign in and Create account open real Clerk modals and return to the initiating URL, including switching between login and registration. A bounded same-tab video draft survives refresh and authentication redirects. Signed-in users receive the existing My learning and account controls. Keep processing anonymous until the existing Shadow/speaking/persistence gates apply.
+
+The Chrome extension is an alternative entry. The first screen uses the prototype’s centered “or / Add to Chrome” entry and explicitly states no sign-in is required for video analysis. Store navigation requires a configured public listing; before publication, the button opens installation guidance with a visible coming-soon notice. English/caption availability restrictions must remain visible. See [implementation and verification boundaries](LANDING_IMPLEMENTATION.md).
+
 ### YouTube extension entry
+
+For multilingual automatic captions, identify the default audio through YouTube's explicit audio-track index and language metadata. Caption ordering and the presence of an English translation do not prove spoken English. Multiple ASR languages without identifiable audio language remain unknown; single-language caption fallbacks remain available.
 
 The extension adds a Libitu icon button to the lower-right control bar inside the player on supported YouTube watch pages. This button and the browser toolbar action both validate the active video and its language before opening Stage 1. Language support is an explicit expandable list and contains only English (`en`) for the current product. Detection uses YouTube's video/audio language metadata and caption-track metadata; it must not infer content language from the browser interface language or title text. The player button stays disabled while checking and for non-English or unknown languages, with a concise hover reason. A toolbar click on an unsupported language shows an action badge/title and the same reason near the player without opening Stage 1.
 
@@ -163,6 +179,7 @@ For a completed YouTube cache with no usable word timing, run a separate recover
 - Support keyboard focus for every interactive annotation
 - When auto-scroll is enabled, align the active line only while the video is playing. Pausing or ending playback suspends transcript alignment, but the auto-scroll control remains available so the learner can change the setting before resuming. Manual transcript scrolling temporarily pauses automatic alignment so the learner can read; the auto-scroll control still toggles the setting in this paused state, and turning it back on resumes alignment immediately when playback is active. Explicit timestamp or logic-node navigation resumes alignment once playback starts.
 - Keep Logic Flow aligned to playback time. Clicking a transcript row seeks the video and immediately activates the latest logic node at or before that timestamp; normal playback updates the same logic selection as the active transcript advances.
+- Remove square-bracket caption cues (including their contents), stray square brackets and repeated angle speaker markers (`>>`, `<<`) from subtitle text. Clean cached display text before corpus annotation too; preserve normal spoken punctuation and source timing.
 - Before punctuation and analysis, remove only standalone English filler tokens `um`, `uh`, `er`, and `ah`; never remove those character sequences inside another word. Use this same normalized transcript for DeepSeek, evidence validation, and display.
 - Preserve reliable source sentence punctuation without running the punctuation model. For captions that need punctuation, send a punctuation-free copy to the local model, attach its sentence marks to the original source words without accepting model casing, then deterministically normalize duplicate or conflicting marks and high-confidence opening discourse markers on every path.
 - Merge caption continuations and conservatively repair incomplete punctuation-model candidates using local syntax evidence. Stage 1 and Stage 2 share one finalized sentence sequence; complete long sentences remain intact, with no child practice groups or length-based hard sentence cuts. Processing windows may cross sentence boundaries without changing the displayed units.
@@ -354,6 +371,12 @@ The corpus is the shared bridge between input and output. A corpus item remains 
 | Source locator | Timestamp or text position when available |
 | `analysis_detail` | Optional persisted selection context plus complete explanation and syntax analysis |
 
+### Corpus library (first increment)
+
+`/corpus` lists the shared saved collection across sources. Card bodies open source-backed details; independent checkboxes keep selection by stable saved key across filtering/sorting. Filters combine alternatives within one dimension and intersect across dimensions. Support type, functional tags, CEFR level, scenario, register and source, plus text search, newest/value/transferability/alphabetical ordering and grid/list views. Default difficulty is unrestricted. Unknown dates and scores stay unknown; high value means an existing learning-value score of at least 4/5.
+
+Editing updates expression/template, meaning, note, tags and structure slots while retaining original source context/analysis as labelled evidence. Delete requires a local confirmation and does not change old session snapshots. Batch Loadout handoff atomically merges into current account-bound settings and refuses over-capacity or unavailable selections without truncating them. Decks, usage counts, review scheduling and metadata editing remain separate.
+
 ### Corpus actions
 
 Learners can list, filter, create, edit, and delete items. Filters should support type, functional tag, source, and recency when persistence is implemented.
@@ -396,7 +419,7 @@ Each turn response can include:
 - Logic-stage progress
 - Optional next-turn hint
 
-The 2026-09-30 user decision includes real-time voice in the first Stage 4 delivery: continuous listening, automatic turn-taking and interrupting the AI. Text input remains available in the same conversation. This supersedes the earlier text-only MVP scope. Implementation is still pending; see [the design and implementation proposal](STAGE_FOUR_IMPLEMENTATION_PLAN.md).
+The 2026-09-30 user decision includes real-time voice in the first Stage 4 delivery: continuous listening, automatic turn-taking and interrupting the AI. Text input remains available in the same conversation. This supersedes the earlier text-only MVP scope. Implemented locally on 2026-10-01 with Gemini Live, shared Voice/Chat, durable observations and asynchronous next-response teaching control. See [implementation and boundaries](STAGE_FOUR_IMPLEMENTATION.md); manual transcript editing, automated logic-stage progress and Stage 5 scoring remain separate.
 
 Hints should appear after a learner struggles, not after every turn. A hint names one selected item and suggests an intent, without writing the learner's complete response.
 
@@ -415,6 +438,10 @@ Show evidence for every score. Evidence can include triggered items, relevant tu
 
 Do not show a fluency score until its inputs and calculation are defined. Avoid presenting language-model judgments as objective measurements.
 
+The 2026-10-01 accepted Stage 5 contract uses immutable final-transcript reports with nullable scores. Language transfer includes structures and the shared chunk/idiom expression slots; repeated occurrences do not inflate item coverage. Prompted and independent uses are labeled separately. Unsupported or missing evidence stays unscored, optional logic stages do not stand in for task achievement, and meaning-preserving refactors must not invent commitments or facts. Report generation is durable and idempotent. See [the implementation contract](STAGE_FIVE_CONTRACT.md); delivery and measured verification are tracked in `TASK.MD`.
+
+The 2026-10-02 personal-page integration presents the latest compatible completed-Mission report as a separate four-dimension summary and links completed practice history to Analytics. Profile reads never request or retry an assessment. Single-Mission scores do not populate the five general learning dimensions or proficiency trends; missing scores remain unassessed.
+
 ## Visual system
 
 Libitu is a focused learning tool. It should feel quiet, precise, and suitable for repeated use.
@@ -424,17 +451,25 @@ Libitu is a focused learning tool. It should feel quiet, precise, and suitable f
 | Role | Token or value |
 |---|---|
 | Primary background | `#ffffff` |
-| Secondary background | `#f7f6f2` |
-| Page background | `#eeecea` |
+| Secondary background | `#f5f2ef` |
+| Page background | `#ffffff` (including outer gutters) |
 | Primary text | `#1a1a1a` |
 | Secondary text | `#5f5e5a` |
-| Border | `rgba(0, 0, 0, 0.10)` |
+| Border | `rgb(78 50 23 / 12%)` |
 | Active | Purple ramp |
 | Success and structures | Teal ramp |
 | Chunks and hints | Amber ramp |
 | Recording and errors | Red ramp |
 
 The implementation source is `packages/ui/src/tokens.css`. Update the token file and this table together when a semantic color changes.
+
+### Typography and fields
+
+The web UI loads locally bundled Inter normal and italic variable fonts with swap display and an adjusted fallback. Preserve existing monospace learning text and layout geometry. Text fields and native/Radix selects share white surfaces, warm borders, purple focus, red invalid borders, placeholder and disabled states. Generic selection uses shared purple tokens; learning/status palettes stay independent. See [the visual system](VISUAL_SYSTEM.md).
+
+### Shared action buttons
+
+Primary actions remain purple. Secondary, soft, ghost, destructive and recording roles use the shared web button system. Recording controls remain black while idle and red while recording; final destructive confirmations are red. Ordinary buttons use an 8 px radius, while media pills and circular tools retain their shapes. Existing dimensions and selection-control semantics remain unchanged. Loading preserves the idle footprint and disables repeated native clicks. See [button roles and implementation](BUTTON_SYSTEM.md).
 
 ### Component rules
 
@@ -446,7 +481,19 @@ The implementation source is `packages/ui/src/tokens.css`. Update the token file
 - Preserve visible keyboard focus and a minimum 44 px touch target on compact screens
 - Do not rely on color alone for selected, successful, or failed states
 
+### Shared selects and directional actions
+
+Use custom Radix-based selects for settings and filtering, including an explicit All sources option. Options highlight with background color only, without individual borders; the menu uses a thin edge and soft shadow. Back/next action controls share 40 px minimum height, 16 px icons and 8 px spacing. Multiline navigation cards retain their card dimensions.
+
+### Shared application navigation
+
+Corpus, My learning/history, Loadout, saved mission, conversation and report pages share the same Logo, Practice / Corpus / Mission / My learning navigation, active-section styling and account controls. Header horizontal padding is 32 px, 20 px at 900 px and below, and 16 px at 480 px and below. Navigation moves to its own row at 900 px. Keep task-specific controls in the content toolbar and preserve landing/reader workflow navigation.
+
 ### Responsive behavior
+
+The reader Stage 2 entry footer spans the full page width without horizontal outer gutters and reaches the bottom viewport edge when the page is at its end, with no outer bottom gap; retain its internal content padding and the existing gutters on other sections.
+
+The reader uses 16 px outer gutters, reduced to 12 px below 640 px and 8 px below 400 px, without a page border. Its desktop shell accounts for both gutters in viewport height. Transcript timestamps display minute:second labels in a separate column; playback retains source precision.
 
 Desktop is the first implementation target. At widths below 1024 px, replace the three-column blueprint with one content column plus drawers or tabs for logic and corpus. Do not compress all three columns until text becomes unreadable.
 
@@ -473,6 +520,8 @@ Instrument these events after the core loop works:
 The first product validation question is whether learners complete the path from real input to speaking output. Do not optimize retention mechanics before this path is reliable.
 
 ## MVP exclusions
+
+The private learning center at `/profile` is implemented as of 2026-10-02. It follows the supplied profile prototype's hierarchy but reports saved activity rather than illustrative proficiency scores. See [the profile contract](PROFILE_IMPLEMENTATION.md) for counting rules, empty/error states, account isolation and navigation. Its `/profile/history` page provides All / Shadowing / Missions filters, newest-first local-date groups, practice states and source/conversation/report links. Filters apply before pagination; loading failures remain retryable without erasing loaded records. Public profiles remain excluded below.
 
 - Spaced repetition and review schedules
 - Native mobile application

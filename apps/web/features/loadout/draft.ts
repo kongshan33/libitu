@@ -166,3 +166,46 @@ export function prepareSubmission(draft: LoadoutDraft, records: SavedCorpusRecor
     corpus_item_ids: draft.selectedKeys.map((key) => byKey.get(key)!.serverId!)
   } } };
 }
+
+/** Explicit report import preserves existing work and uncertain create requests. */
+export function importMissionDraft(storage: DraftStorage, owner: string, draft: LoadoutDraft, context: MutationContext = {}): Promise<"active" | "saved" | null> {
+  return mutateDraft(() => {
+    const envelope = readDraftEnvelope(storage);
+    const previous = accountOf(envelope, owner);
+    const imported = { ...draft, submission: undefined };
+    const hasDraft = previous && (previous.draft.goal.trim() || previous.draft.selectedKeys.length || previous.draft.submission);
+    if (hasDraft) {
+      const alreadySaved = previous.deviceDrafts.some(value => draftSignature(value) === draftSignature(imported));
+      envelope.accounts = { ...envelope.accounts, [owner]: { ...previous, deviceDrafts: alreadySaved ? previous.deviceDrafts : [...previous.deviceDrafts, imported] } };
+    } else envelope.accounts = { ...envelope.accounts, [owner]: { draft: imported, deviceDrafts: previous?.deviceDrafts ?? [] } };
+    storage.setItem(LOADOUT_STORAGE_KEY, JSON.stringify(envelope));
+    return hasDraft ? "saved" : "active";
+  }, context);
+}
+
+/** Merge under the same lock as other draft writes, preserving the latest settings. */
+export function addCorpusToDraft(storage: DraftStorage, owner: string | null, incoming: string[], records: SavedCorpusRecord[], context: MutationContext = {}): Promise<LoadoutDraft | null> {
+  return mutateDraft(() => {
+    const envelope = readDraftEnvelope(storage);
+    let account = owner ? accountOf(envelope, owner) : undefined;
+    if (owner) {
+      if (!account) account = { draft: envelope.guest ? { ...envelope.guest, submission: undefined } : emptyDraft(), deviceDrafts: [] };
+      else if (envelope.guest) account = { ...account, deviceDrafts: [...account.deviceDrafts, { ...envelope.guest, submission: undefined }] };
+      envelope.guest = null;
+    }
+    const current = (owner ? account?.draft : envelope.guest) ?? emptyDraft();
+    if (current.submission) throw new Error("A mission start is awaiting confirmation. Open Loadout to recover it before changing the selection.");
+    const selectedKeys = [...new Set([...current.selectedKeys, ...incoming])];
+    const byKey = new Map(records.map((record) => [record.key, record]));
+    if (selectedKeys.some((key) => !byKey.has(key))) throw new Error("Your loadout contains an unavailable item. Open Loadout to remove it, then try again.");
+    const structures = selectedKeys.filter((key) => byKey.get(key)?.item.kind === "structure").length;
+    if (structures > MAX_STRUCTURES || selectedKeys.length - structures > MAX_EXPRESSIONS) {
+      throw new Error("Combined selection exceeds the loadout limit: 3 structures and 5 expressions (chunks + idioms). Adjust your selection or open Loadout to free slots.");
+    }
+    const draft = { ...current, selectedKeys, submission: undefined };
+    if (owner) envelope.accounts = { ...envelope.accounts, [owner]: { draft, deviceDrafts: account?.deviceDrafts ?? [] } };
+    else envelope.guest = draft;
+    storage.setItem(LOADOUT_STORAGE_KEY, JSON.stringify(envelope));
+    return draft;
+  }, context);
+}

@@ -1,0 +1,51 @@
+/* Geometry stays in feature styles. Do not use these rules on checkboxes/files. */
+.ui-field[data-field][data-shape], .ui-field-surface[data-field-surface] {
+  background: var(--field-background);
+  color: var(--color-text-primary);
+  border-color: var(--field-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  font-family: var(--font-ui);
+  transition: border-color var(--motion-fast) ease, background-color var(--motion-fast) ease;
+}
+.ui-field[data-field][data-shape="pill"] { border-radius: 22px; }
+.ui-field[data-field][data-shape]::placeholder { color: var(--field-placeholder); opacity: 1; }
+.ui-field[data-field][data-shape]:hover:not(:disabled):not(:focus-visible),
+.ui-field-surface[data-field-surface]:hover:not(:has(:disabled)):not(:focus-within) { border-color: var(--color-text-tertiary); }
+.ui-field[data-field][data-shape]:focus-visible,
+.ui-field-surface[data-field-surface]:has(:focus-visible) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-color: var(--purple-600);
+  box-shadow: none;
+}
+/* Textarea focus stays neutral; outline does not change layout geometry. */
+textarea.ui-field[data-field][data-shape]:focus-visible,
+.ui-field-surface[data-field-surface]:has(textarea:focus-visible) {
+  outline: 1px solid var(--color-text-tertiary);
+  outline-offset: var(--focus-offset);
+  border-color: var(--field-border);
+  box-shadow: none;
+}
+.ui-field[data-field][data-shape]:disabled,
+.ui-field-surface[data-field-surface]:has(:disabled) {
+  background: var(--color-background-secondary);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+.ui-field[data-field][data-shape][aria-invalid="true"],
+.ui-field-surface[data-field-surface]:has([aria-invalid="true"]) { border-color: var(--color-danger); }
+.ui-field[data-field="bare"][data-shape] {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.ui-field-surface[data-field-surface] .ui-field[data-field="bare"][data-shape]:focus-visible {
+  outline: none;
+  border-color: transparent;
+}
+.ui-field-surface[data-field-surface]:has(:disabled) .ui-field:disabled { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ui-field[data-field][data-shape], .ui-field-surface[data-field-surface] { transition: none; }
+}

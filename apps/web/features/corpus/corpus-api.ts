@@ -23,6 +23,8 @@ type ApiAnalysisDetail = {
 type ApiRecord = {
   id: string;
   content_id: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   kind: CorpusItem["kind"];
   text: string;
   meaning: string | null;
@@ -82,9 +84,12 @@ function fromApi(row: ApiRecord): SavedCorpusRecord {
     } : undefined
   };
   return {
-    key: locator.client_key ?? savedCorpusKey(row.content_id ?? locator.source_url ?? "", item),
+    key: locator.client_key ?? (typeof snapshot.text === "string"
+      ? savedCorpusKey(row.content_id ?? locator.source_url ?? "", { ...item, text: snapshot.text })
+      : `server:${row.id}`),
     contentId: row.content_id ?? undefined, sourceUrl: locator.source_url ?? "",
-    sourceTitle: locator.source_title ?? "", item, serverId: row.id
+    sourceTitle: locator.source_title ?? "", item, serverId: row.id,
+    createdAt: row.created_at ?? undefined, updatedAt: row.updated_at ?? undefined
   };
 }
 
@@ -127,7 +132,10 @@ export function createCorpusRemote(owner: string, getToken: () => Promise<string
     });
     if (!response.ok) {
       if (init.method === "DELETE" && response.status === 404) return undefined as T;
-      throw new Error(response.status === 401 ? "Sign in again to sync your corpus." : "Corpus sync failed. Your pending items are kept on this device; retry to sync.");
+      throw new Error(response.status === 401 ? "Sign in again to sync your corpus."
+        : init.method === "PATCH" ? "Changes could not be confirmed. Your edit is still here; retry saving or reload to check the saved version."
+        : init.method === "DELETE" ? "Deletion could not be confirmed. Retry deleting or reload to check the saved version."
+        : "Corpus sync failed. Your pending items are kept on this device; retry to sync.");
     }
     const result = response.status === 204 ? undefined : await response.json();
     signal.throwIfAborted();
@@ -141,6 +149,13 @@ export function createCorpusRemote(owner: string, getToken: () => Promise<string
       return fromApi(await request<ApiRecord>(`/${encodeURIComponent(record.serverId)}/analysis-detail`, signal, {
         method: "POST",
         body: JSON.stringify(toApiContext(context))
+      }));
+    },
+    update: async (record, edit, signal) => {
+      if (!record.serverId) throw new Error("Sync this item before editing.");
+      return fromApi(await request<ApiRecord>(`/${encodeURIComponent(record.serverId)}`, signal, {
+        method: "PATCH", body: JSON.stringify({ text: edit.text, meaning: edit.meaning,
+          usage_context: edit.usageNote, tags: edit.tags, slots: edit.slots })
       }));
     },
     remove: (id, signal) => request<void>(`/${encodeURIComponent(id)}`, signal, { method: "DELETE" })

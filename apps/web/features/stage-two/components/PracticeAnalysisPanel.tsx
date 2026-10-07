@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useEffect, useRef, useState } from "react";
 import type { PracticeAnalysis, PracticeApi } from "../persistence/practice-api";
 
@@ -16,16 +18,17 @@ export function PracticeAnalysisPanel({ api, attemptId, data, error, loading, re
   error: string | null; loading: boolean; reload(): void;
 }) {
   const [failure, setFailure] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const busy = busyAction !== null;
   const active = useRef<AbortController | null>(null);
   useEffect(() => { const abort = new AbortController(); active.current = abort; return () => abort.abort(); }, [attemptId]);
   async function act(action: "retry" | "cancel" | "delete") {
     if (!api || !attemptId || !active.current || busy) return;
     const signal = active.current.signal;
-    setBusy(true); setFailure(null);
+    setBusyAction(action); setFailure(null);
     try { await api.controlAnalysis(attemptId, action, signal); if (!signal.aborted) reload(); }
     catch (cause) { if (!signal.aborted) setFailure(cause instanceof Error ? cause.message : "Please retry."); }
-    finally { if (!signal.aborted) setBusy(false); }
+    finally { if (!signal.aborted) setBusyAction(null); }
   }
   if (!attemptId) return null;
   const content = data?.result?.learner.content;
@@ -42,9 +45,9 @@ export function PracticeAnalysisPanel({ api, attemptId, data, error, loading, re
     {content ? <p>Content check: {content.status === "matched" ? "recognized words match the practice text" : content.status === "mismatch" ? "recognized words differ from the practice text; recognition can be mistaken" : "not enough reliable evidence"}.</p> : null}
     {content?.transcript ? <p>Recognized: “{content.transcript}”</p> : null}
     {data?.result?.comparison === "unavailable" && content?.status === "matched" ? <p>This take has no verified paired reference. Your available measurements are shown below.</p> : null}
-    {error || failure ? <p role="alert">{error ?? failure} <button type="button" onClick={reload}>Reload analysis</button></p> : null}
-    {data?.retryable ? <button disabled={busy} onClick={() => void act("retry")}>Retry analysis</button> : null}
-    {data && ["queued", "processing", "awaiting_upload"].includes(data.state) ? <button disabled={busy} onClick={() => void act("cancel")}>Cancel analysis</button> : null}
-    {data && data.state !== "deleted" ? <button disabled={busy} onClick={() => void act("delete")}>Delete analysis</button> : null}
+    {error || failure ? <p role="alert">{error ?? failure} <Button variant="secondary" size="inherit" type="button" loading={loading} loadingLabel="Loading…" onClick={reload}>Reload analysis</Button></p> : null}
+    {data?.retryable ? <Button variant="secondary" size="inherit" disabled={busy} loading={busyAction === "retry"} loadingLabel="Requesting…" onClick={() => void act("retry")}>Retry analysis</Button> : null}
+    {data && ["queued", "processing", "awaiting_upload"].includes(data.state) ? <Button variant="secondary" size="inherit" disabled={busy} loading={busyAction === "cancel"} loadingLabel="Cancelling…" onClick={() => void act("cancel")}>Cancel analysis</Button> : null}
+    {data && data.state !== "deleted" ? <Button variant="danger" size="inherit" disabled={busy} loading={busyAction === "delete"} loadingLabel="Deleting…" onClick={() => void act("delete")}>Delete analysis</Button> : null}
   </section>;
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { Fragment, useMemo } from "react";
 import type { SentenceUnit } from "@libitu/types/stage-two";
 import type { AcousticFeatures } from "../acoustics/types";
@@ -50,7 +52,7 @@ export function RhythmText({ sentence, guide, reference, yours, server, originMs
         <span><i className="rhythm-dot stress-0" />Unstressed</span>
       </div>
       {guide.pending ? <p className="rhythm-help" role="status">Loading dictionary stress…</p> : guide.error
-        ? <p className="rhythm-help">Dictionary stress is unavailable. <button type="button" onClick={guide.retry}>Retry stress guide</button></p> : null}
+        ? <p className="rhythm-help">Dictionary stress is unavailable. <Button variant="secondary" size="inherit" type="button" onClick={guide.retry}>Retry stress guide</Button></p> : null}
       <p className="rhythm-help">This helps you pronounce individual words; it does not identify which words the speaker emphasized. A dash means no single dictionary pattern is available.</p>
     </section>
     <section aria-label="Pauses in the sentence" className="rhythm-text-section">

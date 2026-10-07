@@ -1,0 +1,14 @@
+.wordmark {
+  display: inline-block;
+  color: var(--purple-600);
+  font-family: var(--font-ui);
+  font-size: inherit;
+  font-weight: 750;
+  letter-spacing: -0.058em;
+  white-space: nowrap;
+}
+
+.wordmark i {
+  color: var(--color-brand-dot);
+  font-style: normal;
+}

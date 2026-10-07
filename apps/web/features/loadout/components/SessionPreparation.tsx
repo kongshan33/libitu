@@ -1,11 +1,15 @@
 "use client";
 
-import Link from "next/link";
+import { DirectionLink } from "@/components/ui/direction-button";
+
+import { AppHeader } from "@/components/AppHeader";
+
+import { Button } from "@/components/ui/button";
+
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Check, ArrowLeft } from "lucide-react";
 import type { SpeakingSession } from "@libitu/types/speaking";
-import { AuthControls } from "../../auth/components/AuthControls";
 import { createSpeakingApi, SpeakingApiError } from "../api/speaking-api";
 import { safeReturnPath } from "../navigation";
 import styles from "./Loadout.module.css";
@@ -32,12 +36,12 @@ export function SessionPreparation({ sessionId }: { sessionId: string }) {
   const current = result && result.owner === userId && result.id === sessionId ? result : null;
   const session = current?.session;
   function signIn() { const returnUrl = window.location.href; clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl }); }
-  return <main className={styles.page}><section className={styles.shell} aria-label="Saved speaking mission">
-    <header className={styles.topbar}><Link className={styles.logo} href="/">libitu</Link><span className={styles.topbarTitle}>Your mission</span><AuthControls /></header>
+  return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.shell} aria-label="Saved speaking mission">
+
     <div className={styles.sessionMain}>
-      <Link className={styles.back} href={`/loadout?returnTo=${encodeURIComponent(returnTo)}`}><ArrowLeft size={14} aria-hidden="true" /> Back to loadout</Link>
-      {!isLoaded ? <p role="status">Checking sign-in…</p> : !userId ? <div className={styles.emptyLibrary}><h1>Sign in to view your mission</h1><p>Your saved mission belongs to your account.</p><button className={styles.startButton} type="button" onClick={signIn}>Sign in</button></div>
-        : current?.error ? <div className={styles.error} role="alert"><h1>Mission unavailable</h1><p>{current.error}</p>{current.status === 401 ? <button type="button" onClick={signIn}>Sign in again</button> : current.status !== 404 ? <button type="button" onClick={() => setAttempt((value) => value + 1)}>Retry loading mission</button> : null}</div>
+      <DirectionLink className={styles.back} href={`/loadout?returnTo=${encodeURIComponent(returnTo)}`}><ArrowLeft size={14} aria-hidden="true" /> Back to loadout</DirectionLink>
+      {!isLoaded ? <p role="status">Checking sign-in…</p> : !userId ? <div className={styles.emptyLibrary}><h1>Sign in to view your mission</h1><p>Your saved mission belongs to your account.</p><Button variant="primary" size="inherit" className={styles.startButton} type="button" onClick={signIn}>Sign in</Button></div>
+        : current?.error ? <div className={styles.error} role="alert"><h1>Mission unavailable</h1><p>{current.error}</p>{current.status === 401 ? <Button variant="secondary" size="inherit" type="button" onClick={signIn}>Sign in again</Button> : current.status !== 404 ? <Button variant="secondary" size="inherit" type="button" onClick={() => setAttempt((value) => value + 1)}>Retry loading mission</Button> : null}</div>
           : !session ? <p role="status">Loading your saved mission…</p> : <>
             <div className={styles.savedBadge}><Check size={15} aria-hidden="true" /> Saved to your account</div>
             <h1>Your mission is prepared</h1><p className={styles.sessionGoal}>{session.goal}</p>
@@ -49,5 +53,5 @@ export function SessionPreparation({ sessionId }: { sessionId: string }) {
             </div></section>
           </>}
     </div>
-  </section></main>;
+  </section></main></>;
 }

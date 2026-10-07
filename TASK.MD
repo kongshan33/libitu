@@ -4,23 +4,141 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-09-30
+  updated: 2026-10-04
 ```
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
-## Stage 4 real-time conversation — planned 2026-09-30
+## Loadout style follow-up — 2026-10-04
 
-The user selected continuous listening, automatic turn-taking and AI interruption for the first Stage 4 delivery. Text input remains in the same session. [Design, contracts and task dependencies](design/docs/STAGE_FOUR_IMPLEMENTATION_PLAN.md) are an implementation proposal, not delivered functionality.
+- [x] Keep draft feedback layout stable, use neutral textarea focus and outlined directional links without changing copy.
+- [x] Verified unchanged form coordinates/dimensions across select opening, queued selection saves, typing and save completion at 1440/743/390 px. Neutral textarea focus and secondary 40 px return links pass. Root lint (two existing warnings), build and all 1,190 tests pass.
 
-- [ ] S4-00: Validate one real-time provider; freeze canonical events, turn/evidence fields, interruption and end semantics.
-- [ ] S4-F1/F2: Build the shared Voice/Chat workspace and real-time media controller with accessible responsive controls.
-- [ ] S4-B1/B2: Add durable runtime/turn/event records, ownership and generation fencing; integrate the real-time provider and role prompt.
-- [ ] S4-F3/B3: Integrate text with voice, final transcripts, interruption, reconnect, refresh recovery and explicit connection takeover.
-- [ ] S4-F4/B4: Add traceable selected-item use, logic/hints, transcript corrections, reliable ending and saved review.
-- [ ] S4-Q1: Verify the complete real-provider/device flow, root checks and Loadout/Shadow regressions; record measured latency and cost.
+## Caption marker cleanup — 2026-10-04
 
-No Stage 4 product code, provider configuration or database migration was applied during this analysis. Stage 5 feedback remains separately queued under Milestone 5.
+- [x] Remove bracketed cues and repeated angle markers from new caption processing and cached transcript display.
+- [x] Cover cue-only rows, spoken punctuation and multi-segment cues with source word offsets.
+- Verification: root lint/build/test pass; final web rerun passes all 309 tests (1,190 total across API/web/extension). Lint retains two existing reader unused-import warnings. Cached-display regression covers split cue parts, sentence identity/time and withholding stale word indices.
+
+## Select and directional controls — 2026-10-04
+
+- [x] Migrate native selects, refine menu/trigger appearance and preserve the empty All sources choice.
+- [x] Remove reader bottom gap and standardize directional action dimensions.
+- [x] Nine screens pass at 1440/390 px; reader/shadow/loadout also pass at 743 px. Verified select keyboard/open/choose/Escape behavior, source reset, sorting, borderless options, bottom-edge geometry and 40 px directional buttons with 16 px icons/8 px gaps. Root lint (two existing unused-import warnings), build and all 1,186 tests pass.
+
+## Shared application header — 2026-10-04
+
+- [x] Unify main application headers and account actions; preserve mission controls.
+- [x] Six application screens pass header alignment/navigation checks at 1440 and 390 px; Corpus/Profile also pass at 743 px. Root lint (two existing reader unused-import warnings), build and all 1,186 tests pass. Browser verification uses fixture identity/data.
+
+## White page canvas — 2026-10-04
+
+- [x] Make global and framed-page outer backgrounds white; preserve inner surfaces and spacing.
+- [x] Extend the reader Stage 2 entry bar across the viewport without horizontal outer gutters.
+- [x] Root lint/build and all 1,186 tests pass. Nine screens pass white-canvas and responsive checks at 1440/390 px; the reader footer reaches both viewport edges at 1440/743/390 px without horizontal overflow.
+
+## Reader browser annotations — 2026-10-04
+
+- [x] Match Corpus to stage navigation and make reference-audio activation clearly actionable.
+- [x] Remove the reader reference frame, apply responsive outer gutters without a page border, balance the footer and standardize the saved-language button.
+- [x] Shorten transcript labels to minute:second without changing playback precision; reserve timestamp/text spacing.
+- [x] Verify the seven adjustments at 743, 390 and 1440 px with fixture rendering and measured spacing; timestamp regression, root lint/build and all 1,186 tests pass.
+
+## Typography and control consistency — 2026-10-04
+
+- [x] Load local Inter normal/italic variable fonts with license, swap and fallback support.
+- [x] Share text-field/native/Radix select appearance while retaining existing geometry and semantics.
+- [x] Consolidate generic purple selection tokens without replacing learning colors.
+- [x] Add auxiliary pending-action feedback and remove redundant button-only paint.
+- [x] Root lint/build and 1,185 tests pass; nine screens pass desktop/mobile actual-font, local-font-request and layout checks (18 combinations). Field validation/search/edit/native-select interactions pass.
+- Verification and usage: [visual system](design/docs/VISUAL_SYSTEM.md).
+
+## Shared button system — 2026-10-04
+
+- [x] Introduce shared action variants and real-link navigation; preserve purple branding and existing dimensions.
+- [x] Migrate web actions, retain separate selection controls, and share focus/pressed/disabled/reduced-motion states.
+- [x] Add stable loading progress to key asynchronous submissions.
+- [x] Root lint/build and 1,185 tests pass.
+- [x] Desktop/mobile fixture acceptance at 1440/390 px: submit/link semantics, hover/focus, stable loading size, duplicate prevention, reduced motion, deletion confirmation and recording colors.
+- Browser acceptance and usage: [button system](design/docs/BUTTON_SYSTEM.md).
+
+## Visual consistency pass — 2026-10-03
+
+- [x] Share the landing wordmark across existing web brand links, including mission/report gates.
+- [x] Preserve purple primary buttons, semantic learning colors and existing layouts.
+- [x] Consolidate warm surfaces, radii, elevation, focus and disabled appearance; respect reduced motion.
+- [x] Root lint/build and 1,185 existing tests pass. Desktop/mobile fixture checks cover Landing, Blueprint, Shadow, Loadout, Speaking, Analytics, Corpus, Profile and History; the corpus interaction suite and profile regression assertions pass. Test-only local request forwarding avoids Clerk development-handshake redirects; no production authentication behavior changed.
+
+## Landing page — implemented locally 2026-10-03
+
+- [x] Implement the supplied prototype's visual direction as new React components and scoped CSS, without reusing prototype source.
+- [x] Keep a source-free root as the landing page and preserve existing Stage 1 source/content/job/handoff links.
+- [x] Validate and normalize pasted YouTube URLs; use the existing analysis lifecycle and omit unknown video titles/language.
+- [x] Reuse real Clerk login/register/account controls and forced return URLs; retain same-tab video drafts through refresh/auth.
+- [x] Verify responsive layout, keyboard/error states, real login/register modal switching and fixture-backed Stage 1 entry/reload.
+- [x] Make Stage 1 anonymous access explicit and restore the prominent centered “or / Add to Chrome” entry from the prototype.
+- [ ] Complete a real account login/OAuth round trip and authenticated account-menu acceptance.
+- [ ] Configure the published Chrome Web Store listing when available; current page shows extension guidance.
+
+Verification: root lint/build/test passed (761 API + 306 web + 118 extension tests; unchanged tasks may use Turbo cache). Six new entry regressions cover routing, URL normalization/rejection, external-store validation and resolve/job/blueprint integration. Browser checks cover 320/390/768/1440 px without horizontal overflow, actual Clerk forms, draft refresh, inline errors/Enter, footer focus, fixture-backed ready content and durable reload. Provider analysis and completed OAuth are not claimed. See [details](design/docs/LANDING_IMPLEMENTATION.md).
+
+## Corpus library — implemented locally 2026-10-02
+
+- [x] Add `/corpus`, real cross-source browsing, search, combined filters, sorting and grid/list views.
+- [x] Persist guest/account edits with stable record keys; retain original source analysis and past session snapshots.
+- [x] Add separate detail, selection, edit and confirmed delete actions, plus visible storage/network failures.
+- [x] Merge selections into the latest account-bound Loadout draft atomically; preserve settings, reject overflow and uncertain session submissions.
+- [x] Link the library from input, Loadout and the personal learning center.
+- [ ] Separately implement Decks, evidence-based corpus usage aggregation and server-side list pagination.
+
+Verification: root lint/tests, final production build and 18 focused corpus/storage regressions passed; full browser acceptance passed at 1440/390 px, covering selection, detail, edit/reload, failed PATCH retry, delete/reload, Loadout handoff and account isolation. Browser identity/API data were synthetic. A real owner-scoped Supabase read-only smoke passed. See [scope and verification](design/docs/CORPUS_LIBRARY_IMPLEMENTATION.md). Review scheduling remains excluded from MVP.
+
+## Personal learning center — 2026-10-02
+
+- [x] Add `/profile`, signed-in navigation, Clerk identity, responsive prototype-based layout and explicit signed-out/loading/error/empty states.
+- [x] Aggregate real owner-scoped Shadow takes, participated Missions, saved corpus, recording duration, local-calendar streaks and 28-day/90-day/monthly activity.
+- [x] Add unified paginated history, recoverable Mission links, safe source links and account-bound device-local learning continuation.
+- [x] Design the simple history page with profile entry points, local-date groups, per-record time/status and server-side All / Shadowing / Missions filters before pagination; reset and fence pending reads on filter changes.
+- [x] Keep ability dimensions unassessed and distinguish surviving saved-item additions from a permanent activity event log.
+- [x] Integrate compatible Stage 5 reports as a separate latest-Mission summary and history report links; preserve null/zero, report lifecycle, version checks and read-only profile behavior.
+- [x] Complete root checks and desktop/mobile browser acceptance for this increment.
+- [ ] Separately implement validated ability assessment/trends, persistent learning goals, Decks/usage aggregation and cross-device reader position.
+
+See [implementation and test boundaries](design/docs/PROFILE_IMPLEMENTATION.md).
+
+Verification: root lint, production build and tests passed (617 API + 276 web + 112 extension = 1005 tests). All six profile browser acceptance groups passed at 1440/390 px: range/metric changes, accessible tables, keyboard dimensions, safe source navigation, missing-source abstention, history pagination/retry, empty/error/unknown-date states, delayed-response account isolation and signed-out return URLs. Eight screenshots were inspected. A read-only Supabase smoke verified the real projections with a nonexistent owner; a live unauthenticated request returned 401. Browser identity/API responses are synthetic fixtures, not real OAuth or production performance qualification.
+
+Stage 5/profile integration (2026-10-02): production build passed using an isolated source snapshot to avoid concurrent build output collisions; root lint and 1,161 tests passed (755 API, 294 web, 112 extension). New feedback summary/state/legacy/ownership browser checks, all six existing profile groups, Analytics at three widths and the complete learner journey passed. The real profile-to-feedback join was checked read-only; the existing migration was not reapplied. The local feedback worker was started after confirming no backlog or queued jobs. No new paid-model verification was run.
+
+## Stage 5 evidence-backed report — implemented locally 2026-10-01
+
+The user accepted the [four-dimension report contract](design/docs/STAGE_FIVE_CONTRACT.md).
+
+- [x] Freeze nullable scores, rubric, transfer denominator, final-user references and report lifecycle.
+- [x] Persist immutable assessment input and leased, bounded report jobs with recovery and deletion fencing.
+- [x] Evaluate the full final transcript with validated quotations and deterministic score aggregation.
+- [x] Deliver responsive Analytics, source evidence, real suggestion saves and retry/adjust mission actions.
+- [x] Verify API/worker/database and browser end → report → review/retry recovery; distinguish fixture identity from real OAuth.
+- [ ] Independently calibrate model judgments with human-reviewed conversations before claiming assessment accuracy.
+
+Verification: root lint/build/test passed (711 API + 282 web + 112 extension = 1,105 passing tests; two optional acoustic tests skipped). The feedback migration and real Supabase rollback tests passed. A real bounded DeepSeek assessment produced all four dimensions with 18/18 exact quotations validated; synthetic records were removed. Analytics and Stage 4 browser checks passed at 1440/768/390 px. See the linked contract for provider, fixture-identity and human-calibration boundaries.
+
+## Stage 4 real-time conversation — implemented locally 2026-10-01
+
+[Current implementation and verification](design/docs/STAGE_FOUR_IMPLEMENTATION.md) supersede the earlier proposal. The user selected Gemini Live for the current provider.
+
+- [x] S4-00: Validate real Gemini Live text/audio and freeze normalized runtime/message/evidence contracts.
+- [x] S4-F1/F2: Shared Voice/Chat workspace, continuous media controller, responsive controls and reduced motion.
+- [x] S4-B1/B2: Durable versioned session documents, owner/lease fencing, real provider and role prompt.
+- [x] S4-F3/B3: Text with voice, VAD/transcript boundaries, interrupt, manual reconnect, refresh recovery and explicit takeover.
+- [x] S4-F4/B4: Traceable language observations, bounded hints and next-response policy, end/read-only review/delete. Provider transcript revisions are supported; manual editing and automatic logic-stage detection are not delivered.
+- [x] S4-Q1-local: Root checks; real Gemini/DeepSeek/Supabase synthetic text and voice smoke; responsive Chrome capture/playback and complete Loadout/Shadow regression.
+- [ ] S4-Q1-release: Physical-device/network/latency/cost qualification, complete live post-interruption turn acceptance, account-wide budgets, production supervision and real OAuth end-to-end acceptance.
+- [ ] S4-follow-up: User transcript correction and evidence re-evaluation, if included in the next increment.
+
+Verification: root lint/build/test passed (603 API + 267 web + 112 extension = 982 tests). Real Gemini interruption was observed; the bounded interruption probe did not verify the subsequent complete user/reply turn. See the implementation document for browser/provider test boundaries.
+
+Stage 5 final assessment is delivered in the increment above. Stage 4 observations remain separate from its final report; no mastery score is fabricated.
 
 ## Sound prototype and workspace-order correction — 2026-09-29
 
@@ -298,6 +416,9 @@ Verification notes:
 
 ## Milestone 3: build the YouTube extension entry
 
+- [x] Correct multilingual ASR language detection using the explicit default audio index and audio language; cover reordered captions, non-English audio, ambiguous defaults and legacy single-language metadata.
+- [ ] Verify the updated extension's entry and caption handoff on `-sKAMB10eh0` after manually reloading Libitu and refreshing YouTube. Local regression/manifest checks pass; browser automation cannot open Chrome's extension management page.
+
 - [x] Choose extension build tooling and record the decision
 - [x] Add Manifest V3 configuration and a direct toolbar action
 - [x] Detect supported YouTube watch pages
@@ -367,17 +488,17 @@ Verification notes:
 
 ## Milestone 5: complete corpus and speaking
 
-Loadout increment (2026-09-30): implements the [fixed contract](design/docs/LOADOUT_IMPLEMENTATION.md), independent setup/preview page, shared real corpus selection, account-bound local drafts, 3 structure / 5 shared chunk+idiom limits with at least one item, authenticated idempotent session creation and refresh recovery. Pending Shadow saves survive client-side navigation. Actual AI role-play remains the following increment.
+Loadout increment (2026-09-30): implements the [fixed contract](design/docs/LOADOUT_IMPLEMENTATION.md), independent setup/preview page, shared real corpus selection, account-bound local drafts, 3 structure / 5 shared chunk+idiom limits with at least one item, authenticated idempotent session creation and refresh recovery. Pending Shadow saves survive client-side navigation. The 2026-10-01 Stage 4 increment above adds real AI role-play, turn persistence and traceable usage observations.
 
 - [x] Connect Stage 1 corpus list, create, and delete with local/account persistence
 - [x] Open corpus cards with full source context and persist on-demand analysis details
-- [ ] Add the cross-content corpus library and saved-item editing interface
+- [x] Add the cross-content corpus library and saved-item editing interface
 - [x] Build speaking loadout selection limits
 - [x] Persist owner-checked, ordered loadout snapshots atomically with idempotent creation and authenticated recovery
-- [ ] Implement the role-play adapter and turn persistence
-- [ ] Detect selected-item use with transparent evidence
-- [ ] Generate four-dimension session feedback with supporting turns
-- [ ] Add end-to-end coverage for save, loadout, role-play, and feedback
+- [x] Implement the role-play adapter and turn persistence
+- [x] Detect selected-item use with transparent evidence
+- [x] Generate four-dimension session feedback with supporting turns
+- [x] Add end-to-end browser coverage for save, loadout, role-play and feedback (fixture source/auth/provider; real OAuth remains separate)
 
 Acceptance criteria:
 
@@ -429,7 +550,7 @@ Partial verification notes:
 - [ ] Product analytics and privacy-reviewed event tracking
 - [ ] Deployment, observability, backups, and production runbooks
 
-Do not add spaced repetition or social features unless a new accepted decision changes MVP scope. Real-time voice role-play is now accepted for Stage 4 under the 2026-09-30 decision, with implementation queued above. Server-side practice media follows the file-reference and learner-persistence decisions; it does not authorize unrestricted YouTube downloading.
+Do not add spaced repetition or social features unless a new accepted decision changes MVP scope. Real-time voice role-play was accepted under the 2026-09-30 decision and is implemented locally in Stage 4 above. Server-side practice media follows the file-reference and learner-persistence decisions; it does not authorize unrestricted YouTube downloading.
 
 Stage 2 Milestone 1 acceptance and verification:
 

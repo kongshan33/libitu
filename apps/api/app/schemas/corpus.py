@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.schemas.blueprint import CorpusItem as CorpusSnapshot
 
@@ -112,12 +113,21 @@ class CorpusItemCreate(BaseModel):
 class CorpusItem(CorpusItemCreate):
     id: str
     user_id: str
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 class CorpusItemUpdate(BaseModel):
-    text: str | None = Field(default=None, min_length=1)
+    text: str | None = Field(default=None, min_length=1, max_length=2000)
     meaning: str | None = None
     usage_context: str | None = None
     tags: list[str] | None = None
     slots: dict[str, str] | None = None
     analysis_detail: CorpusItemAnalysisDetail | None = None
+
+    @field_validator("text", "tags", "slots", mode="before")
+    @classmethod
+    def required_when_provided(cls, value):
+        if value is None or (isinstance(value, str) and not value.strip()):
+            raise ValueError("This field cannot be blank or null")
+        return value

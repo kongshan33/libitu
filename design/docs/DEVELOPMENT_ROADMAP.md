@@ -51,6 +51,8 @@ Exit when two test users cannot access each other's private records and anonymou
 
 ## Phase 3: create the real YouTube entry
 
+2026-10-03 web entry: the landing page and normalized paste-to-Stage-1 route are implemented alongside the existing extension handoff. Real Clerk modals are connected. Store publication, a completed real-account OAuth round trip and production caption coverage remain separate; see [verification](LANDING_IMPLEMENTATION.md).
+
 Goal: start the product from a supported YouTube watch page.
 
 Deliver:
@@ -85,9 +87,13 @@ Exit when valid captions produce stable blueprint data and cache hits avoid repe
 
 ## Phase 5: close the learning loop
 
-The next Stage 4 delivery now includes continuous real-time voice, automatic turn-taking and AI interruption, as explicitly selected by the user on 2026-09-30. First validate the provider and event contract, then implement the shared Voice/Chat workspace and server runtime in parallel. This is planned work; see [task dependencies and acceptance](STAGE_FOUR_IMPLEMENTATION_PLAN.md).
+2026-10-02: the private personal learning center and unified practice history are implemented against existing corpus, Shadow and speaking records. Activity counts and device-local continuation do not depend on Stage 5 scores. A separate latest-Mission summary now reads compatible Stage 5 reports and history links to Analytics. The simple history page now groups local dates and supports server-side practice-type filtering before pagination. General ability assessment, score trends, full corpus management and cross-device reader position remain separate. See [scope and verification](PROFILE_IMPLEMENTATION.md).
+
+Stages 4 and 5 were implemented locally on 2026-10-01: Gemini Live conversation, durable transcripts/evidence, asynchronous teaching control, then frozen-input four-dimension reports with quoted evidence and retry/adjust actions. Next qualify devices/network/cost, real OAuth and assessment quality. See [Stage 4 boundaries](STAGE_FOUR_IMPLEMENTATION.md) and [Stage 5 implementation and verification](STAGE_FIVE_CONTRACT.md).
 
 2026-09-30 status: speaking loadout, account-bound browser drafts, durable session creation and the recoverable session preparation page are implemented. Full corpus editing, real role-play, turn history, selected-item detection and feedback remain pending. Loadout completion alone does not satisfy the phase exit criterion. See [the contract and validation](LOADOUT_IMPLEMENTATION.md).
+
+2026-10-02 corpus status: independent `/corpus` browsing, filtering, editing/deletion and Loadout handoff are implemented. Decks and usage aggregation remain separate; see [the library contract](CORPUS_LIBRARY_IMPLEMENTATION.md).
 
 Goal: move one extracted item through corpus and speaking feedback.
 

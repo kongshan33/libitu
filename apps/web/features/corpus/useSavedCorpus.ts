@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { createCorpusRemote } from "./corpus-api";
 import type { CorpusSelectionAnalysis, CorpusSelectionContext } from "@libitu/types/stage-one";
-import { CORPUS_STORAGE_KEY, CorpusStorage, type SavedCorpusRecord } from "./corpus-storage";
+import { CORPUS_STORAGE_KEY, CorpusStorage, type SavedCorpusRecord, type CorpusEdit } from "./corpus-storage";
 
 export function useSavedCorpus() {
   const { isLoaded, userId, getToken } = useAuth();
@@ -38,6 +38,7 @@ export function useSavedCorpus() {
     busy: Boolean(!current || state.busy),
     error: current ? state.error : null,
     signedIn: Boolean(owner),
+    update: (record: SavedCorpusRecord, edit: CorpusEdit) => current ? storage.update(record, edit) : Promise.resolve(false),
     save: (record: SavedCorpusRecord) => current ? storage.save(record) : Promise.resolve(false),
     hydrate: (
       record: SavedCorpusRecord,

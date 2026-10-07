@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "minimum_chrome_version": "116",
   "name": "Libitu",
-  "description": "Start a Libitu Stage 1 blueprint from supported YouTube videos.",
+  "description": "Collect useful phrases from any YouTube video, practice saying them, and use them in realistic AI conversations.",
   "version": "0.1.0",
   "icons": {
     "16": "icons/l.png",

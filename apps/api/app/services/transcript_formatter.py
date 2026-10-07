@@ -372,7 +372,8 @@ def parse_caption_track(track: CaptionTrack, language: str | None = None) -> lis
         text = _remove_filler_tokens(raw) if english else " ".join(raw.split())
         if not text:
             continue
-        raw_words = list(re.finditer(r"\S+", raw))
+        spoken_raw = _mask_caption_markers(raw) if english else raw
+        raw_words = list(re.finditer(r"\S+", spoken_raw))
         # Associate a whitespace word with exactly one segment that itself
         # contains exactly that word. Split contractions and multiword segments
         # deliberately have no word-offset claim.
@@ -494,7 +495,14 @@ def _merge_caption_text(previous: str, current: str) -> str:
     return f"{previous} {current}"
 
 
+def _mask_caption_markers(text: str) -> str:
+    """Blank non-speech cues without shifting JSON3 character offsets."""
+    return re.sub(r"\[[^\[\]\r\n]*\]|[<>]{2,}|[\[\]]", lambda match: " " * len(match.group()), text)
+
+
 def _remove_filler_tokens(text: str) -> str:
+    text = _mask_caption_markers(text)
+    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
     filler_spans = [
         match.span()
         for match in WORD_TOKEN.finditer(text)

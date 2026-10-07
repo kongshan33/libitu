@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useAuth } from "@clerk/nextjs";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { createPracticeApi, type PracticeApi } from "./practice-api";
@@ -76,7 +78,7 @@ export function PracticePersistence({ children }: { children: ReactNode }) {
     {active && state.pending ? <div className="practice-save-banner" role={state.errors.length ? "alert" : "status"}>
       {state.errors.length ? `${state.pending} take(s) need saving. ${state.errors[0].message}` : `Saving ${state.pending} practice take(s)…`}
       <span> Keep this page open and stay signed in until saving finishes.</span>
-      {state.errors.length ? <button type="button" onClick={() => active.outbox.retry()}>Retry saves</button> : null}
+      {state.errors.length ? <Button variant="secondary" size="inherit" type="button" onClick={() => active.outbox.retry()}>Retry saves</Button> : null}
     </div> : null}
     {children}
   </Context.Provider>;

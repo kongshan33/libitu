@@ -1,4 +1,5 @@
 import json
+from datetime import UTC, datetime
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
 import httpx
@@ -54,7 +55,7 @@ def create_corpus_item(user_id: str, payload: CorpusItemCreate) -> CorpusItem:
                 CorpusItemUpdate(analysis_detail=payload.analysis_detail),
             ) or current
         return current
-    item = CorpusItem(id=item_id, user_id=user_id, **payload.model_dump())
+    item = CorpusItem(id=item_id, user_id=user_id, created_at=datetime.now(UTC), updated_at=datetime.now(UTC), **payload.model_dump())
     store.corpus_items[item.id] = item
     return item
 
@@ -97,6 +98,7 @@ def update_corpus_item(user_id: str, item_id: str, payload: CorpusItemUpdate) ->
         return None
     data = current.model_dump(mode="json", by_alias=True)
     data.update(payload.model_dump(mode="json", by_alias=True, exclude_unset=True))
+    data["updated_at"] = datetime.now(UTC)
     updated = CorpusItem(**data)
     store.corpus_items[item_id] = updated
     return updated

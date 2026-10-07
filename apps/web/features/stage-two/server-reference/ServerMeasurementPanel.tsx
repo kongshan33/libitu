@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { useMemo, type ReactNode } from "react";
 import type { SentenceMeasurement } from "./api";
 import type { AcousticFeatures } from "../acoustics/types";
@@ -58,7 +60,7 @@ export function ServerMeasurementPanel({ layer, result, yours, yourAnalysis, con
         <p role="status">{yourAnalysis?.pending ? "Analyzing your recording on this device…" : yourAnalysis?.error ? "Your recording could not be analyzed."
           : yours ? yoursUsable ? "Local analysis ready." : "Your recording has limited evidence."
             : "Record a take to see your audio measurements here."}</p>
-        {yourAnalysis?.error ? <p role="alert">{yourAnalysis.error} <button className={styles.retry} type="button" onClick={yourAnalysis.retry}>Retry local analysis</button></p> : null}
+        {yourAnalysis?.error ? <p role="alert">{yourAnalysis.error} <Button variant="secondary" size="inherit" className={styles.retry} type="button" onClick={yourAnalysis.retry}>Retry local analysis</Button></p> : null}
         {yours ? <>
           {layer === "melody" ? <PitchValues pitch={yourPitch} /> : <TimingValues recording duration={yours.durationMs / 1000}
             span={yoursUsable && yours.speechSpanMs !== null ? yours.speechSpanMs / 1000 : null}

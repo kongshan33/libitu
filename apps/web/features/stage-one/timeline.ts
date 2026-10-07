@@ -34,3 +34,11 @@ export function findCurrentTimedItem<T>(
 
   return current ?? (fallbackToFirst ? firstTimedItem : null);
 }
+
+/** Compact display only; playback keeps the original subsecond timing. */
+export function formatTranscriptTimestamp(timestamp: string): string {
+  const seconds = parseTimestamp(timestamp);
+  if (seconds === null || seconds < 0) return timestamp;
+  const wholeSeconds = Math.floor(seconds);
+  return `${Math.floor(wholeSeconds / 60)}:${String(wholeSeconds % 60).padStart(2, "0")}`;
+}

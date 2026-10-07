@@ -231,3 +231,14 @@ def _words(value: str) -> list[str]:
 
 def _transcript_words(value: str) -> list[str]:
     return _words(" ".join(line.split("\t", maxsplit=1)[-1] for line in value.splitlines()))
+
+
+def test_caption_cues_are_removed_before_punctuation() -> None:
+    lines = transcript_formatter.filter_filler_tokens([
+        transcript_formatter.ParsedTranscriptLine(time="0:21", text=">> Well, first [clears throat] I say thanks."),
+        transcript_formatter.ParsedTranscriptLine(time="0:22", text="[applause]"),
+        transcript_formatter.ParsedTranscriptLine(time="0:23", text="<< A female business leader."),
+    ])
+    assert [(line.time, line.text) for line in lines] == [
+        ("0:21", "Well, first I say thanks."), ("0:23", "A female business leader."),
+    ]

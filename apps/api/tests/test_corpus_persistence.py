@@ -123,3 +123,25 @@ def test_database_failure_is_retryable_and_does_not_fall_back_to_memory(monkeypa
     with pytest.raises(HTTPException) as error:
         corpus_service.create_corpus_item("user-a", payload())
     assert error.value.status_code == 503
+
+
+def test_edit_preserves_source_identity_and_dates(monkeypatch) -> None:
+    monkeypatch.setattr(corpus_service, "get_supabase_repository", lambda: None)
+    original = corpus_service.create_corpus_item("library-owner", payload())
+    edited = corpus_service.update_corpus_item("library-owner", original.id, CorpusItemUpdate(
+        text="commit further", meaning="My explanation", tags=["softening"], usage_context="My note",
+    ))
+    assert edited.id == original.id
+    assert edited.created_at == original.created_at
+    assert edited.updated_at >= original.updated_at
+    assert edited.source_locator == original.source_locator
+    assert corpus_service.create_corpus_item("library-owner", payload()).text == "commit further"
+    assert corpus_service.list_corpus_items("library-owner")[0].meaning == "My explanation"
+    assert corpus_service.update_corpus_item("library-other", original.id, CorpusItemUpdate(text="stolen")) is None
+
+
+@pytest.mark.parametrize("patch", [{"text": None}, {"text": "   "}, {"text": "a" * 2001}, {"tags": None}, {"slots": None}])
+def test_edit_rejects_invalid_fields(patch) -> None:
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        CorpusItemUpdate.model_validate(patch)

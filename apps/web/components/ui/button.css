@@ -1,0 +1,134 @@
+/* Paint is shared; feature classes retain layout, padding and sizes with size=inherit.
+   Explicit appearance attributes outrank legacy feature paint during migration. */
+.ui-button[data-variant][data-size][data-shape] {
+  --button-bg: var(--color-background-primary);
+  --button-fg: var(--color-text-primary);
+  --button-edge: var(--color-border-secondary);
+  --button-hover: var(--color-background-secondary);
+  --button-pressed: var(--color-background-tertiary);
+  position: relative;
+  background: var(--button-bg);
+  color: var(--button-fg);
+  border-color: transparent;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--button-edge);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transform: none;
+  transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+.ui-button[data-variant="primary"][data-size][data-shape] {
+  --button-bg: var(--purple-600);
+  --button-fg: #fff;
+  --button-edge: transparent;
+  --button-hover: var(--purple-800);
+  --button-pressed: #30296f;
+}
+
+.ui-button[data-variant="soft"][data-size][data-shape] {
+  --button-bg: var(--color-background-secondary);
+  --button-edge: transparent;
+  --button-hover: var(--color-background-tertiary);
+  --button-pressed: #e2ddd7;
+}
+
+.ui-button[data-variant="ghost"][data-size][data-shape],
+.ui-button[data-variant="danger"][data-size][data-shape] {
+  --button-bg: transparent;
+  --button-edge: transparent;
+}
+
+.ui-button[data-variant="danger"][data-size][data-shape] {
+  --button-fg: var(--color-danger);
+  --button-hover: var(--color-danger-subtle);
+  --button-pressed: #f9ded8;
+}
+
+.ui-button[data-variant="record"][data-size][data-shape] {
+  --button-bg: var(--color-text-primary);
+  --button-fg: #fff;
+  --button-edge: transparent;
+  --button-hover: #333;
+  --button-pressed: #000;
+}
+
+.ui-button[data-variant="danger-solid"][data-size][data-shape],
+.ui-button[data-variant="record"][data-recording="true"][data-size][data-shape] {
+  --button-bg: var(--color-danger);
+  --button-fg: #fff;
+  --button-edge: transparent;
+  --button-hover: var(--color-danger-strong);
+  --button-pressed: #6e251f;
+}
+
+.ui-button[data-variant][data-size][data-shape]:hover:not(:disabled) {
+  background: var(--button-hover);
+  color: var(--button-fg);
+  border-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--button-edge);
+  transform: none;
+}
+
+.ui-button[data-variant][data-size][data-shape]:active:not(:disabled) {
+  background: var(--button-pressed);
+  transform: none;
+}
+
+.ui-button[data-variant][data-size][data-shape]:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.ui-button[data-variant][data-size][data-shape]:disabled {
+  background: var(--button-bg);
+  color: var(--button-fg);
+  border-color: transparent;
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+  box-shadow: inset 0 0 0 1px var(--button-edge);
+  transform: none;
+}
+
+.ui-button[data-variant][data-size][data-shape][data-loading="true"] { cursor: wait; }
+.ui-button[data-variant][data-size][data-shape="pill"] { border-radius: 999px; }
+.ui-button[data-variant][data-size][data-shape="circle"] { border-radius: 50%; }
+
+/* Defaults for new controls; existing controls explicitly opt into inherited geometry. */
+.ui-button[data-variant][data-size]:not([data-size="inherit"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-width: 1px;
+  border-style: solid;
+  font-family: var(--font-ui);
+  line-height: 1.4;
+  padding: 9px 14px;
+  min-height: 40px;
+  font-size: 13px;
+  --button-icon-size: 16px;
+}
+.ui-button[data-variant][data-size="sm"][data-shape] { min-height: 32px; padding: 6px 10px; gap: 6px; font-size: 12px; --button-icon-size: 14px; }
+.ui-button[data-variant][data-size="lg"][data-shape] { min-height: 44px; padding: 11px 18px; font-size: 14px; --button-icon-size: 18px; }
+.ui-button[data-variant][data-size]:not([data-size="inherit"]) svg { width: var(--button-icon-size); height: var(--button-icon-size); flex-shrink: 0; }
+.ui-button-label { display: contents; }
+.ui-button[data-loading="true"] > .ui-button-label { visibility: hidden; }
+.ui-button-progress {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 6px;
+  pointer-events: none;
+}
+.ui-button-progress > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-button-spinner { width: 12px; height: 12px; flex: 0 0 12px; border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: button-spin 750ms linear infinite; }
+@keyframes button-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .ui-button[data-variant][data-size][data-shape] { transition: none; }
+  .ui-button-spinner { animation: none; }
+}

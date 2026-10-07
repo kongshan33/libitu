@@ -7,6 +7,8 @@ export type SavedCorpusRecord = {
   sourceUrl: string;
   sourceTitle: string;
   serverId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 export type CorpusStorageState = {
   owner: string | null;
@@ -15,10 +17,13 @@ export type CorpusStorageState = {
   records: SavedCorpusRecord[];
   error: string | null;
 };
+export type CorpusEdit = { text: string; meaning: string; usageNote: string; tags: CorpusItem["tags"]; slots: Record<string, string> };
+
 export type CorpusRemote = {
   list(signal: AbortSignal): Promise<SavedCorpusRecord[]>;
   save(record: SavedCorpusRecord, signal: AbortSignal): Promise<SavedCorpusRecord>;
   hydrate(record: SavedCorpusRecord, context: CorpusSelectionContext, signal: AbortSignal): Promise<SavedCorpusRecord>;
+  update(record: SavedCorpusRecord, edit: CorpusEdit, signal: AbortSignal): Promise<SavedCorpusRecord>;
   remove(id: string, signal: AbortSignal): Promise<void>;
 };
 type Envelope = { version: 1; guest: SavedCorpusRecord[]; pending: Record<string, SavedCorpusRecord[]> };
@@ -139,6 +144,7 @@ export class CorpusStorage {
   }
 
   async save(record: SavedCorpusRecord): Promise<boolean> {
+    record = { ...record, createdAt: record.createdAt ?? new Date().toISOString() };
     if (!this.state.ready || this.state.busy) return false;
     const { owner } = this.state;
     const signal = this.controller.signal;
@@ -200,6 +206,33 @@ export class CorpusStorage {
       this.fail(error, signal);
       return null;
     }
+  }
+
+  async update(record: SavedCorpusRecord, edit: CorpusEdit): Promise<boolean> {
+    if (!this.state.ready || this.state.busy) return false;
+    const current = this.state.records.find((item) => item.key === record.key);
+    if (!current) return false;
+    const { owner } = this.state;
+    const signal = this.controller.signal;
+    const remote = this.remote;
+    this.publish({ busy: true, error: null });
+    try {
+      let updated: SavedCorpusRecord;
+      if (owner) {
+        if (!remote || !current.serverId) throw new Error("Sync this item before editing. Retry corpus sync first.");
+        updated = await remote.update(current, edit, signal);
+      } else {
+        // Keys identify a saved record, not its editable text. Preserve source evidence.
+        updated = { ...current, updatedAt: new Date().toISOString(), item: { ...current.item, ...edit } };
+        await this.mutate(signal, (value) => {
+          if (!value.guest.some((item) => item.key === current.key)) throw new Error("This item was removed in another tab. Reload your corpus.");
+          value.guest = value.guest.map((item) => item.key === current.key ? updated : item);
+        });
+      }
+      signal.throwIfAborted();
+      this.publish({ records: this.state.records.map((item) => item.key === current.key ? updated : item), busy: false });
+      return true;
+    } catch (error) { this.fail(error, signal); return false; }
   }
 
   async remove(record: SavedCorpusRecord): Promise<boolean> {

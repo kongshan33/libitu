@@ -1,3 +1,4 @@
+import { cleanCaptionText } from "./caption-text.ts";
 import { selectCorpusItems } from "@libitu/core/stage-one";
 import { readCaptionTrack, readExtensionCaptions } from "./extension-handoff.ts";
 import type {
@@ -379,7 +380,7 @@ export async function loadStageOneBlueprint(
       kind: source.kind,
       normalized_key: `youtube:${source.contentId}`,
       source_url: source.sourceUrl,
-      title: source.title
+      title: source.title || null
     });
   }
 
@@ -401,7 +402,7 @@ export async function loadStageOneBlueprint(
       transcript_text: transcriptText,
       caption_track: captionTrack,
       language: source.language,
-      title: source.title
+      title: source.title || undefined
     })
   });
 
@@ -752,12 +753,13 @@ function toTranscriptLine(line: ApiTranscriptLine, corpusItems: CorpusItem[]): T
 }
 
 function annotateTranscriptLine(line: TranscriptLine, corpusItems: CorpusItem[]): TranscriptLine {
+  const originalText = line.parts.map((part) => typeof part === "string" ? part : part.text).join("");
+  const text = cleanCaptionText(originalText);
   return {
     ...line,
-    parts: annotateTranscriptText(
-      line.parts.map((part) => typeof part === "string" ? part : part.text).join(""),
-      corpusItems
-    )
+    // Old cached word indices may include the removed cue words.
+    wordTimings: text === originalText ? line.wordTimings : undefined,
+    parts: annotateTranscriptText(text, corpusItems)
   };
 }
 

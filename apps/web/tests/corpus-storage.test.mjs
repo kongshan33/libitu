@@ -60,7 +60,8 @@ test("guest saves survive reload and deletion persists", async () => {
   assert.equal(await first.save(record()), true);
   const second = f.open();
   await second.open(null);
-  assert.deepEqual(second.state.records, [record()]);
+  assert.deepEqual(second.state.records.map((row) => { const copy = { ...row }; delete copy.createdAt; return copy; }), [record()]);
+  assert.ok(Date.parse(second.state.records[0].createdAt));
   assert.equal(await second.remove(record()), true);
   await first.open(null);
   assert.deepEqual(first.state.records, []);
@@ -237,4 +238,23 @@ test("authenticated API preserves learning metadata and uses the captured accoun
   const switched = createCorpusRemote("user-b", async () => token);
   await assert.rejects(switched.list(new AbortController().signal), /Account changed/);
   assert.equal(requests.length, 1);
+});
+
+
+test("legacy cloud identity survives text edits even without an import key", async (t) => {
+  const token = `header.${Buffer.from(JSON.stringify({ sub: "user-a" })).toString("base64url")}.signature`;
+  let row = { id: "legacy", content_id: null, kind: "chunk", text: "original", meaning: "meaning", tags: [], slots: {}, source_locator: {} };
+  t.mock.method(globalThis, "fetch", async (_url, options) => {
+    if (options.method === "PATCH") row = { ...row, ...JSON.parse(options.body) };
+    return new Response(JSON.stringify(options.method === "PATCH" ? row : [row]));
+  });
+  const api = createCorpusRemote("user-a", async () => token);
+  const signal = new AbortController().signal;
+  const first = (await api.list(signal))[0];
+  await api.update(first, { text: "edited", meaning: "", usageNote: "", tags: [], slots: {} }, signal);
+  assert.equal((await api.list(signal))[0].key, first.key);
+  row.source_locator = { snapshot: { text: "original", id: "legacy-candidate" } };
+  const withSnapshot = (await api.list(signal))[0];
+  await api.update(withSnapshot, { text: "another edit", meaning: "", usageNote: "", tags: [], slots: {} }, signal);
+  assert.equal((await api.list(signal))[0].key, withSnapshot.key);
 });

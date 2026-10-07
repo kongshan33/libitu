@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { findCurrentTimedItem, parseTimestamp } from "../features/stage-one/timeline.ts";
+import { findCurrentTimedItem, formatTranscriptTimestamp, parseTimestamp } from "../features/stage-one/timeline.ts";
 
 test("timestamps map playback to the latest transcript or logic entry", () => {
   const first = { id: "logic-1" };
@@ -31,4 +31,12 @@ test("untimed entries do not interrupt chronological matching", () => {
   ], 8), second);
   assert.equal(parseTimestamp("1:02:03"), 3723);
   assert.equal(parseTimestamp("not-a-time"), null);
+});
+
+test("transcript labels omit fractions without changing seek precision", () => {
+  assert.equal(formatTranscriptTimestamp("0:00.160"), "0:00");
+  assert.equal(formatTranscriptTimestamp("1:04.999"), "1:04");
+  assert.equal(formatTranscriptTimestamp("1:02:03.250"), "62:03");
+  assert.equal(parseTimestamp("0:00.160"), 0.16);
+  assert.equal(formatTranscriptTimestamp("unknown"), "unknown");
 });

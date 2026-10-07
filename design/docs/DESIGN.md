@@ -2,6 +2,10 @@
 
 > **Status: non-canonical reference.** This document captures an earlier visual study inspired by ElevenLabs. Follow `Libitu_Design_Spec.md` and `packages/ui/src/tokens.css` for current product UI rules. Do not copy landing-page treatments, large radii, pill controls, negative letter spacing, or decorative gradients into the application unless a later accepted decision calls for them.
 
+## Accepted Libitu adaptation — 2026-10-03
+
+The approved first web styling pass adopts warm-neutral surfaces, restrained shadows and consistent radius/interaction tokens without changing existing layout. Use the landing `libitu.` wordmark throughout existing web brand links, scaled to their headers. Preserve purple primary buttons and all learning/status semantic colors. Existing black recording/conversation controls remain black. The references below do not require a monochrome palette, Waldenburg migration, universally large cards or pill-shaped controls. See `DECISIONS.MD` for the accepted scope.
+
 ## 1. Visual Theme & Atmosphere
 
 ElevenLabs' website is a study in restrained elegance — a near-white canvas (`#ffffff`, `#f5f5f5`) where typography and subtle shadows do all the heavy lifting. The design feels like a premium audio product brochure: clean, spacious, and confident enough to let the content speak (literally, given ElevenLabs makes voice AI). There's an almost Apple-like quality to the whitespace strategy, but warmer — the occasional warm stone tint (`#f5f2ef`, `#777169`) prevents the purity from feeling clinical.

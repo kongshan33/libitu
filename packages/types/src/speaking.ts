@@ -45,3 +45,58 @@ export type SpeakingSession = {
   turn_count: number;
   items: SpeakingSessionItem[];
 };
+
+export type SpeakingMessage = {
+  id: string; ordinal: number; role: "user" | "assistant"; text: string;
+  input_source: "voice" | "text"; status: "final" | "interrupted" | "unavailable";
+  revision: number; provider_item_id: string | null; response_id: string | null;
+  client_turn_id: string | null; created_at: string;
+};
+export type SpeakingEvidence = {
+  id: string; session_item_id: string; message_id: string; transcript_revision: number;
+  start: number; end: number; quote: string; match_type: "exact" | "variant" | "structure";
+  appropriateness: "appropriate" | "uncertain" | "inappropriate"; prompted: boolean; reason: string;
+};
+export type SpeakingLearningItem = {
+  session_item_id: string; observed_uses: number; independent_uses: number;
+  prompted_uses: number; last_message_id: string | null;
+};
+/** Public teaching policy deliberately excludes the provider instruction. */
+export type SpeakingTeachingPolicy = {
+  id: string; source_message_id: string; source_revision: number; learning_version: number;
+  target_item_id: string | null; action: "continue_naturally" | "implicit_elicitation" | "explicit_hint" | "move_on";
+  status: "pending" | "applied" | "expired"; response_id: string | null;
+};
+export type SpeakingWorkspace = {
+  session: SpeakingSession; version: number;
+  runtime: { id: string; generation: number; state: "connecting" | "connected" | "disconnected"; expires_at: string } | null;
+  messages: SpeakingMessage[]; evidence: SpeakingEvidence[]; learning: SpeakingLearningItem[];
+  policy: SpeakingTeachingPolicy | null; analysis_status: "idle" | "pending" | "ready" | "unavailable"; hint: string | null;
+};
+export type SpeakingRuntimeTicket = { runtime_id: string; ticket: string; expires_at: string; websocket_path: string };
+export type SpeakingClientEvent =
+  | { type: "authenticate"; ticket: string }
+  | { type: "audio.append"; audio: string }
+  | { type: "text.submit"; client_turn_id: string; text: string }
+  | { type: "playback"; item_id: string; played_ms: number }
+  | { type: "microphone"; enabled: boolean }
+  | { type: "hint" | "interrupt" | "ping" };
+export type SpeakingServerEvent =
+  | { type: "ready" | "snapshot" | "ended"; workspace: SpeakingWorkspace }
+  | { type: "state"; state: "listening" | "thinking" | "speaking" }
+  | { type: "transcript.delta"; role: "user" | "assistant"; item_id: string; delta: string }
+  | { type: "audio.delta"; item_id: string; response_id: string; audio: string }
+  | { type: "audio.clear"; item_id: string | null }
+  | { type: "error"; code: string; message: string; retryable: boolean }
+  | { type: "pong" };
+
+export type FeedbackStatus = "queued" | "processing" | "ready" | "partial" | "insufficient_data" | "failed";
+export type FeedbackDimensionId = "task_fit" | "transfer" | "scenario_fit" | "naturalness";
+export type FeedbackReference = { message_id: string; transcript_revision: number; quote: string; start: number; end: number };
+export type FeedbackCriterion = { id: string; label: string; rating: number | null; reason: string; evidence: FeedbackReference[] };
+export type FeedbackDimension = { id: FeedbackDimensionId; score: number | null; basis: "ai_assessment" | "coverage"; summary: string; criteria: FeedbackCriterion[] };
+export type FeedbackItem = { session_item_id: string; kind: CorpusKind; text: string; status: "appropriate" | "inappropriate" | "uncertain" | "not_observed"; independent_uses: number; prompted_uses: number; reason: string; evidence: FeedbackReference[] };
+export type FeedbackRefactor = { id: string; original: FeedbackReference; suggested: string; reason: string; save_text: string | null; save_kind: CorpusKind; save_meaning: string | null };
+export type FeedbackStatistics = { user_turns: number; assessed_turns: number; excluded_turns: number; word_count: number; average_words: number; selected_expressions: number; used_expressions: number; selected_structures: number; used_structures: number };
+export type FeedbackResult = { dimensions: FeedbackDimension[]; item_results: FeedbackItem[]; statistics: FeedbackStatistics; refactors: FeedbackRefactor[]; logic_stages: { label: string; status: "observed" | "not_observed" | "uncertain"; reason: string; evidence: FeedbackReference[] }[]; notices: string[] };
+export type SpeakingFeedback = { id: string; session_id: string; status: FeedbackStatus; input_hash: string; rubric_version: string; analysis_version: string; attempts: number; retryable: boolean; error_code: string | null; created_at: string; updated_at: string; session: SpeakingSession; messages: SpeakingMessage[]; result: FeedbackResult | null };

@@ -1,11 +1,18 @@
 "use client";
 
-import Link from "next/link";
+import { DirectionButton } from "@/components/ui/direction-button";
+
+import { Textarea } from "@/components/ui/field";
+
+import { Button, ButtonLink } from "@/components/ui/button";
+
+import { BrandLogo } from "@/components/BrandLogo";
+import { AuthControls } from "@/features/auth/components/AuthControls";
 import dynamic from "next/dynamic";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
-import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Target, Trash2, Volume2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Target, Trash2, X } from "lucide-react";
 import type {
   CorpusFilter,
   CorpusItem,
@@ -18,7 +25,7 @@ import type {
   StageOneSegment
 } from "@libitu/types/stage-one";
 import type { LearnerLevel } from "@libitu/types/stage-one";
-import { AuthControls } from "@/features/auth/components/AuthControls";
+import { LearningLocationTracker } from "@/features/profile/LearningLocationTracker";
 import {
   analyzeCorpusSelection,
   defaultStageOneSource,
@@ -28,9 +35,10 @@ import {
   type StageOneSource
 } from "../api/stage-one-api";
 import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
+import { ExplainPanel, SyntaxPanel } from "../../corpus/AnalysisPanels";
 import { useSavedCorpus } from "../../corpus/useSavedCorpus";
 import { savedCorpusKey, type SavedCorpusRecord } from "../../corpus/corpus-storage";
-import { findCurrentTimedItem, parseTimestamp } from "../timeline";
+import { findCurrentTimedItem, parseTimestamp, formatTranscriptTimestamp } from "../timeline";
 import { CaptionTimedText } from "../../playback/CaptionTimedText";
 import { CaptionWordClock } from "../../playback/caption-word-clock";
 import { WordTimingNotice } from "../../playback/WordTimingNotice";
@@ -188,7 +196,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
   useEffect(() => {
     const nextSource = readStageOneSource();
     setSource((current) => current ?? nextSource);
-    setSourceTitle(nextSource.title);
+    setSourceTitle(nextSource.title || "YouTube video");
   }, []);
 
   useEffect(() => {
@@ -591,12 +599,12 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
 
   return (
     <BufferedReferenceProvider value={bufferedReference}>
+    <LearningLocationTracker authLoaded={authLoaded} owner={userId} ready={isReady}
+      contentId={blueprint?.contentId ?? null} sourceUrl={displaySourceUrl} title={displayTitle} />
     <main className="stage-page">
       <section className="reader-shell" aria-label="Libitu stage 1 ingest reader">
         <header className="topbar">
-          <Link className="logo" href="/" aria-label="Libitu home">
-            libitu
-          </Link>
+          <BrandLogo className="logo" />
           <div className="topbar-title">{blueprint?.title ?? sourceTitle}</div>
           <div className="stage-pills" aria-label="Learning stages">
             <button
@@ -609,12 +617,13 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
             <button
               className={`stage-pill ${stageOneView === "preparing" || stageOneView === "shadow" ? "active" : ""}`}
               type="button"
-              disabled={stageOneView !== "shadow"}
+              disabled={!isReady}
             >
               Stage 2 - Shadow
             </button>
             <LoadoutLink className="stage-pill">Stage 3 - Mission</LoadoutLink>
           </div>
+          <ButtonLink variant="secondary" size="inherit" shape="pill" className="stage-pill" href="/corpus">Corpus</ButtonLink>
           <AuthControls />
         </header>
 
@@ -645,11 +654,11 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
             <h1>Sign in to start Shadow</h1>
             <p>Save your practice history to your account. You choose whether to keep recordings for later playback.</p>
             <p>{selectedSegment.title} · Your selected sentence will be kept.</p>
-            <button type="button" disabled={!authLoaded} onClick={() => {
+            <Button variant="secondary" size="inherit" type="button" disabled={!authLoaded} onClick={() => {
               const returnUrl = window.location.href;
               clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
-            }}>{authLoaded ? "Sign in or create account" : "Checking sign-in…"}</button>
-            <button type="button" onClick={closeSegmentPicker}>Back to Stage 1</button>
+            }}>{authLoaded ? "Sign in or create account" : "Checking sign-in…"}</Button>
+            <Button variant="secondary" size="inherit" type="button" onClick={closeSegmentPicker}>Back to Stage 1</Button>
           </section>
         ) : stageOneView === "shadow" && selectedSegment && authLoaded && userId ? (
           <StageTwoShadowing
@@ -759,13 +768,13 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
                   <span className="toggle-track"><span /></span>
                   Highlight active
                 </button>
-                <button className="control-button" type="button" disabled={!isReady}>
+                {/* <Button variant="secondary" size="inherit" className="control-button" type="button" disabled={!isReady}>
                   <LibraryIcon />
                   Add to corpus
-                </button>
+                </Button> */}
               </div>
 
-              <WordTimingNotice rows={transcript} enabled={highlightActive} pending={status === "loading"} />
+              {/* <WordTimingNotice rows={transcript} enabled={highlightActive} pending={status === "loading"} /> */}
               <CaptionTimingRecoveryNotice state={timingRecovery.state} onRetry={timingRecovery.retry} />
               <article
                 className="transcript-area"
@@ -783,7 +792,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
                     key={line.segmentationVersion && line.id ? line.id : `${line.time}-${lineIndex}`}
                     onClick={() => selectTranscriptLine(line, lineIndex)}
                   >
-                    <button className="transcript-time" type="button" aria-label={`Play from ${line.time}`}>{line.time}</button>
+                    <button className="transcript-time" type="button" aria-label={`Play from ${formatTranscriptTimestamp(line.time)}`}>{formatTranscriptTimestamp(line.time)}</button>
                     <CaptionTimedText className="transcript-text" parts={line.parts} clock={wordClock}
                       enabled={highlightActive}
                       sourceTokenStart={line.sourceTokenStart} timingSource={line.timingSource} wordTimings={line.wordTimings} />
@@ -844,7 +853,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
             {corpus.error ? (
               <div className="corpus-sync-status" role="alert">
                 <p>{corpus.error}</p>
-                <button type="button" className="inline-command" onClick={corpus.retry} disabled={corpus.busy}>Retry sync</button>
+                <Button variant="secondary" size="inherit" type="button" className="inline-command" onClick={corpus.retry} disabled={corpus.busy} loading={corpus.busy} loadingLabel="Syncing…">Retry sync</Button>
               </div>
             ) : corpus.busy ? <p className="corpus-sync-status" role="status">Loading saved corpus...</p> : null}
             <div className="corpus-list">
@@ -899,7 +908,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
               <span>Your saved language</span>
               <strong>{savedRecords.length} items saved from this source</strong>
             </div>
-            <LoadoutLink className="mission-button">Open loadout</LoadoutLink>
+            <LoadoutLink className="mission-button" size="sm" shape="default">Open loadout</LoadoutLink>
           </div>
         </aside>
 
@@ -952,7 +961,7 @@ function StageOneStageCta({ segmentCount, onChooseSegment }: StageOneStageCtaPro
       <span className="stage-one-cta-hint">
         {canChooseSegment ? "All segments under 5 minutes" : "Playable segment timing is required"}
       </span>
-      <button
+      <DirectionButton variant="primary"
         className="stage-one-cta-button"
         type="button"
         disabled={!canChooseSegment}
@@ -960,7 +969,7 @@ function StageOneStageCta({ segmentCount, onChooseSegment }: StageOneStageCtaPro
       >
         {canChooseSegment ? "Choose a segment to shadow" : "Segments unavailable"}
         <ArrowRight aria-hidden="true" />
-      </button>
+      </DirectionButton>
     </footer>
   );
 }
@@ -991,10 +1000,10 @@ function StageOneSegmentPicker({
   return (
     <section className="stage-one-picker" aria-label="Choose a segment to shadow">
       <header className="stage-one-picker-header">
-        <button className="stage-one-picker-back" type="button" onClick={onBack}>
+        <DirectionButton variant="secondary" className="stage-one-picker-back" type="button" onClick={onBack}>
           <ArrowLeft aria-hidden="true" />
           Back
-        </button>
+        </DirectionButton>
         <div className="stage-one-picker-heading">
           <h1>Choose a segment to shadow</h1>
           <p>AI divided {title} into {segments.length} segments aligned to the logic flow.</p>
@@ -1078,7 +1087,7 @@ function StageOneSegmentPicker({
             <strong>{selectedSegment.title} · {formatSegmentDuration(selectedSegment)} · {segmentLogicFor(selectedSegment, logicNodes, 0).node?.title ?? "Logic flow"}</strong>
           ) : null}
         </div>
-        <button
+        <DirectionButton variant="primary"
           className="stage-one-picker-begin"
           type="button"
           disabled={!selectedSegment}
@@ -1086,7 +1095,7 @@ function StageOneSegmentPicker({
         >
           Begin Stage 2{selectedSegment ? ` · ${selectedSegment.title}` : ""}
           <ArrowRight aria-hidden="true" />
-        </button>
+        </DirectionButton>
       </footer>
     </section>
   );
@@ -1172,20 +1181,20 @@ function StageTwoPreparation({
         <BufferedReferencePanel capture={capture} playable={Boolean(sourceUrl)}>
           <p role="status">{covered.length} of {sentences.length} sentence audio ranges available on this device. {analyzed.length} references analyzed.</p>
           <p className="stage-two-recording-note">Already heard sentences can be prepared from the buffer. Listen at 1× to fill missing ranges. The first three available references are analyzed here; the next ones are prepared as you practice.</p>
-          {capture.state.phase === "enabled" && (missing || playing) ? <button type="button" onClick={prepareMissing}>
+          {capture.state.phase === "enabled" && (missing || playing) ? <Button variant="secondary" size="inherit" type="button" onClick={prepareMissing}>
             {playing ? "Pause preparation" : "Listen to prepare missing audio"}
-          </button> : null}
-          {preparation.error ? <p role="alert">{preparation.error} <button type="button" onClick={preparation.retry}>Retry preparation</button></p> : null}
+          </Button> : null}
+          {preparation.error ? <p role="alert">{preparation.error} <Button variant="secondary" size="inherit" type="button" onClick={preparation.retry}>Retry preparation</Button></p> : null}
         </BufferedReferencePanel>
       </div>
-      <button
+      <DirectionButton variant="primary"
         className="stage-two-preparation-start visible"
         type="button"
         onClick={() => { player.current?.pause(); capture.suspend(); onStart?.(segment); }}
       >
         <ArrowRight aria-hidden="true" />
         Start shadowing
-      </button>
+      </DirectionButton>
       <p>Listening and recording remain available while reference analysis is preparing. Sound detection is not evaluated.</p>
     </section>
   );
@@ -1288,7 +1297,7 @@ function difficultyColor(difficulty: NonNullable<StageOneSegment["difficulty"]>)
 function readStageOneSource(): StageOneSource {
   const params = new URLSearchParams(window.location.search);
   const sourceUrl = params.get("sourceUrl") ?? defaultStageOneSource.sourceUrl;
-  const title = params.get("title") ?? defaultStageOneSource.title;
+  const title = params.get("title") ?? (params.has("sourceUrl") || params.has("contentId") ? "" : defaultStageOneSource.title);
   const transcriptText = params.get("transcriptText") ?? undefined;
   const language = params.get("language") ?? undefined;
   const contentId = params.get("contentId") ?? undefined;
@@ -1450,9 +1459,9 @@ function CorpusDetailDialog({ state, onClose, onRetry, onSeek, onTabChange }: Co
             <span className="section-label">Corpus detail</span>
             <h1 id="corpus-detail-title">{analysis?.recommendedText ?? corpusSelectedText(state.item)}</h1>
           </div>
-          <button className="dialog-close" type="button" aria-label="Close corpus detail" title="Close" onClick={onClose}>
+          <Button variant="ghost" size="inherit" shape="circle" className="dialog-close" type="button" aria-label="Close corpus detail" title="Close" onClick={onClose}>
             <X aria-hidden="true" />
-          </button>
+          </Button>
         </header>
 
         <section className="source-context" aria-label="Original source context">
@@ -1462,9 +1471,9 @@ function CorpusDetailDialog({ state, onClose, onRetry, onSeek, onTabChange }: Co
               {state.record?.sourceTitle ? <strong>{state.record.sourceTitle}</strong> : null}
             </div>
             {state.context.timestamp ? (
-              <button type="button" className="inline-command" onClick={() => onSeek(state.context.timestamp ?? null)}>
+              <Button variant="secondary" size="inherit" type="button" className="inline-command" onClick={() => onSeek(state.context.timestamp ?? null)}>
                 {state.context.timestamp}
-              </button>
+              </Button>
             ) : null}
           </div>
           {state.context.contextBefore ? <p className="context-neighbor">{state.context.contextBefore}</p> : null}
@@ -1508,7 +1517,7 @@ function CorpusDetailDialog({ state, onClose, onRetry, onSeek, onTabChange }: Co
               <div>
                 <h2>Analysis could not be loaded</h2>
                 <p>{state.error ?? "Please retry."}</p>
-                <button className="inline-command" type="button" onClick={onRetry}>Retry</button>
+                <Button variant="secondary" size="inherit" className="inline-command" type="button" onClick={onRetry}>Retry</Button>
               </div>
             </div>
           ) : state.tab === "explain" ? (
@@ -1610,7 +1619,7 @@ function SelectionAnalysisCard({ state, saveDisabled, onClose, onTogglePin, onFi
         <CycleChip label="register" value={fieldDraft.register} values={editableRegisters} onChange={(value) => onFieldChange("register", value)} />
       </div>
 
-      <textarea
+      <Textarea
         className="selection-note"
         value={state.note}
         placeholder={analysis.notePlaceholder}
@@ -1622,9 +1631,9 @@ function SelectionAnalysisCard({ state, saveDisabled, onClose, onTogglePin, onFi
           <button className={state.tab === "explain" ? "active" : ""} type="button" onClick={() => onTabChange("explain")}>Explain</button>
           <button className={state.tab === "syntax" ? "active" : ""} type="button" onClick={() => onTabChange("syntax")}>Syntax</button>
         </div>
-        <button className="selection-save" type="button" disabled={isLoading || saveDisabled} onClick={() => onSave()}>
+        <Button variant="primary" size="inherit" className="selection-save" type="button" disabled={isLoading || saveDisabled} onClick={() => onSave()}>
           Save
-        </button>
+        </Button>
       </div>
 
       <div className="selection-panel" aria-busy={isLoading}>
@@ -1657,133 +1666,6 @@ function CycleChip<T extends string>({ label, value, values, onChange }: CycleCh
       {value}
     </button>
   );
-}
-
-function ExplainPanel({ analysis, isLoading }: { analysis: CorpusSelectionAnalysis; isLoading: boolean }) {
-  return (
-    <div className="analysis-stack">
-      <section>
-        <h2>Pronunciation</h2>
-        <p><strong>{analysis.explanation.pronunciation.ipa}</strong></p>
-        <p>{analysis.explanation.pronunciation.connectedSpeech}</p>
-        <button className="inline-command" type="button" disabled={isLoading} onClick={() => speakText(analysis.explanation.pronunciation.audioText)}>
-          <Volume2 size={13} aria-hidden="true" />
-          Play
-        </button>
-      </section>
-      <section>
-        <h2>Meaning and function</h2>
-        <p>{analysis.explanation.meaning}</p>
-        <p>{analysis.explanation.pragmaticFunction}</p>
-      </section>
-      <section>
-        <h2>Similar expressions</h2>
-        <div className="mini-chip-row">
-          {analysis.explanation.similarExpressions.map((expression) => <span key={expression}>{expression}</span>)}
-          {analysis.explanation.similarExpressions.length === 0 ? <span>{isLoading ? "Analyzing..." : "No alternatives available"}</span> : null}
-        </div>
-      </section>
-      <section>
-        <h2>Examples</h2>
-        {analysis.explanation.examples.map((example) => (
-          <p className="example-line" key={example.english}>
-            {example.typical ? <span>Typical</span> : null}
-            {example.english}<br />
-            <small>{example.chinese}</small>
-          </p>
-        ))}
-      </section>
-      <div className="mini-chip-row">
-        {analysis.explanation.usageChips.map((chip) => <span key={chip}>{chip}</span>)}
-      </div>
-    </div>
-  );
-}
-
-function SyntaxPanel({
-  analysis,
-  isLoading,
-  onSavePattern,
-  saveDisabled
-}: {
-  analysis: CorpusSelectionAnalysis;
-  isLoading: boolean;
-  onSavePattern?: (kindOverride?: CorpusKind, textOverride?: string, slots?: Record<string, string>) => void;
-  saveDisabled: boolean;
-}) {
-  return (
-    <div className="analysis-stack">
-      <section>
-        <h2>Sentence structure</h2>
-        <p><strong>{analysis.syntaxAnalysis.sentenceType}</strong></p>
-        <p>{analysis.syntaxAnalysis.mainClause}</p>
-        <AnalysisItems items={analysis.syntaxAnalysis.structureBreakdown} emptyLabel={isLoading ? "Analyzing..." : "No additional breakdown."} />
-      </section>
-      <AnalysisList title="Logic relations" items={analysis.syntaxAnalysis.logicRelations} isLoading={isLoading} />
-      <AnalysisList title="Information hierarchy" items={analysis.syntaxAnalysis.informationHierarchy} isLoading={isLoading} />
-      <AnalysisList title="Style" items={analysis.syntaxAnalysis.styleFeatures} isLoading={isLoading} />
-      <AnalysisList title="Usage scenarios" items={analysis.syntaxAnalysis.usageScenarios} isLoading={isLoading} />
-      <AnalysisList title="Grammar focus" items={analysis.syntaxAnalysis.grammarPoints} isLoading={isLoading} />
-      <AnalysisList title="Wording" items={analysis.syntaxAnalysis.wordingNotes} isLoading={isLoading} />
-      <section>
-        <h2>Reusable structures</h2>
-        {analysis.syntaxAnalysis.reusablePatterns.map((pattern) => (
-          <article className="pattern-row" key={pattern.template}>
-            <code>{pattern.template}</code>
-            <p>{pattern.rationale}</p>
-            {onSavePattern ? (
-              <button className="inline-command" type="button" disabled={isLoading || saveDisabled} onClick={() => onSavePattern("structure", pattern.template, pattern.slots)}>
-                Save structure
-              </button>
-            ) : null}
-          </article>
-        ))}
-        {analysis.syntaxAnalysis.reusablePatterns.length === 0 ? <p>Preparing reusable patterns.</p> : null}
-      </section>
-      <section>
-        <h2>Translations</h2>
-        {analysis.syntaxAnalysis.translations.map((translation) => (
-          <div className="translation-version" key={`${translation.label}-${translation.text}`}>
-            <strong>{translation.label}{translation.recommended ? " · Recommended" : ""}</strong>
-            <p>{translation.text}</p>
-          </div>
-        ))}
-        {analysis.syntaxAnalysis.translations.length === 0 ? <p>Preparing translations.</p> : null}
-      </section>
-      <AnalysisList title="Translation notes" items={analysis.syntaxAnalysis.translationNotes} isLoading={isLoading} />
-      {analysis.syntaxAnalysis.backgroundContext ? (
-        <section>
-          <h2>Background</h2>
-          <p>{analysis.syntaxAnalysis.backgroundContext}</p>
-        </section>
-      ) : null}
-      <AnalysisList title="Evidence" items={analysis.syntaxAnalysis.evidence} isLoading={isLoading} />
-    </div>
-  );
-}
-
-function AnalysisList({ title, items, isLoading }: { title: string; items: string[]; isLoading: boolean }) {
-  return (
-    <section>
-      <h2>{title}</h2>
-      <AnalysisItems items={items} emptyLabel={isLoading ? "Analyzing..." : "No additional analysis."} />
-    </section>
-  );
-}
-
-function AnalysisItems({ items, emptyLabel }: { items: string[]; emptyLabel: string }) {
-  if (items.length === 0) return <p>{emptyLabel}</p>;
-  return (
-    <ol className="analysis-list">
-      {items.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}
-    </ol>
-  );
-}
-
-function speakText(text: string) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
 type StageOneStatusPanelProps = {
@@ -1825,9 +1707,9 @@ function StageOneStatusPanel({ status, message, onRetry, preview }: StageOneStat
         </div>
       ) : null}
       {!isLoading ? (
-        <button className="mission-button" type="button" onClick={onRetry}>
+        <Button variant="secondary" size="inherit" className="mission-button" type="button" onClick={onRetry}>
           Retry
-        </button>
+        </Button>
       ) : null}
     </div>
   );

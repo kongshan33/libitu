@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { ArrowUpRight, X } from "lucide-react";
 import type { SpeakingLogicTemplate } from "@libitu/types/speaking";
 import type { SavedCorpusRecord } from "../../corpus/corpus-storage";
@@ -25,7 +27,7 @@ export function LoadoutPreview({ draft, records, logic, onRemove, submitting, ch
     <PreviewSlots title="Expression slots" selected={selection.expressions} count={5} onRemove={onRemove} disabled={submitting} />
     {selection.missing.length ? <div className={styles.missing} role="status"><strong>Unavailable selections</strong>
       <p>These items were removed or could not be loaded.</p>
-      {selection.missing.map(({ key }, index) => <button type="button" key={key} disabled={submitting} onClick={() => onRemove(key)}>Remove unavailable item {index + 1}</button>)}
+      {selection.missing.map(({ key }, index) => <Button variant="secondary" size="inherit" type="button" key={key} disabled={submitting} onClick={() => onRemove(key)}>Remove unavailable item {index + 1}</Button>)}
     </div> : null}
     <div className={styles.startArea}>{children}<p className={styles.readiness} aria-live="polite">{selection.expressions.length} expressions + {selection.structures.length} structures</p>
       <p className={styles.preparationNote}>Your setup will be saved to your account. AI role-play is coming later.</p></div>
@@ -43,7 +45,7 @@ function PreviewSlots({ title, selected, count, onRemove, disabled }: {
       const text = slot?.record ? expressionText(slot.record) : null;
       return <div className={`${styles.slot} ${slot ? styles.filledSlot : ""}`} key={slot?.key ?? `empty-${index}`}>
         <span className={styles.slotNumber}>{index + 1}</span><span className={styles.slotText}>{text ?? "Empty slot"}</span>
-        {slot ? <button type="button" className={styles.remove} aria-label={`Remove ${text} from loadout`} disabled={disabled} onClick={() => onRemove(slot.key)}><X size={15} /></button> : null}
+        {slot ? <Button variant="ghost" size="inherit" type="button" className={styles.remove} aria-label={`Remove ${text} from loadout`} disabled={disabled} onClick={() => onRemove(slot.key)}><X size={15} /></Button> : null}
       </div>;
     })}
   </section>;

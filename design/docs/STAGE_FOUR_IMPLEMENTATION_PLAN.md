@@ -1,5 +1,7 @@
 # Stage 4 实时会话：设计与实施计划
 
+> Historical design proposal. Stage 4 is now implemented locally; [current behavior, verified provider details and remaining work](STAGE_FOUR_IMPLEMENTATION.md) supersede implementation-status claims below.
+
 日期：2026-09-30。状态：分析完成，尚未实现。
 
 用户已确认首版包含**持续聆听、自动分轮、打断 AI 的实时语音**，同时保留文字输入。这一决定取代原规范“文字首版、语音后续”的范围。下列布局、接口、字段和供应商路线是实施建议，尚未通过生产集成验证。

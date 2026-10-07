@@ -4,12 +4,118 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-09-30
+  updated: 2026-10-04
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
 ## Accepted decisions
+
+
+### 2026-10-04: Stabilize draft feedback without renaming flows
+
+Loadout draft-save feedback now reserves its space while hidden, avoiding form movement on input and option changes. Textarea focus uses a neutral thin outline, and directional links default to the same outlined secondary appearance as directional buttons. All user-facing wording and destinations remain unchanged; the proposed Learn terminology is not adopted.
+
+
+### 2026-10-04: Unify selects and directional controls
+
+All visible selects use the shared Radix components, including Loadout settings/source and Corpus sorting. Menus use borderless option highlights, a light panel edge/shadow and inset trigger arrows. DirectionButton/DirectionLink standardize back/next actions at 40 px with 16 px icons; multiline navigation cards keep their card geometry. Reader outer bottom padding is removed and shell height fills the remaining viewport, placing its entry bar against the bottom edge.
+
+
+### 2026-10-04: Exclude caption cues from spoken text
+
+Remove square-bracket cues such as `[clears throat]` entirely and strip `>>` / `<<` speaker markers and stray square brackets. Apply this before English caption analysis and when adapting cached transcripts for both learning stages. Keep spoken punctuation, source timing and existing cached sentence identity; do not reanalyze stored blueprints merely for display cleanup.
+
+### 2026-10-04: Share application navigation
+
+Use AppHeader for Corpus, My learning/history and mission preparation/conversation/report pages. All share Practice, Corpus, Mission and My learning links in that order, plus a single account area. Use 32/20/16 px horizontal gutters at desktop/900 px/480 px breakpoints. Keep workflow actions in a separate content toolbar. Landing and reader keep their dedicated navigation.
+
+
+### 2026-10-04: Use white page canvases
+
+Reader footer follow-up (2026-10-04): the Stage 2 entry bar spans the viewport horizontally, canceling the reader gutter only for this footer. Its content keeps internal padding; other reader sections retain their responsive gutters.
+
+The user requested white outer backgrounds across framed pages. Global body and feature page wrappers use the white primary background; warm-neutral secondary surfaces remain available inside content. Preserve existing gutters and layout. This supersedes the former warm page-background recommendation.
+
+### 2026-10-04: Apply reader-specific spacing from browser review
+
+The user explicitly requested responsive outer margins and targeted button/spacing corrections, superseding the earlier blanket geometry-preservation rule for this reader follow-up. Use 16/12/8 px gutters without adding a page frame. Display transcript positions as minute:second only; keep precise source timing for playback and synchronization.
+
+### 2026-10-04: Load Inter and finish control consistency
+
+- **Decision**: the user explicitly approved real Inter loading, superseding the earlier temporary system-font boundary. Bundle licensed normal/italic variable fonts locally; use swap and a metric-adjusted fallback. Preserve monospace teaching text and system fallbacks for unsupported scripts.
+- **Scope**: retain existing layout and control geometry, adapting overflow constraints only where actual font metrics require it. Share field states and generic purple selection tokens, retain learning colors, finish auxiliary action feedback and remove redundant button paint.
+- **Boundary**: visual fixtures do not constitute real authentication, recording/provider or production acceptance. See [usage and checks](design/docs/VISUAL_SYSTEM.md).
+
+### 2026-10-04: Share semantic button roles while preserving geometry
+
+- **Decision**: retain purple primary actions; use shared secondary, soft, ghost, danger, danger-solid and black recording roles, with red active recording.
+- **Boundary**: preserve existing dimensions through explicit inherited sizes; ordinary radius is 8 px, media pills/circles remain. Tabs, filters, switches and selectable cards are separate controls. Navigation stays a real link.
+- **Behavior**: loading preserves idle content space, disables repeated native clicks and exposes busy state. Share focus, hover, pressed, disabled and reduced-motion styling. See [usage](design/docs/BUTTON_SYSTEM.md).
+
+### 2026-10-03: Unify visual styling while retaining purple actions and layout
+
+- **Decision**: the user approved a first styling pass based on the visual review, explicitly retaining the purple brand, purple primary buttons and learning semantic colors. Reuse the landing `libitu.` wordmark across existing web brand links; preserve contextual scaling and tagline placement.
+- **Scope**: warm-neutral surfaces, shared radius tiers, restrained elevation, typography weights and consistent keyboard/disabled/motion feedback. No changes to grids, spacing, control dimensions, responsive breakpoints or product behavior. Existing black recording/conversation controls retain their roles.
+- **Boundary**: the ElevenLabs reference does not authorize monochrome branding, universal pill controls, oversized display typography or new integrations. Keep the current font stack in this pass; loading a new face needs separate layout verification. Extension toolbar bitmap branding remains unchanged.
+
+### 2026-10-03: Introduce a landing page without migrating reader URLs
+
+- **Decision**: rebuild the provided ToneFlow prototype's visual direction in the web app using the existing Libitu brand and shared tokens; do not copy its HTML/CSS/JavaScript. Keep `/` as the landing page unless a nonempty `sourceUrl`, `contentId`, `jobId` or `handoffId` selects the existing reader. Marketing parameters alone never start demo processing.
+- **Entry**: normalize supported YouTube URL forms before navigation; the existing backend handles captions/jobs/failures. A pasted URL does not prove language and must not inherit a demo title. Shadow remains optional before a speaking mission.
+- **Authentication**: reuse Clerk's real modals, signed-in controls and forced current-URL redirects for login and registration. Retain only the bounded input draft in same-tab session storage; do not infer or simulate identity. Existing guest corpus and private-route ownership remain unchanged.
+- **Publication**: keep the prototype-style “Add to Chrome” entry visible. Open a store only when `LIBITU_CHROME_STORE_URL` is a valid HTTPS Chrome Web Store detail listing; otherwise link to installation guidance and label the store release as coming soon. No fake installation/privacy/terms targets, fabricated product results, provider claims or deployment are introduced.
+
+### 2026-10-02: Do not infer spoken language from multilingual ASR ordering
+
+- **Decision**: preserve explicit video/audio language metadata priority, then use the caption renderer's valid `defaultAudioTrackIndex` and that audio track's language identifier. `hasDefaultTrack` is a caption-default signal and may occur on every dubbed audio track; use it as a fallback only when unambiguous.
+- **Fallback**: a unique ASR language remains useful for older single-source metadata. Multiple ASR languages without an identifiable default audio language remain unknown; neither the first caption nor an English translation proves spoken English. The supported-language list remains English only.
+- **Verification**: sanitized metadata from the reported Lisa Su video reproduces the old Arabic misclassification and passes the corrected English-default regression. Live caption acquisition remains a separate verification step.
+
+### 2026-10-02: Deliver the first usable corpus management library
+
+- **Status**: accepted following the user's approval of the proposed first increment.
+- **Decision**: `/corpus` reuses existing local/account storage, source analysis and Loadout. Card bodies open details; separate checkboxes select stable saved keys. Facets use OR within a dimension and AND between dimensions. High value means an existing learning-value score of at least 4/5; unknown scores/dates remain unknown.
+- **Editing**: first version edits expression/template, meaning, usage note, functional tags and structure slots. Preserve source context and analysis as explicitly original evidence, stable import keys, and existing session snapshots. Kind/difficulty/register/scenario/quality-score editing is outside this version. Account edits require a confirmed server record; failed writes retain the editor draft and never claim success.
+- **Loadout**: merge under the existing browser draft lock with the latest settings and account identity. Reject unavailable references, more than 3 structures or 5 shared expressions, and a pending idempotent session submission; never truncate selections. Preserve guest-adoption and existing account-draft rules.
+- **Scope**: no new database tables or provider integration. Decks, corpus usage aggregation, review scheduling and server-side list pagination remain separate.
+
+### 2026-10-02: Keep practice history a focused record list
+
+- **Status**: implemented following the user's request for a simple history page reachable from the personal page.
+- **Decision**: use one chronological list with All / Shadowing / Missions filters, local-date headings and per-record time, duration or turn count, practice state and one destination. Apply the kind filter before pagination in the authenticated API; filter changes clear the old list and cancel its reads.
+- **Scope**: completed Missions open Stage 5 reports, other Missions open their conversation, and Shadow takes return to their available source. This page does not introduce recording replay, exact-take restoration, deletion, score trends or a new assessment request. Existing account isolation, counting and source-visibility boundaries remain in force.
+
+### 2026-10-02: Surface Stage 5 session feedback in the private profile
+
+- **Status**: accepted following the user’s request to inspect and integrate the completed scoring work.
+- **Decision**: integrate the existing Stage 5 implementation and show its latest compatible ready/partial report separately from the five general learning dimensions. Sort reports by final learner practice time, not retry time. Preserve real zero scores and null abstentions, and link completed Mission history to Analytics with explicit pending/failed/legacy states.
+- **Ownership and cost**: read the minimal report projection through owner-filtered sessions; never expose transcripts, citations or worker internals in the profile response. Viewing the profile never creates or retries assessment jobs. Stage 5 generation remains the existing end/request plus worker lifecycle.
+- **Boundary**: no general ability inference, cross-session score trend or new rubric. Existing reports must match the current rubric/analysis versions and dimension contract. Human calibration and production worker qualification remain separate. See [profile integration](design/docs/PROFILE_IMPLEMENTATION.md).
+
+### 2026-10-02: Deliver a private learning center from saved activity
+
+- **Status**: accepted following the user's request to implement the analyzed first version.
+- **Decision**: follow the profile prototype's identity, dimensions, activity, shortcuts and recent-practice hierarchy. Keep five dimensions explicitly unassessed; replace illustrative score curves with real saved-activity counts. Do not infer ability, weakest dimensions, total learning time or a personal learning goal from record counts.
+- **Counting**: a Shadow take is one non-deleted attempt; a practiced Mission has at least one finalized nonempty learner contribution. Recording time is Shadow audio only. Streaks use those practice events and the browser's IANA timezone, retaining a run ending yesterday. Corpus additions count currently surviving saved items by creation date; missing timestamps remain unknown.
+- **Ownership and continuity**: use authenticated owner-filtered server reads with private/no-store responses. Browser continuation belongs to one account and ready source; account switching does not adopt the previous account's open source. Older attempts without a segment identity reopen Stage 1, with no automatic playback. No new schema, AI call, media acquisition or public profile is included.
+- **Scope**: `/profile/history` aggregates existing records; the corpus shortcut opens the existing `/loadout#corpus` picker. Full library management, cross-device reading position and validated assessment remain separate. See [implementation](design/docs/PROFILE_IMPLEMENTATION.md).
+
+### 2026-10-01: Build evidence-backed Stage 5 reports
+
+- **Status**: accepted and implemented locally; [verification and limits](design/docs/STAGE_FIVE_CONTRACT.md).
+- **Decision**: four dimensions only: task fit, language transfer, scenario fit and naturalness. AI rates explicit rubric criteria with exact user quotations; the server calculates normalized scores. Transfer counts unique selected items used appropriately, with prompted and independent observations shown separately. Missing/uncertain evidence is not zero. No fluency, pronunciation, overall ability or mastery score.
+- **Lifecycle**: freeze the completed mission's settings, transcript and teaching exposures in an owner-scoped durable report job. A separate leased worker reassesses the whole final transcript, including turns whose Stage 4 analysis never finished. Idempotent requests, bounded retries and deletion fencing protect recovery.
+- **Experience**: four cards, evidence-linked details, at most three meaning-preserving refactors, real corpus saves and a new-session retry with the original settings. Optional logic observations are separate from goal achievement. Preserve existing account drafts when adjusting loadout.
+- **Reference**: [frozen contract](design/docs/STAGE_FIVE_CONTRACT.md). Model judgments remain explicitly AI assessments; human rubric calibration is separate from software acceptance.
+
+### 2026-10-01: Deliver Gemini Live with asynchronous teaching control
+
+- **Status**: accepted provider choice and implemented locally; see [implementation and verification](design/docs/STAGE_FOUR_IMPLEMENTATION.md).
+- **Decision**: user selected Gemini Live. Use server-owned WebSocket audio/control with a shared Voice/Chat mission; DeepSeek analyzes finalized learner speech asynchronously. A deterministic controller adjusts a subsequent eligible response, with one target, cooldown, evidence and exposure bounds.
+- **Data**: preserve immutable Loadout language snapshots, finalized messages and quoted UTF-16 evidence in an owner-scoped CAS document. One-use connection tickets, runtime leases, explicit takeover and end/delete fencing prevent old connections from writing. No app raw-audio archive or invented scores.
+- **Provider boundary**: Gemini setup cannot be edited in place; inject private teaching context only at an idle boundary. Text view suppresses playback of native audio. Incomplete playback is marked interrupted and excluded from reconnect history; no exact Gemini audio/text truncation is claimed.
+- **Remaining**: manual transcript editing, automatic logic-stage progress, Stage 5 assessment and production/device/cost qualification are separate. This resolves provider selection in D-010; its operating qualification remains open.
 
 ### 2026-09-30: Include real-time voice in the first Stage 4 delivery
 
@@ -438,7 +544,7 @@ This log records decisions that constrain product behavior or architecture. Add 
 | D-007 | Exact learner recording, transcript, assessment, log, and backup retention schedules | Production practice persistence | Target-country review, user research, deletion behavior, operating cost |
 | D-008 | Initial overseas launch countries and regional infrastructure | Production launch | Market priority, content availability, privacy/consumer rules, latency and cost |
 | D-009 | First authorized file source and scope of full YouTube reference support | File-reference F1 and production coverage commitment | Available source files/API, content and platform rights, tested partial-transfer behavior and costs |
-| D-010 | Stage 4 real-time voice provider and operating contract | Real-time adapter implementation | Trusted transcript/control events, interruption/context alignment, reconnection, device latency, cost and provider retention settings |
+| D-010 | Stage 4 operating qualification; Gemini provider selected and implemented | Production release | Complete post-interruption live turns, device/network latency, account budgets, cost and provider retention settings |
 
 ### 2026-09-09: Keep Stage 2 media actions together above analysis
 

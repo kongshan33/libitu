@@ -424,3 +424,15 @@ test("polling fallback is a complete snapshot and cannot inherit compact SSE wor
   mock.timers.tick(1500);
   await loading;
 });
+
+
+test("cached captions clean cues across parts before annotation", async () => {
+  const cached = blueprint();
+  cached.transcript = [{ id: "existing-sentence", time: "0:21", parts: [">> A [clears ", "throat] useful expression 1."], word_timings: [{source_token_index: 0, text: "clears", start_ms: 21000}] }];
+  fetch.mock.mockImplementation(async (url) => response(String(url).includes("/blueprints/") ? cached : job("ready")));
+  const result = await loadStageOneBlueprint(source);
+  assert.equal(result.transcript[0].parts.map(part => typeof part === "string" ? part : part.text).join(""), "A useful expression 1.");
+  assert.equal(result.transcript[0].id, "existing-sentence");
+  assert.equal(result.transcript[0].time, "0:21");
+  assert.equal(result.transcript[0].wordTimings, undefined);
+});

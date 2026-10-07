@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import type { CaptionRecoveryState } from "../stage-one/components/use-caption-timing-recovery";
 
 export function CaptionTimingRecoveryNotice({ state, inPractice = false, onRetry }: {
@@ -14,6 +16,6 @@ export function CaptionTimingRecoveryNotice({ state, inPractice = false, onRetry
     : state.message;
   return <div className="caption-timing-recovery" data-caption-recovery-phase={state.phase} role="status" aria-live="polite">
     <span>{message}</span>
-    {state.phase === "failed" ? <button type="button" onClick={onRetry}>Retry word timing</button> : null}
+    {state.phase === "failed" ? <Button variant="secondary" size="inherit" type="button" onClick={onRetry}>Retry word timing</Button> : null}
   </div>;
 }

@@ -1,12 +1,21 @@
 "use client";
 
+import { DirectionLink } from "@/components/ui/direction-button";
+
+import { SelectField } from "@/components/ui/select";
+
+import { AppHeader } from "@/components/AppHeader";
+
+import { Textarea, Input } from "@/components/ui/field";
+
+import { Button } from "@/components/ui/button";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
 import type { SpeakingOptions } from "@libitu/types/speaking";
-import { AuthControls } from "../../auth/components/AuthControls";
 import { useSavedCorpus } from "../../corpus/useSavedCorpus";
 import { createSpeakingApi, getSpeakingOptions, SpeakingApiError } from "../api/speaking-api";
 import { useLoadoutDraft } from "../hooks/useLoadoutDraft";
@@ -28,11 +37,12 @@ export function LoadoutPage() {
   const [optionsAttempt, setOptionsAttempt] = useState(0);
   const [returnTo, setReturnTo] = useState("/");
   const [query, setQuery] = useState("");
+  const [reportImport, setReportImport] = useState<string | null>(null);
   const [source, setSource] = useState("");
   const [submission, setSubmission] = useState<{ owner: string | null; busy: boolean; error: string | null; authError: boolean }>({ owner: null, busy: false, error: null, authError: false });
   const inFlight = useRef<AbortController | null>(null);
 
-  useEffect(() => { setReturnTo(safeReturnPath(new URL(window.location.href).searchParams.get("returnTo"))); }, []);
+  useEffect(() => { const params = new URL(window.location.href).searchParams; setReturnTo(safeReturnPath(params.get("returnTo"))); if (params.has("reportImport")) setReportImport(`${params.get("reportImport") === "saved" ? "The mission was saved as an additional draft below. Your current setup is unchanged." : "Your previous mission is ready to adjust."}${params.has("replaceMissing") ? " Some original items were deleted. Remove unavailable selections and choose replacements before starting." : ""}`); }, []);
   useEffect(() => {
     const controller = new AbortController();
     setOptionsError(null);
@@ -93,34 +103,32 @@ export function LoadoutPage() {
     }
   }
 
-  return <main className={styles.page}><section className={styles.shell} aria-label="Speaking loadout">
-    <header className={styles.topbar}>
-      <Link className={styles.logo} href="/">libitu</Link><span className={styles.topbarTitle}>Mission loadout</span>
-      <span className={styles.stagePill} aria-current="page">Stage 3 · Mission</span><AuthControls />
-    </header>
+  return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.shell} aria-label="Speaking loadout">
+
     <div className={styles.body}>
       <div className={styles.main}>
-        <Link href={returnTo} className={styles.back}><ArrowLeft size={14} aria-hidden="true" /> Back to learning</Link>
+        <DirectionLink href={returnTo} className={styles.back}><ArrowLeft size={14} aria-hidden="true" /> Back to learning</DirectionLink>
         <div className={styles.pageHeading}><div className={styles.eyebrow}>Prepare to use your English</div><h1>Mission loadout</h1><p>Choose a goal and a small set of saved language for your next conversation.</p></div>
+        {reportImport ? <p className={styles.notice} role="status">{reportImport}</p> : null}
         {!local.ready && !local.error ? <p className={styles.notice} role="status">Loading your saved loadout…</p> : null}
-        {local.pending ? <p className={styles.fieldHelp} role="status">Saving your draft on this device… Keep this page open until saving finishes.</p> : null}
-        {local.error ? <div className={styles.error} role="alert"><p>{local.error}</p><button type="button" onClick={local.retry}>Retry saving draft</button></div> : null}
-        {local.deviceDrafts.map((deviceDraft, index) => <div className={styles.notice} key={index}><strong>You also have a draft from this device.</strong><p>{deviceDraft.goal || "An untitled mission"} · {deviceDraft.selectedKeys.length} selected items. Using it replaces the setup below.</p><button type="button" disabled={busy} onClick={() => local.adopt(index)}>Use device draft{local.deviceDrafts.length > 1 ? ` ${index + 1}` : ""}</button></div>)}
+        <p className={`${styles.fieldHelp} ${styles.draftStatus}`} data-pending={local.pending} role="status" aria-hidden={!local.pending}>Saving your draft on this device… Keep this page open until saving finishes.</p>
+        {local.error ? <div className={styles.error} role="alert"><p>{local.error}</p><Button variant="secondary" size="inherit" type="button" onClick={local.retry}>Retry saving draft</Button></div> : null}
+        {local.deviceDrafts.map((deviceDraft, index) => <div className={styles.notice} key={index}><strong>You also have a saved draft.</strong><p>{deviceDraft.goal || "An untitled mission"} · {deviceDraft.selectedKeys.length} selected items. Using it replaces the setup below.</p><Button variant="secondary" size="inherit" type="button" disabled={busy} onClick={() => local.adopt(index)}>Use device draft{local.deviceDrafts.length > 1 ? ` ${index + 1}` : ""}</Button></div>)}
 
         <fieldset className={styles.section} disabled={!local.ready || busy}>
           <legend><span className={styles.stepNumber}>1</span> Define your mission</legend>
           <div className={styles.fieldGrid}>
-            <label>Scenario type<select aria-label="Scenario type" value={draft.scenarioType} onChange={(event) => change({ scenarioType: event.target.value as LoadoutDraft["scenarioType"] })}><option value="workplace">Workplace</option><option value="everyday">Everyday life</option></select></label>
-            <label>Difficulty<select aria-label="Difficulty" value={draft.difficulty} onChange={(event) => change({ difficulty: event.target.value as LoadoutDraft["difficulty"] })}><option value="guided">Guided</option><option value="standard">Standard</option><option value="challenging">Challenging</option></select></label>
-            <label className={styles.goalField}>Mission goal<textarea aria-label="Mission goal" value={draft.goal} maxLength={500} rows={3} placeholder="For example: agree on a revised project deadline" onChange={(event) => change({ goal: event.target.value })} aria-describedby="mission-goal-help" /><span id="mission-goal-help" className={styles.fieldHelp}>Describe the outcome you want. {draft.goal.length} / 500</span></label>
-            <label>Feedback level<select aria-label="Feedback level" value={draft.feedbackLevel} onChange={(event) => change({ feedbackLevel: event.target.value as LoadoutDraft["feedbackLevel"] })}><option value="light">Light</option><option value="balanced">Balanced</option><option value="detailed">Detailed</option></select></label>
+            <label>Scenario type<SelectField aria-label="Scenario type" value={draft.scenarioType} onValueChange={(value) => change({ scenarioType: value as LoadoutDraft["scenarioType"] })} options={[{ value: "workplace", label: "Workplace" }, { value: "everyday", label: "Everyday life" }]} /></label>
+            <label>Difficulty<SelectField aria-label="Difficulty" value={draft.difficulty} onValueChange={(value) => change({ difficulty: value as LoadoutDraft["difficulty"] })} options={[{ value: "guided", label: "Guided" }, { value: "standard", label: "Standard" }, { value: "challenging", label: "Challenging" }]} /></label>
+            <label className={styles.goalField}>Mission goal<Textarea aria-label="Mission goal" value={draft.goal} maxLength={500} rows={3} placeholder="For example: agree on a revised project deadline" onChange={(event) => change({ goal: event.target.value })} aria-describedby="mission-goal-help" /><span id="mission-goal-help" className={styles.fieldHelp}>Describe the outcome you want. {draft.goal.length} / 500</span></label>
+            <label>Feedback level<SelectField aria-label="Feedback level" value={draft.feedbackLevel} onValueChange={(value) => change({ feedbackLevel: value as LoadoutDraft["feedbackLevel"] })} options={[{ value: "light", label: "Light" }, { value: "balanced", label: "Balanced" }, { value: "detailed", label: "Detailed" }]} /></label>
           </div>
         </fieldset>
 
         <fieldset className={styles.section} disabled={!local.ready || busy}>
           <legend><span className={styles.stepNumber}>2</span> Choose your logic <span className={styles.optional}>Optional</span></legend>
           <p className={styles.sectionIntro}>A conversational strategy gives your mission a shape. You can also start without one.</p>
-          {optionsError ? <div className={styles.error} role="alert"><p>{optionsError}</p><button type="button" onClick={() => setOptionsAttempt((value) => value + 1)}>Retry mission options</button></div> : !options ? <p role="status">Loading conversation strategies…</p> : null}
+          {optionsError ? <div className={styles.error} role="alert"><p>{optionsError}</p><Button variant="secondary" size="inherit" type="button" onClick={() => setOptionsAttempt((value) => value + 1)}>Retry mission options</Button></div> : !options ? <p role="status">Loading conversation strategies…</p> : null}
           <div className={styles.logicGrid} role="group" aria-label="Logic template">
             {options?.logic_templates.map((logic) => <button type="button" key={logic.id} aria-pressed={draft.logicTemplateId === logic.id}
               className={`${styles.logicCard} ${draft.logicTemplateId === logic.id ? styles.selectedCard : ""}`}
@@ -129,18 +137,19 @@ export function LoadoutPage() {
               <span className={styles.logicDescription}>{logic.description}</span><span className={styles.logicFlow}>{logic.steps.join(" → ")}</span>
             </button>)}
           </div>
-          {draft.logicTemplateId ? <button className={styles.textButton} type="button" onClick={() => change({ logicTemplateId: null })}>Clear logic template</button> : null}
+          {draft.logicTemplateId ? <Button variant="ghost" size="inherit" className={styles.textButton} type="button" onClick={() => change({ logicTemplateId: null })}>Clear logic template</Button> : null}
         </fieldset>
 
-        <section className={styles.section} aria-label="Your saved corpus">
+        <section id="corpus" className={styles.section} aria-label="Your saved corpus">
+          {/* <Link href="/corpus" >Manage corpus →</Link> */}
           <h2><span className={styles.stepNumber}>3</span> Equip your language</h2>
           <p className={styles.sectionIntro}>Select at least one item. Use up to 3 structures and 5 expressions from any source.</p>
           {!corpus.ready && !corpus.error ? <p className={styles.notice} role="status">{corpus.busy && owner ? "Loading and syncing your corpus…" : "Loading your corpus…"}</p> : null}
-          {corpus.error ? <div className={styles.error} role="alert"><p>{corpus.error}</p><button type="button" onClick={corpus.retry}>Retry corpus sync</button></div> : null}
+          {corpus.error ? <div className={styles.error} role="alert"><p>{corpus.error}</p><Button variant="secondary" size="inherit" type="button" onClick={corpus.retry}>Retry corpus sync</Button></div> : null}
           {corpus.ready && !corpus.records.length ? <div className={styles.emptyLibrary}><h3>Your corpus is empty</h3><p>Save an expression or structure while learning, then come back to equip it.</p><Link href={returnTo}>Find language to save <StartIcon /></Link></div> : null}
           {corpus.records.length ? <>
-            <div className={styles.filters}><label>Search corpus<input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Expression, meaning or tag" /></label>
-              <label>Source<select aria-label="Source" value={source} onChange={(event) => setSource(event.target.value)}><option value="">All sources</option>{sourceChoices.map(([value, title]) => <option key={value} value={value}>{title}</option>)}</select></label></div>
+            <div className={styles.filters}><label>Search corpus<Input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Expression, meaning or tag" /></label>
+              <label>Source<SelectField aria-label="Source" value={source} onValueChange={setSource} options={[{ value: "", label: "All sources" }, ...sourceChoices.map(([value, label]) => ({ value, label }))]} /></label></div>
             <CorpusPicker title="Structures" records={filtered.filter((record) => record.item.kind === "structure")} structures selectedKeys={draft.selectedKeys}
               count={selected.structures.length} limit={3} disabled={!local.ready || busy} onToggle={(record) => change(toggleSelection(draft, record, corpus.records))} />
             <CorpusPicker title="Expressions" records={filtered.filter((record) => record.item.kind !== "structure")} selectedKeys={draft.selectedKeys}
@@ -152,11 +161,11 @@ export function LoadoutPage() {
         onRemove={(key) => change({ selectedKeys: draft.selectedKeys.filter((item) => item !== key) })}>
         {submitError ? <p className={styles.submitError} role="alert">{submitError}</p> : null}
         {validation && !canRetrySnapshot ? <p className={styles.validation} id="loadout-validation">{validation}</p> : null}
-        <button type="button" className={styles.startButton} disabled={blocked} onClick={() => void start()} aria-describedby={validation && !canRetrySnapshot ? "loadout-validation" : undefined}>
-          {busy ? "Saving mission…" : !owner || authError ? "Sign in to start mission" : canRetrySnapshot ? "Retry start mission" : "Start mission"}<StartIcon />
-        </button>
+        <Button variant="primary" size="inherit" type="button" className={styles.startButton} disabled={blocked} loading={busy} loadingLabel="Saving mission…" onClick={() => void start()} aria-describedby={validation && !canRetrySnapshot ? "loadout-validation" : undefined}>
+          {!owner || authError ? "Sign in to start mission" : canRetrySnapshot ? "Retry start mission" : "Start mission"}<StartIcon />
+        </Button>
         {!owner ? <p className={styles.fieldHelp}>You can prepare here. Sign in when you are ready to save your mission.</p> : null}
       </LoadoutPreview>
     </div>
-  </section></main>;
+  </section></main></>;
 }

@@ -1,3 +1,5 @@
+export const STAGE_TWO_LOCATION_CHANGED = "libitu:stage-two-location";
+
 export function readStageTwoLocation(url: URL): { segmentId: string; sentenceId: string | null } | null {
   const segmentId = url.searchParams.get("segmentId");
   return url.searchParams.get("stage") === "2" && segmentId
@@ -19,5 +21,8 @@ export function stageTwoLocation(url: URL, selection: { segmentId: string; sente
 
 export function replaceStageTwoLocation(selection: { segmentId: string; sentenceId?: string } | null): void {
   const next = stageTwoLocation(new URL(window.location.href), selection);
-  if (next.href !== window.location.href) window.history.replaceState(window.history.state, "", next);
+  if (next.href !== window.location.href) {
+    window.history.replaceState(window.history.state, "", next);
+    window.dispatchEvent(new Event(STAGE_TWO_LOCATION_CHANGED));
+  }
 }

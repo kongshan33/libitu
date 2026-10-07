@@ -1,8 +1,18 @@
 "use client";
+
+import { Button } from "@/components/ui/button";
+
+import { useState } from "react";
 import type { ServerReferenceSession } from "./use-server-reference";
 
 export function ServerReferencePanel({ session }: { session: ServerReferenceSession }) {
   const { reference, busy, error } = session;
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  async function act(command: "cancel" | "retry" | "delete") {
+    if (busy || pendingAction) return;
+    setPendingAction(command);
+    try { await session.act(command); } finally { setPendingAction(null); }
+  }
   const pending = reference?.state === "queued" || reference?.state === "processing";
   return <div className="server-reference-status">
     <p role="status">{!reference ? "Checking file reference…" : reference.state === "deleted" ? "Reference deleted."
@@ -16,12 +26,12 @@ export function ServerReferencePanel({ session }: { session: ServerReferenceSess
       <input type="file" accept="audio/*" disabled={busy} onChange={event => {
         const file = event.target.files?.[0]; if (file) void session.act(file); event.target.value = "";
       }} /></label> : null}
-    {pending ? <button type="button" disabled={busy} onClick={() => void session.act("cancel")}>Cancel preparation</button> : null}
+    {pending ? <Button variant="secondary" size="inherit" type="button" disabled={busy || !!pendingAction} loading={pendingAction === "cancel"} loadingLabel="Cancelling…" onClick={() => void act("cancel")}>Cancel preparation</Button> : null}
     {reference && ["failed", "cancelled", "partially_completed"].includes(reference.state)
-      ? <button type="button" disabled={busy} onClick={() => void session.act("retry")}>Retry preparation</button> : null}
-    {reference && reference.state !== "deleted" ? <button type="button" disabled={busy} onClick={() => void session.act("delete")}>Delete file reference</button> : null}
+      ? <Button variant="secondary" size="inherit" type="button" disabled={busy || !!pendingAction} loading={pendingAction === "retry"} loadingLabel="Requesting…" onClick={() => void act("retry")}>Retry preparation</Button> : null}
+    {reference && reference.state !== "deleted" ? <Button variant="danger" size="inherit" type="button" disabled={busy || !!pendingAction} loading={pendingAction === "delete"} loadingLabel="Deleting…" onClick={() => void act("delete")}>Delete file reference</Button> : null}
     {busy ? <p role="status">Updating reference…</p> : null}
-    {error ? <p role="alert">{error} <button type="button" onClick={session.retryConnection}>Check again</button></p> : null}
+    {error ? <p role="alert">{error} <Button variant="secondary" size="inherit" type="button" onClick={session.retryConnection}>Check again</Button></p> : null}
     <small>Private file reference · retained for up to 30 days, within the source permission period. No pronunciation score.</small>
   </div>;
 }

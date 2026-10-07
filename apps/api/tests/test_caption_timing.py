@@ -279,3 +279,17 @@ def test_track_bounded_sizes_and_strict_times():
         track([event([{"utf8": "We."}], start=True)])
     with pytest.raises(ValidationError):
         track([event([{"utf8": "x" * 240_001}])])
+
+
+def test_caption_cue_spanning_segments_preserves_spoken_word_offsets():
+    source = track([event([
+        {"utf8": ">> ", "tOffsetMs": 0},
+        {"utf8": "We ", "tOffsetMs": 100},
+        {"utf8": "[clears ", "tOffsetMs": 200},
+        {"utf8": "throat] ", "tOffsetMs": 300},
+        {"utf8": "agree.", "tOffsetMs": 500},
+    ])])
+    rows = parse_caption_track(source, "en")
+    assert rows[0].text == "We agree."
+    assert [(word.text, word.start_ms) for word in rows[0].word_timings] == [("We", 1334), ("agree.", 1734)]
+    assert caption_track_matches_text(source, "0:01\tWe agree.", "en")

@@ -87,7 +87,7 @@ pnpm exec supabase --help
 pnpm dev
 ```
 
-`pnpm dev` starts the web app plus the FastAPI server and queue worker. The worker exits cleanly when `PROCESSING_MODE=inline`.
+`pnpm dev` starts the web app, FastAPI server and configured workers, including Stage 5 feedback. The blueprint worker exits cleanly when `PROCESSING_MODE=inline`.
 
 API setup:
 
@@ -112,7 +112,7 @@ cd apps/api
 
 Web:
 
-- Current homepage renders Stage 1 from the typed FastAPI client in `apps/web/features/stage-one`.
+- The root homepage renders the landing feature when no source identity is present. Existing source/content/job/handoff URLs still render Stage 1 from the typed FastAPI client; see `design/docs/LANDING_IMPLEMENTATION.md`.
 - Stage 1 demo data remains a fixture in `apps/web/features/stage-one/data/stage-one-demo.ts`.
 - ClerkProvider, middleware, and signed-in/signed-out controls are wired in `apps/web`.
 - Shared CSS tokens are imported from `@libitu/ui/tokens.css`.
@@ -124,8 +124,9 @@ API:
 - Queue mode persists content, jobs, and blueprints through Supabase; inline mode uses deterministic in-memory storage for tests and dependency-free development.
 - Queue-mode jobs return `pending`; the separate blueprint worker fetches missing captions and calls the DeepSeek structured-analysis adapter.
 - Tests force inline deterministic processing and never use Upstash, YouTube, or a paid model.
-- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Real role-play remains planned. Persisted sessions reject turn submission with an explicit unavailable response; deterministic replies exist only in the inline fixture.
+- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Stage 4 now uses Gemini Live with server-owned WebSocket controls, durable finalized transcripts/evidence, asynchronous DeepSeek analysis and bounded teaching policies. The old REST turn fixture remains compatibility-only; real turns use the Stage 4 socket. See `design/docs/STAGE_FOUR_IMPLEMENTATION.md`.
 - Private corpus and speaking routes require a Clerk-derived identity; no client-provided owner ID is trusted.
+- Stage 5 freezes completed-session text into a durable leased feedback job and uses bounded DeepSeek assessment with validated quotes and server-calculated scores. `pnpm dev` starts its worker; separately use `pnpm --filter @libitu/api worker:feedback`. The personal learning center reads existing four-dimension summaries without requesting assessments. See `design/docs/STAGE_FIVE_CONTRACT.md` and `design/docs/PROFILE_IMPLEMENTATION.md` for version, null-score and verification boundaries.
 
 Data infrastructure:
 

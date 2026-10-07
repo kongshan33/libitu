@@ -206,26 +206,42 @@ function inspectYouTubeLanguage(expectedVideoId) {
   const captions = response?.captions?.playerCaptionsTracklistRenderer;
   const tracks = Array.isArray(captions?.captionTracks) ? captions.captionTracks : [];
   const audioTracks = Array.isArray(captions?.audioTracks) ? captions.audioTracks : [];
-  const defaultAudioTrack = audioTracks.find((track) => track?.hasDefaultTrack) ?? audioTracks[0];
+  // hasDefaultTrack describes caption defaults, not the video's audio default:
+  // dubbed videos can set it on every audio track. Honor the explicit index.
+  const indexedAudioTrack = Number.isInteger(captions?.defaultAudioTrackIndex)
+    ? audioTracks[captions.defaultAudioTrackIndex]
+    : undefined;
+  const markedAudioTracks = audioTracks.filter((track) => track?.hasDefaultTrack);
+  const defaultAudioTrack = indexedAudioTrack
+    ?? (audioTracks.length === 1 ? audioTracks[0] : markedAudioTracks.length === 1 ? markedAudioTracks[0] : undefined);
+  // YouTube audio IDs append a numeric track identifier to a language tag.
+  const audioTrackLanguage = typeof defaultAudioTrack?.audioTrackId === "string"
+    ? /^([a-z]{2,3}(?:-[a-z0-9]{2,8})*)\.\d+$/i.exec(defaultAudioTrack.audioTrackId)?.[1]
+    : undefined;
   const defaultCaptionIndex = Number.isInteger(defaultAudioTrack?.defaultCaptionTrackIndex)
     ? defaultAudioTrack.defaultCaptionTrackIndex
     : defaultAudioTrack?.captionTrackIndices?.[0];
   const defaultCaptionLanguage = Number.isInteger(defaultCaptionIndex)
     ? tracks[defaultCaptionIndex]?.languageCode
     : undefined;
-  const automaticCaptionLanguage = tracks.find((track) => track?.kind === "asr" || /^a\./i.test(track?.vssId ?? ""))?.languageCode;
+  const automaticLanguages = [...new Set(tracks
+    .filter((track) => track?.kind === "asr" || /^a\./i.test(track?.vssId ?? ""))
+    .map((track) => normalize(track?.languageCode)).filter(Boolean))];
   const uniqueCaptionLanguages = [...new Set(tracks.map((track) => normalize(track?.languageCode)).filter(Boolean))];
   const candidates = [
     [response?.microformat?.playerMicroformatRenderer?.defaultAudioLanguage, "default-audio"],
     [response?.videoDetails?.defaultAudioLanguage, "video-details"],
     [document.querySelector('meta[itemprop="inLanguage"]')?.getAttribute("content"), "page-metadata"],
-    [automaticCaptionLanguage, "automatic-caption"],
-    [defaultCaptionLanguage, "default-caption"],
+    [audioTrackLanguage, "audio-track"],
+    [automaticLanguages.length === 1 ? automaticLanguages[0] : undefined, "automatic-caption"],
+    // Several ASR languages may belong to dubbed audio. A preferred caption
+    // alone cannot establish which language the video speaks.
+    [automaticLanguages.length <= 1 ? defaultCaptionLanguage : undefined, "default-caption"],
     [uniqueCaptionLanguages.length === 1 ? uniqueCaptionLanguages[0] : undefined, "caption-track"]
   ];
   for (const [value, source] of candidates) {
     const languageCode = normalize(value);
-    if (languageCode) return { languageCode, source };
+    if (languageCode && /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/.test(languageCode)) return { languageCode, source };
   }
   return undefined;
 }

@@ -1,8 +1,10 @@
 "use client";
 
+import { Button, ButtonLink } from "@/components/ui/button";
+
 import { Show, UserButton, useClerk } from "@clerk/nextjs";
 
-export function AuthControls() {
+export function AuthControls({ showProfileLink = true, buttonSize = "inherit" }: { showProfileLink?: boolean; buttonSize?: "sm" | "inherit" } = {}) {
   const clerk = useClerk();
 
   function signIn() {
@@ -18,10 +20,11 @@ export function AuthControls() {
   return (
     <div className="auth-controls" aria-label="Account">
       <Show when="signed-out">
-        <button className="auth-button" type="button" onClick={signIn}>Sign in</button>
-        <button className="auth-button primary" type="button" onClick={signUp}>Create account</button>
+        <Button variant="secondary" size={buttonSize} className="auth-button" type="button" onClick={signIn}>Sign in</Button>
+        <Button variant="primary" size={buttonSize} className="auth-button primary" type="button" onClick={signUp}>Create account</Button>
       </Show>
       <Show when="signed-in">
+        {showProfileLink ? <ButtonLink variant="secondary" size={buttonSize} className="auth-button" style={{ textDecoration: "none" }} href="/profile">My learning</ButtonLink> : null}
         <UserButton />
       </Show>
     </div>

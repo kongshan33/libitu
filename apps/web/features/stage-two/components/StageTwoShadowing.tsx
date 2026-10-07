@@ -1,5 +1,9 @@
 "use client";
 
+import { DirectionButton } from "@/components/ui/direction-button";
+
+import { Button } from "@/components/ui/button";
+
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, Repeat2 } from "lucide-react";
 import { LoadoutLink } from "../../navigation/LoadoutLink";
@@ -407,10 +411,10 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
           <h1>{segment.title}</h1>
           <p>{title} · {clock(segment.startMs ?? 0)} – {clock(segment.endMs ?? 0)}</p>
         </div>
-        <LoadoutLink className="stage-two-shadow-back">Open loadout</LoadoutLink>
-        <button className="stage-two-shadow-back" type="button" onClick={leave}>
+        {/* <LoadoutLink className="stage-two-shadow-back">Open loadout</LoadoutLink> */}
+        <DirectionButton variant="secondary" className="stage-two-shadow-back" type="button" onClick={leave}>
           <ArrowLeft aria-hidden="true" /> Back to segments
-        </button>
+        </DirectionButton>
       </header>
       <div className="stage-two-practice-layout">
         <nav className="stage-two-sentences" aria-label="Sentences in this segment">
@@ -443,13 +447,13 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
         </nav>
         <div className="stage-two-practice-main">
           <div className="stage-two-sentence-navigation">
-            <button type="button" aria-label="Previous sentence" disabled={selectedIndex <= 0} onClick={() => navigate(-1)}>
+            <DirectionButton variant="secondary" type="button" aria-label="Previous sentence" disabled={selectedIndex <= 0} onClick={() => navigate(-1)}>
               <ChevronLeft aria-hidden="true" /> Previous
-            </button>
+            </DirectionButton>
             <span role="status">{selected ? `Sentence ${selectedIndex + 1} of ${sentences.length}` : "Segment playback"}</span>
-            <button type="button" aria-label="Next sentence" disabled={selectedIndex < 0 || selectedIndex >= sentences.length - 1} onClick={() => navigate(1)}>
+            <DirectionButton variant="secondary" type="button" aria-label="Next sentence" disabled={selectedIndex < 0 || selectedIndex >= sentences.length - 1} onClick={() => navigate(1)}>
               Next <ChevronRight aria-hidden="true" />
-            </button>
+            </DirectionButton>
           </div>
           <div className="stage-two-sentence-focus">
             <span className="section-label">{selected ? `~${clock(selected.startMs)} – ${clock(selected.endMs)}` : "Listen to this segment"}</span>
@@ -458,7 +462,7 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
                 timingSource={selected.timingSource} wordTimings={selected.wordTimings} clock={wordClock} />
             ) : segment.sourceText ?? segment.summary}</p>
             <small>Sentence timings are approximate. Listen for the full phrase around each boundary.</small>
-            <WordTimingNotice rows={timingRows} concealed={concealPrompt} />
+            {/* <WordTimingNotice rows={timingRows} concealed={concealPrompt} /> */}
             {timingRecovery}
           </div>
           <section className="stage-two-practice-media" aria-label="Listen and record">
@@ -490,12 +494,12 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
               <div className="stage-two-playback-controls stage-two-operation-bar" aria-label="Practice playback and recording controls">
                 <div className="stage-two-operation-reference">
                   <span className="stage-two-operation-label">Reference</span>
-                  <button className="stage-two-play" type="button"
+                  <Button variant="soft" size="inherit" shape="pill" className="stage-two-play" type="button"
                     aria-label={referencePlaying ? "Pause" : scope === "segment" || !selected ? "Play segment" : "Play sentence"}
                     disabled={(cloud.available ? !cloud.audioUrl : !playable) || recording.isBusy() || (referenceBusy && !referencePlaying)} onClick={togglePlayback}>
                     {referencePlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
                     {referencePlaying ? "Pause" : "Play reference"}
-                  </button>
+                  </Button>
                 </div>
                 <SentenceRecordingPanel compact recording={{ ...recording, start: startRecording }}
                   disabled={!outbox?.canRecord() || Boolean(captured.entry?.pending && !captured.row)} sentenceNumber={selected ? selectedIndex + 1 : null} />
@@ -525,10 +529,10 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
                   {activeBufferedReference.state.phase === "enabled" && selected && selected.endMs - selected.startMs <= 60_000
                     && !bufferPreparing && !analysisPending && (!features || features.quality.status !== "usable" || analysisError
                       || (["error", "unreliable"].includes(referenceAnalysis.alignment.phase) && !referenceAnalysis.alignment.canRetry))
-                    ? <button type="button" onClick={prepareBufferedSentence}>Prepare this sentence at 1×</button> : null}
-                  {bufferPreparing ? <button type="button" onClick={pauseReference}>Cancel preparation</button> : null}
+                    ? <Button variant="soft" size="inherit" type="button" onClick={prepareBufferedSentence}>Prepare this sentence at 1×</Button> : null}
+                  {bufferPreparing ? <Button variant="secondary" size="inherit" type="button" onClick={pauseReference}>Cancel preparation</Button> : null}
                   {analysisError || bufferedAnalysis.error ? <p role="alert">{analysisError ?? bufferedAnalysis.error}
-                    <button type="button" onClick={() => { bufferedAnalysis.retry(); retry(); }}>Retry reference analysis</button></p> : null}
+                    <Button variant="secondary" size="inherit" type="button" onClick={() => { bufferedAnalysis.retry(); retry(); }}>Retry reference analysis</Button></p> : null}
                 </BufferedReferencePanel> : <ReferenceAudioPanel compact capture={reference} playable={playable && Boolean(selected)} eligible={referenceEligible}
                   pending={analysisPending} features={features} analysisError={analysisError} />}
                 {!cloud.available ? <div className="capture-analysis-status" aria-label="Browser reference analysis">
@@ -537,9 +541,9 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
                   <p>Uploads the captured sentence for word and pitch analysis. Private reference audio is kept for up to 30 days or until deleted.</p>
                   <p role="status">{captured.entry?.pending?'Preparing reference upload…':captured.row?.state==='completed'?'Reference analysis ready.':captured.row?.state==='queued'||captured.row?.state==='processing'?'Analyzing reference words and pitch…':captured.row?.state==='deleted'?'Reference deleted.':captured.row?.state==='partially_completed'?'Reference needs review; available measurements are shown.':captured.row?.state==='awaiting_upload'?'Reference upload incomplete. Keep this page open and retry.':captured.row?.state==='failed'||captured.row?.state==='cancelled'?'Reference analysis stopped. Retry analysis.':'Play the sentence to capture its reference audio.'}</p>
                   {captured.entry?.error?<p role="alert">{captured.entry.error}</p>:null}
-                  {captured.entry?.error||captured.row&&['failed','cancelled','partially_completed','awaiting_upload'].includes(captured.row.state)?<button onClick={captured.retry}>Retry reference analysis</button>:null}
-                  {captured.row?.state==='deleted'?<button onClick={captured.retry}>Prepare a new reference</button>:null}
-                  {captured.row&&captured.row.state!=='deleted'?<button onClick={()=>void captured.remove()?.then(()=>setReferenceRevision(v=>v+1))}>Delete captured reference</button>:null}
+                  {captured.entry?.error||captured.row&&['failed','cancelled','partially_completed','awaiting_upload'].includes(captured.row.state)?<Button variant="secondary" size="inherit" onClick={captured.retry}>Retry reference analysis</Button>:null}
+                  {captured.row?.state==='deleted'?<Button variant="secondary" size="inherit" onClick={captured.retry}>Prepare a new reference</Button>:null}
+                  {captured.row&&captured.row.state!=='deleted'?<Button variant="danger" size="inherit" onClick={()=>void captured.remove()?.then(()=>setReferenceRevision(v=>v+1))}>Delete captured reference</Button>:null}
                 </div>:null}
               </div>
               <div className="stage-two-operation-footer">
@@ -567,8 +571,8 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
           </section>
           <div ref={layerWorkspaceRef}>
             <PracticeAnalysisPanel key={analysisAttempt ?? "none"} api={persistence?.api} attemptId={analysisAttempt} {...savedAnalysis} />
-            {soundGuide.error ? <p role="alert">{soundGuide.error} <button onClick={soundGuide.retry}>Retry sound guide</button></p> : null}
-            {workspaceUserAnalysis.error ? <p role="alert">{workspaceUserAnalysis.error} <button onClick={workspaceUserAnalysis.retry}>Retry analysis</button></p> : null}
+            {soundGuide.error ? <p role="alert">{soundGuide.error} <Button variant="secondary" size="inherit" onClick={soundGuide.retry}>Retry sound guide</Button></p> : null}
+            {workspaceUserAnalysis.error ? <p role="alert">{workspaceUserAnalysis.error} <Button variant="secondary" size="inherit" onClick={workspaceUserAnalysis.retry}>Retry analysis</Button></p> : null}
             <PracticeLayers active={layer} onChange={setLayer}
               sound={<LayerComparison key={`${selected?.id}:${analysisAttempt}:sound`} layer="sound" view={comparison} concealed={concealPrompt} onConcealedChange={setTextHidden}/>}
               rhythm={<LayerComparison key={`${selected?.id}:${analysisAttempt}:rhythm`} layer="rhythm" view={comparison}/>}
