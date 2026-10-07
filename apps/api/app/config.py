@@ -45,6 +45,21 @@ class Settings(BaseSettings):
     deepseek_max_input_chars: int = 240000
     deepseek_max_output_tokens: int = 32000
 
+    # Stage 4 has separate, bounded requests; these never use Stage 1 token budgets.
+    openai_api_key: str | None = None
+    speaking_realtime_provider: Literal["gemini", "openai"] = "gemini"
+    gemini_api_key: str | None = None
+    gemini_live_model: str = "gemini-3.8-live"
+    gemini_live_voice: str = "Kore"
+    openai_realtime_model: str = "gpt-realtime"
+    openai_realtime_voice: str = "marin"
+    openai_transcription_model: str = "gpt-4o-mini-transcribe"
+    speaking_max_connection_seconds: int = Field(default=1200, ge=60, le=1800)
+    speaking_max_turns: int = Field(default=100, ge=1, le=100)
+    speaking_idle_seconds: int = Field(default=180, ge=30, le=600)
+    speaking_lease_seconds: int = Field(default=60, ge=20, le=120)
+    speaking_max_output_tokens: int = Field(default=450, ge=64, le=1000)
+
     punctuation_model_path: str | None = None
     punctuation_bpe_vocab_path: str | None = None
     punctuation_num_threads: int = Field(default=1, ge=1, le=8)

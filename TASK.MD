@@ -4,23 +4,40 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-09-30
+  updated: 2026-10-01
 ```
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
-## Stage 4 real-time conversation — planned 2026-09-30
+## Stage 5 evidence-backed report — implemented locally 2026-10-01
 
-The user selected continuous listening, automatic turn-taking and AI interruption for the first Stage 4 delivery. Text input remains in the same session. [Design, contracts and task dependencies](design/docs/STAGE_FOUR_IMPLEMENTATION_PLAN.md) are an implementation proposal, not delivered functionality.
+The user accepted the [four-dimension report contract](design/docs/STAGE_FIVE_CONTRACT.md).
 
-- [ ] S4-00: Validate one real-time provider; freeze canonical events, turn/evidence fields, interruption and end semantics.
-- [ ] S4-F1/F2: Build the shared Voice/Chat workspace and real-time media controller with accessible responsive controls.
-- [ ] S4-B1/B2: Add durable runtime/turn/event records, ownership and generation fencing; integrate the real-time provider and role prompt.
-- [ ] S4-F3/B3: Integrate text with voice, final transcripts, interruption, reconnect, refresh recovery and explicit connection takeover.
-- [ ] S4-F4/B4: Add traceable selected-item use, logic/hints, transcript corrections, reliable ending and saved review.
-- [ ] S4-Q1: Verify the complete real-provider/device flow, root checks and Loadout/Shadow regressions; record measured latency and cost.
+- [x] Freeze nullable scores, rubric, transfer denominator, final-user references and report lifecycle.
+- [x] Persist immutable assessment input and leased, bounded report jobs with recovery and deletion fencing.
+- [x] Evaluate the full final transcript with validated quotations and deterministic score aggregation.
+- [x] Deliver responsive Analytics, source evidence, real suggestion saves and retry/adjust mission actions.
+- [x] Verify API/worker/database and browser end → report → review/retry recovery; distinguish fixture identity from real OAuth.
+- [ ] Independently calibrate model judgments with human-reviewed conversations before claiming assessment accuracy.
 
-No Stage 4 product code, provider configuration or database migration was applied during this analysis. Stage 5 feedback remains separately queued under Milestone 5.
+Verification: root lint/build/test passed (711 API + 282 web + 112 extension = 1,105 passing tests; two optional acoustic tests skipped). The feedback migration and real Supabase rollback tests passed. A real bounded DeepSeek assessment produced all four dimensions with 18/18 exact quotations validated; synthetic records were removed. Analytics and Stage 4 browser checks passed at 1440/768/390 px. See the linked contract for provider, fixture-identity and human-calibration boundaries.
+
+## Stage 4 real-time conversation — implemented locally 2026-10-01
+
+[Current implementation and verification](design/docs/STAGE_FOUR_IMPLEMENTATION.md) supersede the earlier proposal. The user selected Gemini Live for the current provider.
+
+- [x] S4-00: Validate real Gemini Live text/audio and freeze normalized runtime/message/evidence contracts.
+- [x] S4-F1/F2: Shared Voice/Chat workspace, continuous media controller, responsive controls and reduced motion.
+- [x] S4-B1/B2: Durable versioned session documents, owner/lease fencing, real provider and role prompt.
+- [x] S4-F3/B3: Text with voice, VAD/transcript boundaries, interrupt, manual reconnect, refresh recovery and explicit takeover.
+- [x] S4-F4/B4: Traceable language observations, bounded hints and next-response policy, end/read-only review/delete. Provider transcript revisions are supported; manual editing and automatic logic-stage detection are not delivered.
+- [x] S4-Q1-local: Root checks; real Gemini/DeepSeek/Supabase synthetic text and voice smoke; responsive Chrome capture/playback and complete Loadout/Shadow regression.
+- [ ] S4-Q1-release: Physical-device/network/latency/cost qualification, complete live post-interruption turn acceptance, account-wide budgets, production supervision and real OAuth end-to-end acceptance.
+- [ ] S4-follow-up: User transcript correction and evidence re-evaluation, if included in the next increment.
+
+Verification: root lint/build/test passed (603 API + 267 web + 112 extension = 982 tests). Real Gemini interruption was observed; the bounded interruption probe did not verify the subsequent complete user/reply turn. See the implementation document for browser/provider test boundaries.
+
+Stage 5 final assessment is delivered in the increment above. Stage 4 observations remain separate from its final report; no mastery score is fabricated.
 
 ## Sound prototype and workspace-order correction — 2026-09-29
 
@@ -367,17 +384,17 @@ Verification notes:
 
 ## Milestone 5: complete corpus and speaking
 
-Loadout increment (2026-09-30): implements the [fixed contract](design/docs/LOADOUT_IMPLEMENTATION.md), independent setup/preview page, shared real corpus selection, account-bound local drafts, 3 structure / 5 shared chunk+idiom limits with at least one item, authenticated idempotent session creation and refresh recovery. Pending Shadow saves survive client-side navigation. Actual AI role-play remains the following increment.
+Loadout increment (2026-09-30): implements the [fixed contract](design/docs/LOADOUT_IMPLEMENTATION.md), independent setup/preview page, shared real corpus selection, account-bound local drafts, 3 structure / 5 shared chunk+idiom limits with at least one item, authenticated idempotent session creation and refresh recovery. Pending Shadow saves survive client-side navigation. The 2026-10-01 Stage 4 increment above adds real AI role-play, turn persistence and traceable usage observations.
 
 - [x] Connect Stage 1 corpus list, create, and delete with local/account persistence
 - [x] Open corpus cards with full source context and persist on-demand analysis details
 - [ ] Add the cross-content corpus library and saved-item editing interface
 - [x] Build speaking loadout selection limits
 - [x] Persist owner-checked, ordered loadout snapshots atomically with idempotent creation and authenticated recovery
-- [ ] Implement the role-play adapter and turn persistence
-- [ ] Detect selected-item use with transparent evidence
-- [ ] Generate four-dimension session feedback with supporting turns
-- [ ] Add end-to-end coverage for save, loadout, role-play, and feedback
+- [x] Implement the role-play adapter and turn persistence
+- [x] Detect selected-item use with transparent evidence
+- [x] Generate four-dimension session feedback with supporting turns
+- [x] Add end-to-end browser coverage for save, loadout, role-play and feedback (fixture source/auth/provider; real OAuth remains separate)
 
 Acceptance criteria:
 
@@ -429,7 +446,7 @@ Partial verification notes:
 - [ ] Product analytics and privacy-reviewed event tracking
 - [ ] Deployment, observability, backups, and production runbooks
 
-Do not add spaced repetition or social features unless a new accepted decision changes MVP scope. Real-time voice role-play is now accepted for Stage 4 under the 2026-09-30 decision, with implementation queued above. Server-side practice media follows the file-reference and learner-persistence decisions; it does not authorize unrestricted YouTube downloading.
+Do not add spaced repetition or social features unless a new accepted decision changes MVP scope. Real-time voice role-play was accepted under the 2026-09-30 decision and is implemented locally in Stage 4 above. Server-side practice media follows the file-reference and learner-persistence decisions; it does not authorize unrestricted YouTube downloading.
 
 Stage 2 Milestone 1 acceptance and verification:
 

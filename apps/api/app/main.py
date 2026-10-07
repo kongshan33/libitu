@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from app.config import get_settings
 
 from app.routers import blueprints, content, corpus, health, jobs, practice, practice_analysis, references, speaking
 
@@ -16,7 +17,7 @@ app.add_middleware(GZipMiddleware, minimum_size=2048, compresslevel=3)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=get_settings().authorized_parties,
     allow_origin_regex=r"^chrome-extension://.*$",
     allow_credentials=True,
     allow_methods=["*"],

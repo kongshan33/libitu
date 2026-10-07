@@ -188,11 +188,12 @@ export async function installLoadoutFixture(page, {
         }
         return route.fulfill({ status: 201, json: session, headers });
       }
-      const match = url.pathname.match(/^\/api\/speaking\/sessions\/([^/]+)$/);
+      const match = url.pathname.match(/^\/api\/speaking\/sessions\/([^/]+)(\/workspace)?$/);
       if (match && request.method() === "GET") {
         state.sessionReads.push({ owner, id: match[1] });
         const session = state.sessions.get(match[1]);
-        return route.fulfill(session?.user_id === owner ? { json: session, headers }
+        const result = match[2] ? { session, version: 0, runtime: null, messages: [], evidence: [], learning: [], policy: null, analysis_status: "idle", hint: null } : session;
+        return route.fulfill(session?.user_id === owner ? { json: result, headers }
           : { status: 404, json: { detail: "Session not found." }, headers });
       }
       throw new Error(`Unexpected fixture API request: ${request.method()} ${url.pathname}`);

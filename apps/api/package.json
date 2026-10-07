@@ -6,6 +6,8 @@
     "dev": "pnpm run \"/^dev:.*/\"",
     "dev:server": "uv run uvicorn app.main:app --reload",
     "dev:worker": "uv run python -m app.workers.blueprint_worker",
+    "dev:feedback-worker": "uv run python -m app.workers.speaking_feedback_worker",
+    "worker:feedback": "uv run python -m app.workers.speaking_feedback_worker",
     "worker": "uv run python -m app.workers.blueprint_worker",
     "setup:punctuation": "uv run python -m scripts.download_punctuation_model",
     "benchmark:acoustics": ".venv/bin/python -m scripts.acoustic_benchmark",

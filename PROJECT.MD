@@ -4,7 +4,7 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-09-30
+  updated: 2026-10-01
 ```
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
@@ -19,9 +19,11 @@ Stage 2 browser-captured references can now be uploaded for private server ASR/M
 
 ## Repository status
 
-Stage 4 scope (2026-09-30): the user chose continuous real-time voice, automatic turn-taking and AI interruption for the first role-play delivery, with text input in the same conversation. [Design and implementation tasks](design/docs/STAGE_FOUR_IMPLEMENTATION_PLAN.md) are documented; provider selection and all Stage 4 product integration remain pending. The saved session page described below is still the actual implementation.
+Stage 5 (2026-10-01): completed missions now open `/speaking/[sessionId]/analytics`. Four-dimension reports use a frozen transcript, exact quoted evidence, deterministic score aggregation and a durable DeepSeek assessment worker. Reports recover after refresh; selected-language observations distinguish prompted use, uncertain data stays unscored, up to three conservative refactors can be saved to corpus, and retry/adjust actions preserve the previous mission and existing drafts. The feedback migration is applied; real provider/storage and responsive browser checks passed. Human rubric calibration and production qualification remain pending. See [contract, operation and verification](design/docs/STAGE_FIVE_CONTRACT.md).
 
-Speaking loadout (2026-09-30): `/loadout` now uses the shared real corpus with scenario, goal, difficulty, feedback and optional logic settings. Chunks/idioms share five expression slots, structures have three, and at least one item is required. Account-bound browser drafts survive refresh and login. Authenticated creation persists ordered language snapshots atomically through Supabase, with idempotent retries and an owner-scoped session preparation page. The migration is applied; real database/RPC/API snapshot, ownership and concurrent-retry checks passed with isolated synthetic accounts. Real role-play, turn persistence and feedback remain planned. See [contract and verification](design/docs/LOADOUT_IMPLEMENTATION.md).
+Stage 4 (2026-10-01): `/speaking/[sessionId]` now provides the shared Voice/Chat workspace, continuous Gemini Live voice with automatic turns and interruption, text input, recoverable transcripts, selected-language evidence, asynchronous DeepSeek analysis and a deterministic next-response teaching controller. Owner-scoped Supabase CAS storage, one-use runtime tickets, takeover/end/delete fencing and interrupted-playback recovery are implemented; the migration is applied. Real text/voice + analyzer + database smoke checks and responsive browser checks passed. Stage 5 reports are implemented above; manual transcript editing and production performance qualification remain separate. See [implementation, configuration and verification limits](design/docs/STAGE_FOUR_IMPLEMENTATION.md).
+
+Speaking loadout (2026-09-30): `/loadout` now uses the shared real corpus with scenario, goal, difficulty, feedback and optional logic settings. Chunks/idioms share five expression slots, structures have three, and at least one item is required. Account-bound browser drafts survive refresh and login. Authenticated creation persists ordered language snapshots atomically through Supabase, with idempotent retries and an owner-scoped session preparation page. The migration is applied; real database/RPC/API snapshot, ownership and concurrent-retry checks passed with isolated synthetic accounts. The Stage 4 increment adds real role-play and turn persistence; Stage 5 above adds final assessment. See [contract and verification](design/docs/LOADOUT_IMPLEMENTATION.md).
 
 Sound/layout correction (2026-09-29): video and practice controls remain above the three-layer workspace. Sound now restores all ten prototype phenomenon filters, two marked text flows, exact-occurrence highlights, linking arcs, inline badges, hover/focus dictionary IPA and the color legend. Both rows support hide/individual reveal. Five existing rule types supply possible-reading targets; vowel/pause timings remain measured data. Additional acoustic realization detectors are still unavailable.
 
@@ -52,14 +54,14 @@ verification target that local setup, not a deployed production website.
 | Area | Current state | Next meaningful outcome |
 |---|---|---|
 | Monorepo | pnpm workspace and Turborepo configured | Keep root commands green |
-| Web | Stage 1 corpus persistence plus independent Loadout selection, browser drafts and saved-session recovery; pending Shadow saves survive client-side route changes | Add saved-item editing and real role-play |
+| Web | Stage 1 corpus persistence, Loadout drafts, Stage 4 Voice/Chat and Stage 5 evidence-linked reports with retry/adjust actions; pending Shadow saves survive client-side route changes | Add saved-item editing and complete real OAuth acceptance |
 | API | FastAPI routes, Clerk identity, recoverable queued blueprint workers, local subtitle punctuation, stage timing, YouTube fallback, and live DeepSeek analysis | Add rate limits and external metrics export |
 | Extension | YouTube player-control button and toolbar action verify English video metadata, perform a bounded passive caption preflight, then open Stage 1; session handoff preserves browser captions | Harden caption acquisition across YouTube UI variants and add playback controls |
 | Shared packages | Types, pure core helpers, UI tokens, config | Add only contracts used by two or more apps |
 | Auth | Clerk UI, Next.js middleware, and FastAPI identity verification are configured locally | Finish hosted Clerk-Supabase trust setup and add real-token integration tests |
-| Database | Supabase persists content, jobs, blueprints, authenticated corpus, cached corpus details and owner-scoped speaking loadout snapshots | Add real speaking turns and feedback persistence |
+| Database | Supabase persists content, jobs, blueprints, corpus, speaking snapshots/transcripts/evidence and leased immutable-input assessment reports | Qualify operational recovery, retention and production supervision |
 | Cache | Upstash queue, versioned blueprint keys, pending-job recovery, bounded requests, worker heartbeat, and locks implemented | Add rate limiting and a durable retry scheduler |
-| AI | Source-aware deterministic caption cleanup and sherpa-onnx format English subtitles locally; DeepSeek V4 Flash produces bounded, evidence-checked `mvp-v9` semantic blueprints with CEFR-ranked chunks, idioms, and structures | Add quality fixtures, evals, and speaking adapters |
+| AI | Local caption cleanup, DeepSeek semantic blueprints, Gemini Live conversation/teaching control and bounded DeepSeek session assessment with validated quotes | Calibrate conversation judgments against independent human-reviewed examples |
 
 ## Product references
 

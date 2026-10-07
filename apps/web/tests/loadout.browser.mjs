@@ -166,6 +166,8 @@ try {
       await waitForSelected(page, 8);
       await page.getByRole("button", { name: /^(Retry start mission|Start mission)$/ }).click();
       await page.waitForURL(/\/speaking\/[a-f0-9-]+/);
+      await page.getByRole("heading", { name: first.goal, exact: true }).waitFor();
+      if (viewport.width <= 800) await page.getByRole("button", { name: "Loadout", exact: true }).click();
       await page.getByText(structures[0].item.text, { exact: true }).waitFor();
       assert.equal(state.creates.length, 2);
       assert.deepEqual(state.creates[1].input, first, "refresh and retry preserve the entire submission including client_id");
@@ -174,10 +176,12 @@ try {
       const readsBefore = state.sessionReads.length;
       state.cloud.get(loadoutOwner).clear();
       await page.reload({ waitUntil: "domcontentloaded" });
+      await page.getByRole("heading", { name: first.goal, exact: true }).waitFor();
+      if (viewport.width <= 800) await page.getByRole("button", { name: "Loadout", exact: true }).click();
       await page.getByText(structures[0].item.text, { exact: true }).waitFor();
       assert.ok(state.sessionReads.length > readsBefore, "session refresh reads its server snapshot");
-      assert.ok((await page.locator("main").innerText()).match(/role.?play.*(not|available|yet)|not.*role.?play/i),
-        "preparation page explains the availability of role-play");
+      assert.equal(await page.getByRole("button", { name: "Start conversation", exact: true }).isVisible(), true,
+        "saved mission opens the real conversation workspace without starting a connection");
       await checkLayout(page, `session-${viewport.width}`);
       await page.evaluate(() => window.__setLoadoutUser("loadout-browser-b"));
       await page.getByText("Session not found.", { exact: true }).waitFor();

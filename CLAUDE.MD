@@ -124,8 +124,9 @@ API:
 - Queue mode persists content, jobs, and blueprints through Supabase; inline mode uses deterministic in-memory storage for tests and dependency-free development.
 - Queue-mode jobs return `pending`; the separate blueprint worker fetches missing captions and calls the DeepSeek structured-analysis adapter.
 - Tests force inline deterministic processing and never use Upstash, YouTube, or a paid model.
-- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Real role-play remains planned. Persisted sessions reject turn submission with an explicit unavailable response; deterministic replies exist only in the inline fixture.
+- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Stage 4 now uses Gemini Live with server-owned WebSocket controls, durable finalized transcripts/evidence, asynchronous DeepSeek analysis and bounded teaching policies. The old REST turn fixture remains compatibility-only; real turns use the Stage 4 socket. See `design/docs/STAGE_FOUR_IMPLEMENTATION.md`.
 - Private corpus and speaking routes require a Clerk-derived identity; no client-provided owner ID is trusted.
+- Stage 5 freezes completed-session text into a durable leased feedback job and uses bounded DeepSeek assessment with validated quotes and server-calculated scores. `pnpm dev` starts its worker; separately use `pnpm --filter @libitu/api worker:feedback`. See `design/docs/STAGE_FIVE_CONTRACT.md` for nullable scores, retry, source and verification boundaries.
 
 Data infrastructure:
 

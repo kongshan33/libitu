@@ -28,11 +28,12 @@ export function LoadoutPage() {
   const [optionsAttempt, setOptionsAttempt] = useState(0);
   const [returnTo, setReturnTo] = useState("/");
   const [query, setQuery] = useState("");
+  const [reportImport, setReportImport] = useState<string | null>(null);
   const [source, setSource] = useState("");
   const [submission, setSubmission] = useState<{ owner: string | null; busy: boolean; error: string | null; authError: boolean }>({ owner: null, busy: false, error: null, authError: false });
   const inFlight = useRef<AbortController | null>(null);
 
-  useEffect(() => { setReturnTo(safeReturnPath(new URL(window.location.href).searchParams.get("returnTo"))); }, []);
+  useEffect(() => { const params = new URL(window.location.href).searchParams; setReturnTo(safeReturnPath(params.get("returnTo"))); if (params.has("reportImport")) setReportImport(`${params.get("reportImport") === "saved" ? "The mission was saved as an additional draft below. Your current setup is unchanged." : "Your previous mission is ready to adjust."}${params.has("replaceMissing") ? " Some original items were deleted. Remove unavailable selections and choose replacements before starting." : ""}`); }, []);
   useEffect(() => {
     const controller = new AbortController();
     setOptionsError(null);
@@ -102,10 +103,11 @@ export function LoadoutPage() {
       <div className={styles.main}>
         <Link href={returnTo} className={styles.back}><ArrowLeft size={14} aria-hidden="true" /> Back to learning</Link>
         <div className={styles.pageHeading}><div className={styles.eyebrow}>Prepare to use your English</div><h1>Mission loadout</h1><p>Choose a goal and a small set of saved language for your next conversation.</p></div>
+        {reportImport ? <p className={styles.notice} role="status">{reportImport}</p> : null}
         {!local.ready && !local.error ? <p className={styles.notice} role="status">Loading your saved loadout…</p> : null}
         {local.pending ? <p className={styles.fieldHelp} role="status">Saving your draft on this device… Keep this page open until saving finishes.</p> : null}
         {local.error ? <div className={styles.error} role="alert"><p>{local.error}</p><button type="button" onClick={local.retry}>Retry saving draft</button></div> : null}
-        {local.deviceDrafts.map((deviceDraft, index) => <div className={styles.notice} key={index}><strong>You also have a draft from this device.</strong><p>{deviceDraft.goal || "An untitled mission"} · {deviceDraft.selectedKeys.length} selected items. Using it replaces the setup below.</p><button type="button" disabled={busy} onClick={() => local.adopt(index)}>Use device draft{local.deviceDrafts.length > 1 ? ` ${index + 1}` : ""}</button></div>)}
+        {local.deviceDrafts.map((deviceDraft, index) => <div className={styles.notice} key={index}><strong>You also have a saved draft.</strong><p>{deviceDraft.goal || "An untitled mission"} · {deviceDraft.selectedKeys.length} selected items. Using it replaces the setup below.</p><button type="button" disabled={busy} onClick={() => local.adopt(index)}>Use device draft{local.deviceDrafts.length > 1 ? ` ${index + 1}` : ""}</button></div>)}
 
         <fieldset className={styles.section} disabled={!local.ready || busy}>
           <legend><span className={styles.stepNumber}>1</span> Define your mission</legend>

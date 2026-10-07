@@ -85,7 +85,7 @@ Exit when valid captions produce stable blueprint data and cache hits avoid repe
 
 ## Phase 5: close the learning loop
 
-The next Stage 4 delivery now includes continuous real-time voice, automatic turn-taking and AI interruption, as explicitly selected by the user on 2026-09-30. First validate the provider and event contract, then implement the shared Voice/Chat workspace and server runtime in parallel. This is planned work; see [task dependencies and acceptance](STAGE_FOUR_IMPLEMENTATION_PLAN.md).
+Stages 4 and 5 were implemented locally on 2026-10-01: Gemini Live conversation, durable transcripts/evidence, asynchronous teaching control, then frozen-input four-dimension reports with quoted evidence and retry/adjust actions. Next qualify devices/network/cost, real OAuth and assessment quality. See [Stage 4 boundaries](STAGE_FOUR_IMPLEMENTATION.md) and [Stage 5 implementation and verification](STAGE_FIVE_CONTRACT.md).
 
 2026-09-30 status: speaking loadout, account-bound browser drafts, durable session creation and the recoverable session preparation page are implemented. Full corpus editing, real role-play, turn history, selected-item detection and feedback remain pending. Loadout completion alone does not satisfy the phase exit criterion. See [the contract and validation](LOADOUT_IMPLEMENTATION.md).
 

@@ -166,3 +166,19 @@ export function prepareSubmission(draft: LoadoutDraft, records: SavedCorpusRecor
     corpus_item_ids: draft.selectedKeys.map((key) => byKey.get(key)!.serverId!)
   } } };
 }
+
+/** Explicit report import preserves existing work and uncertain create requests. */
+export function importMissionDraft(storage: DraftStorage, owner: string, draft: LoadoutDraft, context: MutationContext = {}): Promise<"active" | "saved" | null> {
+  return mutateDraft(() => {
+    const envelope = readDraftEnvelope(storage);
+    const previous = accountOf(envelope, owner);
+    const imported = { ...draft, submission: undefined };
+    const hasDraft = previous && (previous.draft.goal.trim() || previous.draft.selectedKeys.length || previous.draft.submission);
+    if (hasDraft) {
+      const alreadySaved = previous.deviceDrafts.some(value => draftSignature(value) === draftSignature(imported));
+      envelope.accounts = { ...envelope.accounts, [owner]: { ...previous, deviceDrafts: alreadySaved ? previous.deviceDrafts : [...previous.deviceDrafts, imported] } };
+    } else envelope.accounts = { ...envelope.accounts, [owner]: { draft: imported, deviceDrafts: previous?.deviceDrafts ?? [] } };
+    storage.setItem(LOADOUT_STORAGE_KEY, JSON.stringify(envelope));
+    return hasDraft ? "saved" : "active";
+  }, context);
+}

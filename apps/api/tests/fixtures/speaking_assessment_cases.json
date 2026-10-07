@@ -1,0 +1,10 @@
+{
+  "purpose": "Deterministic product-policy fixtures; these are not a human-calibrated linguistic benchmark.",
+  "cases": [
+    {"id": "one-expression", "kind": "chunk", "item": "one trade-off is", "user": "One trade-off is that simple writes make complex queries harder.", "quote": "One trade-off is", "verdict": "appropriate", "match_type": "exact", "expected_transfer": 100},
+    {"id": "filled-structure", "kind": "structure", "item": "The problem isn't [A], but rather [B]", "user": "The problem isn't the deadline, but rather the unclear scope.", "quote": "The problem isn't the deadline, but rather the unclear scope", "verdict": "appropriate", "match_type": "structure", "expected_transfer": 100},
+    {"id": "metalinguistic-mention", "kind": "idiom", "item": "to be fair", "user": "I am only reading the phrase to be fair from the card.", "quote": "to be fair", "verdict": "inappropriate", "match_type": "exact", "expected_transfer": 0},
+    {"id": "short-supported-use", "kind": "chunk", "item": "sounds good", "user": "Sounds good!", "quote": "Sounds good", "verdict": "appropriate", "match_type": "exact", "expected_transfer": 100},
+    {"id": "paraphrase-not-transfer", "kind": "chunk", "item": "one trade-off is", "user": "Simple writes are useful but complex queries are harder.", "quote": null, "verdict": null, "match_type": null, "expected_transfer": 0}
+  ]
+}

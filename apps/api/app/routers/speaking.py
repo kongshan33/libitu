@@ -1,6 +1,9 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request, status
+import asyncio
+import logging
+
+from fastapi import APIRouter, HTTPException, Request, Response, WebSocket, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 
@@ -11,6 +14,13 @@ from app.schemas.speaking import (
 from app.services.speaking_service import (
     create_speaking_session, get_speaking_session, speaking_options, submit_turn,
 )
+from app.schemas.speaking_runtime import RealtimeStart, RealtimeTicket, SpeakingWorkspace
+from app.services import speaking_runtime_state
+from app.services.speaking_runtime import accept_connection, stop_local
+from app.schemas.speaking_feedback import FeedbackRequest, SpeakingFeedback
+from app.services.speaking_feedback_service import read_feedback, request_feedback
+
+log = logging.getLogger(__name__)
 
 
 class SpeakingRoute(APIRoute):
@@ -58,3 +68,48 @@ def create_turn(
     if response is None:
         raise HTTPException(status_code=404, detail="Speaking session not found.")
     return response
+
+
+@router.get("/sessions/{session_id}/workspace")
+def get_workspace(session_id: UUID, current_user: CurrentUserDep) -> SpeakingWorkspace:
+    return speaking_runtime_state.public_workspace(current_user.id, str(session_id))
+
+
+@router.post("/sessions/{session_id}/realtime")
+def start_realtime(session_id: UUID, payload: RealtimeStart, current_user: CurrentUserDep) -> RealtimeTicket:
+    return speaking_runtime_state.create_ticket(current_user.id, str(session_id), payload)
+
+
+@router.websocket("/sessions/{session_id}/realtime/{runtime_id}")
+async def realtime_connection(websocket: WebSocket, session_id: UUID, runtime_id: UUID) -> None:
+    await accept_connection(websocket, str(session_id), str(runtime_id))
+
+
+@router.post("/sessions/{session_id}/end")
+async def end_mission(session_id: UUID, current_user: CurrentUserDep) -> SpeakingWorkspace:
+    result = await asyncio.to_thread(speaking_runtime_state.end_session, current_user.id, str(session_id))
+    await stop_local(str(session_id))
+    try:
+        await asyncio.to_thread(request_feedback, current_user.id, str(session_id))
+    except HTTPException:
+        # End remains successful. A durable worker repairs the enqueue gap, and the
+        # Analytics page can explicitly request the same idempotent report.
+        log.warning("Speaking mission ended; feedback enqueue awaits recovery.")
+    return result
+
+
+@router.post("/sessions/{session_id}/feedback")
+def create_feedback(session_id: UUID, payload: FeedbackRequest, current_user: CurrentUserDep) -> SpeakingFeedback:
+    return request_feedback(current_user.id, str(session_id), retry=payload.retry)
+
+
+@router.get("/sessions/{session_id}/feedback")
+def get_feedback(session_id: UUID, current_user: CurrentUserDep) -> SpeakingFeedback:
+    return read_feedback(current_user.id, str(session_id))
+
+
+@router.delete("/sessions/{session_id}", status_code=204)
+async def delete_mission(session_id: UUID, current_user: CurrentUserDep) -> Response:
+    await asyncio.to_thread(speaking_runtime_state.delete_session, current_user.id, str(session_id))
+    await stop_local(str(session_id))
+    return Response(status_code=204)

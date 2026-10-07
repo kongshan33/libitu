@@ -396,7 +396,7 @@ Each turn response can include:
 - Logic-stage progress
 - Optional next-turn hint
 
-The 2026-09-30 user decision includes real-time voice in the first Stage 4 delivery: continuous listening, automatic turn-taking and interrupting the AI. Text input remains available in the same conversation. This supersedes the earlier text-only MVP scope. Implementation is still pending; see [the design and implementation proposal](STAGE_FOUR_IMPLEMENTATION_PLAN.md).
+The 2026-09-30 user decision includes real-time voice in the first Stage 4 delivery: continuous listening, automatic turn-taking and interrupting the AI. Text input remains available in the same conversation. This supersedes the earlier text-only MVP scope. Implemented locally on 2026-10-01 with Gemini Live, shared Voice/Chat, durable observations and asynchronous next-response teaching control. See [implementation and boundaries](STAGE_FOUR_IMPLEMENTATION.md); manual transcript editing, automated logic-stage progress and Stage 5 scoring remain separate.
 
 Hints should appear after a learner struggles, not after every turn. A hint names one selected item and suggests an intent, without writing the learner's complete response.
 
@@ -414,6 +414,8 @@ The first release uses four dimensions:
 Show evidence for every score. Evidence can include triggered items, relevant turns, and up to three original-to-refactored examples.
 
 Do not show a fluency score until its inputs and calculation are defined. Avoid presenting language-model judgments as objective measurements.
+
+The 2026-10-01 accepted Stage 5 contract uses immutable final-transcript reports with nullable scores. Language transfer includes structures and the shared chunk/idiom expression slots; repeated occurrences do not inflate item coverage. Prompted and independent uses are labeled separately. Unsupported or missing evidence stays unscored, optional logic stages do not stand in for task achievement, and meaning-preserving refactors must not invent commitments or facts. Report generation is durable and idempotent. See [the implementation contract](STAGE_FIVE_CONTRACT.md); delivery and measured verification are tracked in `TASK.MD`.
 
 ## Visual system
 

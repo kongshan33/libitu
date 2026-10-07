@@ -4,12 +4,28 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-09-30
+  updated: 2026-10-01
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
 ## Accepted decisions
+
+### 2026-10-01: Build evidence-backed Stage 5 reports
+
+- **Status**: accepted and implemented locally; [verification and limits](design/docs/STAGE_FIVE_CONTRACT.md).
+- **Decision**: four dimensions only: task fit, language transfer, scenario fit and naturalness. AI rates explicit rubric criteria with exact user quotations; the server calculates normalized scores. Transfer counts unique selected items used appropriately, with prompted and independent observations shown separately. Missing/uncertain evidence is not zero. No fluency, pronunciation, overall ability or mastery score.
+- **Lifecycle**: freeze the completed mission's settings, transcript and teaching exposures in an owner-scoped durable report job. A separate leased worker reassesses the whole final transcript, including turns whose Stage 4 analysis never finished. Idempotent requests, bounded retries and deletion fencing protect recovery.
+- **Experience**: four cards, evidence-linked details, at most three meaning-preserving refactors, real corpus saves and a new-session retry with the original settings. Optional logic observations are separate from goal achievement. Preserve existing account drafts when adjusting loadout.
+- **Reference**: [frozen contract](design/docs/STAGE_FIVE_CONTRACT.md). Model judgments remain explicitly AI assessments; human rubric calibration is separate from software acceptance.
+
+### 2026-10-01: Deliver Gemini Live with asynchronous teaching control
+
+- **Status**: accepted provider choice and implemented locally; see [implementation and verification](design/docs/STAGE_FOUR_IMPLEMENTATION.md).
+- **Decision**: user selected Gemini Live. Use server-owned WebSocket audio/control with a shared Voice/Chat mission; DeepSeek analyzes finalized learner speech asynchronously. A deterministic controller adjusts a subsequent eligible response, with one target, cooldown, evidence and exposure bounds.
+- **Data**: preserve immutable Loadout language snapshots, finalized messages and quoted UTF-16 evidence in an owner-scoped CAS document. One-use connection tickets, runtime leases, explicit takeover and end/delete fencing prevent old connections from writing. No app raw-audio archive or invented scores.
+- **Provider boundary**: Gemini setup cannot be edited in place; inject private teaching context only at an idle boundary. Text view suppresses playback of native audio. Incomplete playback is marked interrupted and excluded from reconnect history; no exact Gemini audio/text truncation is claimed.
+- **Remaining**: manual transcript editing, automatic logic-stage progress, Stage 5 assessment and production/device/cost qualification are separate. This resolves provider selection in D-010; its operating qualification remains open.
 
 ### 2026-09-30: Include real-time voice in the first Stage 4 delivery
 
@@ -438,7 +454,7 @@ This log records decisions that constrain product behavior or architecture. Add 
 | D-007 | Exact learner recording, transcript, assessment, log, and backup retention schedules | Production practice persistence | Target-country review, user research, deletion behavior, operating cost |
 | D-008 | Initial overseas launch countries and regional infrastructure | Production launch | Market priority, content availability, privacy/consumer rules, latency and cost |
 | D-009 | First authorized file source and scope of full YouTube reference support | File-reference F1 and production coverage commitment | Available source files/API, content and platform rights, tested partial-transfer behavior and costs |
-| D-010 | Stage 4 real-time voice provider and operating contract | Real-time adapter implementation | Trusted transcript/control events, interruption/context alignment, reconnection, device latency, cost and provider retention settings |
+| D-010 | Stage 4 operating qualification; Gemini provider selected and implemented | Production release | Complete post-interruption live turns, device/network latency, account budgets, cost and provider retention settings |
 
 ### 2026-09-09: Keep Stage 2 media actions together above analysis
 
