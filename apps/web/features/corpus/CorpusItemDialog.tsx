@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { Textarea } from "@/components/ui/field";
 
 import { Button } from "@/components/ui/button";
@@ -85,7 +87,7 @@ export function CorpusItemDialog({ record, busy, error, initialEdit, onClose, on
           {detail.analysis.analysisSource === "fallback" ? <p className={styles.notice}>{detail.analysis.providerNotice || "AI analysis was unavailable. This is a limited fallback."}</p> : null}
           <div className={styles.tabs} aria-label="Analysis views"><button type="button" aria-pressed={tab === "explain"} onClick={() => setTab("explain")}>Explain</button><button type="button" aria-pressed={tab === "syntax"} onClick={() => setTab("syntax")}>Syntax</button></div>
           {tab === "explain" ? <ExplainPanel analysis={detail.analysis} isLoading={false} /> : <SyntaxPanel analysis={detail.analysis} isLoading={false} saveDisabled />}</>
-          : busy ? <p role="status">Loading original analysis…</p> : original ? <Button variant="secondary" size="inherit" type="button" onClick={() => void hydrate()}>Load original analysis</Button> : <p className={styles.help}>Full analysis is unavailable without saved source evidence. You can still edit and practice this item.</p>}
+          : busy ? <ContentSkeleton label="Loading original analysis…" rows={1} /> : original ? <Button variant="secondary" size="inherit" type="button" onClick={() => void hydrate()}>Load original analysis</Button> : <p className={styles.help}>Full analysis is unavailable without saved source evidence. You can still edit and practice this item.</p>}
       </>}
     </div>
   </dialog>;

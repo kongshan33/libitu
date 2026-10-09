@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { useState } from "react";
 import type { ActivityPoint, ProfileData, ProfileRange } from "./types";
 import { activityDate } from "./format";
@@ -39,7 +41,7 @@ export function ActivityChart({ data, range, onRange, loading }: {
         </button>)}
       </div>
       <div className={styles.chart} aria-busy={loading}>
-        {loading ? <div className={styles.chartMessage} role="status">Loading activity…</div> : !data ? <div className={styles.chartMessage}>Activity is unavailable.</div>
+        {loading ? <ContentSkeleton label="Loading activity…" /> : !data ? <div className={styles.chartMessage}>Activity is unavailable.</div>
           : !known ? <div className={styles.chartMessage}>Dates aren’t available for this activity yet.</div>
             : total === 0 ? <div className={styles.chartMessage}><strong>No {selected.label.toLowerCase()} in this period</strong><span>Your saved activity will appear here.</span></div>
               : <>

@@ -1,4 +1,5 @@
 "use client";
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { Button } from "@/components/ui/button";
 
@@ -34,14 +35,14 @@ export function PracticeAnalysisPanel({ api, attemptId, data, error, loading, re
   const content = data?.result?.learner.content;
   return <section className="practice-analysis-status" aria-label="Saved take analysis">
     <strong>Your recording · selected saved take</strong>
-    <p role="status">{loading ? "Loading analysis…" : error ? "Analysis could not load." : !data ? "Server analysis was not requested for this take."
+    <>{loading && !data ? <ContentSkeleton label="Loading analysis…" rows={1} /> : <p role="status">{error ? "Analysis could not load." : !data ? "Server analysis was not requested for this take."
       : data.state === "queued" ? data.error_code === 'reference_pending' ? 'Waiting for reference analysis. Comparison will continue automatically.' : "Queued for analysis. You can keep practicing."
         : data.state === "processing" ? "Checking spoken words and aligning your recording…"
           : data.state === "completed" ? "Analysis saved. Compare your recording in Sound, Rhythm and Melody."
             : data.state === "needs_review" ? "Comparison withheld: the words or alignment need review. This is not a pronunciation grade."
               : data.state === "failed" ? analysisFailure(data.error_code)
                 : data.state === "awaiting_upload" ? "Waiting for the recording upload. Keep this page open."
-                  : data.state === "deleted" ? "Analysis deleted." : "Analysis cancelled."}</p>
+                  : data.state === "deleted" ? "Analysis deleted." : "Analysis cancelled."}</p>}</>
     {content ? <p>Content check: {content.status === "matched" ? "recognized words match the practice text" : content.status === "mismatch" ? "recognized words differ from the practice text; recognition can be mistaken" : "not enough reliable evidence"}.</p> : null}
     {content?.transcript ? <p>Recognized: “{content.transcript}”</p> : null}
     {data?.result?.comparison === "unavailable" && content?.status === "matched" ? <p>This take has no verified paired reference. Your available measurements are shown below.</p> : null}

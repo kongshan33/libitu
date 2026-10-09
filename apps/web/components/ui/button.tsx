@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "soft" | "ghost" | "danger" | "danger-solid" | "record";
+export type ButtonVariant = "primary" | "secondary" | "soft" | "ghost" | "danger" | "danger-outline" | "danger-solid" | "record";
 type Appearance = {
   variant?: ButtonVariant;
   /** `inherit` preserves existing feature geometry during migration. */

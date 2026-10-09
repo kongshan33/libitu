@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, mock, test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
-import { loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
+import { annotateTranscriptLine, loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
 import { selectCorpusItems } from "@libitu/core/stage-one";
 import { buildSentenceUnits } from "../features/stage-two/sentences.ts";
 
@@ -435,4 +435,29 @@ test("cached captions clean cues across parts before annotation", async () => {
   assert.equal(result.transcript[0].id, "existing-sentence");
   assert.equal(result.transcript[0].time, "0:21");
   assert.equal(result.transcript[0].wordTimings, undefined);
+});
+
+
+test("saved source wording annotates independently of edited card text and preserves caption metadata", () => {
+  const line = { id: "sentence-1", time: "0:01", startMs: 1000, endMs: 4000,
+    sourceTokenStart: 0, wordTimings: [{ sourceTokenIndex: 0, text: "Keep" }],
+    parts: ["Keep an eye on the plan."] };
+  const item = { id: "manual-1", kind: "structure", text: "Keep an eye on [something]",
+    sourceText: "Keep an eye on", tags: ["framing"], meta: "0:01" };
+  const annotated = annotateTranscriptLine(line, [item]);
+  assert.deepEqual(annotated.parts, [{ text: "Keep an eye on", kind: "structure", tag: "framing", corpusItemId: "manual-1" }, " the plan."]);
+  assert.equal(annotated.wordTimings, line.wordTimings);
+  assert.equal(annotated.id, line.id);
+  assert.equal(annotated.startMs, line.startMs);
+  assert.deepEqual(annotateTranscriptLine(annotated, []).parts, line.parts);
+});
+
+
+test("annotations link exact source wording to a card without fragment or inside-word matches", () => {
+  const item = { id: "card-1", kind: "structure", text: "What matters is [priority]",
+    sourceText: "What matters is how we respond", tags: ["framing"] };
+  const annotate = (text, entry = item) => annotateTranscriptLine({ time: "0:01", parts: [text] }, [entry]).parts;
+  assert.deepEqual(annotate("What matters is the price."), ["What matters is the price."]);
+  assert.equal(annotate("What matters is how we respond.")[0].corpusItemId, "card-1");
+  assert.deepEqual(annotate("They planned it.", { ...item, sourceText: "plan" }), ["They planned it."]);
 });

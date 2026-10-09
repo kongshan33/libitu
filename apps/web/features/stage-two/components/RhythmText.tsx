@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { Button } from "@/components/ui/button";
 
 import { Fragment, useMemo } from "react";
@@ -51,7 +53,7 @@ export function RhythmText({ sentence, guide, reference, yours, server, originMs
         <span><i className="rhythm-dot stress-1" />Primary</span><span><i className="rhythm-dot stress-2" />Secondary</span>
         <span><i className="rhythm-dot stress-0" />Unstressed</span>
       </div>
-      {guide.pending ? <p className="rhythm-help" role="status">Loading dictionary stress…</p> : guide.error
+      {guide.pending ? <ContentSkeleton label="Loading dictionary stress…" rows={1} /> : guide.error
         ? <p className="rhythm-help">Dictionary stress is unavailable. <Button variant="secondary" size="inherit" type="button" onClick={guide.retry}>Retry stress guide</Button></p> : null}
       <p className="rhythm-help">This helps you pronounce individual words; it does not identify which words the speaker emphasized. A dash means no single dictionary pattern is available.</p>
     </section>

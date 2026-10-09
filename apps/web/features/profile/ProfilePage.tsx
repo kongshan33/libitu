@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionButton, DirectionLink } from "@/components/ui/direction-button";
 
 import { AppHeader } from "@/components/AppHeader";
@@ -27,7 +29,7 @@ export function ProfilePage({ history = false }: { history?: boolean }) {
   return <main className={styles.page}>
     <AppHeader active="learning" />
     <div className={styles.shell}>
-      {!isLoaded ? <div className={styles.gate} role="status">Loading your account…</div> : !userId ? <section className={styles.gate}>
+      {!isLoaded ? <ContentSkeleton label="Loading your account…" /> : !userId ? <section className={styles.gate}>
         <span className={styles.gateIcon}><UserRound size={30} aria-hidden="true" /></span><div className={styles.eyebrow}>Your personal learning space</div><h1>Make your practice count.</h1><p>Sign in to see your saved practice, grow your corpus and pick up where you left off.</p>
         <DirectionButton variant="primary" className={styles.primary} type="button" onClick={() => { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in to view my learning <ArrowRight size={16} aria-hidden="true" /></DirectionButton>
         <Link className={styles.textLink} href="/">Back to practice</Link>
@@ -42,7 +44,7 @@ function AccountLearning({ owner, history }: { owner: string; history: boolean }
   if (history) return <>
     <DirectionLink href="/profile" className={styles.back}><ArrowLeft size={15} aria-hidden="true" /> My learning</DirectionLink>
     <div className={styles.heading}><div><div className={styles.eyebrow}>A record of showing up</div><h1>Practice history</h1><p>Revisit your conversations and the sources you’ve practiced with.</p></div><ButtonLink variant="primary" size="inherit" href="/loadout" className={styles.primary}><Play size={14} aria-hidden="true" /> New Mission</ButtonLink></div>
-    {timezone ? <HistoryFeed owner={owner} timezone={timezone} /> : <p role="status">Loading practice history…</p>}
+    {timezone ? <HistoryFeed owner={owner} timezone={timezone} /> : <ContentSkeleton label="Loading practice history…" />}
     <p className={styles.footnote}>One shadowing entry is one saved take. Mission entries include at least one speaking turn. Dates use {timezone ?? "your local timezone"}.</p>
   </>;
   return <Dashboard owner={owner} timezone={timezone} />;
@@ -94,7 +96,7 @@ function Dashboard({ owner, timezone }: { owner: string; timezone: string | null
       ].map(([value, label]) => <div key={label}><dt>{label}</dt><dd>{value ?? "—"}</dd></div>)}</dl>
     </section>
     {error ? <ProfileError error={error} retry={() => setAttempt((value) => value + 1)} /> : null}
-    {busy && !data ? <p className={styles.loading} role="status">Loading your learning records…</p> : null}
+    {busy && !data ? <ContentSkeleton label="Loading your learning records…" /> : null}
     {data && error ? <p className={styles.footnote}>Showing the last loaded overview. Activity for the requested range could not be refreshed.</p> : null}
     <MissionFeedback data={data} loading={busy && !data} />
     <div className={styles.grid}>
@@ -110,7 +112,7 @@ function Dashboard({ owner, timezone }: { owner: string; timezone: string | null
         : <QuickLink href="/" icon={Play} title="Find your next source" subtitle="Start with a video you want to understand" tone="blue" />}
     </div></section>
     <section className={styles.card} aria-labelledby="recent-title"><div className={styles.cardHeader}><h2 id="recent-title">Recent practice</h2><DirectionLink href="/profile/history" className={styles.textLink}>View all <ArrowRight size={14} aria-hidden="true" /></DirectionLink></div>
-      {data ? <HistoryList items={data.recent_history.items} timezone={data.timezone} /> : <p className={styles.loading}>{busy ? "Loading recent practice…" : "Recent practice is unavailable."}</p>}
+      {data ? <HistoryList items={data.recent_history.items} timezone={data.timezone} /> : busy ? <ContentSkeleton label="Loading recent practice…" /> : <p className={styles.loading}>Recent practice is unavailable.</p>}
     </section>
     <p className={styles.footnote}><CalendarDays size={13} aria-hidden="true" />{overview ? `${overview.active_days} active ${overview.active_days === 1 ? "day" : "days"} · ` : ""}Saved practice only. Recorded time includes shadowing audio, not listening or Mission duration.</p>
   </>;

@@ -752,7 +752,7 @@ function toTranscriptLine(line: ApiTranscriptLine, corpusItems: CorpusItem[]): T
   }, corpusItems);
 }
 
-function annotateTranscriptLine(line: TranscriptLine, corpusItems: CorpusItem[]): TranscriptLine {
+export function annotateTranscriptLine(line: TranscriptLine, corpusItems: CorpusItem[]): TranscriptLine {
   const originalText = line.parts.map((part) => typeof part === "string" ? part : part.text).join("");
   const text = cleanCaptionText(originalText);
   return {
@@ -782,7 +782,8 @@ function annotateTranscriptText(text: string, corpusItems: CorpusItem[]): Array<
     parts.push({
       text: text.slice(match.start, match.end),
       tag: match.item.tags[0] ?? (match.item.kind === "structure" ? "framing" : "discourse"),
-      kind: match.item.kind
+      kind: match.item.kind,
+      corpusItemId: match.item.id
     });
     cursor = match.end;
   }
@@ -797,17 +798,17 @@ function extractCandidatePhrase(value: string) {
 }
 
 function findCandidateMatch(loweredText: string, phrase: string): { start: number; end: number } | null {
-  if (phrase.length < 3) return null;
-  const exactStart = loweredText.indexOf(phrase.toLocaleLowerCase());
-  if (exactStart >= 0) return { start: exactStart, end: exactStart + phrase.length };
-
-  const words = phrase.toLocaleLowerCase().match(/[a-z0-9']+/g) ?? [];
-  for (let length = words.length - 1; length >= 3; length -= 1) {
-    for (let startWord = 0; startWord + length <= words.length; startWord += 1) {
-      const fragment = words.slice(startWord, startWord + length).join(" ");
-      const start = loweredText.indexOf(fragment);
-      if (start >= 0) return { start, end: start + fragment.length };
+  const needle = phrase.trim().toLocaleLowerCase();
+  if (!needle) return null;
+  let start = loweredText.indexOf(needle);
+  while (start >= 0) {
+    const end = start + needle.length;
+    const word = /[\p{L}\p{N}_]/u;
+    if (!(word.test(needle[0]) && start > 0 && word.test(loweredText[start - 1]))
+      && !(word.test(needle[needle.length - 1]) && end < loweredText.length && word.test(loweredText[end]))) {
+      return { start, end };
     }
+    start = loweredText.indexOf(needle, start + 1);
   }
   return null;
 }

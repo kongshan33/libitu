@@ -22,6 +22,8 @@
 .inputWrap { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 1px solid var(--color-border-secondary); border-radius: var(--radius-md); padding: 0 14px; background: white; color: var(--color-text-tertiary); }
 .inputWrap input { padding: 15px 0; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--color-text-primary); width: 100%; min-width: 0; font: inherit; font-size: 14px; scroll-margin-top: 60px; }
 .inputWrap input:focus-visible { outline: none; }
+.page .inputWrap[data-field-surface]:has(input:focus-visible) { outline: none; border-color: var(--field-border); box-shadow: none; }
+.page .inputWrap[data-field-surface]:has(input[aria-invalid="true"]) { border-color: var(--color-danger); }
 .inputWrap input::placeholder { color: var(--color-text-tertiary); }
 .primaryButton { display: inline-flex; align-items: center; justify-content: center; gap: 12px; border-width: 1px; border-style: solid; min-height: 50px; padding: 13px 21px; font-size: 14px; white-space: nowrap; }
 .error { font-size: 13px; line-height: 1.5; color: #a52d2d; margin: 9px 0 0; }

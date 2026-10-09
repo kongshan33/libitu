@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionButton } from "@/components/ui/direction-button";
 
 import { Textarea } from "@/components/ui/field";
@@ -9,6 +11,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AuthControls } from "@/features/auth/components/AuthControls";
 import dynamic from "next/dynamic";
+import { ReaderSkeleton } from "./ReaderSkeleton";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
@@ -28,6 +31,7 @@ import type { LearnerLevel } from "@libitu/types/stage-one";
 import { LearningLocationTracker } from "@/features/profile/LearningLocationTracker";
 import {
   analyzeCorpusSelection,
+  annotateTranscriptLine,
   defaultStageOneSource,
   loadStageOneBlueprint,
   StageOneApiError,
@@ -54,7 +58,7 @@ import { buildReferenceKey, type ReferenceAnalysisCache } from "../../stage-two/
 import { LoadoutLink } from "../../navigation/LoadoutLink";
 
 const StageTwoShadowing = dynamic(() => import("../../stage-two/components/StageTwoShadowing").then((module) => module.StageTwoShadowing),
-  { loading: () => <p role="status">Opening practice…</p> });
+  { loading: () => <ContentSkeleton label="Opening practice…" variant="practice" /> });
 
 const tagClass: Record<CorpusItem["tags"][number], string> = {
   acknowledging: "tag-teal",
@@ -108,6 +112,7 @@ type CorpusDetailState = {
 };
 
 type StageOneReaderProps = {
+  initialStage?: "reader" | "shadow";
   onChooseSegment?: () => void;
   onStartStageTwo?: (segment: StageOneSegment) => void;
 };
@@ -122,7 +127,7 @@ function LibraryIcon() {
   );
 }
 
-export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneReaderProps = {}) {
+export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage = "reader" }: StageOneReaderProps = {}) {
   const { isLoaded: authLoaded, userId } = useAuth();
   const clerk = useClerk();
   const [blueprint, setBlueprint] = useState<StageOneBlueprint | null>(null);
@@ -133,6 +138,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
   const [activeTranscriptIdentity, setActiveTranscriptIdentity] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CorpusFilter>("chunks");
   const corpus = useSavedCorpus();
+  const [corpusTarget, setCorpusTarget] = useState<{ key: string } | null>(null);
   const [selectionCard, setSelectionCard] = useState<SelectionCardState | null>(null);
   const [corpusDetail, setCorpusDetail] = useState<CorpusDetailState | null>(null);
   const closeSelectionCard = useCallback(() => setSelectionCard(null), []);
@@ -141,9 +147,9 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
   const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
   const playingRef = useRef(false);
   const [highlightActive, setHighlightActive] = useState(true);
-  const [sourceTitle, setSourceTitle] = useState("Loading Stage 1 content");
+  const [sourceTitle, setSourceTitle] = useState(initialStage === "shadow" ? "Loading practice" : "Loading Stage 1 content");
   const [source, setSource] = useState<StageOneSource | null>(null);
-  const [stageOneView, setStageOneView] = useState<StageOneView>("reader");
+  const [stageOneView, setStageOneView] = useState<StageOneView>(initialStage);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const loadControllerRef = useRef<AbortController | null>(null);
@@ -179,17 +185,34 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
     suspendBuffered();
     captureGeneration.current++;
   }, [suspendBuffered]);
-  const savedRecords = corpus.records.filter((record) => (record.contentId ?? record.sourceUrl) === sourceKey
-    || Boolean(sourceUrl && record.sourceUrl === sourceUrl));
-  const savedByKey = new Map(savedRecords.map((record) => [record.key, record]));
+  const savedRecords = useMemo(() => corpus.records.filter((record) => (record.contentId ?? record.sourceUrl) === sourceKey
+    || Boolean(sourceUrl && record.sourceUrl === sourceUrl)), [corpus.records, sourceKey, sourceUrl]);
   const corpusKey = (item: CorpusItem) => savedRecords.find((record) =>
     record.key === savedCorpusKey(record.contentId ?? record.sourceUrl, item)
     || savedCorpusKey("", record.item) === savedCorpusKey("", item))?.key ?? savedCorpusKey(sourceKey, item);
-  const candidates = blueprint?.corpusItems ?? analysisPreview?.corpusItems ?? [];
-  const allCorpus = [...new Map([
-    ...candidates.map((item) => [corpusKey(item), item] as const),
-    ...savedRecords.map((record) => [record.key, record.item] as const)
-  ]).entries()].map(([key, item]) => ({ key, item, record: savedByKey.get(key) }));
+  const allCorpus = useMemo(() => {
+    const candidates = blueprint?.corpusItems ?? analysisPreview?.corpusItems ?? [];
+    const keyFor = (item: CorpusItem) => savedRecords.find((record) =>
+      savedCorpusKey("", record.item) === savedCorpusKey("", item))?.key ?? savedCorpusKey(sourceKey, item);
+    const records = new Map(savedRecords.map((record) => [record.key, record]));
+    return [...new Map([
+      ...candidates.map((item) => [keyFor(item), item] as const),
+      ...savedRecords.map((record) => [record.key, record.item] as const)
+    ]).entries()].map(([key, item]) => ({ key, item, record: records.get(key) }));
+  }, [blueprint?.corpusItems, analysisPreview?.corpusItems, savedRecords, sourceKey]);
+  const selectCorpusHighlight = useCallback((key: string) => {
+    const entry = allCorpus.find((entry) => entry.key === key);
+    if (!entry) return;
+    setActiveTab((tab) => tab === "saved" && entry.record ? "saved"
+      : ({ chunk: "chunks", idiom: "idioms", structure: "structures" } as const)[entry.item.kind]);
+    setCorpusTarget({ key });
+  }, [allCorpus]);
+  useEffect(() => {
+    if (!corpusTarget) return;
+    const card = document.getElementById(`corpus-card-${encodeURIComponent(corpusTarget.key)}`);
+    card?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    card?.querySelector<HTMLButtonElement>(".corpus-detail-trigger")?.focus({ preventScroll: true });
+  }, [corpusTarget]);
   const visibleCorpus = activeTab === "saved" ? savedRecords.map((record) => ({ key: record.key, item: record.item, record }))
     : allCorpus.filter(({ item }) => item.kind === ({ chunks: "chunk", idioms: "idiom", structures: "structure" } as const)[activeTab]);
 
@@ -257,8 +280,12 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
   }, [source, loadAttempt]);
 
   const transcript = useMemo(
-    () => blueprint?.transcript ?? analysisPreview?.transcriptLines ?? [],
-    [analysisPreview?.transcriptLines, blueprint?.transcript]
+    () => {
+      const lines = blueprint?.transcript ?? analysisPreview?.transcriptLines ?? [];
+      const items = allCorpus.map(({ key, item }) => ({ ...item, id: key }));
+      return lines.map((line) => annotateTranscriptLine(line, items));
+    },
+    [analysisPreview?.transcriptLines, blueprint?.transcript, allCorpus]
   );
   const logicNodes = useMemo(
     () => blueprint?.logicNodes ?? analysisPreview?.logicNodes ?? [],
@@ -591,6 +618,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
     if (!location) return;
     if (!playableSegments.some((segment) => segment.id === location.segmentId)) {
       replaceStageTwoLocation(null);
+      setStageOneView("reader");
       return;
     }
     setSelectedSegmentId(location.segmentId);
@@ -607,27 +635,29 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
           <BrandLogo className="logo" />
           <div className="topbar-title">{blueprint?.title ?? sourceTitle}</div>
           <div className="stage-pills" aria-label="Learning stages">
-            <button
+            <Button variant="secondary" size="inherit" shape="pill"
               className={`stage-pill ${stageOneView === "reader" || stageOneView === "picker" ? "active" : ""}`}
               type="button"
               onClick={closeSegmentPicker}
             >
               Stage 1 - Ingest
-            </button>
-            <button
+            </Button>
+            <Button variant="secondary" size="inherit" shape="pill"
               className={`stage-pill ${stageOneView === "preparing" || stageOneView === "shadow" ? "active" : ""}`}
               type="button"
               disabled={!isReady}
             >
               Stage 2 - Shadow
-            </button>
+            </Button>
             <LoadoutLink className="stage-pill">Stage 3 - Mission</LoadoutLink>
           </div>
           <ButtonLink variant="secondary" size="inherit" shape="pill" className="stage-pill" href="/corpus">Corpus</ButtonLink>
           <AuthControls />
         </header>
 
-        {stageOneView === "picker" ? (
+        {stageOneView === "shadow" && status !== "failed" && status !== "unsupported" && (!selectedSegment || !authLoaded) ? (
+          <ContentSkeleton label="Loading practice…" variant="practice" />
+        ) : stageOneView === "picker" ? (
           <StageOneSegmentPicker
             segments={playableSegments}
             logicNodes={logicNodes}
@@ -682,6 +712,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
         <aside className="left-panel" aria-label="Logic flow" aria-busy={!isReady}>
           <section className="logic-flow">
             <div className="section-label">Logic flow</div>
+            {status === "loading" && logicNodes.length === 0 ? <ReaderSkeleton /> : null}
             {logicNodes.map((node) => (
               <div className="logic-step" key={node.id}>
                 <button
@@ -722,7 +753,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
               />
             ) : source ? (
               <p className="empty-state">The source video URL is unavailable.</p>
-            ) : null}
+            ) : <div className="reader-skeleton-video" aria-hidden="true" />}
           </div>
           {displaySourceUrl && blueprint?.contentId ? <BufferedReferencePanel capture={bufferedReference} playable /> : null}
           <div className="video-summary" aria-live="polite">
@@ -741,6 +772,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
             />
           ) : null}
 
+          {status === "loading" && transcript.length === 0 ? <ReaderSkeleton rows={4} /> : null}
           {transcript.length > 0 ? (
             <>
               <div className="video-controls">
@@ -794,7 +826,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
                   >
                     <button className="transcript-time" type="button" aria-label={`Play from ${formatTranscriptTimestamp(line.time)}`}>{formatTranscriptTimestamp(line.time)}</button>
                     <CaptionTimedText className="transcript-text" parts={line.parts} clock={wordClock}
-                      enabled={highlightActive}
+                      enabled={highlightActive} onCorpusSelect={selectCorpusHighlight}
                       sourceTokenStart={line.sourceTokenStart} timingSource={line.timingSource} wordTimings={line.wordTimings} />
                   </div>
                 ))}
@@ -855,8 +887,9 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
                 <p>{corpus.error}</p>
                 <Button variant="secondary" size="inherit" type="button" className="inline-command" onClick={corpus.retry} disabled={corpus.busy} loading={corpus.busy} loadingLabel="Syncing…">Retry sync</Button>
               </div>
-            ) : corpus.busy ? <p className="corpus-sync-status" role="status">Loading saved corpus...</p> : null}
+            ) : corpus.busy ? <ContentSkeleton label="Loading saved corpus…" rows={1} /> : null}
             <div className="corpus-list">
+              {status === "loading" && visibleCorpus.length === 0 && activeTab !== "saved" ? <ReaderSkeleton /> : null}
               {visibleCorpus.length === 0 && activeTab === "saved" && corpus.ready ? (
                 <p className="empty-state">No saved expressions for this video.</p>
               ) : visibleCorpus.length === 0 && !isReady ? (
@@ -868,7 +901,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo }: StageOneRea
                 const saved = Boolean(record);
                 const saveLabel = saved ? "Remove from corpus" : "Save to corpus";
                 return (
-                  <article className={`corpus-card ${saved ? "saved" : ""}`} key={key}>
+                  <article id={`corpus-card-${encodeURIComponent(key)}`} className={`corpus-card ${saved ? "saved" : ""} ${corpusTarget?.key === key ? "corpus-target" : ""}`} key={key}>
                     <button
                       className="corpus-detail-trigger"
                       type="button"
@@ -1678,7 +1711,7 @@ type StageOneStatusPanelProps = {
 function StageOneStatusPanel({ status, message, onRetry, preview }: StageOneStatusPanelProps) {
   const isLoading = status === "loading";
   const title = isLoading
-    ? "Loading the blueprint"
+    ? "Preparing your listening workspace"
     : status === "unsupported"
       ? "This source is not supported yet"
       : "Blueprint generation failed";
@@ -1694,7 +1727,7 @@ function StageOneStatusPanel({ status, message, onRetry, preview }: StageOneStat
           <p>
             {message ??
               (isLoading
-                ? "Resolving content, starting analysis, and fetching the Stage 1 blueprint."
+                ? "Your video, subtitles and expressions will appear here as they become available."
                 : "The API could not return a usable blueprint.")}
           </p>
         </div>

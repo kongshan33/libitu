@@ -11,6 +11,10 @@ This log records decisions that constrain product behavior or architecture. Add 
 
 ## Accepted decisions
 
+### 2026-10-08: Bind transcript highlights to visible corpus cards
+
+Use the same merged candidate/saved corpus list for Stage 1 annotations and sidebar cards. Match complete source wording with word boundaries rather than guessing from partial fragments. Each annotation carries its card identity; activation selects the card’s category, scrolls and focuses it, preserving Saved when appropriate. Highlight activation does not seek the player; timestamps and ordinary sentence text retain playback navigation.
+
 
 ### 2026-10-04: Stabilize draft feedback without renaming flows
 
@@ -567,3 +571,10 @@ The user explicitly requested responsive outer margins and targeted button/spaci
 
 
 2026-09-30 layer guidance correction: restore the right-side Layer focus, Feedback and Tip cards for Sound, Rhythm and Melody. Sound guidance follows the selected phenomenon and uses the current sentence’s rule suggestions; conceal mode also hides word-specific sidebar text. Desktop places guidance beside the layer canvas; narrow screens place it below. The video remains above the workspace. Removing the experimental score sidebar did not authorize removing instructional guidance; no illustrative scores or detected-error claims are restored.
+
+
+### 2026-10-08: Show progressive reader loading placeholders
+
+- **Status**: accepted and implemented.
+- **Decision**: render a lightweight route fallback and decorative skeletons only for empty loading regions; existing status messages own progress and errors.
+- **Consequence**: no artificial completion percentages, minimum delay, extra requests, player remounts or extension preflight changes. Disable animation for reduced motion. Pre-response navigation latency remains outside this UI change.

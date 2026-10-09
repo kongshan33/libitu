@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { Button } from "@/components/ui/button";
 
 import { useEffect, useRef, useState } from "react";
@@ -69,36 +71,38 @@ export function PracticeHistory({ contentId, sentenceId, onPlay, blocked, onAnal
   return <section className="practice-history" aria-label="Saved practice">
     <h2>Saved practice for this sentence</h2>
     <p>Practice records are saved to your account. Retained recordings stay private until you delete them; they are not used for model training.</p>
-    {loading ? <p role="status">Loading saved practice…</p> : !items.length ? <p>No saved takes yet.</p> : null}
-    {error ? <p role="alert">{error} <Button variant="secondary" size="inherit" onClick={() => setRefresh((n) => n + 1)}>Reload history</Button></p> : null}
-    <ul>{items.map((item) => <li key={item.id}>
-      <span>{new Date(item.created_at).toLocaleString()} · {(item.duration_ms / 1000).toFixed(1)} sec · {item.playback_rate}× · {item.text_visible ? "Text visible" : "Text hidden"}</span>
-      {onAnalysisSelect ? <button type="button" disabled={busy} aria-pressed={selectedAnalysisId === item.id}
-        onClick={() => onAnalysisSelect(item.id)}>View analysis</button> : null}
+    {loading ? <ContentSkeleton label="Loading saved practice…" /> : !items.length ? <p>No saved takes yet.</p> : null}
+    {error ? <p role="alert">{error} <Button variant="secondary" size="sm" onClick={() => setRefresh((n) => n + 1)}>Reload history</Button></p> : null}
+    <ul>{items.map((item) => <li key={item.id} data-selected={selectedAnalysisId === item.id}>
+      <div className="practice-history-meta"><time dateTime={item.created_at}>{new Date(item.created_at).toLocaleString()}</time><span> {(item.duration_ms / 1000).toFixed(1)} sec · {item.playback_rate}× · {item.text_visible ? "Text visible" : "Text hidden"}</span></div>
+      <div className="practice-history-actions">
+      {onAnalysisSelect ? <Button variant="secondary" size="sm" type="button" disabled={busy} aria-pressed={selectedAnalysisId === item.id}
+        onClick={() => onAnalysisSelect(item.id)}>View analysis</Button> : null}
       {item.recording_state === "ready" ? <>
-        <Button variant="secondary" size="inherit" type="button" disabled={busy || blocked} loading={busyAction === `audio:${item.id}`} loadingLabel="Loading…" onClick={() => void action(`audio:${item.id}`, async (signal) => {
+        <Button variant="secondary" size="sm" type="button" disabled={busy || blocked} loading={busyAction === `audio:${item.id}`} loadingLabel="Loading…" onClick={() => void action(`audio:${item.id}`, async (signal) => {
           const blob = await api!.audio(item.id, signal);
           if (signal.aborted) return;
           onPlay();
           setAudio({ id: item.id, url: URL.createObjectURL(blob) });
         })}>Load recording</Button>
-        <Button variant="danger" size="inherit" type="button" disabled={busy} loading={busyAction === `remove-audio:${item.id}`} loadingLabel="Deleting…" onClick={() => void action(`remove-audio:${item.id}`, async (signal) => {
+        <Button variant="danger-outline" size="sm" type="button" disabled={busy} loading={busyAction === `remove-audio:${item.id}`} loadingLabel="Deleting…" onClick={() => void action(`remove-audio:${item.id}`, async (signal) => {
           await api!.remove(item.id, true, signal);
           if (!signal.aborted) setRefresh((n) => n + 1);
         })}>Delete saved audio</Button>
       </> : <small>{item.recording_state === "pending" ? "Audio upload incomplete" : "No retained audio"}</small>}
-      <Button variant="danger" size="inherit" type="button" disabled={busy} loading={busyAction === `remove:${item.id}`} loadingLabel="Deleting…" onClick={() => void action(`remove:${item.id}`, async (signal) => {
+      <Button variant="danger-outline" size="sm" type="button" disabled={busy} loading={busyAction === `remove:${item.id}`} loadingLabel="Deleting…" onClick={() => void action(`remove:${item.id}`, async (signal) => {
         await api!.remove(item.id, false, signal);
         if (!signal.aborted) {
           if (selectedAnalysisId === item.id) onAnalysisSelect?.(null);
           setRefresh((n) => n + 1);
         }
       })}>Delete practice record</Button>
+      </div>
       {audio?.id === item.id ? <audio ref={audioRef} src={audio.url} controls preload="metadata"
         onPlay={() => { if (blocked) audioRef.current?.pause(); else onPlay(); }}
         onError={() => setError("This recording could not play. Try loading it again.")} /> : null}
     </li>)}</ul>
-    {offset !== null ? <Button variant="secondary" size="inherit" type="button" disabled={busy} loading={busyAction === "older"} loadingLabel="Loading…" onClick={() => void action("older", async (signal) => {
+    {offset !== null ? <Button variant="secondary" size="sm" type="button" disabled={busy} loading={busyAction === "older"} loadingLabel="Loading…" onClick={() => void action("older", async (signal) => {
       const page = await api!.list(contentId, sentenceId!, offset, signal);
       if (!signal.aborted) { setItems((current) => [...current, ...page.items]); setOffset(page.next_offset); }
     })}>Load older takes</Button> : null}

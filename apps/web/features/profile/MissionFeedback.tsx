@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionLink } from "@/components/ui/direction-button";
 
 import { useState } from "react";
@@ -22,7 +24,7 @@ export function MissionFeedback({ data, loading }: { data: ProfileData | null; l
     <div className={styles.cardHeader}><h2 id="feedback-title"><ClipboardCheck size={16} aria-hidden="true" />Latest Mission feedback</h2>
       <span className={styles.smallMuted}>{report?.status === "partial" ? "Partial report" : "Stage 5"}</span></div>
     {report ? <FeedbackDetails key={`${report.id}:${report.updated_at}`} report={report} timezone={data!.timezone} />
-      : loading ? <p className={styles.loading} role="status">Loading Mission feedback…</p>
+      : loading ? <ContentSkeleton label="Loading Mission feedback…" rows={1} />
         : !data ? <p className={styles.loading}>Mission feedback is unavailable. Retry loading your learning records above.</p>
           : <div className={styles.feedbackEmpty}><div><strong>{unavailable === "legacy_report" ? "Your earlier conversation is in your history" : unavailable === "version_mismatch" ? "Your earlier report is in your history" : unavailable === "invalid_result" ? "This report needs a closer look" : "Your next Mission can bring new insight"}</strong>
             <p>{unavailable === "legacy_report" ? "This older record has no compatible report. You can review the conversation from practice history."

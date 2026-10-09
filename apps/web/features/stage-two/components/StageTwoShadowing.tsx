@@ -5,7 +5,7 @@ import { DirectionButton } from "@/components/ui/direction-button";
 import { Button } from "@/components/ui/button";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Pause, Play, Repeat2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Info, Pause, Play, Repeat2 } from "lucide-react";
 import { LoadoutLink } from "../../navigation/LoadoutLink";
 import type { StageOneSegment, TranscriptLine } from "@libitu/types/stage-one";
 import type { SentenceUnit } from "@libitu/types/stage-two";
@@ -529,36 +529,47 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
                   {activeBufferedReference.state.phase === "enabled" && selected && selected.endMs - selected.startMs <= 60_000
                     && !bufferPreparing && !analysisPending && (!features || features.quality.status !== "usable" || analysisError
                       || (["error", "unreliable"].includes(referenceAnalysis.alignment.phase) && !referenceAnalysis.alignment.canRetry))
-                    ? <Button variant="soft" size="inherit" type="button" onClick={prepareBufferedSentence}>Prepare this sentence at 1×</Button> : null}
+                    ? <Button variant="secondary" size="inherit" type="button" onClick={prepareBufferedSentence}>Prepare this sentence at 1×</Button> : null}
                   {bufferPreparing ? <Button variant="secondary" size="inherit" type="button" onClick={pauseReference}>Cancel preparation</Button> : null}
                   {analysisError || bufferedAnalysis.error ? <p role="alert">{analysisError ?? bufferedAnalysis.error}
                     <Button variant="secondary" size="inherit" type="button" onClick={() => { bufferedAnalysis.retry(); retry(); }}>Retry reference analysis</Button></p> : null}
                 </BufferedReferencePanel> : <ReferenceAudioPanel compact capture={reference} playable={playable && Boolean(selected)} eligible={referenceEligible}
                   pending={analysisPending} features={features} analysisError={analysisError} />}
                 {!cloud.available ? <div className="capture-analysis-status" aria-label="Browser reference analysis">
-                  <label className="practice-retention"><input type="checkbox" checked={persistence?.analyzeReference??false}
-                    onChange={event=>persistence?.setAnalyzeReference(event.target.checked)}/>Analyze captured reference audio on the server</label>
-                  <p>Uploads the captured sentence for word and pitch analysis. Private reference audio is kept for up to 30 days or until deleted.</p>
                   <p role="status">{captured.entry?.pending?'Preparing reference upload…':captured.row?.state==='completed'?'Reference analysis ready.':captured.row?.state==='queued'||captured.row?.state==='processing'?'Analyzing reference words and pitch…':captured.row?.state==='deleted'?'Reference deleted.':captured.row?.state==='partially_completed'?'Reference needs review; available measurements are shown.':captured.row?.state==='awaiting_upload'?'Reference upload incomplete. Keep this page open and retry.':captured.row?.state==='failed'||captured.row?.state==='cancelled'?'Reference analysis stopped. Retry analysis.':'Play the sentence to capture its reference audio.'}</p>
                   {captured.entry?.error?<p role="alert">{captured.entry.error}</p>:null}
                   {captured.entry?.error||captured.row&&['failed','cancelled','partially_completed','awaiting_upload'].includes(captured.row.state)?<Button variant="secondary" size="inherit" onClick={captured.retry}>Retry reference analysis</Button>:null}
                   {captured.row?.state==='deleted'?<Button variant="secondary" size="inherit" onClick={captured.retry}>Prepare a new reference</Button>:null}
-                  {captured.row&&captured.row.state!=='deleted'?<Button variant="danger" size="inherit" onClick={()=>void captured.remove()?.then(()=>setReferenceRevision(v=>v+1))}>Delete captured reference</Button>:null}
+                  {captured.row&&captured.row.state!=='deleted'?<Button variant="danger-outline" size="sm" onClick={()=>void captured.remove()?.then(()=>setReferenceRevision(v=>v+1))}>Delete captured reference</Button>:null}
                 </div>:null}
               </div>
               <div className="stage-two-operation-footer">
-                <label className="practice-retention">
-                  <input type="checkbox" checked={persistence?.analyze ?? false} disabled={recording.isBusy()}
-                    onChange={(event) => persistence?.setAnalyze(event.target.checked)} />
-                  Analyze new recordings on the server
-                </label>
-                <p>Uploads your voice for content checking and word timing/pitch comparison. Results stay with your practice record; analysis audio is removed after processing, or expires after 24 hours. This choice is remembered for your account on this browser.</p>
-                <label className="practice-retention">
-                  <input type="checkbox" checked={retainRecording} disabled={recording.isBusy()}
-                    onChange={(event) => setRetainRecording(event.target.checked)} />
-                  Keep new recordings in my account for later playback
-                </label>
-                <p>Completed takes save a practice record automatically. Checked recordings are uploaded privately and kept until you delete them. No model training or human review.</p>
+                <details className="stage-two-audio-settings">
+                  <summary><Info aria-hidden="true" size={16} />Audio settings</summary>
+                  <div className="stage-two-audio-settings-content">
+                    {!cloud.available ? <div className="stage-two-audio-preference">
+                      <label className="practice-retention"><input type="checkbox" checked={persistence?.analyzeReference??false}
+                        onChange={event=>persistence?.setAnalyzeReference(event.target.checked)}/>Analyze captured reference audio on the server</label>
+                      <p>Uploads the captured sentence for word and pitch analysis. Private reference audio is kept for up to 30 days or until deleted.</p>
+                    </div> : null}
+                    <div className="stage-two-audio-preference">
+                      <label className="practice-retention">
+                        <input type="checkbox" checked={persistence?.analyze ?? false} disabled={recording.isBusy()}
+                          onChange={(event) => persistence?.setAnalyze(event.target.checked)} />
+                        Analyze new recordings on the server
+                      </label>
+                      <p>Uploads your voice for content checking and word timing/pitch comparison. Results stay with your practice record; analysis audio is removed after processing, or expires after 24 hours. This choice is remembered for your account on this browser.</p>
+                    </div>
+                    <div className="stage-two-audio-preference">
+                      <label className="practice-retention">
+                        <input type="checkbox" checked={retainRecording} disabled={recording.isBusy()}
+                          onChange={(event) => setRetainRecording(event.target.checked)} />
+                        Keep new recordings in my account for later playback
+                      </label>
+                      <p>Completed takes save a practice record automatically. Checked recordings are uploaded privately and kept until you delete them. No model training or human review.</p>
+                    </div>
+                  </div>
+                </details>
                 <p className="stage-two-practice-hint">Listen to the reference, then record and replay your take.</p>
                 <details className="stage-two-operation-help">
                   <summary>How It Works</summary>

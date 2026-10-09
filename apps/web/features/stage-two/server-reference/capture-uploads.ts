@@ -16,6 +16,7 @@ export class CaptureUploads {
   subscribe(listener:()=>void) { this.listeners.add(listener); return ()=>{this.listeners.delete(listener);}; }
   get(key: string) { return this.entries.get(key); }
   get pending() { return [...this.entries.values()].filter(e=>e.pending).length; }
+  get pendingUploads() { return [...this.entries.values()].filter(e=>e.pending && e.clip).length; }
   private publish() { for (const notify of this.listeners) notify(); }
   enqueue(segment: string, source: ReferenceAlignmentSource, clip: ReferenceAnalysisClip) {
     const key=captureKey(source.contentId,segment,source.sentenceId), old=this.entries.get(key);

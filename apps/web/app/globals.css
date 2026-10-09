@@ -170,11 +170,12 @@ svg {
   text-decoration: none;
 }
 
-.stage-pill.active {
-  border-color: var(--purple-200);
-  background: var(--purple-50);
-  color: var(--purple-800);
-  font-weight: 500;
+.stage-pill.ui-button[data-variant][data-size][data-shape].active {
+  --button-bg: var(--purple-50);
+  --button-fg: var(--purple-800);
+  --button-edge: var(--purple-200);
+  --button-hover: var(--purple-50);
+  --button-pressed: var(--purple-50);
 }
 
 .left-panel,
@@ -3760,7 +3761,7 @@ svg {
   padding: 48px 24px;
   text-align: center;
 }
-.shadow-sign-in button, .practice-history button, .practice-save-banner button {
+.shadow-sign-in button {
   min-height: 44px;
   margin: 4px;
   padding: 8px 12px;
@@ -3770,18 +3771,40 @@ svg {
   color: inherit;
   cursor: pointer;
 }
-.practice-save-banner {
-  padding: 12px 20px;
-  background: var(--amber-50);
-  color: var(--color-text-primary);
+.practice-save-notifications {
+  position: fixed; z-index: 100; right: 24px; bottom: max(24px, env(safe-area-inset-bottom));
+  width: min(400px, calc(100% - 32px)); display: grid; gap: 10px;
+  max-height: calc(100dvh - 48px); overflow-y: auto;
 }
+.practice-save-banner {
+  display: flex; align-items: flex-start; gap: 12px; padding: 16px;
+  border: 1px solid #bfdbfe; border-radius: var(--radius-lg);
+  background: #eff6ff; color: #1e40af;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 10%);
+  font-size: 13px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.practice-save-banner > svg { flex-shrink: 0; margin-top: 1px; }
+.practice-save-banner strong { display: block; font-weight: 600; }
+.practice-save-banner p { margin: 4px 0 0; color: inherit; }
+.practice-save-banner button { margin-top: 10px; }
+.practice-save-banner[data-state="error"] { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
+.practice-save-spinner { animation: practice-save-spin 1s linear infinite; }
+@keyframes practice-save-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .practice-save-spinner { animation: none; } }
+@media (max-width: 600px) { .practice-save-notifications { right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); } }
 .practice-retention { display: flex; gap: 8px; align-items: center; min-height: 44px; }
-.practice-history { padding: 16px 0; border-top: 1px solid var(--color-border-tertiary); }
-.practice-history h2 { font-size: 16px; }
-.practice-history p, .practice-history li { font-size: 13px; }
-.practice-history ul { padding: 0; list-style: none; }
-.practice-history li { padding: 8px 0; border-bottom: 1px solid var(--color-border-tertiary); }
-.practice-history li > span { display: block; }
+.practice-history { padding: 20px; margin: 16px 0; border: 1px solid var(--color-border-tertiary); border-radius: var(--radius-lg); background: var(--color-background-primary); }
+.practice-history h2 { margin: 0 0 8px; font-size: 16px; }
+.practice-history p { font-size: 12px; line-height: 1.6; color: var(--color-text-secondary); }
+.practice-history ul { display: grid; gap: 10px; padding: 0; margin: 16px 0 0; list-style: none; }
+.practice-history li { padding: 14px; border: 1px solid var(--color-border-tertiary); border-radius: var(--radius-md); }
+.practice-history li[data-selected="true"] { border-color: var(--purple-600); }
+.practice-history-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: 12px; }
+.practice-history-meta time { font-weight: 500; }
+.practice-history-meta span, .practice-history-actions small { color: var(--color-text-secondary); font-size: 11px; }
+.practice-history-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.practice-history-actions .ui-button { margin: 0; }
+@media (max-width: 600px) { .practice-history { padding: 14px; } }
 .practice-history audio { display: block; max-width: 100%; }
 
 /* File references share the compact media controls; layer colors stay in analysis. */
@@ -3985,3 +4008,49 @@ svg {
 @media (max-width: 400px) {
   .stage-page { --stage-gutter: 8px; }
 }
+
+.corpus-card.corpus-target {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Shared route and incremental reader placeholders; no simulated progress. */
+.reader-skeleton { display: grid; gap: 24px; padding: 20px 16px; }
+.reader-skeleton-group { display: grid; gap: 10px; }
+.reader-skeleton-line {
+  display: block;
+  height: 12px;
+  width: 100%;
+  border-radius: 4px;
+  background: var(--color-background-secondary, #f1f0ee);
+  animation: reader-skeleton-pulse 1.8s ease-in-out infinite;
+}
+.reader-skeleton-line:first-child { width: 72%; height: 15px; }
+.reader-skeleton-line:last-child { width: 48%; }
+.reader-skeleton-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--color-background-secondary, #f1f0ee);
+}
+@keyframes reader-skeleton-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) {
+  .reader-skeleton-line { animation: none; }
+}
+
+/* Compact audio preferences; processing feedback stays visible above. */
+.stage-two-operation-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.stage-two-audio-settings { min-width: 0; max-width: 100%; font-size: 12px; }
+.stage-two-audio-settings > summary {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px;
+  padding: 6px 10px; border: 1px solid var(--color-border-tertiary);
+  border-radius: var(--radius-md); background: var(--color-background-primary);
+  color: var(--color-text-primary); cursor: pointer; list-style: none;
+}
+.stage-two-audio-settings > summary::-webkit-details-marker { display: none; }
+.stage-two-audio-settings > summary:hover { background: var(--color-background-secondary); }
+.stage-two-audio-settings > summary:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: 2px; }
+.stage-two-audio-settings[open] { flex-basis: 100%; }
+.stage-two-audio-settings-content { display: grid; gap: 12px; padding: 12px 0 4px; }
+.stage-two-audio-preference .practice-retention { min-height: 32px; font-size: 12px; }
+.stage-two-audio-preference p { margin: 4px 0 0 24px; color: var(--color-text-secondary); font-size: 11px; line-height: 1.6; }
+.stage-two-audio-preference input { flex-shrink: 0; }

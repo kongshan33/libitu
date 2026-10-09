@@ -95,6 +95,36 @@ async function selectText(page, text) {
   await page.locator(".selection-original").filter({ hasText: text }).waitFor();
 }
 
+async function verifyManualHighlight(page) {
+    // A user-selected expression absent from the blueprint must annotate immediately and after reload.
+    await selectText(page, "the plan");
+    await page.locator(".selection-save:not([disabled])").click();
+    const manualHighlight = page.locator(".transcript-text .highlight.chunk").filter({ hasText: "the plan" });
+    await manualHighlight.waitFor();
+    assert.equal(await manualHighlight.textContent(), "the plan");
+    await page.getByRole("button", { name: "Idioms", exact: true }).click();
+    const seekBefore = await page.evaluate(() => window.__lastSeek);
+    await manualHighlight.click();
+    await page.locator(".corpus-tab.active").filter({ hasText: "Chunks" }).waitFor();
+    const target = page.locator(".corpus-card.corpus-target .corpus-detail-trigger");
+    assert.equal(await target.locator(".corpus-text").textContent(), "the plan");
+    assert.equal(await target.evaluate((node) => node === document.activeElement), true);
+    assert.equal(await page.evaluate(() => window.__lastSeek), seekBefore, "card navigation must not seek playback");
+    await page.locator(".transcript-text .highlight.idiom").click();
+    await page.locator(".corpus-tab.active").filter({ hasText: "Idioms" }).waitFor();
+    assert.match(await page.locator(".corpus-card.corpus-target").textContent(), /double down on/);
+    await page.getByRole("button", { name: "Saved", exact: true }).click();
+    await manualHighlight.click();
+    assert.equal(await page.locator(".corpus-tab.active").textContent(), "Saved");
+    assert.equal(await page.locator(".transcript-text .highlight.idiom").textContent(), "doubled down on");
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await manualHighlight.waitFor();
+    await page.getByRole("button", { name: "Saved", exact: true }).click();
+    await page.getByRole("button", { name: "Remove from corpus", exact: true }).click();
+    await manualHighlight.waitFor({ state: "detached" });
+    assert.equal(await page.locator(".transcript-text .highlight.idiom").textContent(), "doubled down on");
+}
+
 const browser = await chromium.launch({ headless: true, channel: process.env.LIBITU_BROWSER_CHANNEL ?? "chrome" });
 try {
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
@@ -112,7 +142,7 @@ try {
         if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
         if (url.pathname === "/api/corpus/analyze-selection") {
           selectionCount += 1;
-          if (selectionCount === 1) { delayedSelectionRoute = route; return; }
+          if (selectionCount === 1 && !process.env.LIBITU_TEST_SAVED_HIGHLIGHTS_ONLY) { delayedSelectionRoute = route; return; }
           return route.fulfill({ json: selectionAnalysis(route.request().postDataJSON().selected_text, selectionCount), headers });
         }
         if (url.pathname === "/api/jobs/render-test") {
@@ -213,6 +243,14 @@ try {
       window.__streams[0].dispatchEvent(Object.assign(new Event("job"), { data: JSON.stringify(ready) }));
     }, { ...job, status: "ready", processing_stage: "completed", analysis_preview: null });
     await page.locator(".save-button:not([disabled])").waitFor();
+    if (process.env.LIBITU_TEST_SAVED_HIGHLIGHTS_ONLY) {
+      await page.evaluate(() => window.__ytPlayerEvents.onStateChange({ data: 2 }));
+      await verifyManualHighlight(page);
+      assert.deepEqual(errors, []);
+      console.log(JSON.stringify({ viewport, savedHighlights: "save/reload/remove passed", errors }));
+      await context.close();
+      continue;
+    }
     // Keep the mobile header stationary while testing account actions, independently of playback auto-scroll.
     await page.evaluate(() => window.__ytPlayerEvents.onStateChange({ data: 2 }));
     const returnUrl = page.url();
@@ -229,6 +267,10 @@ try {
     await signIn.press("Enter");
     const createAccount = page.getByRole("button", { name: "Create account", exact: true });
     await createAccount.hover();
+    await page.waitForFunction(() => {
+      const button = [...document.querySelectorAll("button")].find((node) => node.textContent === "Create account");
+      return button && getComputedStyle(button).backgroundColor === "rgb(60, 52, 137)";
+    });
     assert.deepEqual(await createAccount.evaluate((button) => ({
       background: getComputedStyle(button).backgroundColor,
       color: getComputedStyle(button).color
@@ -407,6 +449,7 @@ try {
     await page.getByRole("button", { name: "Saved", exact: true }).click();
     await page.waitForFunction(() => !document.querySelector(".corpus-sync-status"));
     assert.equal(await page.locator(".corpus-card").count(), 0);
+    await verifyManualHighlight(page);
     assert.deepEqual(errors, []);
     console.log(JSON.stringify({ viewport, counts, preservedNodes: 4, errors }));
     await context.close();

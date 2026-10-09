@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionLink } from "@/components/ui/direction-button";
 
 import { SelectField } from "@/components/ui/select";
@@ -110,7 +112,7 @@ export function LoadoutPage() {
         <DirectionLink href={returnTo} className={styles.back}><ArrowLeft size={14} aria-hidden="true" /> Back to learning</DirectionLink>
         <div className={styles.pageHeading}><div className={styles.eyebrow}>Prepare to use your English</div><h1>Mission loadout</h1><p>Choose a goal and a small set of saved language for your next conversation.</p></div>
         {reportImport ? <p className={styles.notice} role="status">{reportImport}</p> : null}
-        {!local.ready && !local.error ? <p className={styles.notice} role="status">Loading your saved loadout…</p> : null}
+        {!local.ready && !local.error ? <ContentSkeleton label="Loading your saved loadout…" /> : null}
         <p className={`${styles.fieldHelp} ${styles.draftStatus}`} data-pending={local.pending} role="status" aria-hidden={!local.pending}>Saving your draft on this device… Keep this page open until saving finishes.</p>
         {local.error ? <div className={styles.error} role="alert"><p>{local.error}</p><Button variant="secondary" size="inherit" type="button" onClick={local.retry}>Retry saving draft</Button></div> : null}
         {local.deviceDrafts.map((deviceDraft, index) => <div className={styles.notice} key={index}><strong>You also have a saved draft.</strong><p>{deviceDraft.goal || "An untitled mission"} · {deviceDraft.selectedKeys.length} selected items. Using it replaces the setup below.</p><Button variant="secondary" size="inherit" type="button" disabled={busy} onClick={() => local.adopt(index)}>Use device draft{local.deviceDrafts.length > 1 ? ` ${index + 1}` : ""}</Button></div>)}
@@ -128,7 +130,7 @@ export function LoadoutPage() {
         <fieldset className={styles.section} disabled={!local.ready || busy}>
           <legend><span className={styles.stepNumber}>2</span> Choose your logic <span className={styles.optional}>Optional</span></legend>
           <p className={styles.sectionIntro}>A conversational strategy gives your mission a shape. You can also start without one.</p>
-          {optionsError ? <div className={styles.error} role="alert"><p>{optionsError}</p><Button variant="secondary" size="inherit" type="button" onClick={() => setOptionsAttempt((value) => value + 1)}>Retry mission options</Button></div> : !options ? <p role="status">Loading conversation strategies…</p> : null}
+          {optionsError ? <div className={styles.error} role="alert"><p>{optionsError}</p><Button variant="secondary" size="inherit" type="button" onClick={() => setOptionsAttempt((value) => value + 1)}>Retry mission options</Button></div> : !options ? <ContentSkeleton label="Loading conversation strategies…" /> : null}
           <div className={styles.logicGrid} role="group" aria-label="Logic template">
             {options?.logic_templates.map((logic) => <button type="button" key={logic.id} aria-pressed={draft.logicTemplateId === logic.id}
               className={`${styles.logicCard} ${draft.logicTemplateId === logic.id ? styles.selectedCard : ""}`}
@@ -144,7 +146,7 @@ export function LoadoutPage() {
           {/* <Link href="/corpus" >Manage corpus →</Link> */}
           <h2><span className={styles.stepNumber}>3</span> Equip your language</h2>
           <p className={styles.sectionIntro}>Select at least one item. Use up to 3 structures and 5 expressions from any source.</p>
-          {!corpus.ready && !corpus.error ? <p className={styles.notice} role="status">{corpus.busy && owner ? "Loading and syncing your corpus…" : "Loading your corpus…"}</p> : null}
+          {!corpus.ready && !corpus.error ? <ContentSkeleton label="Loading your corpus…" variant="cards" /> : null}
           {corpus.error ? <div className={styles.error} role="alert"><p>{corpus.error}</p><Button variant="secondary" size="inherit" type="button" onClick={corpus.retry}>Retry corpus sync</Button></div> : null}
           {corpus.ready && !corpus.records.length ? <div className={styles.emptyLibrary}><h3>Your corpus is empty</h3><p>Save an expression or structure while learning, then come back to equip it.</p><Link href={returnTo}>Find language to save <StartIcon /></Link></div> : null}
           {corpus.records.length ? <>

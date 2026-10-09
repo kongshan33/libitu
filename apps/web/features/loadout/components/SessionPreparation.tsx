@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionLink } from "@/components/ui/direction-button";
 
 import { AppHeader } from "@/components/AppHeader";
@@ -40,9 +42,9 @@ export function SessionPreparation({ sessionId }: { sessionId: string }) {
 
     <div className={styles.sessionMain}>
       <DirectionLink className={styles.back} href={`/loadout?returnTo=${encodeURIComponent(returnTo)}`}><ArrowLeft size={14} aria-hidden="true" /> Back to loadout</DirectionLink>
-      {!isLoaded ? <p role="status">Checking sign-in…</p> : !userId ? <div className={styles.emptyLibrary}><h1>Sign in to view your mission</h1><p>Your saved mission belongs to your account.</p><Button variant="primary" size="inherit" className={styles.startButton} type="button" onClick={signIn}>Sign in</Button></div>
+      {!isLoaded ? <ContentSkeleton label="Checking sign-in…" /> : !userId ? <div className={styles.emptyLibrary}><h1>Sign in to view your mission</h1><p>Your saved mission belongs to your account.</p><Button variant="primary" size="inherit" className={styles.startButton} type="button" onClick={signIn}>Sign in</Button></div>
         : current?.error ? <div className={styles.error} role="alert"><h1>Mission unavailable</h1><p>{current.error}</p>{current.status === 401 ? <Button variant="secondary" size="inherit" type="button" onClick={signIn}>Sign in again</Button> : current.status !== 404 ? <Button variant="secondary" size="inherit" type="button" onClick={() => setAttempt((value) => value + 1)}>Retry loading mission</Button> : null}</div>
-          : !session ? <p role="status">Loading your saved mission…</p> : <>
+          : !session ? <ContentSkeleton label="Loading your saved mission…" variant="cards" /> : <>
             <div className={styles.savedBadge}><Check size={15} aria-hidden="true" /> Saved to your account</div>
             <h1>Your mission is prepared</h1><p className={styles.sessionGoal}>{session.goal}</p>
             <dl className={styles.sessionSettings}><div><dt>Scenario</dt><dd>{session.scenario_type === "workplace" ? "Workplace" : "Everyday life"}</dd></div><div><dt>Difficulty</dt><dd>{session.difficulty}</dd></div><div><dt>Feedback</dt><dd>{session.feedback_level}</dd></div></dl>

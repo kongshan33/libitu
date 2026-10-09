@@ -1,5 +1,7 @@
 "use client";
 
+import { LoaderCircle, CircleAlert } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@clerk/nextjs";
@@ -66,7 +68,7 @@ export function PracticePersistence({ children }: { children: ReactNode }) {
   }
   useEffect(() => {
     function warn(event: BeforeUnloadEvent) {
-      if (active?.outbox.state.pending || active?.captures.pending) { event.preventDefault(); event.returnValue = ""; }
+      if (active?.outbox.state.pending || active?.captures.pendingUploads) { event.preventDefault(); event.returnValue = ""; }
     }
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
@@ -74,12 +76,22 @@ export function PracticePersistence({ children }: { children: ReactNode }) {
 
   return <Context.Provider value={active ? { api: active.api, referenceApi: active.referenceApi, outbox: active.outbox,
     captures: active.captures, state, analyze, setAnalyze, captureVersion, analyzeReference, setAnalyzeReference } : null}>
-    {active?.captures.pending ? <div className="practice-save-banner" role="status">Preparing reference audio… Keep this page open until the upload finishes.</div> : null}
-    {active && state.pending ? <div className="practice-save-banner" role={state.errors.length ? "alert" : "status"}>
-      {state.errors.length ? `${state.pending} take(s) need saving. ${state.errors[0].message}` : `Saving ${state.pending} practice take(s)…`}
-      <span> Keep this page open and stay signed in until saving finishes.</span>
-      {state.errors.length ? <Button variant="secondary" size="inherit" type="button" onClick={() => active.outbox.retry()}>Retry saves</Button> : null}
-    </div> : null}
+    {active && (active.captures.pendingUploads || state.pending) ? <aside className="practice-save-notifications" aria-label="Audio saving notifications">
+      {active.captures.pendingUploads ? <div className="practice-save-banner" role="status">
+        <LoaderCircle className="practice-save-spinner" size={20} aria-hidden="true" />
+        <div><strong>Preparing reference audio…</strong><p>Keep this page open until the upload finishes.</p></div>
+      </div> : null}
+      {state.pending ? <div className="practice-save-banner" data-state={state.errors.length ? "error" : "pending"}
+        role={state.errors.length ? "alert" : "status"}>
+        {state.errors.length ? <CircleAlert size={20} aria-hidden="true" /> : <LoaderCircle className="practice-save-spinner" size={20} aria-hidden="true" />}
+        <div>
+          <strong>{state.errors.length ? "Your practice still needs saving" : `Saving ${state.pending} practice ${state.pending === 1 ? "take" : "takes"}…`}</strong>
+          {state.errors.length ? <p>{state.errors[0].message}</p> : null}
+          <p>Keep this page open and stay signed in until saving finishes.</p>
+          {state.errors.length ? <Button variant="secondary" size="sm" type="button" onClick={() => active.outbox.retry()}>Retry saves</Button> : null}
+        </div>
+      </div> : null}
+    </aside> : null}
     {children}
   </Context.Provider>;
 }

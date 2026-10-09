@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionButton, DirectionLink } from "@/components/ui/direction-button";
 
 import { SelectField } from "@/components/ui/select";
@@ -26,7 +28,7 @@ export function CorpusLibrary() {
   const { isLoaded, userId } = useAuth();
   return <main className={styles.page}>
     <AppHeader active="corpus" />
-    {isLoaded ? <LibraryContent key={userId ?? "guest"} owner={userId ?? null} /> : <p className={styles.empty} role="status">Loading your library…</p>}
+    {isLoaded ? <LibraryContent key={userId ?? "guest"} owner={userId ?? null} /> : <ContentSkeleton label="Loading your library…" variant="cards" />}
   </main>;
 }
 function LibraryContent({ owner }: { owner: string | null }) {
@@ -86,7 +88,7 @@ function LibraryContent({ owner }: { owner: string | null }) {
       {filterOpen ? <aside id="mobile-corpus-filters" className={styles.mobileFilters} aria-label="Corpus filters">{filterContent}</aside> : null}
       {filters.highValue ? <p className={styles.help}>Learning value of 4 or 5 out of 5. Items without a score are not included.</p> : null}
       {corpus.error ? <div role="alert" className={styles.error}><p>{corpus.error}</p><Button variant="secondary" size="inherit" type="button" disabled={corpus.busy} loading={corpus.busy} loadingLabel="Syncing…" onClick={corpus.retry}>Retry corpus sync</Button></div> : null}
-      {!corpus.ready && !corpus.error ? <p role="status" className={styles.empty}>Loading and syncing your corpus…</p> : null}
+      {!corpus.ready && !corpus.error ? <ContentSkeleton label="Loading and syncing your corpus…" /> : null}
       <div className={styles.resultMeta}><span aria-live="polite">{visible.length} items shown</span><span>{selectedKeys.length} selected{hidden ? ` · ${hidden} hidden by filters` : ""}</span></div>
       {corpus.ready && !corpus.records.length ? <div className={styles.empty}><BookOpen size={32} /><h2>Your collection starts with one expression.</h2><p>Save useful language while listening or reading, then find it here.</p><DirectionLink href="/">Find language to save <ArrowRight size={15} /></DirectionLink></div> : corpus.ready && !visible.length ? <div className={styles.empty}><Search size={28} /><h2>No matching items</h2><p>Try a different search or clear your filters.</p><Button variant="secondary" size="inherit" type="button" onClick={() => setFilters(emptyFilters)}>Clear filters</Button></div> : null}
       <div className={`${styles.items} ${view === "list" ? styles.list : ""}`}>

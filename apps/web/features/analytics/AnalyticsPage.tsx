@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionLink } from "@/components/ui/direction-button";
 
 import { AppHeader } from "@/components/AppHeader";
@@ -23,7 +25,7 @@ import styles from "./Analytics.module.css";
 export function AnalyticsPage({ sessionId }: { sessionId: string }) {
   const { isLoaded, userId, getToken } = useAuth();
   const clerk = useClerk();
-  if (!isLoaded) return <><AppHeader active="mission" /><main className={styles.page}><p role="status">Checking sign-in…</p></main></>;
+  if (!isLoaded) return <><AppHeader active="mission" /><main className={styles.page}><ContentSkeleton label="Checking sign-in…" /></main></>;
   if (!userId) return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.gate}><BrandLogo className={styles.logo} /><h1>Sign in to view your report</h1><p>Your conversation and feedback belong to your account.</p><Button variant="primary" size="inherit" className={styles.primary} onClick={() => { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in</Button></section></main></>;
   return <OwnedReport key={`${userId}:${sessionId}`} owner={userId} sessionId={sessionId} getToken={getToken} />;
 }
@@ -122,7 +124,7 @@ function OwnedReport({ owner, sessionId, getToken }: { owner: string; sessionId:
     <div className={styles.topbar}><span className={styles.stagePill}>Stage 5 · Analytics</span></div>
     <div className={styles.heading}><DirectionLink className={styles.back} href={`/speaking/${encodeURIComponent(sessionId)}`}><ArrowLeft size={14} aria-hidden="true" /> Conversation review</DirectionLink><div className={styles.eyebrow}>Reflect, then try again</div><h1>{report ? "Your mission report" : "Speaking report"}</h1><p>{report?.session.goal ?? "Feedback grounded in your conversation."}</p>{report ? <div className={styles.context}><span>{report.session.scenario_type === "workplace" ? "Workplace" : "Everyday life"}</span><span>{report.session.difficulty}</span>{report.session.logic_template ? <span>{report.session.logic_template.title}</span> : null}<span>{report.session.turn_count} user {report.session.turn_count === 1 ? "turn" : "turns"}</span></div> : null}</div>
     {state.error ? <div className={styles.statusBox} role="alert"><h2>{state.errorStatus === 404 ? "Report unavailable" : "Report not ready to show"}</h2><p>{state.error}</p>{state.errorStatus !== 404 && state.errorStatus !== 409 ? <Button variant="secondary" size="inherit" onClick={() => void controller.current?.refresh()} disabled={state.loading} loading={state.loading} loadingLabel="Loading…">Reload report</Button> : null}</div> : null}
-    {!report && state.loading ? <div className={styles.statusBox} role="status">Loading your saved report…</div> : null}
+    {!report && state.loading ? <ContentSkeleton label="Loading your saved report…" variant="cards" /> : null}
     {report ? <>
       {pending || report.status !== "ready" ? <div className={styles.statusBox} role="status"><strong>{({ queued: "Your report is queued", processing: "Reviewing your conversation", partial: "Some feedback is available", insufficient_data: "Not enough evidence for a full assessment", failed: "The assessment could not be completed", ready: "Report ready" })[report.status]}</strong><p>{pending ? "Your transcript is saved. You can leave this page and return to the same report." : report.status === "insufficient_data" ? "Missing or unconfirmed speech is not treated as a zero. Start another mission when you are ready." : "Verified observations are kept. Unavailable scores stay blank."}</p>{state.pollingPaused ? <p>Automatic checking has paused. Your assessment can continue in the background.</p> : null}{state.pollingPaused ? <Button variant="secondary" size="inherit" disabled={state.loading} loading={state.loading} loadingLabel="Checking…" onClick={() => void controller.current?.refresh()}>Check report status</Button> : null}{report.retryable && !pending ? <Button variant="secondary" size="inherit" disabled={state.loading} loading={state.loading} loadingLabel="Requesting…" onClick={() => void controller.current?.retry()}><RefreshCw size={13} aria-hidden="true" />Retry assessment</Button> : null}</div> : null}
       <div className={styles.body}><div className={styles.main}>

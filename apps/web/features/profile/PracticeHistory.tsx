@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { Button, ButtonLink } from "@/components/ui/button";
 
 import Link from "next/link";
@@ -82,7 +84,7 @@ function FilteredHistory({ owner, timezone, kind }: { owner: string; timezone: s
         <ButtonLink variant="primary" size="inherit" href={kind === "shadowing" ? "/" : "/loadout"} className={styles.primary}>{kind === "shadowing" ? "Explore practice" : "Start a Mission"}<ArrowUpRight size={15} aria-hidden="true" /></ButtonLink>
       </div> : null}
     {error ? <ProfileError error={error} retry={() => setAttempt((value) => value + 1)} /> : null}
-    {busy ? <p className={styles.loading} role="status">Loading practice history…</p> : null}
+    {busy ? <ContentSkeleton label="Loading practice history…" /> : null}
     {next !== null && !error ? <div className={styles.feedFooter}><Button variant="secondary" size="inherit" type="button" loading={busy} loadingLabel="Loading practice…" onClick={() => setOffset(next)}>Load more practice</Button></div> : null}
   </div>;
 }

@@ -172,6 +172,7 @@ Show a compact `Word timing unavailable` notice below Stage 1's subtitle control
 For a completed YouTube cache with no usable word timing, run a separate recovery attempt after rendering the existing blueprint. Request fresh JSON3 from an already open matching YouTube tab through the extension, independently of the original handoff; do not open a video, start playback, or create another analysis job. Validate the video, language and unchanged source words before saving timing. Show recovery progress/failure beside the timing notice and allow explicit retry; missing extensions/tabs and unusable captions leave basic practice available. Apply new sentence/timing data only when Stage 1 is paused. In an active Stage 2, keep the current practice snapshot and tell the learner to return to Stage 1 to apply the recovered view; do not silently reset a recording, reference session, sentence selection or playback range.
 
 - Show timestamps with tabular numerals
+- Include the current source’s personally saved cards in transcript highlights, using the same merged card list as the sidebar. Match complete source wording with word boundaries; do not highlight guessed partial fragments. Update after saving, restoring or removing a card; extraction-candidate highlights remain available. Each highlight identifies its card: activation selects the corresponding category (or retains Saved for a saved card), scrolls/focuses the card and visibly marks it without seeking playback.
 - Use amber highlighting for concrete chunks
 - Use teal highlighting for reusable structures
 - Show meaning and functional tag in a tooltip or details popover
@@ -571,3 +572,8 @@ The current browser-reference path uploads the captured sentence for private ser
 
 
 2026-09-30 layer guidance correction: restore the right-side Layer focus, Feedback and Tip cards for Sound, Rhythm and Melody. Sound guidance follows the selected phenomenon and uses the current sentence’s rule suggestions; conceal mode also hides word-specific sidebar text. Desktop places guidance beside the layer canvas; narrow screens place it below. The video remains above the workspace. Removing the experimental score sidebar did not authorize removing instructional guidance; no illustrative scores or detected-error claims are restored.
+
+
+### Stage 1 pending-state feedback (2026-10-08)
+
+Show a lightweight route loading shell while the page resolves. Empty transcript, logic and extracted-expression regions use decorative skeletons during loading, independently replaced by available content. Keep real status/error/retry messages visible, preserve Saved empty states, and disable pulse animation for reduced motion. Do not impose a minimum display time or change caption preflight, playback, handoff or analysis sequencing.

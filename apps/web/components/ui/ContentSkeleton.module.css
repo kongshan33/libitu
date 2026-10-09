@@ -1,0 +1,18 @@
+.root { width: 100%; min-width: 0; padding: 12px 0; }
+.content { animation: skeleton-pulse 1.6s ease-in-out infinite; }
+.groups { display: grid; gap: 16px; }
+.group { display: grid; gap: 10px; padding: 12px 0; }
+.group span, .heading, .video, .controls { display: block; background: var(--color-background-tertiary, #eeecea); border-radius: 6px; }
+.group span { height: 12px; }
+.group span:first-child { width: 45%; height: 16px; }
+.group span:last-child { width: 72%; }
+.cards .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cards .group { padding: 20px; border: 1px solid var(--color-border-tertiary); border-radius: 12px; min-height: 130px; }
+.practice { grid-column: 1 / -1; padding: 24px; }
+.heading { height: 24px; width: 55%; margin-bottom: 24px; }
+.video { aspect-ratio: 16 / 9; max-height: 440px; }
+.controls { height: 72px; margin: 16px 0; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes skeleton-pulse { 50% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .content { animation: none; } }
+@media (max-width: 600px) { .cards .groups { grid-template-columns: minmax(0, 1fr); } .practice { padding: 16px; } }

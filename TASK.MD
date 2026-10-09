@@ -9,6 +9,61 @@ meta:
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
+## Loading boundary correction — 2026-10-08
+
+- [x] Make the inherited root route fallback stage-neutral instead of rendering ReaderLoadingShell for every destination.
+- [x] Initialize valid Shadow deep links from server query parameters and show the practice skeleton through blueprint/auth loading; invalid segment IDs return to the reader.
+- [x] Delayed API browser checks confirm no Stage 1 reader skeleton/content during Shadow loading and successful resolution for Shadow, Corpus and profile.
+
+## Page loading skeletons — 2026-10-08
+
+- [x] Replace Stage 2 dynamic-import text with a practice-shaped skeleton.
+- [x] Add shared rows/cards skeletons and route loading shells; migrate main page/data fetch placeholders while retaining errors, empty results and operation progress.
+- [x] Provide screen-reader loading status, decorative hidden shapes and reduced-motion support.
+- Verification: root lint/build/test pass; delayed-response skeleton-to-content and reduced-motion checks pass for Corpus, Loadout, profile/history, Mission and analytics at 1440/390 px. Stage 2 ready-state mobile rendering passes; its dynamic-import fallback is wired to the practice skeleton.
+
+## Stage navigation states — 2026-10-08
+
+- [x] Stage 1/2 use shared secondary Button appearance like Stage 3/Corpus, retaining stage selection colors and existing handlers/disabled conditions.
+- [x] Fixture browser checks at 1148/390 px verify matching idle/hover paint, disabled hover stability and persistent selected styling.
+
+## Saved Shadow practice styling — 2026-10-08
+
+- [x] Group saved-take metadata/actions in cards; use small shared buttons and outlined destructive actions, including reference deletion.
+- [x] Clip shared button backgrounds inside transparent borders to remove exterior white halos.
+- Verification: root lint/build/test pass; desktop/mobile production-preview fixture checks cover small button height, destructive variant/background clipping and save/load/retry/delete flows. Local dev preview was restarted after missing generated vendor chunks.
+
+## Audio save notifications — 2026-10-08
+
+- [x] Use a responsive fixed notification stack with blue processing and warm error states, icons and retry actions.
+- [x] Distinguish read-only reference recovery from pending uploads, avoiding false entry notices/unload warnings.
+- [x] Regression covers recovery versus upload counts; desktop/mobile fixture browser checks cover empty entry, failure notice, retry, save/history and logout.
+
+## Stage 2 compact audio settings — 2026-10-08
+
+- [x] Give sentence preparation a white outlined secondary button.
+- [x] Consolidate three audio preferences and their explanations in a keyboard-accessible disclosure, preserving defaults, handlers and visible processing feedback.
+- Verification: root lint/build/test pass (1,192 tests; five existing unused-symbol lint warnings). Fixture browser checks pass at 1440/827/390 px, including keyboard disclosure, unchanged initial checkbox states and no horizontal overflow. Real extension capture/upload is not exercised.
+
+## Stage 1 loading feedback — 2026-10-08
+
+- [x] Add route and region skeletons without delaying streamed content or changing acquisition/playback.
+- [x] Preserve errors/retry and Saved states; respect reduced motion.
+- Verification: root lint/build/test pass (1,192 tests; five existing lint warnings). Live extension latency and browser visual checks were not performed for this change.
+
+## Stage 1 highlight/card correspondence — 2026-10-08
+
+- [x] Derive highlights from the same merged list as sidebar cards and attach card identities.
+- [x] Remove fragment fallback and reject inside-word matches.
+- [x] Click a highlight to select the matching category and focus/scroll the corresponding card without seeking.
+- Verification: root lint/build/test pass (311 Web tests, five existing lint warnings). Focused browser checks pass at 1440/390 px for saving, reload, deletion, Chunks/Idioms navigation, Saved retention, focused matching cards and unchanged playback position. Exact-source and false-fragment/inside-word regressions pass.
+
+## Stage 1 saved-card highlighting — 2026-10-08
+
+- [x] Include current-source saved items in memoized transcript annotation, updating after save, restoration and removal.
+- [x] Add source-wording/metadata regression coverage and desktop/mobile save–reload–remove browser assertions.
+- Verification: root lint/build/test pass (five existing unused-variable/import warnings); final Web rerun passes 310 tests. Focused browser save/reload/remove coverage passes at 1440/390 px. The full desktop fixture passes; the full mobile fixture stops at its separate active-logic-node assertion before reaching the new flow. An unrelated analytics polling timing test failed once under concurrent checks and passed on rerun.
+
 ## Loadout style follow-up — 2026-10-04
 
 - [x] Keep draft feedback layout stable, use neutral textarea focus and outlined directional links without changing copy.

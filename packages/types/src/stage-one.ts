@@ -77,6 +77,7 @@ export type CorpusItem = {
 };
 
 export type HighlightedTranscriptPart = {
+  corpusItemId?: string;
   text: string;
   tag: string;
   kind: CorpusKind;

@@ -13,10 +13,11 @@ type Props = {
   clock: CaptionWordClock;
   className?: string;
   enabled?: boolean;
+  onCorpusSelect?: (id: string) => void;
 };
 
 /** Text nodes retain exact source spelling/whitespace, including inside corpus buttons. */
-export const CaptionTimedText = memo(function CaptionTimedText({ text, parts, sourceTokenStart, timingSource, wordTimings, clock, className, enabled = true }: Props) {
+export const CaptionTimedText = memo(function CaptionTimedText({ text, parts, sourceTokenStart, timingSource, wordTimings, clock, className, enabled = true, onCorpusSelect }: Props) {
   const root = useRef<HTMLSpanElement>(null);
   const displayText = text ?? parts?.map((part) => typeof part === "string" ? part : part.text).join("") ?? "";
   const words = useMemo(() => qualifyCaptionWords(displayText, sourceTokenStart, timingSource, wordTimings),
@@ -49,6 +50,10 @@ export const CaptionTimedText = memo(function CaptionTimedText({ text, parts, so
       offset += value.length;
       return typeof part === "string" ? <span key={index}>{content}</span> : (
         <button className={`highlight ${part.kind}`} data-tag={part.tag} key={`${part.text}-${index}`}
+          onClick={onCorpusSelect && part.corpusItemId ? (event) => {
+            event.stopPropagation();
+            onCorpusSelect(part.corpusItemId!);
+          } : undefined}
           type="button" aria-label={`${part.kind}: ${part.text}. ${part.tag}`}>{content}</button>
       );
     })}

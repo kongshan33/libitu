@@ -37,3 +37,12 @@ test('restored completed references release redundant raw audio without uploadin
  const restored=queue.restore('segment',source);queue.enqueue('segment',source,clip);resume({id:'existing',state:'completed'});await restored;
  assert.equal(await queue.freeze(key)(),'existing');assert.equal(calls.length,0);assert.equal(queue.get(key).clip,null);queue.dispose();
 });
+
+test('read-only restoration does not report a pending upload',async()=>{
+ let resume;const {queue}=setup({latestCapture:()=>new Promise(r=>resume=r)});
+ const restored=queue.restore('segment',source);
+ assert.equal(queue.pending,1);assert.equal(queue.pendingUploads,0);
+ resume(null);await restored;
+ queue.enqueue('segment',source,clip);assert.equal(queue.pendingUploads,1);
+ await until(()=>queue.pending===0);assert.equal(queue.pendingUploads,0);queue.dispose();
+});

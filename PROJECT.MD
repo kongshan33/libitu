@@ -19,6 +19,22 @@ Stage 2 browser-captured references can now be uploaded for private server ASR/M
 
 ## Repository status
 
+Route loading correction (2026-10-08): the shared root loading boundary is stage-neutral. Valid Stage 2 deep links initialize the reader directly in Shadow and retain the practice skeleton through blueprint/auth loading; invalid segments return to the reader.
+
+Page loading skeletons (2026-10-08): Stage 2 lazy-code loading uses a practice-shaped skeleton instead of Opening practice text. Corpus, Loadout, profile/history, mission and analytics route/data loading use shared accessible skeletons, including saved-take/history/analysis sections. Reduced motion disables pulse. Empty/error states, save/upload progress and asynchronous assessment status remain explicit.
+
+Saved Shadow practice presentation (2026-10-08): saved takes use bordered cards with separate metadata/actions, small shared buttons and an outlined destructive variant. Reference deletion uses the same variant. Shared button background clipping removes the white halo outside inset edges without changing control dimensions.
+
+Audio save notifications (2026-10-08): pending reference uploads and practice saves share a fixed, responsive notification stack. Blue processing cards and warm error cards use icons, concise headings and retry actions without shifting content. Read-only reference recovery does not count as an upload or trigger an unload warning. Empty queues show no notice; completion removes it. Client-side navigation preserves active saves.
+
+Stage 2 audio preferences (2026-10-08): reference analysis, recording analysis and recording retention share a collapsed Audio settings disclosure. Existing choices and explanatory copy are preserved; processing status, errors and recovery actions remain visible. Prepare-this-sentence uses the outlined secondary button.
+
+Stage 1 loading feedback (2026-10-08): the root route now has a server-renderable loading shell; empty transcript, logic and extracted-expression regions show decorative skeletons only while loading. Each region yields to real streamed content immediately; errors/retry, Saved, player ownership and extension caption preflight remain unchanged. Reduced-motion preferences disable the pulse. This improves pending-state feedback, not network/provider latency or pre-response browser blank time.
+
+Stage 1 card correspondence (2026-10-08): annotations and the sidebar now use the same merged candidate/saved list. Exact source phrases with word boundaries carry card identities; unrelated partial phrases are no longer highlighted. Clicking a highlight selects its category (or retains Saved for a saved card), scrolls/focuses the matching card and does not seek playback.
+
+Stage 1 saved-card highlighting (2026-10-08): transcript annotations derive from extraction candidates plus the current source’s saved corpus. Manual saves, restored records and removals update highlights using source wording while retaining caption text, sentence identity and word timing.
+
 
 Loadout draft-save feedback now reserves its space while hidden, avoiding form movement on input and option changes. Textarea focus uses a neutral thin outline, and directional links default to the same outlined secondary appearance as directional buttons. All user-facing wording and destinations remain unchanged; the proposed Learn terminology is not adopted.
 

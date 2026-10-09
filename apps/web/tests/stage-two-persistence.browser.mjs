@@ -143,6 +143,7 @@ try {
     assert.equal(await page.evaluate(() => window.__micCalls), 0);
     await page.evaluate(() => window.__setUser("test-user-a"));
     await page.locator(".stage-two-recording").waitFor();
+    assert.equal(await page.locator(".practice-save-banner").count(), 0, "no saving notice on entry");
     const record = page.getByRole("button", { name: "Record sentence", exact: true });
     await record.click();
     await page.getByText("Recording your voice", { exact: true }).waitFor();
@@ -150,12 +151,16 @@ try {
     await page.getByRole("button", { name: "Stop recording", exact: true }).click();
     await page.getByText("No retained audio", { exact: true }).waitFor();
     assert.equal(audios.size, 0, "unchecked retention never uploads audio");
+    await page.locator(".stage-two-audio-settings > summary").click();
     await page.getByRole("checkbox", { name: "Keep new recordings in my account for later playback" }).check();
     failUpload = true;
     await page.getByRole("button", { name: "Record again", exact: true }).click();
     await page.waitForTimeout(800);
     await page.getByRole("button", { name: "Stop recording", exact: true }).click();
     await page.getByRole("button", { name: "Retry saves" }).waitFor();
+    assert.equal(await page.locator('.practice-save-banner').getAttribute('role'), 'alert');
+    assert.equal(await page.locator('.practice-save-notifications').evaluate(el => getComputedStyle(el).position), 'fixed');
+    await page.locator('.practice-save-banner').screenshot({path: join(artifacts, `notice-${viewport.width}.png`)});
     await page.getByRole("button", { name: "Next sentence", exact: true }).click();
     failUpload = false;
     await page.getByRole("button", { name: "Retry saves" }).click();

@@ -11,6 +11,7 @@ Accepted 2026-10-04. Purple primary actions and learning semantic colors remain;
 | `soft` | Supporting action | Warm gray |
 | `ghost` | Close, back and quiet tools | Transparent |
 | `danger` | Entry to destructive confirmation | Red text |
+| `danger-outline` | Destructive action needing a visible boundary on a surface | White / red thin edge |
 | `danger-solid` | Final destructive confirmation | Red / white |
 | `record` | Start voice or recording | Black / white; `recording` turns red |
 
@@ -39,3 +40,5 @@ Pass stable idle children with `loading` and `loadingLabel`. The idle content re
 Verified 2026-10-04: desktop (1440 px) and mobile (390 px) button regressions pass. The mobile topbar and stage navigation now permit shrinking inside their existing layout, eliminating a 2 px regression introduced by uniform button weight.
 
 Run root `pnpm lint`, `pnpm build` and `pnpm test`. The optional `apps/web/tests/buttons.browser.mjs` regression uses Playwright with Chrome and a running local web server. Set `LIBITU_PLAYWRIGHT_MODULE` when Playwright is outside the workspace. It checks desktop/mobile submit and link semantics, focus/hover colors, stable loading geometry, repeat-click prevention, reduced motion, destructive confirmation and recording state colors. Identity and API responses are fixtures; microphone input is synthetic. These checks do not verify real authentication or provider integrations.
+
+Button backgrounds clip to the padding box so inherited transparent border widths do not produce an outer white halo around the inset edge. Saved Shadow practice uses small outlined actions and grouped metadata/actions.

@@ -1,5 +1,7 @@
 "use client";
 
+import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
+
 import { DirectionLink } from "@/components/ui/direction-button";
 
 import { AppHeader } from "@/components/AppHeader";
@@ -22,7 +24,7 @@ import styles from "./Speaking.module.css";
 export function ConversationWorkspace({ sessionId }: { sessionId: string }) {
   const { isLoaded, userId, getToken } = useAuth();
   const clerk = useClerk();
-  if (!isLoaded) return <><AppHeader active="mission" /><main className={styles.page}><p role="status">Checking sign-in…</p></main></>;
+  if (!isLoaded) return <><AppHeader active="mission" /><main className={styles.page}><ContentSkeleton label="Checking sign-in…" /></main></>;
   if (!userId) return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.gate}><BrandLogo className={styles.logo} /><h1>Sign in to view your mission</h1><p>Your saved mission and conversation belong to your account.</p><Button variant="primary" size="inherit" className={styles.primary} onClick={() => { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in</Button></section></main></>;
   return <OwnedConversation key={`${userId}:${sessionId}`} owner={userId} sessionId={sessionId} getToken={getToken} />;
 }
@@ -91,7 +93,7 @@ function OwnedConversation({ owner, sessionId, getToken }: { owner: string; sess
   const voiceHelp = ended ? "Review your transcript and language evidence." : connecting ? "Preparing your conversation." : state.connection === "paused" ? "Paused while you were away. Resume when ready." : state.connection === "disconnected" ? "Your finalized transcript is saved. Reconnect when ready." : !connected ? "Start, then speak naturally. You can also type below." : state.phase === "speaking" ? "Speak to interrupt, or use Stop speaking." : state.microphone ? "Turns are detected automatically." : "Keep typing, or enable your microphone.";
   return <><AppHeader active="mission" /><main className={styles.page}><section className={`${styles.shell} ${focused ? styles.focused : ""}`} aria-label="Speaking mission">
     <div className={styles.topbar} aria-label="Mission controls"><DirectionLink className={styles.back} href={`/loadout?returnTo=${encodeURIComponent(returnTo)}`}><ArrowLeft size={14} aria-hidden="true" /><span>Loadout</span></DirectionLink><span className={styles.topspacer} />{workspace && !ended ? <Button variant="secondary" size="inherit" type="button" className={styles.endButton} onClick={() => setConfirmAction("end")} disabled={state.busy}>End mission</Button> : null}</div>
-    {!workspace ? <div className={styles.empty}>{state.error ? <><h1>Mission unavailable</h1><p role="alert">{state.error}</p><Button variant="primary" size="inherit" type="button" className={styles.primary} onClick={() => void controller?.load()}>Retry loading mission</Button></> : <p role="status">Loading your saved mission…</p>}</div> : <>
+    {!workspace ? <div className={styles.empty}>{state.error ? <><h1>Mission unavailable</h1><p role="alert">{state.error}</p><Button variant="primary" size="inherit" type="button" className={styles.primary} onClick={() => void controller?.load()}>Retry loading mission</Button></> : <ContentSkeleton label="Loading your saved mission…" variant="cards" />}</div> : <>
       <div className={styles.mission}><div className={styles.eyebrow}>{workspace.session.scenario_type === "workplace" ? "Workplace" : "Everyday life"} · {workspace.session.difficulty} · {workspace.session.feedback_level} feedback</div><h1>{workspace.session.goal}</h1><p>{ended ? "Saved conversation · read-only review" : "Use your selected language in a natural conversation."}</p></div>
       {workspace.session.logic_template ? <section className={styles.logic} aria-label="Conversation strategy"><div><strong>{workspace.session.logic_template.title}</strong><span>Practice guide</span></div><ol>{workspace.session.logic_template.steps.map((step, index) => <li key={`${index}:${step}`}>{index > 0 ? <ChevronRight size={12} aria-hidden="true" /> : null}<span>{step}</span></li>)}</ol></section> : null}
       {state.error ? <div className={styles.notice} role="alert"><span>{state.error}</span>{state.conflict ? <Button variant="secondary" size="inherit" type="button" onClick={() => void controller?.start(view === "voice", true)} disabled={connecting}>Take over here</Button> : null}</div> : null}
