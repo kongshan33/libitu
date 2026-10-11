@@ -22,10 +22,10 @@ import { MissionFeedback } from "./MissionFeedback";
 import { HistoryFeed, HistoryList, ProfileError } from "./PracticeHistory";
 import { readProfileResource } from "./api";
 import { profileSourceHref, recordedDuration } from "./format";
-import type { ProfileData, ProfileRange } from "./types";
+import type { HistoryKind, ProfileData, ProfileRange } from "./types";
 import styles from "./Profile.module.css";
 
-export function ProfilePage({ history = false }: { history?: boolean }) {
+export function ProfilePage({ history = false, historyKind = "all" }: { history?: boolean; historyKind?: HistoryKind }) {
   const { isLoaded, userId } = useAuth();
   const clerk = useClerk();
   return <main className={styles.page}>
@@ -35,19 +35,19 @@ export function ProfilePage({ history = false }: { history?: boolean }) {
         <span className={styles.gateIcon}><UserRound size={30} aria-hidden="true" /></span><div className={styles.eyebrow}>Your personal learning space</div><h1>Make your practice count.</h1><p>Sign in to see your saved practice, grow your corpus and pick up where you left off.</p>
         <DirectionButton variant="primary" className={styles.primary} type="button" onClick={() => { const url = currentAuthReturnUrl(); clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in to view my learning <ArrowRight size={16} aria-hidden="true" /></DirectionButton>
         <Link className={styles.textLink} href="/">Back to practice</Link>
-      </section> : <AccountLearning key={`${userId}:${history}`} owner={userId} history={history} />}
+      </section> : <AccountLearning key={`${userId}:${history}:${historyKind}`} owner={userId} history={history} historyKind={historyKind} />}
     </div>
   </main>;
 }
 
-function AccountLearning({ owner, history }: { owner: string; history: boolean }) {
+function AccountLearning({ owner, history, historyKind }: { owner: string; history: boolean; historyKind: HistoryKind }) {
   const [timezone, setTimezone] = useState<string | null>(null);
   useEffect(() => { setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"); }, []);
   if (history) return <>
     <DirectionLink href="/profile" className={styles.back}><ArrowLeft size={15} aria-hidden="true" /> My learning</DirectionLink>
     <div className={styles.heading}><div><div className={styles.eyebrow}>A record of showing up</div><h1>Practice history</h1><p>Revisit your conversations and the sources you’ve practiced with.</p></div><ButtonLink variant="primary" size="inherit" href="/loadout" className={styles.primary}><Play size={14} aria-hidden="true" /> New Mission</ButtonLink></div>
-    {timezone ? <HistoryFeed owner={owner} timezone={timezone} /> : <ContentSkeleton label="Loading practice history…" />}
-    <p className={styles.footnote}>One shadowing entry is one saved take. Mission entries include at least one speaking turn. Dates use {timezone ?? "your local timezone"}.</p>
+    {timezone ? <HistoryFeed owner={owner} timezone={timezone} initialKind={historyKind} /> : <ContentSkeleton label="Loading practice history…" />}
+    <p className={styles.footnote}>Videos appear once per source and open Stage 1. One shadowing entry is one saved take. Mission entries include at least one speaking turn. Dates use {timezone ?? "your local timezone"}.</p>
   </>;
   return <Dashboard owner={owner} timezone={timezone} />;
 }
@@ -113,6 +113,9 @@ function Dashboard({ owner, timezone }: { owner: string; timezone: string | null
       {lastLocation ? <QuickLink href={lastLocation.href} icon={Play} title={location ? "Continue learning" : "Last practiced source"} subtitle={`${lastLocation.title}${location ? " · On this device" : ""}`} tone="blue" />
         : <QuickLink href="/" icon={Play} title="Find your next source" subtitle="Start with a video you want to understand" tone="blue" />}
     </div></section>
+    <section className={styles.card} aria-labelledby="videos-title"><div className={styles.cardHeader}><h2 id="videos-title">Original videos</h2><Link href="/profile/history?kind=video" className={styles.textLink}>View all videos <ArrowRight size={14} aria-hidden="true" /></Link></div>
+      {!data ? busy ? <ContentSkeleton label="Loading video history…" /> : <p className={styles.videoEmpty}>Video history is unavailable.</p> : data.recent_videos?.items.length ? <HistoryList items={data.recent_videos.items} timezone={data.timezone} /> : <div className={styles.videoEmpty}><p>Your videos will appear here when you open them while signed in.</p><Link href="/" className={styles.textLink}>Explore videos <ArrowRight size={14} aria-hidden="true" /></Link></div>}
+    </section>
     <section className={styles.card} aria-labelledby="recent-title"><div className={styles.cardHeader}><h2 id="recent-title">Recent practice</h2><DirectionLink href="/profile/history" className={styles.textLink}>View all <ArrowRight size={14} aria-hidden="true" /></DirectionLink></div>
       {data ? <HistoryList items={data.recent_history.items} timezone={data.timezone} /> : busy ? <ContentSkeleton label="Loading recent practice…" /> : <p className={styles.loading}>Recent practice is unavailable.</p>}
     </section>

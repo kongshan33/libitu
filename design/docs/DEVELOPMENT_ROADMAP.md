@@ -197,3 +197,5 @@ The current browser-reference path uploads the captured sentence for private ser
 
 
 2026-09-30 layer guidance correction: restore the right-side Layer focus, Feedback and Tip cards for Sound, Rhythm and Melody. Sound guidance follows the selected phenomenon and uses the current sentence’s rule suggestions; conceal mode also hides word-specific sidebar text. Desktop places guidance beside the layer canvas; narrow screens place it below. The video remains above the workspace. Removing the experimental score sidebar did not authorize removing instructional guidance; no illustrative scores or detected-error claims are restored.
+
+2026-10-11: original-video records and direct Stage 1 navigation are implemented in My learning/history using existing owner-scoped content state; no new schema or assessment dependency. Verification is tracked in [profile implementation](PROFILE_IMPLEMENTATION.md).

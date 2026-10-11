@@ -2,7 +2,15 @@ export class ProfileApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
 
-export async function readProfileResource<T>(path: string, owner: string, getToken: () => Promise<string | null>, signal: AbortSignal): Promise<T> {
+export function readProfileResource<T>(path: string, owner: string, getToken: () => Promise<string | null>, signal: AbortSignal): Promise<T> {
+  return profileRequest<T>(path, owner, getToken, signal, "GET");
+}
+
+export function rememberProfileVideo(contentId: string, owner: string, getToken: () => Promise<string | null>, signal: AbortSignal): Promise<void> {
+  return profileRequest<void>(`/videos/${encodeURIComponent(contentId)}`, owner, getToken, signal, "PUT");
+}
+
+async function profileRequest<T>(path: string, owner: string, getToken: () => Promise<string | null>, signal: AbortSignal, method: "GET" | "PUT"): Promise<T> {
   signal.throwIfAborted();
   const token = await getToken();
   signal.throwIfAborted();
@@ -13,7 +21,7 @@ export async function readProfileResource<T>(path: string, owner: string, getTok
   try {
     response = await fetch(`${(process.env.NEXT_PUBLIC_LIBITU_API_BASE_URL ?? "http://localhost:8000").replace(/\/$/, "")}/api/profile${path}`, {
       signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
-      cache: "no-store", headers: { Authorization: `Bearer ${token}` }
+      method, cache: "no-store", headers: { Authorization: `Bearer ${token}` }
     });
   } catch {
     signal.throwIfAborted();
@@ -22,7 +30,7 @@ export async function readProfileResource<T>(path: string, owner: string, getTok
   signal.throwIfAborted();
   if (!response.ok) throw new ProfileApiError(response.status === 401
     ? "Sign in again to view your learning." : "Your learning records are temporarily unavailable. Please retry.", response.status);
-  const result = await response.json() as T;
+  const result = response.status === 204 ? undefined as T : await response.json() as T;
   signal.throwIfAborted();
   return result;
 }

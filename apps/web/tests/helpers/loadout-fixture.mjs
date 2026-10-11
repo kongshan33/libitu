@@ -124,6 +124,10 @@ export async function installLoadoutFixture(page, {
       const token = request.headers().authorization?.split(" ")[1];
       const owner = token ? JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString()).sub : null;
       state.requests.push({ method: request.method(), path: url.pathname, owner });
+      if (url.pathname === `/api/profile/videos/${fixtureContentId}` && request.method() === "PUT") {
+        assert.ok(owner);
+        return route.fulfill({ status: 204, headers });
+      }
       if (url.pathname === "/api/speaking/options") return route.fulfill({ headers,
         json: { logic_templates: logicTemplates, max_structures: 3, max_expressions: 5, min_items: 1 } });
       if (shadow) {

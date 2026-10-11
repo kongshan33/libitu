@@ -220,3 +220,10 @@
   .practiceStatus { margin-left: 44px; }
   .practiceStatus + .historyStatus { margin-left: auto; }
 }
+
+.videoEmpty { padding: 20px; color: var(--color-text-secondary); font-size: 13px; line-height: 1.6; }
+.videoEmpty p { margin: 0 0 10px; }
+.visitError { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 10px 16px; font-size: 12px; background: var(--amber-50); color: #80500d; }
+@media (max-width: 480px) {
+  .historyFilters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

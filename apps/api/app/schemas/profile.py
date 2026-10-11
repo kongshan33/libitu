@@ -10,7 +10,7 @@ from app.schemas.speaking import ScenarioType, SpeakingDifficulty
 from app.schemas.speaking_feedback import DimensionId, FeedbackStatus
 
 ProfileRange = Literal["4w", "3m", "all"]
-ProfileHistoryKind = Literal["all", "shadowing", "speaking"]
+ProfileHistoryKind = Literal["all", "video", "shadowing", "speaking"]
 FeedbackUnavailableReason = Literal["legacy_report", "version_mismatch", "invalid_result"]
 
 
@@ -90,12 +90,12 @@ class LastPracticedSource(BaseModel):
 
 class ProfileHistoryItem(BaseModel):
     id: UUID
-    kind: Literal["shadowing", "speaking"]
+    kind: Literal["video", "shadowing", "speaking"]
     title: str
     occurred_at: datetime
     duration_ms: int | None = None
     turn_count: int | None = None
-    status: Literal["recorded", "draft", "active", "completed", "abandoned"]
+    status: Literal["opened", "recorded", "draft", "active", "completed", "abandoned"]
     content_id: UUID | None = None
     source_url: str | None = None
     sentence_id: str | None = None
@@ -116,6 +116,7 @@ class LearningProfile(BaseModel):
     activity: ProfileActivity
     resume_speaking: ResumeSpeaking | None = None
     last_practiced_source: LastPracticedSource | None = None
+    recent_videos: ProfileHistoryPage = Field(default_factory=lambda: ProfileHistoryPage(items=[]))
     recent_history: ProfileHistoryPage
     latest_feedback: ProfileFeedbackSummary | None = None
     latest_feedback_unavailable_reason: Literal["not_available", "legacy_report", "version_mismatch", "invalid_result"] | None = None

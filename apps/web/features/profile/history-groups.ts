@@ -16,6 +16,7 @@ export function groupHistory(items: HistoryItem[], timezone: string) {
 }
 
 export function practiceStatus(item: HistoryItem): string {
+  if (item.kind === "video") return "Original video";
   if (item.kind === "shadowing") return "Saved take";
-  return { active: "In progress", completed: "Completed", abandoned: "Ended early", draft: "Prepared", recorded: "Recorded" }[item.status];
+  return { opened: "Opened", active: "In progress", completed: "Completed", abandoned: "Ended early", draft: "Prepared", recorded: "Recorded" }[item.status];
 }

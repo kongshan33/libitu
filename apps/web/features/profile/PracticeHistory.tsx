@@ -9,7 +9,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import Link from "@/components/ui/PrefetchLink";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, MessageCircle, Mic } from "lucide-react";
+import { ArrowUpRight, MessageCircle, Mic, Video } from "lucide-react";
 import { ProfileApiError, readProfileResource } from "./api";
 import type { HistoryItem, HistoryKind, HistoryPage } from "./types";
 import { historyAction, historyHref, recordedDuration } from "./format";
@@ -26,12 +26,12 @@ export function ProfileError({ error, retry }: { error: Error; retry: () => void
 }
 
 export function HistoryList({ items, timezone, detailed = false }: { items: HistoryItem[]; timezone: string; detailed?: boolean }) {
-  if (!items.length) return <div className={styles.empty}><Mic size={24} aria-hidden="true" /><h3>Your next practice starts here</h3><p>Save a shadowing take or contribute to a Mission to start your history.</p><ButtonLink variant="primary" size="inherit" href="/loadout" className={styles.primary}>Start a Mission <ArrowUpRight size={15} aria-hidden="true" /></ButtonLink></div>;
+  if (!items.length) return <div className={styles.empty}><Mic size={24} aria-hidden="true" /><h3>Your next practice starts here</h3><p>Open a video, save a shadowing take or contribute to a Mission to start your history.</p><ButtonLink variant="primary" size="inherit" href="/loadout" className={styles.primary}>Start a Mission <ArrowUpRight size={15} aria-hidden="true" /></ButtonLink></div>;
   return <ul className={styles.historyList}>{items.map((item) => {
-    const Icon = item.kind === "shadowing" ? Mic : MessageCircle;
+    const Icon = item.kind === "video" ? Video : item.kind === "shadowing" ? Mic : MessageCircle;
     const href = historyHref(item);
     const content = <><span className={`${styles.historyIcon} ${item.kind === "speaking" ? styles.teal : ""}`}><Icon size={18} aria-hidden="true" /></span>
-      <span className={styles.historyText}><strong>{item.title}</strong><span>{item.kind === "shadowing" ? "Shadowing" : "Mission"}<span aria-hidden="true"> · </span><time dateTime={item.occurred_at}>{new Intl.DateTimeFormat("en", { timeZone: timezone, ...(detailed ? { hour: "numeric", minute: "2-digit" } as const : { month: "short", day: "numeric", year: "numeric" } as const) }).format(new Date(item.occurred_at))}</time>
+      <span className={styles.historyText}><strong>{item.title}</strong><span>{item.kind === "video" ? "Original video" : item.kind === "shadowing" ? "Shadowing" : "Mission"}<span aria-hidden="true"> · </span><time dateTime={item.occurred_at}>{new Intl.DateTimeFormat("en", { timeZone: timezone, ...(detailed ? { hour: "numeric", minute: "2-digit" } as const : { month: "short", day: "numeric", year: "numeric" } as const) }).format(new Date(item.occurred_at))}</time>
         {item.duration_ms !== null ? ` · ${recordedDuration(item.duration_ms)} recorded` : item.turn_count !== null ? ` · ${item.turn_count} speaking ${item.turn_count === 1 ? "turn" : "turns"}` : ""}</span></span>
       {detailed ? <span className={styles.practiceStatus} data-status={item.status}>{practiceStatus(item)}</span> : null}
       <span className={styles.historyStatus}>{historyAction(item)}{href ? <ArrowUpRight size={14} aria-hidden="true" /> : null}</span></>;
@@ -39,12 +39,12 @@ export function HistoryList({ items, timezone, detailed = false }: { items: Hist
   })}</ul>;
 }
 
-export function HistoryFeed({ owner, timezone }: { owner: string; timezone: string }) {
-  const [kind, setKind] = useState<HistoryKind>("all");
+export function HistoryFeed({ owner, timezone, initialKind = "all" }: { owner: string; timezone: string; initialKind?: HistoryKind }) {
+  const [kind, setKind] = useState<HistoryKind>(initialKind);
   return <section className={styles.card} aria-label="Saved practice history">
     <div className={styles.historyToolbar}>
       <div className={styles.historyFilters} role="group" aria-label="Practice type">
-        {([ ["all", "All practice"], ["shadowing", "Shadowing"], ["speaking", "Missions"] ] as const).map(([value, label]) =>
+        {([ ["all", "All practice"], ["video", "Videos"], ["shadowing", "Shadowing"], ["speaking", "Missions"] ] as const).map(([value, label]) =>
           <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)}>{label}</button>)}
       </div>
       <span className={styles.smallMuted}>Most recent first</span>
@@ -80,10 +80,10 @@ function FilteredHistory({ owner, timezone, kind }: { owner: string; timezone: s
       <h2>{group.label}</h2><HistoryList items={group.items} timezone={timezone} detailed />
     </section>)}
     {!items.length && !busy && !error ? kind === "all" ? <HistoryList items={items} timezone={timezone} /> :
-      <div className={styles.empty}>{kind === "shadowing" ? <Mic size={24} aria-hidden="true" /> : <MessageCircle size={24} aria-hidden="true" />}
-        <h3>{kind === "shadowing" ? "No saved shadowing takes yet" : "No Missions practiced yet"}</h3>
-        <p>{kind === "shadowing" ? "Practice a sentence and save your take to find it here." : "Contribute a speaking turn to a Mission to find it here."}</p>
-        <ButtonLink variant="primary" size="inherit" href={kind === "shadowing" ? "/" : "/loadout"} className={styles.primary}>{kind === "shadowing" ? "Explore practice" : "Start a Mission"}<ArrowUpRight size={15} aria-hidden="true" /></ButtonLink>
+      <div className={styles.empty}>{kind === "video" ? <Video size={24} aria-hidden="true" /> : kind === "shadowing" ? <Mic size={24} aria-hidden="true" /> : <MessageCircle size={24} aria-hidden="true" />}
+        <h3>{kind === "video" ? "No videos yet" : kind === "shadowing" ? "No saved shadowing takes yet" : "No Missions practiced yet"}</h3>
+        <p>{kind === "video" ? "Open a video while signed in to find it here." : kind === "shadowing" ? "Practice a sentence and save your take to find it here." : "Contribute a speaking turn to a Mission to find it here."}</p>
+        <ButtonLink variant="primary" size="inherit" href={kind !== "speaking" ? "/" : "/loadout"} className={styles.primary}>{kind !== "speaking" ? "Explore practice" : "Start a Mission"}<ArrowUpRight size={15} aria-hidden="true" /></ButtonLink>
       </div> : null}
     {error ? <ProfileError error={error} retry={() => setAttempt((value) => value + 1)} /> : null}
     {busy ? <ContentSkeleton label="Loading practice history…" /> : null}

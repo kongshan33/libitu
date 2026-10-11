@@ -178,7 +178,7 @@ def test_repository_reads_past_lower_server_caps_and_filters_every_table(exact):
     for method, table, kwargs in database.calls:
         assert method == "GET"
         assert kwargs["params"]["user_id"] == "eq.alice"
-        assert kwargs["params"]["order"] == "created_at.desc,id.desc"
+        assert kwargs["params"]["order"] == ("last_opened_at.desc,content_id.desc" if table == "/user_content_states" else "created_at.desc,id.desc")
         assert "*" not in kwargs["params"]["select"]
         assert "recording_sha256" not in kwargs["params"]["select"]
     attempt_offsets = [call[2]["params"]["offset"] for call in database.calls if call[1] == "/shadow_attempts"]
@@ -379,7 +379,7 @@ def test_profile_reads_feedback_in_one_bounded_owner_join():
         status="completed", speaking_feedback=feedback(11))]})
     ProfileRepository(database).read("alice", NOW)
     calls = [call for call in database.calls if call[1] == "/speaking_sessions"]
-    assert len(calls) == 1 and len(database.calls) == 3
+    assert len(calls) == 1 and len(database.calls) == 4
     projection = calls[0][2]["params"]["select"].split("speaking_feedback(")[1]
     assert "dimensions:result->dimensions" in projection
     assert not any(value in projection for value in ("source", "lease", "messages", "input_hash", "*"))
@@ -444,3 +444,73 @@ def test_history_kind_filters_before_pagination_and_keeps_owner_boundary(monkeyp
         assert client.get("/api/profile/history?kind=unknown").status_code == 422
     finally:
         app.dependency_overrides.pop(require_user, None)
+
+
+def test_video_history_deduplicates_owned_sources_and_does_not_inflate_practice(monkeypatch):
+    source = {"kind": "youtube", "title": "Original team update", "source_url": SOURCE_URL, "visibility": "public"}
+    def video(index, stamp, **changes):
+        return {"id": identity(index), "content_id": identity(index), "user_id": "alice", "last_opened_at": stamp, "contents": source, **changes}
+    records = ProfileRecords(
+        attempts=[attempt(1, contents=source)],
+        corpus=[{"id": identity(2), "user_id": "alice", "kind": "chunk", "content_id": CONTENT_ID,
+                 "created_at": "2026-10-01T00:00:00Z", "contents": source}],
+        videos=[video(0, "2026-10-02T02:30:00Z", content_id=CONTENT_ID),
+                video(3, "2026-10-02T01:00:00Z"),
+                video(4, "2026-10-02T01:00:00Z", user_id="bob"),
+                video(5, "2026-10-02T01:00:00Z", contents={**source, "visibility": "private", "owner_user_id": "bob"}),
+                video(6, "2026-10-02T01:00:00Z", contents=None),
+                video(7, "2030-01-01T00:00:00Z")])
+    use_records(monkeypatch, records)
+    summary = profile_service.get_profile("alice", "UTC", "4w", now=NOW)
+    assert len(summary.recent_videos.items) == 2
+    assert summary.recent_videos.items[0].id == UUID(CONTENT_ID)
+    assert summary.recent_videos.items[0].title == "Original team update"
+    assert summary.overview.shadowing_attempts == 1 and summary.overview.active_days == 1
+    assert all(item.kind != "video" for item in summary.recent_history.items)
+    first = profile_service.get_profile_history("alice", 0, 1, "video")
+    second = profile_service.get_profile_history("alice", first.next_offset, 1, "video")
+    assert first.items[0].kind == "video" and second.next_offset is None
+    assert first.items[0].id != second.items[0].id
+
+
+def test_record_video_is_authenticated_idempotent_and_does_not_start_processing(monkeypatch):
+    from app.services import profile_visits
+    from app.schemas.content import ContentResolveResponse
+    monkeypatch.setattr(store, "content_visits", {})
+    monkeypatch.setattr(store, "contents", {CONTENT_ID: ContentResolveResponse(
+        content_id=CONTENT_ID, kind="youtube", normalized_key="youtube:dQw4w9WgXcQ", source_url=SOURCE_URL, title="Original video")})
+    client = TestClient(app)
+    path = f"/api/profile/videos/{CONTENT_ID}"
+    assert client.put(path).status_code == 401
+    app.dependency_overrides[require_user] = lambda: AuthenticatedUser(id="alice")
+    try:
+        for _ in range(2):
+            response = client.put(path)
+            assert response.status_code == 204 and response.headers["cache-control"] == "private, no-store"
+        assert list(store.content_visits) == [("alice", CONTENT_ID)]
+        assert client.put(f"/api/profile/videos/{identity(99)}").status_code == 404
+        assert client.put("/api/profile/videos/invalid").status_code == 422
+        assert len(client.get("/api/profile/history?kind=video").json()["items"]) == 1
+        app.dependency_overrides[require_user] = lambda: AuthenticatedUser(id="bob")
+        assert client.get("/api/profile/history?kind=video").json()["items"] == []
+        # Persistence errors never fabricate an inline success.
+        monkeypatch.setattr(profile_visits, "get_supabase_repository", lambda: SimpleNamespace(_request=lambda *a, **k: (_ for _ in ()).throw(httpx.ConnectError("private details"))))
+        assert client.put(path).status_code == 503
+        assert list(store.content_visits) == [("alice", CONTENT_ID)]
+    finally:
+        app.dependency_overrides.pop(require_user, None)
+
+
+def test_video_upsert_preserves_existing_progress_and_checks_public_identity(monkeypatch):
+    from app.services import profile_visits
+    calls = []
+    monkeypatch.setattr(profile_visits, "read_public_content", lambda content_id: calls.append(("identity", content_id)))
+    database = SimpleNamespace(_request=lambda *args, **kwargs: calls.append((args, kwargs)))
+    monkeypatch.setattr(profile_visits, "get_supabase_repository", lambda: database)
+    profile_visits.remember_video("alice", CONTENT_ID)
+    assert calls[0] == ("identity", CONTENT_ID)
+    args, kwargs = calls[-1]
+    assert args == ("POST", "/user_content_states")
+    assert set(kwargs["json"]) == {"user_id", "content_id", "last_opened_at"}
+    assert kwargs["json"]["user_id"] == "alice"
+    assert kwargs["params"]["on_conflict"] == "user_id,content_id"

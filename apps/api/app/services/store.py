@@ -13,3 +13,6 @@ blueprints: dict[str, Blueprint] = {}
 corpus_items: dict[str, CorpusItem] = {}
 speaking_sessions: dict[str, SpeakingSession] = {}
 speaking_session_submissions: dict[tuple[str, str], tuple[dict, str]] = {}
+
+# Explicit authenticated video visits; inline development only.
+content_visits: dict[tuple[str, str], str] = {}

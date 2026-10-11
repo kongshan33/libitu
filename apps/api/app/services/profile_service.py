@@ -133,8 +133,31 @@ def _latest_feedback(sessions: list[tuple[dict, list[datetime]]]):
     return None, first_reason or "not_available"
 
 
+def _video_history(records: ProfileRecords, owner: str, now: datetime) -> list[ProfileHistoryItem]:
+    # Visits and surviving owned practice/corpus are evidence of a relationship;
+    # the public content catalogue alone must never become personal history.
+    videos: dict[str, ProfileHistoryItem] = {}
+    for row in [*records.attempts, *records.corpus, *records.videos]:
+        if row.get("user_id") != owner or row.get("deleted_at") or not _source_visible(row, owner):
+            continue
+        source = row["contents"]
+        stamp = row.get("last_opened_at") or row.get("created_at")
+        if source.get("kind") != "youtube" or source.get("visibility") != "public" or not stamp or not row.get("content_id"):
+            continue
+        occurred = _date_time(stamp)
+        if occurred > now:
+            continue
+        content_id = str(row["content_id"])
+        item = ProfileHistoryItem(id=content_id, kind="video", title=source.get("title") or "YouTube video",
+            occurred_at=occurred, status="opened", content_id=content_id, source_url=source.get("source_url"))
+        if content_id not in videos or occurred > videos[content_id].occurred_at:
+            videos[content_id] = item
+    return sorted(videos.values(), key=lambda item: (item.occurred_at, str(item.id)), reverse=True)
+
+
 def _history(attempts: list[dict], sessions: list[tuple[dict, list[datetime]]], owner: str,
-             offset: int, limit: int, kind: ProfileHistoryKind = "all") -> ProfileHistoryPage:
+             offset: int, limit: int, kind: ProfileHistoryKind = "all",
+             videos: list[ProfileHistoryItem] | None = None) -> ProfileHistoryPage:
     items = [ProfileHistoryItem(
         id=row["id"], kind="shadowing", title=row["sentence_text"],
         occurred_at=_date_time(row["created_at"]), duration_ms=row["duration_ms"], status="recorded",
@@ -147,6 +170,7 @@ def _history(attempts: list[dict], sessions: list[tuple[dict, list[datetime]]], 
         turn_count=len(turns), status=row["status"], session_id=row["id"],
         feedback=_feedback(row, turns)[0],
     ) for row, turns in sessions if turns)
+    items.extend(videos or [])
     if kind != "all":
         items = [item for item in items if item.kind == kind]
     items.sort(key=lambda item: (item.occurred_at, item.kind, str(item.id)), reverse=True)
@@ -210,6 +234,7 @@ def get_profile(owner: str, timezone_name: str, period: ProfileRange,
                          key=lambda row: (_date_time(row["created_at"]), row["id"]), reverse=True)
         latest = sources[0] if sources else None
         feedback, feedback_reason = _latest_feedback(sessions)
+        videos = _video_history(records, owner, now)
         return LearningProfile(timezone=timezone_name, range=period, generated_at=now,
             overview=ProfileOverview(
                 shadowing_attempts=len(attempts), speaking_sessions=sum(bool(turns) for _, turns in sessions),
@@ -224,6 +249,7 @@ def get_profile(owner: str, timezone_name: str, period: ProfileRange,
                 source_url=latest["contents"].get("source_url"),
                 sentence_text=latest["sentence_text"], title=latest["contents"].get("title"),
                 start_ms=latest["start_ms"], practiced_at=_date_time(latest["created_at"])) if latest else None,
+            recent_videos=ProfileHistoryPage(items=videos[:3], next_offset=3 if len(videos) > 3 else None),
             recent_history=_history(attempts, sessions, owner, 0, 5),
             latest_feedback=feedback, latest_feedback_unavailable_reason=feedback_reason)
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
@@ -233,8 +259,8 @@ def get_profile(owner: str, timezone_name: str, period: ProfileRange,
 def get_profile_history(owner: str, offset: int, limit: int, kind: ProfileHistoryKind = "all") -> ProfileHistoryPage:
     now = datetime.now(timezone.utc)
     try:
-        records = read_profile_records(owner, now, include_corpus=False)
+        records = read_profile_records(owner, now, include_corpus=True)
         attempts, sessions = _practice_data(records, owner, now)
-        return _history(attempts, sessions, owner, offset, limit, kind)
+        return _history(attempts, sessions, owner, offset, limit, kind, _video_history(records, owner, now))
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
         raise unavailable() from None

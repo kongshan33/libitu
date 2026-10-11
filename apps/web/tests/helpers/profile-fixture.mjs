@@ -81,6 +81,7 @@ export function profileResponse({ owner = profileOwner, range = "4w", timezone =
       source_url: profileSourceUrl,
       title: "A practical team update", start_ms: 15_000, practiced_at: "2026-10-02T06:00:00Z"
     },
+    recent_videos: { items: [], next_offset: null },
     recent_history: { items: history.slice(0, 5), next_offset: history.length > 5 ? 5 : null },
     latest_feedback: null, latest_feedback_unavailable_reason: "not_available"
   };

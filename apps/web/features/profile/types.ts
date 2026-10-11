@@ -1,6 +1,6 @@
 import type { FeedbackDimensionId, FeedbackStatus, SpeakingDifficulty, SpeakingScenario } from "@libitu/types/speaking";
 
-export type HistoryKind = "all" | "shadowing" | "speaking";
+export type HistoryKind = "all" | "video" | "shadowing" | "speaking";
 
 export type ProfileRange = "4w" | "3m" | "all";
 
@@ -22,12 +22,12 @@ export interface ProfileFeedback {
 
 export interface HistoryItem {
   id: string;
-  kind: "shadowing" | "speaking";
+  kind: "video" | "shadowing" | "speaking";
   title: string;
   occurred_at: string;
   duration_ms: number | null;
   turn_count: number | null;
-  status: "recorded" | "draft" | "active" | "completed" | "abandoned";
+  status: "opened" | "recorded" | "draft" | "active" | "completed" | "abandoned";
   content_id: string | null;
   source_url: string | null;
   sentence_id: string | null;
@@ -58,6 +58,7 @@ export interface ProfileData {
   activity: { bucket: "day" | "month"; start_date: string; end_date: string; items: ActivityPoint[] };
   resume_speaking: { session_id: string; goal: string; status: "draft" | "active"; turn_count: number; updated_at: string } | null;
   last_practiced_source: { content_id: string; source_url: string | null; sentence_id: string; sentence_text: string; title: string | null; start_ms: number; practiced_at: string } | null;
+  recent_videos: HistoryPage;
   recent_history: HistoryPage;
   latest_feedback: ProfileFeedback | null;
   latest_feedback_unavailable_reason: "not_available" | FeedbackUnavailableReason | null;

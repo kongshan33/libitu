@@ -54,3 +54,20 @@ test("completed Missions open Stage 5 while active conversations remain resumabl
   assert.equal(historyHref({ ...legacy, feedback: { ...legacy.feedback, unavailable_reason: "version_mismatch" } }), "/speaking/session-1/analytics");
   assert.equal(historyHref({ ...item, status: "active" }), "/speaking/session-1?returnTo=%2Fprofile");
 });
+
+test("original video links always open Stage 1 without restoring Shadow selection", () => {
+  const item = { kind: "video", content_id: "a0000000-0000-4000-8000-000000000001", source_url: "https://untrusted.example", status: "opened" };
+  assert.equal(historyHref(item), "/practice/a0000000-0000-4000-8000-000000000001");
+  assert.equal(historyAction(item), "Open Stage 1");
+  assert.equal(historyHref({ ...item, content_id: "../bad" }), null);
+});
+
+test("recording a video authenticates its owner and accepts a no-content acknowledgement", async (t) => {
+  const { rememberProfileVideo } = await import("../features/profile/api.ts");
+  const fetch = t.mock.method(globalThis, "fetch", async () => new Response(null, { status: 204 }));
+  await assert.rejects(rememberProfileVideo("video-id", "a", async () => token("b"), new AbortController().signal));
+  assert.equal(fetch.mock.callCount(), 0);
+  await rememberProfileVideo("video-id", "a", async () => token("a"), new AbortController().signal);
+  assert.equal(fetch.mock.calls[0].arguments[1].method, "PUT");
+  assert.match(fetch.mock.calls[0].arguments[0], /\/profile\/videos\/video-id$/);
+});

@@ -32,6 +32,7 @@ class ProfileRecords:
     attempts: list[dict] = field(default_factory=list)
     sessions: list[dict] = field(default_factory=list)
     corpus: list[dict] = field(default_factory=list)
+    videos: list[dict] = field(default_factory=list)
 
 
 class ProfileRepository:
@@ -85,13 +86,17 @@ class ProfileRepository:
         deadline = monotonic() + READ_BUDGET_SECONDS
         attempts = self._rows("shadow_attempts", owner,
             "id,user_id,content_id,sentence_id,sentence_text,start_ms,duration_ms,created_at,"
-            "deleted_at,contents(title,source_url,visibility,owner_user_id)", now, deadline, deleted_at="is.null")
+            "deleted_at,contents(kind,title,source_url,visibility,owner_user_id)", now, deadline, deleted_at="is.null")
         sessions = self._rows("speaking_sessions", owner,
             "id,user_id,goal,scenario_type,difficulty,status,created_at,turn_count,"
             "speaking_runtime_state(messages:document->messages)," + FEEDBACK_PROJECTION,
             now, deadline, client_id="not.is.null")
-        corpus = self._rows("corpus_items", owner, "id,user_id,kind,created_at", now, deadline) if include_corpus else []
-        return ProfileRecords(attempts, sessions, corpus)
+        corpus = self._rows("corpus_items", owner, "id,user_id,kind,created_at,content_id,contents(kind,title,source_url,visibility,owner_user_id)", now, deadline) if include_corpus else []
+        videos = self._rows("user_content_states", owner,
+            "id:content_id,user_id,content_id,created_at,last_opened_at,"
+            "contents(kind,title,source_url,visibility,owner_user_id)", now, deadline,
+            order="last_opened_at.desc,content_id.desc")
+        return ProfileRecords(attempts, sessions, corpus, videos)
 
 
 def read_profile_records(owner: str, now: datetime, *, include_corpus: bool = True) -> ProfileRecords:
@@ -118,6 +123,17 @@ def read_profile_records(owner: str, now: datetime, *, include_corpus: bool = Tr
                 "speaking_feedback": feedback.get(str(session.id))})
         corpus = [item.model_dump(mode="json") for item in list(store.corpus_items.values())
                   if item.user_id == owner] if include_corpus else []
-        return ProfileRecords(sessions=sessions, corpus=corpus)
+        videos = []
+        for (user_id, content_id), opened in list(store.content_visits.items()):
+            content = store.contents.get(content_id)
+            if user_id == owner and content is not None:
+                videos.append({"id": content_id, "user_id": owner, "content_id": content_id,
+                    "last_opened_at": opened, "contents": {**content.model_dump(mode="json"),
+                    "visibility": "public", "owner_user_id": None}})
+        for row in corpus:
+            content = store.contents.get(str(row.get("content_id")))
+            if content is not None:
+                row["contents"] = {**content.model_dump(mode="json"), "visibility": "public", "owner_user_id": None}
+        return ProfileRecords(sessions=sessions, corpus=corpus, videos=videos)
     except (httpx.HTTPError, ValueError, TypeError, KeyError):
         raise unavailable() from None

@@ -21,6 +21,12 @@ This log records decisions that constrain product behavior or architecture. Add 
 
 ## Accepted decisions
 
+### 2026-10-11: Retain original video records with direct Stage 1 entry
+
+- **Decision**: add original-video records to the personal page and unified history, with a Videos filter and one record per source. The record opens the canonical `/practice/{contentId}` Reader route without restoring a Shadow segment/sentence.
+- **Data**: authenticated ready workspace visits upsert only owner, content and last-opened timestamp in existing `user_content_states`; preserve its mode/progress. Surviving owner-scoped Shadow and corpus sources supply earlier video associations. Public catalogue entries alone are never personal history.
+- **Boundary**: only public YouTube content supported by the current Reader is listed. Visits do not imply completed viewing or practice, and do not add duration, streaks or scores. GET profile/history remains read-only; a separate authenticated PUT records a workspace visit. Guest/account changes never claim the previous identity’s mounted source. No migration or paid/model/media operation is added.
+
 ### 2026-10-11: Give general pages one visible loading owner
 
 The root `loading.tsx` and generic Corpus, Loadout and profile route fallbacks stacked ahead of page-owned auth/data placeholders during navigation. Remove those broad fallbacks for these synchronous page shells: a client transition may keep the prior page until commit, then the destination renders its own loading regions. Landing has no business-data loading state. Keep import/content workspace and speaking fallbacks where server work can suspend before the page shell exists. This supersedes the earlier decision to retain a stage-neutral root fallback, without changing content processing, auth gating or media lifetime.

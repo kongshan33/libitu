@@ -9,6 +9,13 @@ meta:
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
+## Original video history — 2026-10-11
+
+- [x] Record authenticated ready-video visits in existing owner-scoped content state, preserving progress and surfacing save failure/retry.
+- [x] Add deduplicated Original videos to the personal page and Videos filtering to practice history; include existing owned Shadow/corpus video sources.
+- [x] Open every original-video record at its canonical Stage 1 route; preserve account isolation and existing practice counts.
+- [x] Complete desktop/mobile browser acceptance and record verification in the profile contract.
+
 ## Cross-page loading ownership — 2026-10-11
 
 - [x] Remove the overlapping root and generic Corpus, Loadout and profile route skeletons; keep page-owned auth/data loading states and dedicated practice/speaking boundaries.

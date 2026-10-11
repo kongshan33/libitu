@@ -1,9 +1,11 @@
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Response
 
 from app.auth import CurrentUserDep
 from app.schemas.profile import LearningProfile, ProfileHistoryPage, ProfileRange, ProfileHistoryKind
+from app.services.profile_visits import remember_video
 from app.services.profile_service import get_profile, get_profile_history
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
@@ -24,3 +26,9 @@ def history(user: CurrentUserDep, response: Response,
             kind: Annotated[ProfileHistoryKind, Query()] = "all") -> ProfileHistoryPage:
     response.headers["Cache-Control"] = "private, no-store"
     return get_profile_history(user.id, offset, limit, kind)
+
+
+@router.put("/videos/{content_id}", status_code=204)
+def record_video(content_id: UUID, user: CurrentUserDep) -> Response:
+    remember_video(user.id, str(content_id))
+    return Response(status_code=204, headers={"Cache-Control": "private, no-store"})
