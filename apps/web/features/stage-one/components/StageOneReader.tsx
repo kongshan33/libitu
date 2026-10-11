@@ -1,5 +1,7 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { DirectionButton } from "@/components/ui/direction-button";
@@ -11,9 +13,10 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { BrandLogo } from "@/components/BrandLogo";
 import { AuthControls } from "@/features/auth/components/AuthControls";
 import dynamic from "next/dynamic";
+import { StageTwoSkeleton } from "../../stage-two/components/StageTwoSkeleton";
 import { ReaderSkeleton } from "./ReaderSkeleton";
 import { useAuth, useClerk } from "@clerk/nextjs";
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
 import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Target, Trash2, X } from "lucide-react";
 import type {
@@ -28,37 +31,32 @@ import type {
   StageOneSegment
 } from "@libitu/types/stage-one";
 import type { LearnerLevel } from "@libitu/types/stage-one";
-import { LearningLocationTracker } from "@/features/profile/LearningLocationTracker";
+import { useContentWorkspace } from "../../learning-workspace/ContentWorkspaceProvider";
+import { WorkspacePlayer } from "../../learning-workspace/MediaHost";
 import {
   analyzeCorpusSelection,
   annotateTranscriptLine,
-  defaultStageOneSource,
-  loadStageOneBlueprint,
-  StageOneApiError,
-  type StageOneAnalysisPreview,
-  type StageOneSource
+  type StageOneAnalysisPreview
 } from "../api/stage-one-api";
-import { YouTubePlayer, type YouTubePlayerHandle } from "./YouTubePlayer";
+import { type YouTubePlayerHandle } from "./YouTubePlayer";
 import { ExplainPanel, SyntaxPanel } from "../../corpus/AnalysisPanels";
 import { useSavedCorpus } from "../../corpus/useSavedCorpus";
 import { savedCorpusKey, type SavedCorpusRecord } from "../../corpus/corpus-storage";
 import { findCurrentTimedItem, parseTimestamp, formatTranscriptTimestamp } from "../timeline";
 import { CaptionTimedText } from "../../playback/CaptionTimedText";
 import { CaptionWordClock } from "../../playback/caption-word-clock";
-import { WordTimingNotice } from "../../playback/WordTimingNotice";
 import { CaptionTimingRecoveryNotice } from "../../playback/CaptionTimingRecoveryNotice";
-import { useCaptionTimingRecovery } from "./use-caption-timing-recovery";
 import { buildSentenceUnits } from "../../stage-two/sentences";
-import { readStageTwoLocation, replaceStageTwoLocation } from "../../stage-two/location";
-import { BufferedReferenceProvider, useBufferedReference } from "../../stage-two/reference/use-buffered-reference";
+import { useBufferedReference } from "../../stage-two/reference/use-buffered-reference";
 import { BufferedReferencePanel } from "../../stage-two/components/BufferedReferencePanel";
 import { useReferenceAnalysis } from "../../stage-two/analysis/use-reference-analysis";
 import { useBufferedAnalysis } from "../../stage-two/analysis/use-buffered-analysis";
 import { buildReferenceKey, type ReferenceAnalysisCache } from "../../stage-two/analysis/reference-analysis-cache";
 import { LoadoutLink } from "../../navigation/LoadoutLink";
 
+const loadShadow = () => import("../../stage-two/components/StageTwoShadowing");
 const StageTwoShadowing = dynamic(() => import("../../stage-two/components/StageTwoShadowing").then((module) => module.StageTwoShadowing),
-  { loading: () => <ContentSkeleton label="Opening practice…" variant="practice" /> });
+  { loading: () => <StageTwoSkeleton label="Opening practice…" /> });
 
 const tagClass: Record<CorpusItem["tags"][number], string> = {
   acknowledging: "tag-teal",
@@ -111,29 +109,14 @@ type CorpusDetailState = {
   error?: string;
 };
 
-type StageOneReaderProps = {
-  initialStage?: "reader" | "shadow";
-  onChooseSegment?: () => void;
-  onStartStageTwo?: (segment: StageOneSegment) => void;
-};
-
-type StageOneView = "reader" | "picker" | "preparing" | "shadow";
-
-function LibraryIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 16 16">
-      <path d="M3.25 3.5h9.5v9h-9.5zM5.5 5.75h5M5.5 8h5M5.5 10.25h3" />
-    </svg>
-  );
-}
-
-export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage = "reader" }: StageOneReaderProps = {}) {
+export function StageOneReader() {
   const { isLoaded: authLoaded, userId } = useAuth();
   const clerk = useClerk();
-  const [blueprint, setBlueprint] = useState<StageOneBlueprint | null>(null);
-  const [analysisPreview, setAnalysisPreview] = useState<StageOneAnalysisPreview | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "failed" | "unsupported">("loading");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { blueprint, analysisPreview, status, errorMessage, source, retryLoad,
+    stageOneView, navigate, prefetch, isNavigating, selectedSegmentId, setSelectedSegmentId,
+    isPlayerPlaying, handlePlaybackChange, timingRecovery, bufferedReference,
+    sharedReferenceCache, captureGeneration, suspendReference } = useContentWorkspace();
+  const sourceTitle = source?.title || (stageOneView === "shadow" ? "Loading practice" : "Loading Stage 1 content");
   const [activeNode, setActiveNode] = useState<string | null>(null);
   const [activeTranscriptIdentity, setActiveTranscriptIdentity] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<CorpusFilter>("chunks");
@@ -144,47 +127,21 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
   const closeSelectionCard = useCallback(() => setSelectionCard(null), []);
   const [autoScroll, setAutoScroll] = useState(true);
   const [autoScrollPausedUntil, setAutoScrollPausedUntil] = useState<number | null>(null);
-  const [isPlayerPlaying, setIsPlayerPlaying] = useState(false);
-  const playingRef = useRef(false);
   const [highlightActive, setHighlightActive] = useState(true);
-  const [sourceTitle, setSourceTitle] = useState(initialStage === "shadow" ? "Loading practice" : "Loading Stage 1 content");
-  const [source, setSource] = useState<StageOneSource | null>(null);
-  const [stageOneView, setStageOneView] = useState<StageOneView>(initialStage);
-  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
-  const [loadAttempt, setLoadAttempt] = useState(0);
-  const loadControllerRef = useRef<AbortController | null>(null);
-  const resolvedSourceRef = useRef<StageOneSource | null>(null);
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [wordClock] = useState(() => new CaptionWordClock());
   const programmaticScrollTimeoutRef = useRef<number | null>(null);
   const resumeAutoScrollTimeoutRef = useRef<number | null>(null);
+  const ownerGeneration = useRef(0);
   const detailCacheRef = useRef(new Map<string, CorpusItemAnalysisDetail>());
-  const handlePlaybackChange = useCallback((playing: boolean) => {
-    playingRef.current = playing;
-    setIsPlayerPlaying(playing);
-  }, []);
-  const applyRecoveredBlueprint = useCallback((next: StageOneBlueprint) => {
-    if (playingRef.current) return false;
-    setBlueprint(next);
-    return true;
-  }, []);
-  const timingRecovery = useCaptionTimingRecovery(blueprint, {
-    ready: status === "ready", applyWhenPaused: stageOneView === "reader" && !isPlayerPlaying,
-    language: source?.language, learnerLevel: source?.learnerLevel, onApply: applyRecoveredBlueprint
-  });
-
   const sourceKey = blueprint?.contentId ?? source?.contentId ?? source?.sourceUrl ?? "";
   const sourceUrl = blueprint?.sourceUrl ?? source?.sourceUrl;
-  const bufferedReference = useBufferedReference(blueprint?.contentId ?? source?.contentId ?? null, sourceUrl ?? null);
-  const sharedReferenceAnalysis = useReferenceAnalysis(null, null);
-  const sharedReferenceCache = sharedReferenceAnalysis.cache;
-  const captureGeneration = useRef(0);
-  const suspendBuffered = bufferedReference.suspend;
-  useEffect(() => { sharedReferenceCache.clear(); }, [sourceKey, sourceUrl, sharedReferenceCache]);
-  const suspendReference = useCallback(() => {
-    suspendBuffered();
-    captureGeneration.current++;
-  }, [suspendBuffered]);
+  useEffect(() => { setActiveNode(current => blueprint?.logicNodes.some(node => node.id === current)
+    ? current : blueprint?.logicNodes[0]?.id ?? null); }, [blueprint?.logicNodes]);
+  useLayoutEffect(() => {
+    ownerGeneration.current++;
+    setSelectionCard(null); setCorpusDetail(null); detailCacheRef.current.clear();
+  }, [userId]);
   const savedRecords = useMemo(() => corpus.records.filter((record) => (record.contentId ?? record.sourceUrl) === sourceKey
     || Boolean(sourceUrl && record.sourceUrl === sourceUrl)), [corpus.records, sourceKey, sourceUrl]);
   const corpusKey = (item: CorpusItem) => savedRecords.find((record) =>
@@ -215,69 +172,6 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
   }, [corpusTarget]);
   const visibleCorpus = activeTab === "saved" ? savedRecords.map((record) => ({ key: record.key, item: record.item, record }))
     : allCorpus.filter(({ item }) => item.kind === ({ chunks: "chunk", idioms: "idiom", structures: "structure" } as const)[activeTab]);
-
-  useEffect(() => {
-    const nextSource = readStageOneSource();
-    setSource((current) => current ?? nextSource);
-    setSourceTitle(nextSource.title || "YouTube video");
-  }, []);
-
-  useEffect(() => {
-    if (!source) return;
-
-    const activeSource = resolvedSourceRef.current ?? source;
-    const controller = new AbortController();
-    loadControllerRef.current = controller;
-
-    loadBlueprint();
-
-    return () => {
-      controller.abort();
-      if (loadControllerRef.current === controller) loadControllerRef.current = null;
-    };
-
-    async function loadBlueprint() {
-      // Strict Mode can dispose the first setup before any network work starts.
-      await Promise.resolve();
-      if (controller.signal.aborted) return;
-      setStatus("loading");
-      setErrorMessage(null);
-
-      try {
-        const nextBlueprint = await loadStageOneBlueprint(activeSource, (message) => {
-          if (!controller.signal.aborted) setErrorMessage(message);
-        }, {
-          signal: controller.signal,
-          resumeFailedJob: loadAttempt > 0,
-          onResolved: (ids) => {
-            if (controller.signal.aborted) return;
-            resolvedSourceRef.current = { ...activeSource, ...ids, handoffId: undefined };
-            const url = new URL(window.location.href);
-            if (url.searchParams.get("contentId") === ids.contentId && url.searchParams.get("jobId") === ids.jobId
-              && !url.searchParams.has("handoffId") && !url.searchParams.has("transcriptText")) return;
-            url.searchParams.set("contentId", ids.contentId);
-            url.searchParams.set("jobId", ids.jobId);
-            url.searchParams.delete("handoffId");
-            url.searchParams.delete("transcriptText");
-            window.history.replaceState(window.history.state, "", url);
-          },
-          onPreview: (preview) => {
-            if (!controller.signal.aborted) setAnalysisPreview(preview);
-          }
-        });
-        if (controller.signal.aborted) return;
-        setBlueprint(nextBlueprint);
-        setActiveNode((current) => current ?? nextBlueprint.logicNodes[0]?.id ?? null);
-        setAnalysisPreview(null);
-        setStatus("ready");
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        const apiError = error instanceof StageOneApiError ? error : null;
-        setStatus(apiError?.kind ?? "failed");
-        setErrorMessage(error instanceof Error ? error.message : "Unable to load this content.");
-      }
-    }
-  }, [source, loadAttempt]);
 
   const transcript = useMemo(
     () => {
@@ -504,6 +398,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
   }
 
   async function openCorpusDetail(key: string, item: CorpusItem, record?: SavedCorpusRecord) {
+    const generation = ownerGeneration.current;
     const context = buildCorpusSelectionContext(
       item,
       transcript,
@@ -540,6 +435,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
     } else {
       enrichedItem = { ...item, analysisDetail: { context, analysis: await analyze() } };
     }
+    if (generation !== ownerGeneration.current) return;
     const detail = enrichedItem.analysisDetail;
     if (!detail) {
       setCorpusDetail((current) => current?.id === detailId
@@ -561,13 +457,6 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
     void openCorpusDetail(corpusDetail.key, corpusDetail.item, corpusDetail.record);
   }
 
-  function retryLoad() {
-    if (!source) return;
-    loadControllerRef.current?.abort();
-    setStatus("loading");
-    setLoadAttempt((attempt) => attempt + 1);
-  }
-
   const isReady = status === "ready" && blueprint !== null;
   const playableSegments = useMemo(
     () => (blueprint?.segments ?? []).filter(isPlayableSegment),
@@ -578,59 +467,46 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
   const displaySummary = blueprint?.summary ?? analysisPreview?.summary;
   const selectedSegment = playableSegments.find((segment) => segment.id === selectedSegmentId) ?? null;
 
+  useEffect(() => {
+    if (stageOneView !== "preparing" || !selectedSegment || !blueprint) return;
+    const first = buildSentenceUnits(blueprint.contentId, selectedSegment, blueprint.transcript)[0];
+    prefetch("shadow", selectedSegment.id, first?.id);
+    // Load code only; recorder/audio effects still start when Shadow mounts.
+    void loadShadow().catch(() => { /* The normal entry retains its loading/error boundary. */ });
+  }, [stageOneView, selectedSegment, blueprint, prefetch]);
+
   const openSegmentPicker = useCallback(() => {
     if (playableSegments.length === 0) return;
     suspendReference();
     playerRef.current?.pause();
-    onChooseSegment?.();
-    setStageOneView("picker");
-  }, [onChooseSegment, playableSegments.length, suspendReference]);
+    navigate("picker");
+  }, [playableSegments.length, suspendReference, navigate]);
 
   const closeSegmentPicker = useCallback(() => {
     suspendReference();
-    replaceStageTwoLocation(null);
     if (stageOneView !== "reader") handlePlaybackChange(false);
-    setStageOneView("reader");
-  }, [handlePlaybackChange, stageOneView, suspendReference]);
+    navigate("reader", undefined, undefined, true);
+  }, [handlePlaybackChange, stageOneView, suspendReference, navigate]);
 
   const beginStageTwoPreparation = useCallback((segment: StageOneSegment) => {
     suspendReference();
-    setSelectedSegmentId(segment.id);
-    setStageOneView("preparing");
-  }, [suspendReference]);
+    navigate("preparing", segment.id);
+  }, [suspendReference, navigate]);
 
   const launchStageTwo = useCallback((segment: StageOneSegment) => {
     suspendReference();
     const firstSentence = blueprint ? buildSentenceUnits(blueprint.contentId, segment, blueprint.transcript)[0] : null;
-    replaceStageTwoLocation({ segmentId: segment.id, sentenceId: firstSentence?.id });
-    setSelectedSegmentId(segment.id);
-    setStageOneView("shadow");
-    if (userId) onStartStageTwo?.(segment);
-    else if (authLoaded) {
-      const returnUrl = window.location.href;
+    const target = navigate("shadow", segment.id, firstSentence?.id);
+    if (!userId && authLoaded) {
+      const returnUrl = window.location.origin + target;
       clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
     }
-  }, [onStartStageTwo, suspendReference, blueprint, userId, authLoaded, clerk]);
-
-  useEffect(() => {
-    if (!blueprint) return;
-    const location = readStageTwoLocation(new URL(window.location.href));
-    if (!location) return;
-    if (!playableSegments.some((segment) => segment.id === location.segmentId)) {
-      replaceStageTwoLocation(null);
-      setStageOneView("reader");
-      return;
-    }
-    setSelectedSegmentId(location.segmentId);
-    setStageOneView("shadow");
-  }, [blueprint, playableSegments]);
+  }, [suspendReference, blueprint, userId, authLoaded, clerk, navigate]);
 
   return (
-    <BufferedReferenceProvider value={bufferedReference}>
-    <LearningLocationTracker authLoaded={authLoaded} owner={userId} ready={isReady}
-      contentId={blueprint?.contentId ?? null} sourceUrl={displaySourceUrl} title={displayTitle} />
+    <>
     <main className="stage-page">
-      <section className="reader-shell" aria-label="Libitu stage 1 ingest reader">
+      <section className="reader-shell" aria-label="Libitu stage 1 ingest reader" aria-busy={isNavigating}>
         <header className="topbar">
           <BrandLogo className="logo" />
           <div className="topbar-title">{blueprint?.title ?? sourceTitle}</div>
@@ -655,9 +531,10 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
           <AuthControls />
         </header>
 
-        {stageOneView === "shadow" && status !== "failed" && status !== "unsupported" && (!selectedSegment || !authLoaded) ? (
-          <ContentSkeleton label="Loading practice…" variant="practice" />
-        ) : stageOneView === "picker" ? (
+        {stageOneView !== "reader" && status !== "failed" && status !== "unsupported"
+          && (status === "loading" || (stageOneView !== "picker" && !selectedSegment) || (stageOneView === "shadow" && !authLoaded)) ? (
+          <StageTwoSkeleton view={stageOneView === "picker" ? "segments" : stageOneView === "preparing" ? "preparing" : "shadow"} />
+        ) : stageOneView === "picker" && status !== "failed" && status !== "unsupported" ? (
           <StageOneSegmentPicker
             segments={playableSegments}
             logicNodes={logicNodes}
@@ -685,7 +562,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
             <p>Save your practice history to your account. You choose whether to keep recordings for later playback.</p>
             <p>{selectedSegment.title} · Your selected sentence will be kept.</p>
             <Button variant="secondary" size="inherit" type="button" disabled={!authLoaded} onClick={() => {
-              const returnUrl = window.location.href;
+              const returnUrl = currentAuthReturnUrl();
               clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
             }}>{authLoaded ? "Sign in or create account" : "Checking sign-in…"}</Button>
             <Button variant="secondary" size="inherit" type="button" onClick={closeSegmentPicker}>Back to Stage 1</Button>
@@ -703,8 +580,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
             captureGeneration={captureGeneration.current}
             onBack={() => {
               suspendReference();
-              replaceStageTwoLocation(null);
-              setStageOneView("picker");
+              navigate("picker", undefined, undefined, true);
             }}
           />
         ) : (
@@ -741,7 +617,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
         >
           <div className="video-frame">
             {displaySourceUrl ? (
-              <YouTubePlayer
+              <WorkspacePlayer
                 wordClock={wordClock}
                 ref={playerRef}
                 sourceUrl={displaySourceUrl}
@@ -949,6 +825,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
           <StageOneStageCta
             segmentCount={playableSegments.length}
             onChooseSegment={openSegmentPicker}
+            onPrefetch={() => prefetch("picker")}
           />
         ) : null}
           </>
@@ -964,7 +841,7 @@ export function StageOneReader({ onChooseSegment, onStartStageTwo, initialStage 
         />
       ) : null}
     </main>
-    </BufferedReferenceProvider>
+    </>
   );
 }
 
@@ -977,9 +854,10 @@ function isPlayableSegment(segment: StageOneBlueprint["segments"][number]) {
 type StageOneStageCtaProps = {
   segmentCount: number;
   onChooseSegment?: () => void;
+  onPrefetch?: () => void;
 };
 
-function StageOneStageCta({ segmentCount, onChooseSegment }: StageOneStageCtaProps) {
+function StageOneStageCta({ segmentCount, onChooseSegment, onPrefetch }: StageOneStageCtaProps) {
   const canChooseSegment = segmentCount > 0;
 
   return (
@@ -999,6 +877,7 @@ function StageOneStageCta({ segmentCount, onChooseSegment }: StageOneStageCtaPro
         type="button"
         disabled={!canChooseSegment}
         onClick={onChooseSegment}
+        onMouseEnter={onPrefetch} onFocus={onPrefetch} onTouchStart={onPrefetch}
       >
         {canChooseSegment ? "Choose a segment to shadow" : "Segments unavailable"}
         <ArrowRight aria-hidden="true" />
@@ -1160,7 +1039,7 @@ function StageTwoPreparation({
   const player = useRef<YouTubePlayerHandle>(null);
   const [playing, setPlaying] = useState(false);
   const suspend = capture.suspend;
-  const observed = useReferenceAnalysis(null, null, undefined, cache);
+  const observed = useReferenceAnalysis(null, cache);
   const preparation = useBufferedAnalysis(contentId, sourceUrl, sentences, capture, cache);
   const keyOf = (sentence: typeof sentences[number]) => buildReferenceKey(contentId, sourceUrl, sentence.id, sentence.startMs, sentence.endMs);
   const covered = sentences.filter((sentence) => capture.covers({ start: sentence.startMs / 1000, end: sentence.endMs / 1000 }));
@@ -1208,7 +1087,7 @@ function StageTwoPreparation({
         })}
       </div>
       <div className="stage-two-buffer-preparation">
-        {sourceUrl ? <YouTubePlayer ref={player} sourceUrl={sourceUrl} title="Prepare selected practice audio"
+        {sourceUrl ? <WorkspacePlayer ref={player} sourceUrl={sourceUrl} title="Prepare selected practice audio"
           onPlaybackChange={setPlaying} onTimeChange={() => {}}
           onTelemetry={(sample) => capture.sample(sample.blockedByPausedSeek ? { ...sample, state: 2 } : sample, captureGeneration)} /> : null}
         <BufferedReferencePanel capture={capture} playable={Boolean(sourceUrl)}>
@@ -1325,37 +1204,6 @@ function formatSegmentDuration(segment: StageOneSegment) {
 
 function difficultyColor(difficulty: NonNullable<StageOneSegment["difficulty"]>) {
   return difficulty === "easy" ? "#1d9e75" : difficulty === "dense" ? "#e24b4a" : "#ef9f27";
-}
-
-function readStageOneSource(): StageOneSource {
-  const params = new URLSearchParams(window.location.search);
-  const sourceUrl = params.get("sourceUrl") ?? defaultStageOneSource.sourceUrl;
-  const title = params.get("title") ?? (params.has("sourceUrl") || params.has("contentId") ? "" : defaultStageOneSource.title);
-  const transcriptText = params.get("transcriptText") ?? undefined;
-  const language = params.get("language") ?? undefined;
-  const contentId = params.get("contentId") ?? undefined;
-  const jobId = params.get("jobId") ?? undefined;
-  const handoffId = params.get("handoffId") ?? undefined;
-  const learnerLevel = parseLearnerLevel(params.get("learnerLevel") ?? params.get("level"));
-
-  return {
-    kind: "youtube",
-    sourceUrl,
-    title,
-    contentId,
-    jobId,
-    handoffId,
-    transcriptText,
-    language,
-    learnerLevel: learnerLevel ?? defaultStageOneSource.learnerLevel
-  };
-}
-
-function parseLearnerLevel(value: string | null): LearnerLevel | undefined {
-  const normalized = value?.toUpperCase();
-  return normalized && ["A1", "A2", "B1", "B2", "C1", "C2"].includes(normalized)
-    ? normalized as LearnerLevel
-    : undefined;
 }
 
 function transcriptIdentity(line: StageOneBlueprint["transcript"][number], index: number) {

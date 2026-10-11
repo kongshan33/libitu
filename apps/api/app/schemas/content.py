@@ -1,8 +1,10 @@
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, HttpUrl, model_validator
 
 from app.schemas.captions import CaptionTrack
+from app.schemas.job import ProcessingStatus
 
 
 class ContentKind(StrEnum):
@@ -48,3 +50,30 @@ class ContentResolveResponse(BaseModel):
     has_transcript: bool = False
     language: str | None = None
     title: str | None = None
+
+
+class PublicContent(BaseModel):
+    content_id: str
+    kind: Literal["youtube"] = "youtube"
+    source_url: str
+    title: str | None = None
+    language: str | None = None
+
+
+class ContentJobSummary(BaseModel):
+    id: str
+    content_id: str
+    analysis_version: str
+    status: ProcessingStatus
+    attempt_count: int
+
+
+class ContentProcessing(BaseModel):
+    analysis_version: str
+    blueprint_available: bool
+    job: ContentJobSummary | None = None
+
+
+class ContentContext(BaseModel):
+    content: PublicContent
+    processing: ContentProcessing

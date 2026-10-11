@@ -3,7 +3,7 @@
   "minimum_chrome_version": "116",
   "name": "Libitu",
   "description": "Collect useful phrases from any YouTube video, practice saying them, and use them in realistic AI conversations.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "icons": {
     "16": "icons/l.png",
     "32": "icons/l.png",
@@ -17,33 +17,49 @@
       "32": "icons/l.png"
     }
   },
-
   "background": {
     "service_worker": "src/background.js",
     "type": "module"
   },
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["src/youtube-caption-observer.js"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "src/youtube-caption-observer.js"
+      ],
       "run_at": "document_start",
       "world": "MAIN"
     },
     {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["src/content-script.js"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "src/content-script.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["http://localhost:3000/*"],
-      "js": ["src/stage-one-bridge.js", "src/stage-two-bridge.js", "src/buffer-bridge.js"],
+      "matches": [
+        "http://localhost:3000/*"
+      ],
+      "js": [
+        "src/stage-one-bridge.js",
+        "src/buffer-bridge.js"
+      ],
       "run_at": "document_start"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["icons/l.png"],
-      "matches": ["https://www.youtube.com/*"]
+      "resources": [
+        "icons/l.png"
+      ],
+      "matches": [
+        "https://www.youtube.com/*"
+      ]
     }
   ],
   "host_permissions": [
@@ -51,5 +67,13 @@
     "http://localhost:3000/*",
     "https://www.youtube.com/*"
   ],
-  "permissions": ["activeTab", "scripting", "storage", "tabs", "tabCapture", "offscreen"]
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs",
+    "tabCapture",
+    "offscreen",
+    "webNavigation"
+  ]
 }

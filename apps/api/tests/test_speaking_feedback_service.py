@@ -136,11 +136,11 @@ def test_invalid_saved_public_result_is_sanitized(mission):
 
 
 def test_end_is_successful_when_enqueue_needs_recovery(mission, monkeypatch):
-    from app.routers import speaking
+    from app.services import speaking_lifecycle
     _, sid, _ = mission
     def unavailable(*args, **kwargs):
         raise HTTPException(503, "unavailable")
-    monkeypatch.setattr(speaking, "request_feedback", unavailable)
+    monkeypatch.setattr(speaking_lifecycle, "request_feedback", unavailable)
     with TestClient(app) as client:
         ended = client.post(f"/api/speaking/sessions/{sid}/end")
     assert ended.status_code == 200

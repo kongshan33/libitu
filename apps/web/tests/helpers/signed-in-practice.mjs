@@ -14,6 +14,12 @@ export async function installSignedInPractice(page) {
       mountUserButton() {}, unmountUserButton() {}, __internal_updateProps() {} };
   });
   await page.route(/clerk\.(accounts\.dev|com)/, (route) => route.fulfill({ contentType: "application/javascript", body: "/* local identity fixture */" }));
+  // Local playback suites have no previously uploaded private reference.
+  await page.route(/\/api\/references\/(captures\/latest|capability)(\?|$)/, route => {
+    const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type,authorization" };
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+    return route.fulfill({ headers, json: new URL(route.request().url()).pathname.endsWith("/latest") ? null : { available: false, input_mode: null } });
+  });
   await page.route(/\/api\/(practice\/attempts|corpus)(\?|$|\/)/, async (route) => {
     const request = route.request(), url = new URL(request.url());
     const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type,authorization",

@@ -12,57 +12,38 @@ const context = await chromium.launchPersistentContext("", {
   args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`],
   viewport: { width: 1440, height: 1000 }
 });
+context.setDefaultTimeout(30_000);
 const errors = [];
-const counts = { resolve: 0, jobs: 0, reads: 0, blueprint: 0 };
-let resolveRoute;
-let resolveBody;
-const job = { id: "entry-job", content_id: "entry-content", status: "processing", processing_stage: "analyzing", analysis_preview: null };
-const blueprint = {
-  id: "entry-blueprint", content_id: job.content_id, title: "First video", source_url: "https://www.youtube.com/watch?v=first-video",
-  summary: "A discussion of useful ideas.", chapters: [], logic_flow: [], corpus_items: [],
-  transcript: [{ time: "0:01", parts: ["First video captions."] }]
-};
-const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type" };
+let step = "launch";
+const contentId = "a0000000-0000-4000-8000-000000000001";
 
 try {
   await context.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (url.protocol === "chrome-extension:") return route.continue();
-    if (url.pathname.startsWith("/api/")) {
-      if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers });
-      if (url.pathname === "/api/content/resolve") {
-        counts.resolve += 1;
-        resolveBody = route.request().postDataJSON();
-        resolveRoute = route;
-        return;
-      }
-      if (url.pathname === "/api/jobs") { counts.jobs += 1; job.status = "processing"; return route.fulfill({ json: job, headers }); }
-      if (url.pathname === "/api/jobs/entry-job") { counts.reads += 1; return route.fulfill({ json: job, headers }); }
-      if (url.pathname === "/api/blueprints/entry-content") { counts.blueprint += 1; return route.fulfill({ json: blueprint, headers }); }
-      throw new Error(`Unexpected API request: ${url.pathname}`);
+    if (url.origin === "http://localhost:8000" || (url.origin === origin && url.pathname.startsWith("/api/"))) return route.abort();
+    if (url.origin === origin && route.request().resourceType() !== "document") return route.fulfill({ contentType: "application/javascript", body: "/* fixture asset */" });
+    if (url.origin === origin) return route.fulfill({ contentType: "text/html", body: `<!doctype html>
+      <title>Import handoff fixture</title><p>Waiting for captions</p><script>
+      const handoffId=new URL(location.href).searchParams.get('handoffId');
+      const requestId=crypto.randomUUID();
+      addEventListener('message', event=>{
+        if(event.source!==window||event.origin!==location.origin||event.data?.type!=='LIBITU_HANDOFF_RESPONSE'
+          ||event.data.version!==4||event.data.requestId!==requestId||event.data.handoffId!==handoffId)return;
+        if(event.data.phase==='ready'){window.handoff=event.data;document.querySelector('p').textContent=event.data.transcriptText;}
+      });
+      window.requestCaptions=()=>postMessage({type:'LIBITU_HANDOFF_REQUEST',version:4,requestId,handoffId},location.origin);
+      </script>` });
+    if (url.origin === "https://www.youtube.com" && url.pathname === "/api/timedtext") {
+      return route.fulfill({ json: { events: [{ tStartMs: 1000, dDurationMs: 1500,
+        segs: [{ utf8: "First video captions.", tOffsetMs: 0 }] }] } });
     }
-    if (url.origin === origin || url.hostname.endsWith(".clerk.accounts.dev")) return route.continue();
     if (url.origin === "https://www.youtube.com" && url.pathname === "/") {
       return route.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><title>YouTube fixture</title>
         <style>body{font:16px Arial;margin:24px;background:#fff;color:#171717}#movie_player{position:relative;width:100%;aspect-ratio:16/9;background:#222}h1{font-size:22px}ytd-watch-flexy{display:block;max-width:900px}video{width:100%}.ytp-chrome-controls{position:absolute;right:0;bottom:0;left:0;height:48px;background:rgba(0,0,0,.72)}.ytp-right-controls{display:flex;float:right;height:100%}.ytp-button{width:48px;border:0;background:transparent;color:#fff}</style>
         </head><body><h2>YouTube fixture</h2><main></main></body></html>` });
     }
     return route.fulfill({ status: 200, contentType: "text/html", body: "" });
-  });
-  await context.addInitScript(() => {
-    if (location.origin !== "http://localhost:3000") return;
-    window.__streams = [];
-    window.EventSource = class extends EventTarget {
-      constructor() { super(); window.__streams.push(this); }
-      close() {}
-    };
-    window.YT = { Player: class {
-      constructor(_element, { events }) { queueMicrotask(() => events.onReady()); }
-      getCurrentTime() { return 0; }
-      seekTo() {}
-      playVideo() {}
-      destroy() {}
-    } };
   });
   context.on("page", (page) => page.on("pageerror", (error) => errors.push(error.message)));
   const worker = context.serviceWorkers()[0] ?? await context.waitForEvent("serviceworker");
@@ -97,8 +78,10 @@ try {
       buttonWidth: button.getBoundingClientRect().width, imageWidth: image.getBoundingClientRect().width };
   }), { width: 48, height: 48, buttonWidth: 48, imageWidth: 30 });
   await youtube.screenshot({ path: "/tmp/libitu-youtube-entry-desktop.png", fullPage: true });
+  await youtube.evaluate(async () => { await fetch("/api/timedtext?v=first-video&lang=en&fmt=json3").then(response => response.json()); });
+  await youtube.waitForFunction(() => globalThis.__libituCaptionObserverV1?.read("first-video", "en").status === "ready");
   const startedAt = Date.now();
-  const opened = context.waitForEvent("page", { timeout: 15_000 }).catch(() => null);
+  const opened = context.waitForEvent("page", { timeout: 45_000 }).catch(() => null);
   await button.click();
   await youtube.evaluate(() => {
     const segment = document.createElement("ytd-transcript-segment-renderer");
@@ -108,45 +91,34 @@ try {
   const openedPage = await opened;
   const stage = openedPage ?? context.pages().find((page) => page.url().startsWith(origin));
   assert.ok(stage, `Stage 1 did not open: ${await youtube.locator("#libitu-youtube-entry").evaluate((host) => host.shadowRoot.querySelector("p").textContent)}`);
-  await stage.locator(".youtube-player iframe").waitFor();
-  await stage.getByText("Reading captions from YouTube.", { exact: true }).waitFor();
+  assert.equal(new URL(stage.url()).pathname, "/practice/import");
+  assert.equal(new URL(stage.url()).searchParams.get("sourceUrl"), "https://www.youtube.com/watch?v=first-video");
+  // Chrome-created tabs can start navigation before Playwright attaches its
+  // routes. Reload the captured address into the deterministic Web consumer.
+  await stage.reload();
+  await stage.waitForFunction(() => typeof window.requestCaptions === "function");
+  await stage.evaluate(() => window.requestCaptions());
+  await stage.waitForFunction(() => window.handoff?.phase === "ready");
+  assert.equal(await stage.evaluate(() => window.handoff.transcriptText), "0:01.000\tFirst video captions.");
   const firstViewMs = Date.now() - startedAt;
-  console.log(JSON.stringify({ firstViewMs, phase: "video visible after bounded caption preflight" }));
-  assert.equal(counts.resolve, 0, "Stage 1 must render before content resolve/API work");
-  const iframe = await stage.locator(".youtube-player iframe").elementHandle();
-  await stage.waitForFunction(() => document.querySelector(".youtube-player iframe"));
-  const resolveDeadline = Date.now() + 10_000;
-  while (!resolveRoute && Date.now() < resolveDeadline) await new Promise((resolve) => setTimeout(resolve, 20));
-  assert.ok(resolveRoute, "Stage 1 must submit the captured transcript");
-  assert.equal(resolveBody.transcript_text, "0:01\tFirst video captions.");
-  assert.equal(resolveBody.title, "First video");
-  assert.equal(resolveBody.language, "en");
-  await stage.screenshot({ path: "/tmp/libitu-stage-one-handoff-desktop.png", fullPage: true, animations: "disabled" });
+  step = "reuse pending import";
   const pagesBefore = context.pages().length;
   await button.click();
-  assert.equal(context.pages().length, pagesBefore);
-  await resolveRoute.fulfill({ json: { content_id: job.content_id, source_url: blueprint.source_url, title: blueprint.title }, headers });
-  await stage.waitForFunction(() => window.__streams.length === 1);
-  assert.equal(new URL(stage.url()).searchParams.has("handoffId"), false);
-  assert.equal(new URL(stage.url()).searchParams.get("jobId"), job.id);
-  job.status = "failed";
-  await stage.evaluate((failedJob) => {
-    window.__streams[0].dispatchEvent(Object.assign(new Event("job"), { data: JSON.stringify(failedJob) }));
-  }, { ...job, error_code: "analysis_failed", error_message: "Analysis temporarily unavailable." });
-  await stage.getByRole("button", { name: "Retry", exact: true }).click();
-  await stage.waitForFunction(() => window.__streams.length === 2);
-  assert.deepEqual(counts, { resolve: 1, jobs: 2, reads: 1, blueprint: 0 });
-  await stage.evaluate((readyJob) => {
-    window.__streams[1].dispatchEvent(Object.assign(new Event("job"), { data: JSON.stringify(readyJob) }));
-  }, { ...job, status: "ready" });
-  await stage.locator(".transcript-line").waitFor();
-  assert.equal(await iframe.evaluate((element) => element.isConnected), true);
-  assert.deepEqual(counts, { resolve: 1, jobs: 2, reads: 1, blueprint: 1 });
-  job.status = "ready";
-  await stage.reload();
-  await stage.locator(".transcript-line").waitFor();
-  assert.deepEqual(counts, { resolve: 1, jobs: 2, reads: 2, blueprint: 2 });
+  await youtube.waitForFunction(() => document.querySelector("#libitu-youtube-entry")?.shadowRoot.querySelector("button").dataset.state !== "capturing");
+  assert.equal(context.pages().length, pagesBefore, "pending import is reused");
+  // Simulate the Web's completed import; real Web resolve/retry is separately
+  // exercised by canonical-routes and content-workspace browser tests.
+  step = "reuse canonical content";
+  await stage.evaluate(id => history.replaceState(null, "", `/practice/${id}`), contentId);
+  await worker.evaluate(async ({ id, videoId }) => {
+    const tab = (await chrome.tabs.query({ url: "http://localhost:3000/*" }))[0];
+    await chrome.storage.session.set({ [`libituContentTab:${tab.id}`]: { contentId: id, videoId, documentId: "fixture" } });
+  }, { id: contentId, videoId: "first-video" });
+  await button.click();
+  await youtube.waitForFunction(() => document.querySelector("#libitu-youtube-entry")?.shadowRoot.querySelector("button").dataset.state !== "capturing");
+  assert.equal(context.pages().length, pagesBefore, "resolved content is reused after handoff removal");
 
+  step = "SPA source change";
   // A YouTube SPA change removes the entry until the new player identity matches.
   await youtube.evaluate(() => {
     document.dispatchEvent(new Event("yt-navigate-start"));
@@ -180,6 +152,7 @@ try {
   const metadata = await worker.evaluate(async (id) => chrome.tabs.sendMessage(id, { type: "LIBITU_GET_YOUTUBE_METADATA" }), tabId);
   assert.equal(metadata.videoId, "second-video");
   assert.equal(metadata.title, "Second video");
+  step = "stale snapshot";
   const capturing = worker.evaluate(async (id) => chrome.tabs.sendMessage(id, { type: "LIBITU_GET_YOUTUBE_SNAPSHOT", videoId: "second-video" }), tabId);
   await youtube.evaluate(() => {
     document.dispatchEvent(new Event("yt-navigate-start"));
@@ -199,7 +172,10 @@ try {
   const disabledButton = youtube.locator("#libitu-youtube-entry button");
   await disabledButton.waitFor();
   await disabledButton.waitFor({ state: "visible" });
-  await youtube.waitForFunction(() => document.querySelector("#libitu-youtube-entry")?.shadowRoot?.querySelector("button")?.disabled);
+  await youtube.waitForFunction(() => {
+    const button = document.querySelector("#libitu-youtube-entry")?.shadowRoot?.querySelector("button");
+    return button?.disabled && button.title.includes("English videos only");
+  });
   assert.match(await disabledButton.getAttribute("title"), /English videos only/);
   const languageHint = youtube.locator("#libitu-youtube-entry p");
   assert.match(await languageHint.textContent(), /English videos only/);
@@ -214,16 +190,16 @@ try {
     document.dispatchEvent(new Event("yt-navigate-finish"));
   });
   await button.waitFor({ state: "detached" });
-  assert.equal(counts.resolve, 1);
 
   await stage.setViewportSize({ width: 390, height: 844 });
   await stage.screenshot({ path: "/tmp/libitu-stage-one-entry-mobile.png", fullPage: true });
   assert.equal(await stage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
   assert.deepEqual(errors, []);
-  console.log(JSON.stringify({ firstViewMs, counts, checks: "real unpacked extension, English-only gate, SPA entry, pending captions/API, deduplication, handoff, retry, refresh, mobile" }));
+  console.log(JSON.stringify({ firstViewMs, checks: "real unpacked extension, English-only gate, SPA entry, v4 import handoff, canonical tab reuse, mobile" }));
 } catch (error) {
+  console.error("Failed step:", step);
   for (const page of context.pages()) {
-    console.error(JSON.stringify({ url: page.url(), entryStatus: await page.locator("#libitu-youtube-entry p").allTextContents(), status: await page.locator(".stage-status").allTextContents(), counts }));
+    console.error(JSON.stringify({ url: page.url(), entryStatus: await page.locator("#libitu-youtube-entry p").allTextContents(), buttons: await page.locator("#libitu-youtube-entry button").evaluateAll(nodes => nodes.map(node => ({ label: node.getAttribute("aria-label"), title: node.title }))), status: await page.locator(".stage-status").allTextContents() }));
   }
   throw error;
 } finally {

@@ -7,7 +7,6 @@ import { readCurrentYouTubeCaptionTrack, captionTrackToTranscript } from "../src
 import { createFreshCaptionReader } from "../src/fresh-captions.js";
 
 const code = readFileSync(new URL("../src/background.js", import.meta.url), "utf8")
-  .replace('import { installReferenceCapture } from "./reference-capture.js";', "")
   .replace('import { installBufferedCapture } from "./buffer-capture.js";', "")
   .replace('import { readCurrentYouTubeCaptionTrack, captionTrackToTranscript } from "./youtube-captions.js";', "")
   .replace('import { createFreshCaptionReader } from "./fresh-captions.js";', "");
@@ -30,6 +29,7 @@ function harness() {
     failReceiver: false
   };
   const chrome = {
+    webNavigation: { getFrame: async ({ tabId }) => ({ url: tabs.get(tabId)?.url, documentId: "stage-document" }) },
     runtime: {
       id: "test-extension",
       onMessage: event("message"),
@@ -68,6 +68,7 @@ function harness() {
       remove: async (key) => { delete records[key]; }
     } },
     tabs: {
+      onRemoved: event("removed"),
       onUpdated: event("updated"),
       query: async () => [...tabs.values()].filter((tab) => tab.url.startsWith("https://www.youtube.com/watch")),
       get: async (id) => { if (!tabs.has(id)) throw new Error("Closed tab"); return tabs.get(id); },
@@ -89,13 +90,13 @@ function harness() {
     chrome, URL, URLSearchParams, crypto, clearTimeout,
     setTimeout: (callback, delay) => setTimeout(callback, state.quickTimeout ? Math.min(delay, 5) : delay),
     readCurrentYouTubeCaptionTrack, captionTrackToTranscript,
-    createFreshCaptionReader,
+    createFreshCaptionReader: (chrome) => createFreshCaptionReader(chrome, async () => true),
     installReferenceCapture: () => ({ handlesTab: () => false }),
     installBufferedCapture: () => ({ handlesTab: () => false })
   });
   restart();
   const dispatch = (message, sender = { tab: video, frameId: 0, url: video.url }) => new Promise((resolve) => {
-    if (!listeners.message(message, sender, resolve)) resolve(undefined);
+    if (!listeners.message(message, { id: "test-extension", ...sender }, resolve)) resolve(undefined);
   });
   return { state, calls, tabs, records, listeners, dispatch, restart };
 }
@@ -298,7 +299,8 @@ test("fresh caption requests bypass old ready handoffs and duplicate-entry focus
   await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
   assert.equal(h.calls.filter(([type]) => type === "focus").length, 1);
   h.state.captionTrack = Promise.resolve({ captionTrack: json3Track });
-  const result = await h.dispatch({ type: "LIBITU_READ_FRESH_CAPTIONS", requestId: "fresh-one",
+  stage.url = "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001";
+  const result = await h.dispatch({ type: "LIBITU_READ_FRESH_CAPTIONS", version: 4, contentId: "a0000000-0000-4000-8000-000000000001", documentNonce: "document-nonce-12345", requestId: "fresh-one",
     sourceUrl: video.url, videoId: "first-video", language: "en" }, sender);
   assert.equal(result.status, "ready");
   assert.deepEqual(result.captionTrack, json3Track);
@@ -306,4 +308,19 @@ test("fresh caption requests bypass old ready handoffs and duplicate-entry focus
   assert.equal(h.calls.filter(([type]) => type === "open").length, 1);
   assert.equal(h.calls.filter(([type]) => type === "LIBITU_GET_YOUTUBE_SNAPSHOT").length, 1);
   assert.equal(h.calls.filter(([type]) => type === "json3").length, 2);
+});
+
+test("a verified canonical content tab is reused after the handoff expires", async () => {
+  const h = harness();
+  const id = "a0000000-0000-4000-8000-000000000001";
+  h.tabs.set(2, { id: 2, url: `http://localhost:3000/practice/${id}/shadow?segmentId=s&sentenceId=n` });
+  h.records["libituContentTab:2"] = { contentId: id, videoId: "first-video", documentId: "document" };
+  assert.equal((await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" })).opened, true);
+  assert.equal(h.calls.filter(([type]) => type === "focus").length, 1);
+  assert.equal(h.calls.filter(([type]) => type === "open").length, 0);
+  assert.equal(h.calls.filter(([type]) => type === "json3").length, 0);
+  h.tabs.get(2).url = "http://localhost:3000/profile";
+  await h.dispatch({ type: "LIBITU_OPEN_STAGE_ONE" });
+  assert.equal(h.calls.filter(([type]) => type === "open").length, 1);
+  assert.equal(new URL(h.calls.find(([type]) => type === "open")[1]).pathname, "/practice/import");
 });

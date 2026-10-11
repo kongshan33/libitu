@@ -76,7 +76,7 @@ export function readExtensionCaptions(handoffId: string, signal?: AbortSignal): 
     function onMessage(event: MessageEvent) {
       if (event.source !== window || event.origin !== window.location.origin) return;
       const data = event.data;
-      if (data?.type !== "LIBITU_HANDOFF_RESPONSE" || data.requestId !== requestId || data.handoffId !== handoffId) return;
+      if (data?.type !== "LIBITU_HANDOFF_RESPONSE" || data.version !== 4 || data.requestId !== requestId || data.handoffId !== handoffId) return;
       if (data.phase === "connected" && !connected) {
         connected = true;
         window.clearTimeout(timer);
@@ -91,11 +91,6 @@ export function readExtensionCaptions(handoffId: string, signal?: AbortSignal): 
 
     window.addEventListener("message", onMessage);
     signal?.addEventListener("abort", abort, { once: true });
-    window.postMessage({ type: "LIBITU_HANDOFF_REQUEST", handoffId, requestId }, window.location.origin);
+    window.postMessage({ type: "LIBITU_HANDOFF_REQUEST", version: 4, handoffId, requestId }, window.location.origin);
   });
-}
-
-/** Compatibility for callers that only need the transcript. */
-export async function readExtensionTranscript(handoffId: string, signal?: AbortSignal): Promise<string | undefined> {
-  return (await readExtensionCaptions(handoffId, signal)).transcriptText;
 }

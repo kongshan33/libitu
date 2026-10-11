@@ -1,5 +1,5 @@
 import { buttonAppearance } from "@/components/ui/button";
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ArrowRight, Bookmark, Puzzle, MessageCircle, Quote, Waves } from "lucide-react";
 import { AuthControls } from "@/features/auth/components/AuthControls";

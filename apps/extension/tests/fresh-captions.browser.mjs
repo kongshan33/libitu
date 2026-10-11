@@ -12,7 +12,9 @@ const observerFile = "src/youtube-caption-observer.js";
 const temporary = await mkdtemp(join(tmpdir(), "libitu-passive-captions-"));
 const contexts = [];
 const sourceUrl = (videoId) => `https://www.youtube.com/watch?v=${videoId}`;
-const webUrl = (videoId) => `http://localhost:3000/?contentId=old-content&sourceUrl=${encodeURIComponent(sourceUrl(videoId))}`;
+const videoIds = ["first-video", "other-video", "late--video"];
+const contentId = videoId => `a0000000-0000-4000-8000-00000000000${videoIds.indexOf(videoId) + 1}`;
+const webUrl = videoId => `http://localhost:3000/practice/${contentId(videoId)}`;
 const privateValue = "fixture-private-signature";
 const fine = (start = 1040) => ({
   signedUrl: `https://www.youtube.com/api/timedtext?signature=${privateValue}`,
@@ -97,8 +99,8 @@ async function launch(label, { lateObserver = false } = {}) {
   await context.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (url.protocol === "chrome-extension:") return route.continue();
-    if (url.origin === "http://localhost:3000" && url.pathname === "/") {
-      return route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Old cached reader</title><p>Already available plain captions.</p>" });
+    if (url.origin === "http://localhost:3000" && url.pathname.startsWith("/practice/")) {
+      return route.fulfill({ contentType: "text/html", body: "<!doctype html><title>Cached reader</title><p>Already available plain captions.</p>" });
     }
     if (url.origin === "https://www.youtube.com" && ["/", "/watch"].includes(url.pathname)) {
       return route.fulfill({ contentType: "text/html", body: youtubeHtml });
@@ -123,13 +125,22 @@ async function launch(label, { lateObserver = false } = {}) {
     return route.abort();
   });
   const worker = context.serviceWorkers()[0] ?? await context.waitForEvent("serviceworker", { timeout: 10_000 });
+  await worker.evaluate(ids => {
+    globalThis.fetch = async url => {
+      const path = new URL(url).pathname;
+      if (!path.endsWith("/identity")) throw new Error("Expected identity-only lookup");
+      const id = path.split("/").at(-2);
+      const videoId = ids[Number(id.slice(-1)) - 1];
+      return Response.json({ content_id: id, kind: "youtube", source_url: `https://www.youtube.com/watch?v=${videoId}` });
+    };
+  }, videoIds);
   const youtube = await context.newPage();
   const web = await context.newPage();
   async function playerRequest(transport, variant = "fine") {
     counts.playerRequests += 1;
     return youtube.evaluate(({ transport, variant }) => window.fixture.requestCaptions(transport, variant), { transport, variant });
   }
-  async function refresh(videoId, overrides = {}) {
+  async function refresh(videoId, overrides = {}, retries = 0) {
     const result = await web.evaluate(({ videoId, overrides }) => new Promise((resolve, reject) => {
       const requestId = crypto.randomUUID();
       const timer = setTimeout(() => { window.removeEventListener("message", listener); reject(new Error("Fresh bridge did not respond")); }, 5500);
@@ -141,10 +152,13 @@ async function launch(label, { lateObserver = false } = {}) {
         resolve(event.data);
       }
       window.addEventListener("message", listener);
-      window.postMessage({ type: "LIBITU_FRESH_CAPTIONS_REQUEST", requestId,
+      window.postMessage({ type: "LIBITU_FRESH_CAPTIONS_REQUEST", version: 4, contentId: location.pathname.split("/")[2], requestId,
         sourceUrl: "https://www.youtube.com/watch?v=" + videoId, videoId, language: "en", ...overrides }, location.origin);
     }), { videoId, overrides });
     assert.equal(/fixture-private|signature|baseUrl|signedUrl|"pot"/.test(JSON.stringify(result)), false, "Signed source credentials must not cross the bridge");
+    // A loaded local machine can hit the real bounded bridge deadline. Exercise
+    // the user's explicit Retry without weakening any expected caption status.
+    if (result.status === "timeout" && retries < 2) return refresh(videoId, overrides, retries + 1);
     return result;
   }
   async function observed(videoId, start = 1040, status = "ready") {
@@ -164,7 +178,8 @@ try {
   assert.equal(await youtube.evaluate(() => globalThis.__libituCaptionObserverV1?.version), 1,
     "The real manifest observer must install on the YouTube home page before SPA navigation");
   await youtube.evaluate(() => window.fixture.setVideo("first-video"));
-  await web.goto(webUrl("first-video"));
+  await web.goto("http://localhost:3000/practice/import");
+  await web.evaluate(url => history.replaceState(null, "", url), webUrl("first-video"));
   const identifiers = await worker.evaluate(async ({ source, web }) => {
     const tabs = await chrome.tabs.query({});
     return { sourceTabId: tabs.find((tab) => tab.url === source)?.id, stageTabId: tabs.find((tab) => tab.url === web)?.id };
@@ -172,7 +187,10 @@ try {
   assert.ok(identifiers.sourceTabId && identifiers.stageTabId);
   const oldHandoff = { id: "old-caption-handoff", ...identifiers, createdAt: Date.now(), status: "ready",
     transcriptText: "0:01\tOld plain caption.", snapshot: { supported: true, videoId: "first-video", canonicalUrl: sourceUrl("first-video"), title: "Caption fixture", language: "en" } };
-  await worker.evaluate(async (record) => chrome.storage.session.set({ ["libituHandoff:" + record.id]: record }), oldHandoff);
+  await worker.evaluate(async ({ record, contentId }) => chrome.storage.session.set({
+    ["libituHandoff:" + record.id]: record,
+    ["libituContentTab:" + record.stageTabId]: { contentId, videoId: "first-video", documentId: "fixture" }
+  }), { record: oldHandoff, contentId: contentId("first-video") });
   await youtube.getByRole("button", { name: "Open in Libitu", exact: true }).click();
   step = "captions-off response through background-tab bridge";
   assert.equal(context.pages().filter((page) => page.url().startsWith("http://localhost:3000")).length, 1);
@@ -189,7 +207,9 @@ try {
   const first = await refresh("first-video");
   assert.equal(first.status, "ready");
   assert.equal(first.captionTrack.events[0].segs[1].tOffsetMs, 300);
-  assert.deepEqual((await refresh("first-video")).captionTrack, first.captionTrack);
+  const repeated = await refresh("first-video");
+  assert.equal(repeated.status, "ready", JSON.stringify(repeated));
+  assert.deepEqual(repeated.captionTrack, first.captionTrack);
   assert.equal(counts.timedtextReads, 1, "Observer cache rereads add no network work");
   assert.deepEqual(await playerRequest("fetch", "later"), { status: 200, body: fine(2040) },
     "The observer must not consume or replace the player's fetch response");

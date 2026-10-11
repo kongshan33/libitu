@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mkdtemp, writeFile } from "node:fs/promises";
@@ -33,8 +34,7 @@ const blueprint = { id: job.blueprint_id, content_id: content, title: "Save your
   })),
   segments: [{ id: "practice-segment", sequence: 1, title: "Opening", summary: "Practice the opening.",
     start_ms: 1000, end_ms: 7000, transcript_start_index: 0, transcript_end_index: 2, phonology_tags: [], recommended: true }] };
-const entry = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title, contentId: content,
-  jobId: job.id, learnerLevel: "B2", stage: "2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
+const entry = `${origin}/practice/${content}/shadow?${new URLSearchParams({ learnerLevel: "B2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
 
 // Test-only Clerk resource emitter: exercises the real React auth boundary and return
 // options without credentials. It does not establish hosted Clerk/OAuth correctness.
@@ -138,6 +138,7 @@ try {
       const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type,authorization", "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS" };
       if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
       if (url.pathname.startsWith("/api/")) {
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (url.pathname === `/api/blueprints/${content}`) return route.fulfill({ json: blueprint, headers });
         const sentence = blueprint.transcript.find(s => url.pathname === `/api/blueprints/${content}/sentences/${s.id}/sound`);
@@ -247,6 +248,7 @@ try {
     assert.ok(downloads >= 2);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await page.screenshot({ path: join(artifacts, `file-reference-${viewport.width}.png`), fullPage: true });
+    await page.locator(".stage-two-audio-settings > summary").click();
     await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).check();
     await page.getByRole("button", { name: "Record sentence", exact: true }).click();
     await page.getByText("Recording your voice", { exact: true }).waitFor();
@@ -341,6 +343,7 @@ try {
     assert.equal(await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).isChecked(), true);
 
     // A choice about future uploads must not hide previously saved analysis.
+    await page.locator(".stage-two-audio-settings > summary").click();
     await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).uncheck();
     await page.reload({waitUntil:'domcontentloaded',timeout:60000});
     await page.getByText("Analysis saved. Compare your recording in Sound, Rhythm and Melody.", { exact: true }).waitFor();

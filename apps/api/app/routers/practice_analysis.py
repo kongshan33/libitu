@@ -33,9 +33,7 @@ def create(attempt_id: UUID, payload: AnalysisCreate, user: CurrentUserDep, repo
 
 @router.get("/{attempt_id}/analysis", response_model=AnalysisView | None)
 def status(attempt_id: UUID, user: CurrentUserDep, repo: Repo) -> AnalysisView | None:
-    service.attempt_owned(repo, user.id, str(attempt_id))
-    row = repo.get(user.id, str(attempt_id))
-    return service.view(repo, user.id, row) if row else None
+    return service.read(repo, user.id, str(attempt_id))
 
 
 @router.put("/{attempt_id}/analysis/audio")
@@ -52,15 +50,10 @@ async def upload(attempt_id: UUID, request: Request, user: CurrentUserDep, repo:
 
 @router.post("/{attempt_id}/analysis/{action}")
 def control(attempt_id: UUID, action: Literal["retry", "cancel"], user: CurrentUserDep, repo: Repo) -> AnalysisView:
-    row = service.owned(repo, user.id, str(attempt_id))
-    if action == "retry" and not service.view(repo, user.id, row).retryable:
-        raise HTTPException(409, "This analysis cannot be retried. Record a new take.")
-    return service.view(repo, user.id, repo.control(user.id, str(attempt_id), action))
+    return service.control(repo, user.id, str(attempt_id), action)
 
 
 @router.delete("/{attempt_id}/analysis", status_code=204)
 def delete(attempt_id: UUID, user: CurrentUserDep, repo: Repo) -> Response:
-    row = service.owned(repo, user.id, str(attempt_id))
-    repo.control(user.id, str(attempt_id), "delete")
-    repo.remove_audio(row)
+    service.delete(repo, user.id, str(attempt_id))
     return Response(status_code=204)

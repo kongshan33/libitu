@@ -112,7 +112,7 @@ cd apps/api
 
 Web:
 
-- The root homepage renders the landing feature when no source identity is present. Existing source/content/job/handoff URLs still render Stage 1 from the typed FastAPI client; see `design/docs/LANDING_IMPLEMENTATION.md`.
+- The root homepage always renders Landing. `/practice/import` resolves video/handoff input; `/practice/{contentId}` and its `/segments` and `/shadow` children share a content layout, controller and MediaHost. R3 directly replaced root query entries and enabled extension v4 only; Web/extension update together. See `design/docs/ROUTING_AND_RESPONSIBILITY_ARCHITECTURE.md`.
 - Stage 1 demo data remains a fixture in `apps/web/features/stage-one/data/stage-one-demo.ts`.
 - ClerkProvider, middleware, and signed-in/signed-out controls are wired in `apps/web`.
 - Shared CSS tokens are imported from `@libitu/ui/tokens.css`.
@@ -146,7 +146,7 @@ Extension:
 
 - `apps/extension` contains a loadable Manifest V3 extension.
 - The extension has a language-gated YouTube player-control action, a one-click toolbar action, a background service worker, and manifest validation.
-- It enables launch only for verified English videos, opens Stage 1 with lightweight video metadata before acquiring captions, and shows an English-only reason instead of launching unsupported languages. A short-lived session handoff delivers browser captions to the web app, which creates the FastAPI content/job and updates its URL with `contentId` and `jobId`.
+- It enables launch only for verified English videos, performs a bounded caption preflight, then opens the import route with lightweight metadata and a handoff. Unsupported languages show an English-only reason. A short-lived session handoff delivers browser captions to the web app, which resolves the content at `/practice/import` and replaces the transient URL with `/practice/{contentId}`. The workspace reads/ensures processing using the R1 contract.
 - Stage 1 embeds the selected YouTube video and reads the exact blueprint created by the extension; missing captions fail explicitly.
 - An early YouTube MAIN-world observer passively copies bounded player JSON3 responses; signed requests/tokens remain with the player. Handoff and timing-only recovery read sanitized current-video captions, with explicit late-installation/unobserved/failed-response states. Reload the unpacked extension and source document before verifying a new observer version; tests against intercepted fixtures are not proof of live YouTube availability.
 

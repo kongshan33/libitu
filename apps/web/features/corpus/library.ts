@@ -1,3 +1,4 @@
+import { CONTENT_ID, learningHref } from "../navigation/learning-location.ts";
 import type { SavedCorpusRecord } from "./corpus-storage.ts";
 import { expressionText } from "../loadout/draft.ts";
 
@@ -27,7 +28,7 @@ export function libraryItems(records: SavedCorpusRecord[], filters: LibraryFilte
   });
 }
 export function sourceHref(record: SavedCorpusRecord): string | null {
-  if (record.contentId) return `/?${new URLSearchParams({ contentId: record.contentId })}`;
+  if (record.contentId && CONTENT_ID.test(record.contentId)) return learningHref({ contentId: record.contentId });
   try { const url = new URL(record.sourceUrl); return ["https:", "http:"].includes(url.protocol) ? url.href : null; }
   catch { return null; }
 }

@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { installSignedInPractice } from "./helpers/signed-in-practice.mjs";
 import { createRequire } from "node:module";
@@ -25,9 +26,7 @@ const blueprint = {
   segments: [{ id: "sound-segment", sequence: 1, title: "Practice", summary: "Explore possible readings.",
     start_ms: 1000, end_ms: 31000, transcript_start_index: 0, transcript_end_index: 6, phonology_tags: [] }]
 };
-const entry = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title,
-  contentId: job.content_id, jobId: job.id, stage: "2", segmentId: blueprint.segments[0].id,
-  sentenceId: blueprint.transcript[0].id })}`;
+const entry = `${origin}/practice/${job.content_id}/shadow?${new URLSearchParams({ segmentId: blueprint.segments[0].id, sentenceId: blueprint.transcript[0].id })}`;
 
 // These responses exercise the rendering contract; they are not a dictionary or detector evaluation.
 function annotation(index) {
@@ -82,6 +81,7 @@ try {
       if (url.pathname.startsWith("/api/")) {
         if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
         assert.equal(request.method(), "GET", "Sound guidance never uploads media or requests a paid analysis");
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
         if (url.pathname === "/api/references/capability") return route.fulfill({ json: { available: false, input_mode: null }, headers });

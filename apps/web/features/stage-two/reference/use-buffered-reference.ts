@@ -2,7 +2,7 @@
 
 import { createContext, createElement, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { SentenceUnit } from "@libitu/types/stage-two";
-import type { ReferenceRange, ReferenceTelemetry } from "./reference-capture";
+import type { ReferenceRange, ReferenceTelemetry } from "./reference-types";
 import { BufferedReferenceController, emptyBufferedReferenceState } from "./buffered-reference";
 
 /** Mount above the Stage 1/picker/Stage 2 branches so one grant and buffer survive navigation. */
@@ -11,7 +11,17 @@ export function useBufferedReference(contentId: string | null, sourceUrl: string
   const [state, setState] = useState(emptyBufferedReferenceState);
   const [controller] = useState(() => new BufferedReferenceController(setState));
 
-  useEffect(() => { controller.setSource(sourceKey); }, [controller, sourceKey]);
+  useEffect(() => {
+    controller.setSource(sourceKey);
+    if (!sourceKey) return;
+    const [contentId, sourceUrl] = JSON.parse(sourceKey) as [string, string];
+    const videoId = new URL(sourceUrl).searchParams.get("v");
+    const sessionId = crypto.randomUUID();
+    // One independent verified registration records the resolved source for extension tab reuse.
+    // It never arms capture or opens a source tab.
+    window.postMessage({ type: "LIBITU_BUFFER_REQUEST", version: 4, action: "register", sessionId,
+      requestId: sessionId, contentId, videoId }, window.location.origin);
+  }, [controller, sourceKey]);
 
   useEffect(() => {
     function receive(event: MessageEvent) {
@@ -48,9 +58,8 @@ export function useBufferedReference(contentId: string | null, sourceUrl: string
 export type BufferedReferenceSession = ReturnType<typeof useBufferedReference>;
 
 /**
- * Stage 1 owns the reference session, while the preparation and Shadow views
- * consume it. The context prevents a dynamically mounted Stage 2 view from
- * silently falling back to the legacy per-sentence capture panel.
+ * The content workspace owns the reference session, while the preparation and Shadow views
+ * consume it. Every Shadow view uses this one content-owned v4 session.
  */
 export const BufferedReferenceContext = createContext<BufferedReferenceSession | null>(null);
 
@@ -62,5 +71,7 @@ export function BufferedReferenceProvider({ value, children }: {
 }
 
 export function useBufferedReferenceContext() {
-  return useContext(BufferedReferenceContext);
+  const session = useContext(BufferedReferenceContext);
+  if (!session) throw new Error("A content reference session is required.");
+  return session;
 }

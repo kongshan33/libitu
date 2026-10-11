@@ -43,22 +43,29 @@ TranscriptFormatter = Callable[
 ]
 
 
+class JobSuperseded(Exception):
+    """A newer durable generation or terminal state owns this job."""
+
+
 def process_job(
     job_id: str,
     analyzer: Analyzer = analyze_transcript,
     transcript_fetcher: TranscriptFetcher = fetch_youtube_caption_track,
     transcript_formatter: TranscriptFormatter = format_transcript,
 ) -> None:
-    job = processing_queue.get_job(job_id)
-    if job is None or job.status == ProcessingStatus.ready:
-        return
     if not processing_queue.acquire_lock(job_id):
         return
-
-    current_job = job
+    current_job = None
     total_started = perf_counter()
     analysis_started: float | None = None
     try:
+        # Re-read after acquiring the worker lock. A duplicate queue entry must
+        # not execute a terminal failure, nor use a pre-lock pending snapshot.
+        repository = get_supabase_repository()
+        job = repository.get_job(job_id) if repository else processing_queue.get_job(job_id)
+        if job is None or job.status in (ProcessingStatus.ready, ProcessingStatus.failed):
+            return
+        current_job = job
         settings = get_settings()
         if job.analysis_version != settings.analysis_version:
             _fail(
@@ -72,7 +79,7 @@ def process_job(
             update={
                 "status": ProcessingStatus.processing,
                 "processing_stage": ProcessingStage.loading_content,
-                "attempt_count": job.attempt_count + 1,
+                "attempt_count": max(1, job.attempt_count),
                 "started_at": datetime.now(UTC),
                 "completed_at": None,
                 "stage_timings_ms": {},
@@ -222,6 +229,8 @@ def process_job(
         )
         _save_job(current_job)
         _log_job_event(current_job, "job_completed")
+    except JobSuperseded:
+        return
     except TranscriptUnavailableError as error:
         _fail(current_job, "transcript_unavailable", str(error), total_started)
     except AnalysisProviderError as error:
@@ -235,6 +244,8 @@ def process_job(
         )
         _fail(current_job, error.code, str(error), total_started)
     except Exception as error:
+        if current_job is None:
+            raise
         _log_job_event(current_job, "job_exception", exception_type=type(error).__name__)
         _fail(current_job, "processing_failed", "Blueprint processing failed unexpectedly.", total_started)
     finally:
@@ -307,13 +318,16 @@ def _fail(
 
 
 def _save_job(job) -> None:
-    processing_queue.save_job(job)
     repository = get_supabase_repository()
     if repository is not None:
-        try:
-            repository.save_job(job)
-        except httpx.HTTPError as error:
-            print(f"Supabase job persistence failed: {type(error).__name__}", flush=True)
+        previous = repository.get_job(job.id)
+        if previous is None or previous.status not in (ProcessingStatus.pending, ProcessingStatus.processing) or (
+            previous.attempt_count != job.attempt_count and not (previous.attempt_count == 0 and job.attempt_count == 1)
+        ):
+            raise JobSuperseded()
+        if repository.compare_and_swap_job(previous, job) is None:
+            raise JobSuperseded()
+    processing_queue.save_job(job)
 
 
 def _save_content(content: ContentResolveResponse, transcript: str, caption_track: CaptionTrack | None = None) -> None:

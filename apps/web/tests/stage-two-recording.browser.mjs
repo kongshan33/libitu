@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { installSignedInPractice } from "./helpers/signed-in-practice.mjs";
 import { createRequire } from "node:module";
@@ -6,7 +7,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
 const origin = process.env.LIBITU_TEST_URL ?? "http://localhost:3000";
 const job = {
-  id: "recording-test", content_id: "recording-content", status: "ready", blueprint_id: "recording-blueprint",
+  id: "recording-test", content_id: "a0000000-0000-4000-8000-000000000003", status: "ready", blueprint_id: "recording-blueprint",
   analysis_version: "mvp-v9", processing_stage: "completed", analysis_preview: null, error_message: null
 };
 const blueprint = {
@@ -22,9 +23,8 @@ const blueprint = {
   segments: [{ id: "recording-segment", sequence: 1, title: "Opening", summary: "Practice the opening.",
     start_ms: 1000, end_ms: 10000, transcript_start_index: 0, transcript_end_index: 3, phonology_tags: [] }]
 };
-const entry = `${origin}/?${new URLSearchParams({
-  sourceUrl: blueprint.source_url, title: blueprint.title, contentId: job.content_id, jobId: job.id,
-  stage: "2", segmentId: blueprint.segments[0].id, sentenceId: blueprint.transcript[0].id
+const entry = `${origin}/practice/${job.content_id}/shadow?${new URLSearchParams({
+  segmentId: blueprint.segments[0].id, sentenceId: blueprint.transcript[0].id
 })}`;
 
 async function openPractice(page) {
@@ -96,6 +96,7 @@ try {
       if (url.pathname.startsWith("/api/")) {
         if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
         apiCalls.push(`${request.method()} ${url.pathname}`);
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (request.method() === "GET" && url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (request.method() === "GET" && url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
         if (request.method() === "GET" && url.pathname.startsWith(`/api/blueprints/${job.content_id}/sentences/`)
@@ -255,6 +256,7 @@ try {
     await openPractice(page);
     await beginPending(page);
     await page.getByRole("button", { name: "Back to segments", exact: true }).click();
+    await page.locator(".stage-one-segment-card").first().waitFor();
     await releasePending(page);
     assert.equal(await panel.count(), 0, "late grant after leaving Stage 2 does not revive recording");
 

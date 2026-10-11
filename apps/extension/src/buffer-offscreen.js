@@ -18,7 +18,7 @@ export function createBufferedRecorder(send, environment = {}) {
   };
   let current = null;
   const emit = (session, status, extra = {}, requestId = session.sessionId) => Promise.resolve(send({
-    type: "LIBITU_BUFFER_OFFSCREEN_EVENT", version: 3, token: session.token, sessionId: session.sessionId,
+    type: "LIBITU_BUFFER_OFFSCREEN_EVENT", version: 4, token: session.token, sessionId: session.sessionId,
     requestId, status, ...extra
   })).catch(() => {});
   const owns = (message) => current && current.sessionId === message.sessionId && current.token === message.token;
@@ -110,7 +110,7 @@ if (typeof chrome !== "undefined" && chrome.runtime?.id) {
   window.addEventListener("pagehide", () => recorder.dispose());
   chrome.runtime.onMessage.addListener((message, sender, reply) => {
     if (sender.id !== chrome.runtime.id || sender.tab || (sender.url && sender.url !== chrome.runtime.getURL("src/background.js"))
-      || message?.type !== "LIBITU_BUFFER_OFFSCREEN_COMMAND" || message.version !== 3 || message.target !== "buffer-offscreen"
+      || message?.type !== "LIBITU_BUFFER_OFFSCREEN_COMMAND" || message.version !== 4 || message.target !== "buffer-offscreen"
       || !validId(message.token) || !validId(message.sessionId) || !validId(message.requestId)) return false;
     if (message.action === "open" && message.requestId === message.sessionId && typeof message.streamId === "string" && message.streamId.length <= 4096) void recorder.open(message);
     else if (message.action === "observe" && message.telemetry && message.requestId === message.sessionId) recorder.observe(message);

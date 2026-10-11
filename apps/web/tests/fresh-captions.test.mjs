@@ -3,13 +3,13 @@ import { afterEach, beforeEach, mock, test } from "node:test";
 import { requestFreshCaptions, captionVideoId, bindFreshCaptionSource, freshCaptionFailureMessages } from "../features/stage-one/api/fresh-captions.ts";
 import { updateCaptionTiming } from "../features/stage-one/api/stage-one-api.ts";
 
-const source = { contentId: "cached-content", videoId: "YIokM_4i1i0", sourceUrl: "https://www.youtube.com/watch?v=YIokM_4i1i0" };
+const source = { contentId: "a0000000-0000-4000-8000-000000000001", videoId: "YIokM_4i1i0", sourceUrl: "https://www.youtube.com/watch?v=YIokM_4i1i0" };
 const track = { version: "youtube-json3-v1", video_id: source.videoId, language: "en", kind: "asr",
   events: [{ tStartMs: 1000, dDurationMs: 1000, segs: [{ utf8: "Hello.", tOffsetMs: 0 }] }] };
 let listeners, messages;
 beforeEach(() => {
   listeners = new Set(); messages = [];
-  globalThis.window = { location: { href: "http://localhost:3000/?contentId=cached-content&jobId=old-job&learnerLevel=B2#transcript-old", origin: "http://localhost:3000" },
+  globalThis.window = { location: { href: "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001?learnerLevel=B2#transcript-old", origin: "http://localhost:3000", get pathname() { return new URL(this.href).pathname; } },
     setTimeout, clearTimeout, history: { state: { keep: true }, replaceState: (_state, _unused, url) => { window.location.href = String(url); } },
     addEventListener: (_event, fn) => listeners.add(fn), removeEventListener: (_event, fn) => listeners.delete(fn),
     postMessage: (message) => messages.push(message) };
@@ -19,18 +19,18 @@ afterEach(() => { mock.restoreAll(); mock.timers.reset(); delete globalThis.wind
 function reply(data = {}, outer = {}) {
   const request = messages.at(-1);
   for (const handler of listeners) handler({ source: window, origin: window.location.origin,
-    data: { type: "LIBITU_FRESH_CAPTIONS_RESPONSE", requestId: request.requestId, videoId: source.videoId,
+    data: { type: "LIBITU_FRESH_CAPTIONS_RESPONSE", version: 4, requestId: request.requestId, videoId: source.videoId,
       status: "ready", captionTrack: track, ...data }, ...outer });
 }
 
 test("old content-only links bind a canonical source without disturbing durable page state", async () => {
   const loading = requestFreshCaptions(source);
   const page = new URL(window.location.href);
-  assert.equal(page.searchParams.get("sourceUrl"), source.sourceUrl);
-  assert.equal(page.searchParams.get("jobId"), "old-job");
+  assert.equal(page.searchParams.get("sourceUrl"), null);
+  assert.equal(page.searchParams.get("jobId"), null);
   assert.equal(page.searchParams.get("learnerLevel"), "B2");
   assert.equal(page.hash, "#transcript-old");
-  assert.deepEqual(messages[0], { type: "LIBITU_FRESH_CAPTIONS_REQUEST", requestId: messages[0].requestId,
+  assert.deepEqual(messages[0], { type: "LIBITU_FRESH_CAPTIONS_REQUEST", version: 4, contentId: source.contentId, requestId: messages[0].requestId,
     sourceUrl: source.sourceUrl, videoId: source.videoId, language: "en" });
   reply();
   assert.deepEqual(await loading, { status: "ready", captionTrack: track });
@@ -41,10 +41,10 @@ test("old content-only links bind a canonical source without disturbing durable 
 test("short/mobile URLs are canonicalized and ambiguous or credential URLs are rejected", async () => {
   for (const url of [`https://youtu.be/${source.videoId}?si=share`, `http://m.youtube.com/watch?v=${source.videoId}`,
     `https://www.youtube.com/shorts/${source.videoId}`]) {
-    window.location.href = `http://localhost:3000/?contentId=${source.contentId}&sourceUrl=${encodeURIComponent(url)}`;
+    window.location.href = `http://localhost:3000/practice/${source.contentId}`;
     const loading = requestFreshCaptions({ ...source, sourceUrl: url });
     assert.equal(messages.at(-1).sourceUrl, source.sourceUrl);
-    assert.equal(new URL(window.location.href).searchParams.get("sourceUrl"), source.sourceUrl);
+    assert.equal(new URL(window.location.href).searchParams.get("sourceUrl"), null);
     reply(); await loading;
   }
   for (const url of [`https://u:p@www.youtube.com/watch?v=${source.videoId}`,
@@ -151,7 +151,7 @@ test("aborting source recovery removes listeners and rejects late replies", asyn
 
 test("same-video different-content navigation cannot accept an old response", async () => {
   const loading = requestFreshCaptions(source);
-  const url = new URL(window.location.href); url.searchParams.set("contentId", "other-content"); window.location.href = url.href;
+  const url = new URL(window.location.href); url.pathname = "/practice/a0000000-0000-4000-8000-000000000002"; window.location.href = url.href;
   reply();
   assert.deepEqual(await loading, { status: "stale" });
 });

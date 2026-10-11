@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import { BrandLogo } from "./BrandLogo";
 import { AuthControls } from "@/features/auth/components/AuthControls";
 import styles from "./AppHeader.module.css";

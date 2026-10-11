@@ -4,12 +4,71 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-04
+  updated: 2026-10-10
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
+## Proposed architecture
+
+### 2026-10-09: Separate content navigation from learning runtime ownership
+
+- **Status**: R0–R5 implemented; R3 direct-update decision below supersedes the proposed compatibility strategy.
+- **Proposal**: adopt content-based Reader/Shadow routes with one content runtime and stable media host; keep account-bound saves above route changes. Add a read-only content-context endpoint and explicit failed-job retry intent, and collect multi-step analysis/speaking actions into services. Migrate extension URL identity through a versioned protocol while retaining old entry paths.
+- **Reason**: root query routing, duplicate view state and URL-coupled extension sessions prevent independent navigation changes; current return links lose origin context and job-only entry interpretation is inconsistent.
+- **Consequence**: deliver R0–R5 in the [architecture proposal](design/docs/ROUTING_AND_RESPONSIBILITY_ARCHITECTURE.md), with identity, media, history, auth and mixed-version acceptance before canonical link rollout. No provider, database schema, visual terminology or media-consent change is approved by this proposal.
+- **Relationship**: the accepted root-link compatibility, anonymous Reader, authenticated Shadow and cross-page save decisions remain in force. This proposal does not mark new routes or APIs as implemented or supersede current product behavior.
+
 ## Accepted decisions
+
+### 2026-10-10: Verify the current Chrome document after SPA import
+
+Chrome content-script messages can retain the document's initial `sender.url` after History API navigation. Use that value for origin validation, the current tab for content identity, and `webNavigation.getFrame` to verify that the active top-level document still has the sender's document ID and requested content URL. Apply the same boundary to buffered-audio arming/probes and fresh-caption reads. Do not infer audio authorization from successful arming; the Chrome toolbar action remains required. Browser regressions must cover import→content in one document as well as cold canonical entries.
+
+### 2026-10-10: Finish route migration with one active implementation per responsibility
+
+Remove the v2 capture runtime, its Web hook/panel and the old resolve/job/blueprint entry loader. Import owns transient captions and content resolution; the content controller accepts a resolved content ID and owns public reads/processing observation and explicit retries. Content-owned v4 capture/cache resources serve both Reader preparation and Shadow. Read stage, segment and sentence selection from the URL; keep local state only for interaction controls. Invalid client-side URLs clear the previous activation/retry identity so browser Back can recover safely. Extension source verification uses `content.content_id` from the shared public API contract; reuse that JSON in extension regression tests to prevent independently mocked field drift. Historical records remain as history, while current instructions and executable fixtures use canonical routes and v4. This does not delete stored content, introduce schema changes or qualify real toolbar capture.
+
+### 2026-10-10: Separate reference capability probing from verified arming
+
+The user approved removing duplicate serial identity checks from Enable reference audio. Keep `ping` local and side-effect free; perform one fresh public metadata check for a new `arm`, retain current-document validation, and share pending work for duplicate arms owned by the same session. `/api/content/{id}/identity` returns the existing public content projection without reading analysis/jobs or creating processing. Keep verified tab-reuse registration separate as `register`; an availability response is not proof of content identity. Web state distinguishes checking, preparing, armed and enabled, and only the real armed acknowledgement prompts the toolbar click. Reserve pending ownership before I/O so cancellation/navigation can invalidate late results. Actual capture still requires the explicit toolbar gesture. This is a direct coordinated Web/API/extension update, with no legacy endpoint fallback or database migration.
+
+### 2026-10-10: Prefetch known destinations and preserve ready workspace content
+
+Warm internal routes on hover, focus or touch while retaining Next link viewport prefetch. Warm the next valid workspace step when its inputs are ready, and preload Shadow code during preparation without mounting it. Unknown IDs are not guessed: session creation and content resolution still complete before their destinations become available. Route prefetch must remain read-only and must not activate import, processing, microphone or session client effects. Remove the nested content-route `loading.tsx` introduced in the preceding correction: the shared layout owns cold-entry fallback, while ready workspace navigation retains the current content and persistent media. Match Stage 2 placeholders to selection/preparation/Shadow geometry and responsive ordering, with decorative shapes and reduced-motion support. The user’s subsequent simplification keeps only broad regions and removes imitation controls, repeated sentence rows and nested analysis/history details. Extension launch/preflight latency remains deferred.
+
+### 2026-10-10: Present import waiting within the workspace loading shell
+
+The import route receives transient captions and resolves a stable content ID before mounting the content runtime. Keep this sequencing and show the existing Reader skeleton throughout route loading, caption handoff and resolution. Show failures and retry separately; successful resolution immediately replaces the transient URL. The shared content-layout cold-entry fallback follows the destination pathname without reading search parameters or workspace data: Reader retains the Reader shell; segments/Shadow receive their matching structural skeletons. The follow-up removes the nested content-route loading boundary so ready content remains visible during internal navigation. This corrects the initially hard-coded practice fallback, which could appear between import and Reader. The root fallback remains stage-neutral; the content provider and media host remain in the shared layout. This corrects R3 presentation without introducing a delay, player, processing request or protocol change.
+
+### 2026-10-10: Replace learning routes and extension protocols directly
+
+The user explicitly rejected backward compatibility during R3. This supersedes the earlier dual-protocol, legacy-root adapter, v1 continuation migration and entry-switch requirements. Web and extension are one coordinated release: `/` is Landing, input enters `/practice/import`, and content lives at `/practice/{contentId}` with `/segments` and `/shadow` children. The import page consumes matching handoff captions before mounting media. Existing root query bookmarks and job-only links are unsupported; no automatic translation or old-protocol fallback is installed. New extension launches go directly to import. Existing content, corpus and practice records remain intact; their links use canonical content IDs.
+
+Only v4 buffer/handoff/timing bridges are enabled. Capture binds exact origin, Chrome sender tab/document, an isolated bridge's per-document nonce, content ID, canonical video ID and capture session ID. The extension checks content→video against the public read-only API before arming, and still requires an explicit same-tab toolbar action. Steps, sentences and level changes do not invalidate the binding; content/document changes and worker restart do. New-document detection uses Chrome webNavigation in addition to pagehide and lease expiry. Public reads and nonce correlation do not grant media permission.
+
+R4's necessary link producers, extension tab reuse and continuation v2 writes are pulled into R3 so no live entry emits an unsupported address. v1 continuation records are ignored, not migrated; root account/outbox ownership and persisted practice records are unchanged. R5 removes the retired capture runtime and old entry loader and reconciles active documentation/fixtures. This is a local implementation change, not deployment or live-media qualification.
+
+
+### 2026-10-10: Give the content workspace one media owner
+
+The content controller owns activation, source validation, processing observation, explicit retry intent and immutable blueprint publication. It reuses available results even when an older job failed; only missing processing can be ensured automatically, and lost retry responses retain the observed attempt count. Existing caption input is consumed only when needed and matching; available results do not trigger new semantic analysis.
+
+One content-scoped MediaHost keeps the same actual iframe while Reader, preparation and Shadow register their display position and control callbacks. The host follows the existing layout using measured slots and scroll clipping, without reparenting or changing portal containers. Leaving a view pauses and clears its range; leaving the content destroys the player. Normalize the legacy source URL before creating media resources so v3 extension identity remains stable.
+
+The workspace owns reference buffers, owner-scoped analysis caches and deferred caption updates. Active Shadow keeps its original sentence snapshot; only paused Reader accepts recovered timing. Account changes reset private Shadow resources and fence Reader detail callbacks without reloading public analysis. PracticePersistence remains above the workspace so accepted saves/uploads can finish after navigation. R2 retains legacy query URLs and local picker/preparation states; new routes and push-history rules remain R3 work.
+
+### 2026-10-10: Make content reads passive and processing retries conditional
+
+`GET /api/content/{content_id}` exposes only public YouTube metadata and current-version processing summaries, with `no-store`; it never resolves captions or starts work. Durable visibility governs when configured, and storage failures produce a safe 503 instead of apparent absence. A blueprint can be available independently of an older failed job. Missing source metadata is recoverable only from a valid normalized video key, never from demo content.
+
+Explicit `retry_failed=false` preserves failures. `true` requires the observed `expected_attempt_count`; an atomic status/count comparison reserves the next attempt, stale counts return current state and future counts conflict. `attempt_count` now identifies an accepted processing attempt: creation reserves 1 and retry reserves the next count; worker startup does not increment it again. PostgreSQL conditional PATCH and Redis Lua implement the storage boundary without a schema migration. Durable state wins over stale Redis job state, and delayed cache publishers cannot regress a generation or terminal state. Omitted fields retain legacy adapter retry behavior; the Reader now adopts the new contract through the R2 content controller.
+
+Practice analysis reads/control/deletion are service use cases with ownership and tombstone-before-audio ordering. Speaking end/delete commit durable state and fence late writers before best-effort local cleanup. End still attempts feedback after local cleanup failure; feedback failures are repaired by the existing reconciliation worker and do not undo completion. Deployment must upgrade the API and blueprint worker together because attempt reservation moved from worker startup to the command boundary. Hosted deployment and operational recovery qualification remain pending.
+
+### 2026-10-10: Separate learning origin from authentication return in legacy routes
+
+One shared parser/builder owns current root learning URLs. Reject ambiguous or malformed entries, resolve standalone job IDs through the existing job read, and verify job/content/blueprint association. Browser entry parsing never supplies demo content when identity is absent. A learning origin may point to learning, Corpus or profile/history; it excludes nested return chains and transient job/caption handoffs. Mission configuration, conversation, reports, retries and draft adjustments propagate that same sanitized origin. Authentication uses a distinct return rule that preserves the initiating supported page, query and fragment, including Mission/report pages. Links expose their complete destination in href so copying and new-tab navigation preserve origin. This R0 decision does not introduce canonical practice routes, change media lifetimes or implement the planned backend content-context/retry contracts.
 
 ### 2026-10-08: Bind transcript highlights to visible corpus cards
 

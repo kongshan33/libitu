@@ -21,6 +21,7 @@ def test_pending_job_is_reenqueued(monkeypatch) -> None:
     )
     monkeypatch.setattr(job_service.processing_queue, "find_job", lambda *_args: existing)
     monkeypatch.setattr(job_service.processing_queue, "enqueue", enqueued.append)
+    monkeypatch.setattr(job_service.processing_queue, "save_job", lambda _job: None)
 
     result = job_service.create_or_resume_job(JobCreateRequest(content_id=existing.content_id))
 
@@ -47,7 +48,8 @@ def test_failed_job_is_reset_before_reenqueue(monkeypatch) -> None:
         lambda: SimpleNamespace(analysis_version="mvp-v2", queue_is_configured=True),
     )
     monkeypatch.setattr(job_service.processing_queue, "find_job", lambda *_args: existing)
-    monkeypatch.setattr(job_service, "_save_queued_job", saved.append)
+    monkeypatch.setattr(job_service.processing_queue, "compare_and_swap_job", lambda _old, new: new)
+    monkeypatch.setattr(job_service.processing_queue, "save_job", saved.append)
     monkeypatch.setattr(job_service.processing_queue, "enqueue", enqueued.append)
 
     result = job_service.create_or_resume_job(JobCreateRequest(content_id=existing.content_id))

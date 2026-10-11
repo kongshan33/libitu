@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fixtureContentId, installLoadoutFixture, loadoutOwner, shadowBlueprint, shadowJob } from "./helpers/loadout-fixture.mjs";
+import { fixtureContentId, installLoadoutFixture, loadoutOwner } from "./helpers/loadout-fixture.mjs";
 
 // One continuous UI journey. Identity, source, persistence, realtime and assessment
 // are synthetic fixtures; this does not claim OAuth or model-quality validation.
@@ -65,7 +65,7 @@ await page.routeWebSocket("**/api/speaking/sessions/*/realtime/*", socket => {
   });
 });
 try {
-  const reader = `${origin}/?${new URLSearchParams({ sourceUrl: shadowBlueprint.source_url, title: shadowBlueprint.title, contentId: fixtureContentId, jobId: shadowJob.id, learnerLevel: "B2" })}#practice`;
+  const reader = `${origin}/practice/${fixtureContentId}?learnerLevel=B2#practice`;
   await page.goto(reader, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.getByRole("button", { name: "Save to corpus", exact: true }).click(); await page.getByRole("button", { name: "Remove from corpus", exact: true }).waitFor();
   await page.locator(".mission-box").getByRole("link", { name: "Open loadout", exact: true }).click();

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, mock, test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
-import { annotateTranscriptLine, loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
+import { annotateTranscriptLine, readProcessingJob, waitForJob, assertReadyJob, readLearningBlueprint, readContentContext, ensureContentProcessing } from "../features/stage-one/api/stage-one-api.ts";
 import { selectCorpusItems } from "@libitu/core/stage-one";
 import { buildSentenceUnits } from "../features/stage-two/sentences.ts";
 
@@ -38,6 +39,19 @@ const blueprint = (items = [candidate(1)], segments) => ({
 });
 const response = (body) => new Response(JSON.stringify(body), { status: 200 });
 
+// Exercise the transport chain with an explicit observed job. Entry resolution and
+// retry policy are covered by content-workspace.test.mjs, not a legacy loader.
+async function observeBlueprint(source, onProgress, options = {}) {
+  const initial = await readProcessingJob(source.jobId, options.signal);
+  const complete = await waitForJob(initial, onProgress, value => {
+    const corpusItems = selectCorpusItems(value.corpusItems, source.learnerLevel);
+    options.onPreview?.({ ...value, corpusItems,
+      transcriptLines: value.transcriptLines.map(line => annotateTranscriptLine(line, corpusItems)) });
+  }, options.signal);
+  assertReadyJob(complete);
+  return readLearningBlueprint(source, options.signal);
+}
+
 class FakeEventSource extends EventTarget {
   static instances = [];
   closed = false;
@@ -66,10 +80,68 @@ afterEach(() => {
   delete globalThis.EventSource;
 });
 
+test("content context is a no-store GET and never ensures a job", async () => {
+  const context = JSON.parse(readFileSync(new URL("../../../packages/types/fixtures/content-context.json", import.meta.url)));
+  fetch.mock.mockImplementation(async (url, init) => {
+    assert.match(url, /\/api\/content\/test-content$/);
+    assert.equal(init.cache, "no-store");
+    assert.equal(init.method, undefined);
+    return response(context);
+  });
+  assert.deepEqual(await readContentContext(source.contentId), context);
+  assert.equal(fetch.mock.callCount(), 1);
+});
+
+test("new ensure sends false and lost explicit retries reuse the observed attempt", async () => {
+  const bodies = [];
+  fetch.mock.mockImplementation(async (_url, init) => { bodies.push(JSON.parse(init.body)); return response(job("failed")); });
+  await ensureContentProcessing(source.contentId);
+  const observed = { id: source.jobId, content_id: source.contentId, analysis_version: "v1", status: "failed", attempt_count: 4 };
+  await ensureContentProcessing(source.contentId, observed);
+  await ensureContentProcessing(source.contentId, observed);
+  assert.deepEqual(bodies, [
+    { content_id: source.contentId, retry_failed: false },
+    { content_id: source.contentId, retry_failed: true, expected_attempt_count: 4 },
+    { content_id: source.contentId, retry_failed: true, expected_attempt_count: 4 },
+  ]);
+  await assert.rejects(ensureContentProcessing("other", observed), /Reload the failed/);
+  assert.equal(fetch.mock.callCount(), 3);
+});
+
+test("content context rejects a task from another content or analysis version", async () => {
+  fetch.mock.mockImplementation(async () => response({ content: { content_id: source.contentId }, processing: {
+    analysis_version: "current", job: { content_id: source.contentId, analysis_version: "old" }
+  } }));
+  await assert.rejects(readContentContext(source.contentId), /changed identity/);
+});
+
+test("a job response cannot substitute a different job for the same content", async () => {
+  fetch.mock.mockImplementation(async () => response({ ...job("ready"), id: "other-job" }));
+  const resolved = [];
+  await assert.rejects(observeBlueprint(source, undefined, { onResolved: ids => resolved.push(ids) }), /changed identity/);
+  assert.deepEqual(resolved, []);
+  assert.equal(fetch.mock.callCount(), 1);
+});
+
+test("a stream identity conflict stops before publishing the changed preview or polling", async () => {
+  fetch.mock.mockImplementation(async () => response(job()));
+  const previews = [];
+  const loading = observeBlueprint(source, undefined, { onPreview: value => previews.push(value) });
+  const rejected = assert.rejects(loading, /different video/);
+  await nextTurn();
+  const stream = FakeEventSource.instances[0];
+  const before = previews.length;
+  stream.emit({ ...job(), content_id: "different-content" });
+  await rejected;
+  assert.equal(previews.length, before);
+  assert.equal(stream.closed, true);
+  assert.equal(fetch.mock.callCount(), 1);
+});
+
 test("a disposed load never starts a network request", async () => {
   const controller = new AbortController();
   controller.abort();
-  await assert.rejects(loadStageOneBlueprint(source, undefined, { signal: controller.signal }), { name: "AbortError" });
+  await assert.rejects(observeBlueprint(source, undefined, { signal: controller.signal }), { name: "AbortError" });
   assert.equal(fetch.mock.callCount(), 0);
   assert.equal(FakeEventSource.instances.length, 0);
 });
@@ -81,7 +153,7 @@ test("aborting an in-flight request reaches fetch", async () => {
     init.signal.addEventListener("abort", () => reject(init.signal.reason), { once: true });
   }));
   const controller = new AbortController();
-  const loading = loadStageOneBlueprint(source, undefined, { signal: controller.signal });
+  const loading = observeBlueprint(source, undefined, { signal: controller.signal });
   const rejected = assert.rejects(loading, { name: "AbortError" });
   controller.abort();
   await rejected;
@@ -94,7 +166,7 @@ test("aborting SSE closes it without starting polling or accepting late events",
   fetch.mock.mockImplementation(async () => response(job()));
   const controller = new AbortController();
   const previews = [];
-  const loading = loadStageOneBlueprint(source, undefined, { signal: controller.signal, onPreview: (p) => previews.push(p) });
+  const loading = observeBlueprint(source, undefined, { signal: controller.signal, onPreview: (p) => previews.push(p) });
   await nextTurn();
   const stream = FakeEventSource.instances[0];
   const rejected = assert.rejects(loading, { name: "AbortError" });
@@ -112,7 +184,7 @@ test("a genuine SSE error falls back to polling, whose delay is cancellable", as
   mock.timers.enable({ apis: ["setTimeout"] });
   fetch.mock.mockImplementation(async () => response(job()));
   const controller = new AbortController();
-  const loading = loadStageOneBlueprint(source, undefined, { signal: controller.signal });
+  const loading = observeBlueprint(source, undefined, { signal: controller.signal });
   await nextTurn();
   const stream = FakeEventSource.instances[0];
   stream.onerror();
@@ -131,7 +203,7 @@ test("SSE failure still completes through polling when not cancelled", async () 
   let jobReads = 0;
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
     ? blueprint() : job(++jobReads === 1 ? "processing" : "ready", null)));
-  const loading = loadStageOneBlueprint(source);
+  const loading = observeBlueprint(source);
   await nextTurn();
   FakeEventSource.instances[0].onerror();
   await nextTurn();
@@ -144,7 +216,7 @@ test("SSE failure still completes through polling when not cancelled", async () 
 test("cached ready jobs skip stale previews and never open SSE", async () => {
   const previews = [];
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint() : job("ready")));
-  await loadStageOneBlueprint(source, undefined, { onPreview: (p) => previews.push(p) });
+  await observeBlueprint(source, undefined, { onPreview: (p) => previews.push(p) });
   assert.equal(previews.length, 0);
   assert.equal(FakeEventSource.instances.length, 0);
   assert.equal(fetch.mock.callCount(), 2);
@@ -173,7 +245,7 @@ test("final blueprint maps playable segments and defaults legacy responses to an
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
     ? blueprint([candidate(1)], segments) : job("ready")));
 
-  const result = await loadStageOneBlueprint(source);
+  const result = await observeBlueprint(source);
 
   assert.deepEqual(result.segments, [{
     id: "segment-1",
@@ -198,7 +270,7 @@ test("final blueprint maps playable segments and defaults legacy responses to an
 
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
     ? blueprint() : job("ready")));
-  const legacyResult = await loadStageOneBlueprint(source);
+  const legacyResult = await observeBlueprint(source);
   assert.deepEqual(legacyResult.segments, []);
 });
 
@@ -213,11 +285,11 @@ test("preview and final result share identities, selected order, and annotations
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
     ? blueprint(selected) : job("processing", preview(items))));
   const previews = [];
-  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (p) => previews.push(p) });
+  const loading = observeBlueprint(source, undefined, { onPreview: (p) => previews.push(p) });
   await nextTurn();
   const stream = FakeEventSource.instances[0];
   stream.emit(job("processing", preview(items)));
-  assert.equal(previews.length, 1, "identical SSE snapshots do not trigger another preview render");
+  assert.equal(previews.length, 2, "transport delivers complete SSE snapshots");
   stream.emit(job("ready", null));
   const final = await loading;
   assert.equal(previews[0].corpusItems.length, 12);
@@ -226,7 +298,7 @@ test("preview and final result share identities, selected order, and annotations
   assert.deepEqual(previews[0].transcriptLines.map((x) => x.parts), final.transcript.map((x) => x.parts));
   assert.equal(stream.closed, true);
   stream.emit(job());
-  assert.equal(previews.length, 1);
+  assert.equal(previews.length, 2);
 });
 
 test("sentence metadata and text survive streamed preview, annotation reconstruction, finalization and Stage 2", async () => {
@@ -261,7 +333,7 @@ test("sentence metadata and text survive streamed preview, annotation reconstruc
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/")
     ? finished : job("processing", streamed)));
   const previews = [];
-  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  const loading = observeBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
   await nextTurn();
   FakeEventSource.instances[0].emit(job("ready", null));
   const final = await loading;
@@ -312,7 +384,7 @@ test("SSE omitted words inherit only from the same complete identity and explici
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
     : job("processing", { ...preview(), transcript_lines: [] })));
   const previews = [];
-  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  const loading = observeBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
   await nextTurn();
   const stream = FakeEventSource.instances[0];
   let output = 1;
@@ -352,14 +424,14 @@ test("aborted/reconnected loads cannot reuse another connection's word timing ca
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
     : job("processing", { ...preview(), transcript_lines: [] })));
   const abort = new AbortController();
-  const first = loadStageOneBlueprint(source, undefined, { signal: abort.signal, onPreview() {} });
+  const first = observeBlueprint(source, undefined, { signal: abort.signal, onPreview() {} });
   await nextTurn();
   FakeEventSource.instances[0].emit(job("processing", { ...preview(), transcript_lines: [full] }));
   const rejected = assert.rejects(first, { name: "AbortError" });
   abort.abort();
   await rejected;
   const previews = [];
-  const second = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  const second = observeBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
   await nextTurn();
   const fresh = FakeEventSource.instances[1];
   fresh.emit(job("processing", { ...preview(), transcript_lines: [row] }));
@@ -382,7 +454,7 @@ test("compact SSE restores every word row through the API's 2000-row preview max
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
     : job("processing", { ...preview(), transcript_lines: [] })));
   const previews = [];
-  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  const loading = observeBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
   await nextTurn();
   const stream = FakeEventSource.instances[0];
   stream.emit(job("processing", { ...preview(), output_chars: 1, transcript_lines: rows }));
@@ -410,7 +482,7 @@ test("polling fallback is a complete snapshot and cannot inherit compact SSE wor
   fetch.mock.mockImplementation(async (url) => response(url.includes("/blueprints/") ? blueprint()
     : job(++reads === 1 ? "processing" : "ready", { ...preview(), transcript_lines: [row] })));
   const previews = [];
-  const loading = loadStageOneBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
+  const loading = observeBlueprint(source, undefined, { onPreview: (value) => previews.push(value) });
   await nextTurn();
   const stream = FakeEventSource.instances[0];
   stream.emit(job("processing", { ...preview(), transcript_lines: [{ ...row, word_timings: [{
@@ -430,7 +502,7 @@ test("cached captions clean cues across parts before annotation", async () => {
   const cached = blueprint();
   cached.transcript = [{ id: "existing-sentence", time: "0:21", parts: [">> A [clears ", "throat] useful expression 1."], word_timings: [{source_token_index: 0, text: "clears", start_ms: 21000}] }];
   fetch.mock.mockImplementation(async (url) => response(String(url).includes("/blueprints/") ? cached : job("ready")));
-  const result = await loadStageOneBlueprint(source);
+  const result = await observeBlueprint(source);
   assert.equal(result.transcript[0].parts.map(part => typeof part === "string" ? part : part.text).join(""), "A useful expression 1.");
   assert.equal(result.transcript[0].id, "existing-sentence");
   assert.equal(result.transcript[0].time, "0:21");
@@ -460,4 +532,13 @@ test("annotations link exact source wording to a card without fragment or inside
   assert.deepEqual(annotate("What matters is the price."), ["What matters is the price."]);
   assert.equal(annotate("What matters is how we respond.")[0].corpusItemId, "card-1");
   assert.deepEqual(annotate("They planned it.", { ...item, sourceText: "plan" }), ["They planned it."]);
+});
+
+test("ready blueprint must belong to the requested content and source", async () => {
+  let result = { ...blueprint(), content_id: "another-content" };
+  mock.method(globalThis, "fetch", async () => response(result));
+  const contentOnly = { ...source, jobId: undefined };
+  await assert.rejects(readLearningBlueprint(contentOnly), /does not match/);
+  result = { ...blueprint(), source_url: "https://www.youtube.com/watch?v=another0001" };
+  await assert.rejects(readLearningBlueprint(contentOnly), /does not match/);
 });

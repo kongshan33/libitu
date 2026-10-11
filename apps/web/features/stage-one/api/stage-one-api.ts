@@ -1,5 +1,6 @@
+import { canonicalVideoSource } from "../../navigation/learning-location.ts";
+import type { ContentContext, ContentJobSummary } from "@libitu/types/stage-one";
 import { cleanCaptionText } from "./caption-text.ts";
-import { selectCorpusItems } from "@libitu/core/stage-one";
 import { readCaptionTrack, readExtensionCaptions } from "./extension-handoff.ts";
 import type {
   CaptionTrack,
@@ -47,7 +48,6 @@ export type StageOneSource = {
   sourceUrl: string;
   title: string;
   contentId?: string;
-  jobId?: string;
   handoffId?: string;
   transcriptText?: string;
   captionTrack?: CaptionTrack;
@@ -55,7 +55,7 @@ export type StageOneSource = {
   learnerLevel?: LearnerLevel;
 };
 
-type ApiContentResolveResponse = {
+export type ApiContentResolveResponse = {
   content_id: string;
   kind: string;
   normalized_key: string;
@@ -63,11 +63,12 @@ type ApiContentResolveResponse = {
   title: string | null;
 };
 
-type ApiProcessingJob = {
+export type ApiProcessingJob = {
   id: string;
   content_id: string;
   status: "pending" | "processing" | "ready" | "failed";
   analysis_version: string;
+  attempt_count: number;
   processing_stage?:
     | "queued"
     | "loading_content"
@@ -280,13 +281,6 @@ export class StageOneApiError extends Error {
   }
 }
 
-export const defaultStageOneSource: StageOneSource = {
-  kind: "youtube",
-  sourceUrl: "https://www.youtube.com/watch?v=abc123",
-  title: "Building Anthropic | A conversation with our co-founders",
-  learnerLevel: "B1"
-};
-
 export async function analyzeCorpusSelection(input: AnalyzeCorpusSelectionInput): Promise<CorpusSelectionAnalysis> {
   try {
     const analysis = await request<ApiCorpusSelectionAnalysis>("/api/corpus/analyze-selection", {
@@ -306,121 +300,32 @@ export async function analyzeCorpusSelection(input: AnalyzeCorpusSelectionInput)
   }
 }
 
-export async function loadStageOneBlueprint(
-  source = defaultStageOneSource,
-  onProgress?: (message: string) => void,
-  options: {
-    signal?: AbortSignal;
-    resumeFailedJob?: boolean;
-    onPreview?: (preview: StageOneAnalysisPreview) => void;
-    onResolved?: (ids: { contentId: string; jobId: string }) => void;
-  } = {}
-): Promise<StageOneBlueprint> {
-  const { signal } = options;
-  signal?.throwIfAborted();
-  const loadRequest = <T>(path: string, init: RequestInit = {}) =>
-    request<T>(path, { ...init, signal });
-  let lastPreview = "";
-  const onPreview = options.onPreview ? (preview: StageOneAnalysisPreview) => {
-    if (signal?.aborted) return;
-    const corpusItems = selectCorpusItems(preview.corpusItems, source.learnerLevel);
-    const next = {
-      ...preview,
-      corpusItems,
-      transcriptLines: preview.transcriptLines.map((line) => annotateTranscriptLine(line, corpusItems))
-    };
-    const signature = JSON.stringify(next);
-    if (signature === lastPreview) return;
-    lastPreview = signature;
-    options.onPreview?.(next);
-  } : undefined;
-  if (source.contentId) {
-    if (source.jobId) {
-      onProgress?.("Checking the processing job.");
-      let job: ApiProcessingJob;
-      try {
-        job = await loadRequest<ApiProcessingJob>(`/api/jobs/${source.jobId}`);
-      } catch (error) {
-        if (!(error instanceof StageOneApiError) || error.status !== 404) throw error;
-        onProgress?.("Starting the current blueprint version.");
-        job = await loadRequest<ApiProcessingJob>("/api/jobs", {
-          method: "POST",
-          body: JSON.stringify({ content_id: source.contentId })
-        });
-      }
-      if (job.status === "failed" && options.resumeFailedJob) {
-        onProgress?.("Restarting blueprint analysis.");
-        job = await loadRequest<ApiProcessingJob>("/api/jobs", {
-          method: "POST",
-          body: JSON.stringify({ content_id: source.contentId })
-        });
-      }
-      options.onResolved?.({ contentId: source.contentId, jobId: job.id });
-      job = await waitForJob(job, onProgress, onPreview, signal);
-      assertReadyJob(job);
-    }
-    onProgress?.("Loading the completed blueprint.");
-    let blueprint: ApiBlueprint;
-    try {
-      blueprint = await loadRequest<ApiBlueprint>(blueprintPath(source.contentId, source.learnerLevel));
-    } catch (error) {
-      if (!(error instanceof StageOneApiError) || error.status !== 404) throw error;
-      onProgress?.("Updating this content to the current blueprint version.");
-      let currentJob = await loadRequest<ApiProcessingJob>("/api/jobs", {
-        method: "POST",
-        body: JSON.stringify({ content_id: source.contentId })
-      });
-      options.onResolved?.({ contentId: source.contentId, jobId: currentJob.id });
-      currentJob = await waitForJob(currentJob, onProgress, onPreview, signal);
-      assertReadyJob(currentJob);
-      blueprint = await loadRequest<ApiBlueprint>(blueprintPath(source.contentId, source.learnerLevel));
-    }
-    return toStageOneBlueprint(blueprint, {
-      content_id: source.contentId,
-      kind: source.kind,
-      normalized_key: `youtube:${source.contentId}`,
-      source_url: source.sourceUrl,
-      title: source.title || null
-    });
-  }
+/** Transport adapters used by import and the content workspace. */
+export async function readProcessingJob(id: string, signal?: AbortSignal): Promise<ApiProcessingJob> {
+  const job = await request<ApiProcessingJob>(`/api/jobs/${encodeURIComponent(id)}`, { signal, cache: "no-store" });
+  if (job.id !== id) throw new StageOneApiError("The processing job changed identity.", 409);
+  return job;
+}
 
+export async function resolveLearningSource(source: StageOneSource, signal?: AbortSignal) {
   let transcriptText = source.transcriptText;
   let captionTrack = readCaptionTrack(source.captionTrack);
   if (source.handoffId && (!transcriptText || !captionTrack)) {
-    onProgress?.("Reading captions from YouTube.");
     const captions = await readExtensionCaptions(source.handoffId, signal);
     transcriptText ??= captions.transcriptText;
     captionTrack ??= captions.captionTrack;
-    signal?.throwIfAborted();
   }
-  onProgress?.(transcriptText ? "Saving the source transcript." : "Checking available captions.");
-  const content = await loadRequest<ApiContentResolveResponse>("/api/content/resolve", {
-    method: "POST",
-    body: JSON.stringify({
-      kind: source.kind,
-      source_url: source.sourceUrl,
-      transcript_text: transcriptText,
-      caption_track: captionTrack,
-      language: source.language,
-      title: source.title || undefined
-    })
-  });
+  signal?.throwIfAborted();
+  return request<ApiContentResolveResponse>("/api/content/resolve", { method: "POST", signal,
+    body: JSON.stringify({ kind: source.kind, source_url: source.sourceUrl, title: source.title || undefined,
+      language: source.language, transcript_text: transcriptText, caption_track: captionTrack }) });
+}
 
-  onProgress?.("Starting blueprint analysis.");
-  let job = await loadRequest<ApiProcessingJob>("/api/jobs", {
-    method: "POST",
-    body: JSON.stringify({
-      content_id: content.content_id
-    })
-  });
-
-  options.onResolved?.({ contentId: content.content_id, jobId: job.id });
-  job = await waitForJob(job, onProgress, onPreview, signal);
-  assertReadyJob(job);
-
-  onProgress?.("Loading the completed blueprint.");
-  const blueprint = await loadRequest<ApiBlueprint>(blueprintPath(content.content_id, source.learnerLevel));
-  return toStageOneBlueprint(blueprint, content);
+export async function readLearningBlueprint(source: StageOneSource & { contentId: string }, signal?: AbortSignal) {
+  const blueprint = await request<ApiBlueprint>(blueprintPath(source.contentId, source.learnerLevel), { signal, cache: "no-store" });
+  assertBlueprintSource(blueprint, source.contentId, source.sourceUrl);
+  return toStageOneBlueprint(blueprint, { content_id: source.contentId, kind: source.kind,
+    normalized_key: "", source_url: source.sourceUrl, title: source.title });
 }
 
 /** Upgrade a cached caption view without resolving content or starting semantic analysis. */
@@ -443,7 +348,7 @@ export async function updateCaptionTiming(contentId: string, captionTrack: Capti
   }) };
 }
 
-async function waitForJob(
+export async function waitForJob(
   initialJob: ApiProcessingJob,
   onProgress?: (message: string) => void,
   onPreview?: (preview: StageOneAnalysisPreview) => void,
@@ -456,8 +361,9 @@ async function waitForJob(
   const deadline = Date.now() + JOB_WAIT_TIMEOUT_MS;
   try {
     return await waitForJobStream(initialJob, deadline, onProgress, onPreview, signal);
-  } catch {
+  } catch (error) {
     signal?.throwIfAborted();
+    if (error instanceof StageOneApiError && error.status === 409) throw error;
     return waitForJobPolling(initialJob, deadline, onProgress, onPreview, signal);
   }
 }
@@ -473,7 +379,7 @@ function waitForJobStream(
     signal?.throwIfAborted();
     let settled = false;
     let previousWords = new Map<string, NonNullable<ApiSentenceMetadata["word_timings"]>>();
-    const stream = new EventSource(`${apiBaseUrl()}/api/jobs/${initialJob.id}/events?compact_word_timings=true`);
+    const stream = new EventSource(`${apiBaseUrl()}/api/jobs/${encodeURIComponent(initialJob.id)}/events?compact_word_timings=true`);
     const timeout = window.setTimeout(() => finish(() => reject(new Error("Job stream timed out."))), Math.max(0, deadline - Date.now()));
 
     function finish(action: () => void) {
@@ -495,6 +401,8 @@ function waitForJobStream(
       if (settled) return;
       try {
         let job = JSON.parse(event.data) as ApiProcessingJob;
+        assertJobContent(job, initialJob.content_id);
+        if (job.id !== initialJob.id || job.analysis_version !== initialJob.analysis_version) throw new StageOneApiError("The job stream changed identity.", 409, "failed");
         if (job.analysis_preview) {
           // SSE alone can omit unchanged word payloads. This cache belongs to one
           // connection, holds only its latest bounded snapshot and never affects polling/final data.
@@ -523,7 +431,7 @@ function waitForJobStream(
   });
 }
 
-async function waitForJobPolling(
+export async function waitForJobPolling(
   initialJob: ApiProcessingJob,
   deadline: number,
   onProgress?: (message: string) => void,
@@ -534,7 +442,9 @@ async function waitForJobPolling(
   while (["pending", "processing"].includes(job.status) && Date.now() < deadline) {
     notifyJobUpdate(job, onProgress, onPreview);
     await delay(JOB_POLL_INTERVAL_MS, signal);
-    job = await request<ApiProcessingJob>(`/api/jobs/${job.id}`, { signal });
+    job = await request<ApiProcessingJob>(`/api/jobs/${encodeURIComponent(initialJob.id)}`, { signal });
+    assertJobContent(job, initialJob.content_id);
+    if (job.id !== initialJob.id || job.analysis_version !== initialJob.analysis_version) throw new StageOneApiError("The processing job changed identity.", 409, "failed");
   }
   notifyJobUpdate(job, onProgress, onPreview);
   return job;
@@ -551,7 +461,18 @@ function notifyJobUpdate(
   }
 }
 
-function assertReadyJob(job: ApiProcessingJob) {
+function assertJobContent(job: ApiProcessingJob, contentId: string) {
+  if (job.content_id !== contentId) throw new StageOneApiError("The processing job belongs to a different video. Open the original learning link.", 409, "failed");
+}
+
+export function assertBlueprintSource(blueprint: ApiBlueprint, contentId: string, sourceUrl: string) {
+  if (blueprint.content_id !== contentId || (sourceUrl && blueprint.source_url
+    && (canonicalVideoSource(sourceUrl) ?? sourceUrl) !== (canonicalVideoSource(blueprint.source_url) ?? blueprint.source_url))) {
+    throw new StageOneApiError("The content does not match this learning link. Open the original video again.", 409, "failed");
+  }
+}
+
+export function assertReadyJob(job: ApiProcessingJob) {
   if (job.status === "failed") {
     const kind = ["content_not_found", "transcript_unavailable"].includes(job.error_code ?? "")
       ? "unsupported"
@@ -561,6 +482,28 @@ function assertReadyJob(job: ApiProcessingJob) {
   if (job.status !== "ready") {
     throw new StageOneApiError("Processing is still running. Try again in a moment.");
   }
+}
+
+/** Public context reads never start processing. */
+export async function readContentContext(contentId: string, signal?: AbortSignal): Promise<ContentContext> {
+  const context = await request<ContentContext>(`/api/content/${encodeURIComponent(contentId)}`, { signal, cache: "no-store" });
+  const job = context.processing.job;
+  if (context.content.content_id !== contentId || (job && (job.content_id !== contentId || job.analysis_version !== context.processing.analysis_version))) {
+    throw new StageOneApiError("The content context changed identity. Reload this learning link.", 409, "failed");
+  }
+  return context;
+}
+
+/** Retain this observed job snapshot when retrying a lost POST response. */
+export async function ensureContentProcessing(contentId: string, retry?: ContentJobSummary, signal?: AbortSignal): Promise<ApiProcessingJob> {
+  if (retry && (retry.content_id !== contentId || retry.status !== "failed")) {
+    throw new StageOneApiError("Reload the failed processing attempt before retrying.", 409, "failed");
+  }
+  const job = await request<ApiProcessingJob>("/api/jobs", { method: "POST", signal, body: JSON.stringify({
+    content_id: contentId, retry_failed: Boolean(retry), ...(retry ? { expected_attempt_count: retry.attempt_count } : {})
+  }) });
+  assertJobContent(job, contentId);
+  return job;
 }
 
 async function request<T>(path: string, init: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
@@ -643,7 +586,7 @@ function apiBaseUrl() {
 function blueprintPath(contentId: string, learnerLevel?: LearnerLevel) {
   const query = new URLSearchParams({ corpus_limit: "12" });
   if (learnerLevel) query.set("learner_level", learnerLevel);
-  return `/api/blueprints/${contentId}?${query.toString()}`;
+  return `/api/blueprints/${encodeURIComponent(contentId)}?${query.toString()}`;
 }
 
 function toStageOneBlueprint(blueprint: ApiBlueprint, content: ApiContentResolveResponse): StageOneBlueprint {
@@ -652,7 +595,7 @@ function toStageOneBlueprint(blueprint: ApiBlueprint, content: ApiContentResolve
     id: blueprint.id,
     contentId: blueprint.content_id,
     segmentationVersion: blueprint.segmentation_version ?? undefined,
-    sourceUrl: blueprint.source_url ?? content.source_url ?? undefined,
+    sourceUrl: canonicalVideoSource(blueprint.source_url ?? content.source_url ?? "") ?? blueprint.source_url ?? content.source_url ?? undefined,
     title: blueprint.title || content.title || "Untitled content",
     summary: blueprint.summary,
     logicNodes: blueprint.logic_flow.map(toLogicNode),

@@ -39,20 +39,50 @@ def get_content(content_id: str) -> QueuedContent | None:
 
 
 def save_job(job: ProcessingJob) -> None:
-    settings = get_settings()
-    redis = _redis()
-    pipeline = redis.pipeline()
-    pipeline.set(
-        _job_key(job.id),
-        json.dumps(job.model_dump(mode="json"), separators=(",", ":")),
-        ex=settings.processing_state_ttl_seconds,
-    )
-    pipeline.set(
-        _job_index_key(job.content_id, job.analysis_version),
-        job.id,
-        ex=settings.processing_state_ttl_seconds,
-    )
-    pipeline.exec()
+    _write_job(job, "publish")
+
+
+def create_job_once(job: ProcessingJob) -> ProcessingJob:
+    return ProcessingJob.model_validate_json(_write_job(job, "create"))
+
+
+def compare_and_swap_job(previous: ProcessingJob, updated: ProcessingJob) -> ProcessingJob | None:
+    if (updated.id, updated.content_id, updated.analysis_version) != (previous.id, previous.content_id, previous.analysis_version):
+        raise ValueError("A processing transition cannot change identity")
+    value = _write_job(updated, "compare", previous)
+    return ProcessingJob.model_validate_json(value) if value else None
+
+
+def _write_job(job: ProcessingJob, mode: str, previous: ProcessingJob | None = None):
+    return _redis().eval(_JOB_WRITE, [_job_key(job.id), _job_index_key(job.content_id, job.analysis_version)], [
+        job.model_dump_json(), get_settings().processing_state_ttl_seconds, mode,
+        str(previous.attempt_count if previous else -1), previous.status.value if previous else "",
+    ])
+
+
+# Both state and index change atomically. A delayed cache publisher cannot
+# overwrite a newer retry, restart a terminal job, or regress processing to pending.
+_JOB_WRITE = """
+local raw = redis.call('GET', KEYS[1])
+local candidate = cjson.decode(ARGV[1])
+local mode = ARGV[3]
+if raw then
+  local old = cjson.decode(raw)
+  if old.content_id ~= candidate.content_id or old.analysis_version ~= candidate.analysis_version then
+    return redis.error_reply('processing identity conflict')
+  end
+  if mode == 'create' then return raw end
+  if mode == 'compare' then
+    if old.attempt_count ~= tonumber(ARGV[4]) or old.status ~= ARGV[5] then return false end
+  elseif old.attempt_count > candidate.attempt_count or
+    (old.attempt_count == candidate.attempt_count and
+      ((old.status == 'ready' or old.status == 'failed') and old.status ~= candidate.status or
+       old.status == 'processing' and candidate.status == 'pending')) then return raw end
+elseif mode == 'compare' then return false end
+redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[2])
+redis.call('SET', KEYS[2], candidate.id, 'EX', ARGV[2])
+return ARGV[1]
+"""
 
 
 def get_job(job_id: str) -> ProcessingJob | None:

@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
@@ -145,6 +146,7 @@ try {
           if (selectionCount === 1 && !process.env.LIBITU_TEST_SAVED_HIGHLIGHTS_ONLY) { delayedSelectionRoute = route; return; }
           return route.fulfill({ json: selectionAnalysis(route.request().postDataJSON().selected_text, selectionCount), headers });
         }
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === "/api/jobs/render-test") {
           counts.jobs += 1;
           return route.fulfill({ json: job, headers });
@@ -191,10 +193,7 @@ try {
         destroy() {}
       } };
     });
-    await page.goto(`${origin}/?${new URLSearchParams({
-      sourceUrl: blueprint.source_url, title: blueprint.title,
-      contentId: job.content_id, jobId: job.id, learnerLevel: "B2"
-    })}#transcript-0-01`, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await page.goto(`${origin}/practice/${job.content_id}?learnerLevel=B2#transcript-0-01`, { waitUntil: "domcontentloaded", timeout: 60_000 });
     await page.waitForFunction(() => window.__streams.length === 1);
     await page.getByRole("button", { name: "Idioms", exact: true }).click();
     await page.locator(".corpus-card").waitFor();
@@ -298,7 +297,7 @@ try {
     await page.getByRole("button", { name: /Changing direction/ }).waitFor();
     assert.equal(await page.getByRole("button", { name: /Changing direction/ }).evaluate((node) => node.classList.contains("active")), true);
     assert.equal(await page.evaluate(() => window.__lastSeek), 8);
-    assert.deepEqual(counts, { jobs: 1, blueprints: 1 });
+    assert.deepEqual(counts, { jobs: 2, blueprints: 1 });
     assert.equal(await page.evaluate(() => window.__streams.length === 1 && window.__streams[0].closed), true);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
     assert.equal(await page.getByText("Chapters", { exact: true }).count(), 0);

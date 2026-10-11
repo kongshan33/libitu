@@ -60,7 +60,7 @@ test("server sentence identity survives different segments and URL recovery", ()
   assert.equal(first.id, second.id);
   assert.equal(first.text, "We have reached an agreement.");
   assert.equal(first.sourceTokenStart, 38);
-  const url = stageTwoLocation(new URL("https://libitu.test/?contentId=c&jobId=j"), {
+  const url = stageTwoLocation(new URL("https://libitu.test/practice/a0000000-0000-4000-8000-000000000001"), {
     segmentId: second.segmentId, sentenceId: second.id
   });
   const restored = readStageTwoLocation(new URL(url.href));
@@ -169,10 +169,10 @@ test("empty, invalid and single-sentence segments fail safely without invented c
 });
 
 test("practice URLs restore a sentence without losing the source, job, level or fragment", () => {
-  const url = new URL("https://libitu.test/?contentId=c&jobId=j&learnerLevel=B2&sourceUrl=https%3A%2F%2Fyoutu.be%2Fx#transcript");
+  const url = new URL("https://libitu.test/practice/a0000000-0000-4000-8000-000000000001?learnerLevel=B2#transcript");
   const next = stageTwoLocation(url, { segmentId: "segment-1", sentenceId: "sentence-2" });
   assert.deepEqual(readStageTwoLocation(next), { segmentId: "segment-1", sentenceId: "sentence-2" });
-  assert.equal(next.searchParams.get("sourceUrl"), "https://youtu.be/x");
+  assert.equal(next.searchParams.get("sourceUrl"), null);
   assert.equal(next.hash, url.hash);
   assert.equal(stageTwoLocation(next, null).href, url.href);
   assert.equal(readStageTwoLocation(new URL("https://libitu.test/?stage=2")), null);

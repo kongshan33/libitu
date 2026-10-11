@@ -1,10 +1,12 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { Button, ButtonLink } from "@/components/ui/button";
 
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, MessageCircle, Mic } from "lucide-react";
@@ -18,7 +20,7 @@ export function ProfileError({ error, retry }: { error: Error; retry: () => void
   const clerk = useClerk();
   const auth = error instanceof ProfileApiError && error.status === 401;
   return <div className={styles.error} role="alert"><p>{error.message}</p><Button variant="secondary" size="inherit" type="button" onClick={() => {
-    if (auth) { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }
+    if (auth) { const url = currentAuthReturnUrl(); clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }
     else retry();
   }}>{auth ? "Sign in again" : "Retry"}</Button></div>;
 }

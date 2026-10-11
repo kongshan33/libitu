@@ -417,7 +417,7 @@ def test_ready_job_survives_optional_source_probe_without_requeue(ready_optional
     monkeypatch.setattr(processing_queue, "save_job", cached_jobs.append)
     monkeypatch.setattr(processing_queue, "enqueue", forbidden)
     monkeypatch.setattr(job_service, "_resume_job", forbidden)
-    monkeypatch.setattr(job_service, "_save_queued_job", forbidden)
+    repository.compare_and_swap_job = forbidden
     if failure == "content":
         monkeypatch.setattr(processing_queue, "get_content", unavailable)
     elif failure == "source_blueprint":
@@ -429,7 +429,7 @@ def test_ready_job_survives_optional_source_probe_without_requeue(ready_optional
     result = job_service.create_or_resume_job(JobCreateRequest(content_id=fixture.blueprint.content_id))
     assert result is fixture.job
     assert result.status == "ready" and result.blueprint_id == fixture.blueprint.id
-    assert cached_jobs == ([fixture.job] if ready_location == "durable" else [])
+    assert cached_jobs == [fixture.job]  # Durable state now refreshes either hot or cold cache.
     assert "Optional caption source comparison failed: TimeoutError" in caplog.text
     assert "fixture-secret-source-probe" not in caplog.text
 

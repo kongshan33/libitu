@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { installSignedInPractice } from "./helpers/signed-in-practice.mjs";
 import { createRequire } from "node:module";
@@ -6,7 +7,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
 const origin = process.env.LIBITU_TEST_URL ?? "http://localhost:3000";
 const job = {
-  id: "stage-two-test", content_id: "practice-content", status: "ready", blueprint_id: "practice-blueprint",
+  id: "stage-two-test", content_id: "a0000000-0000-4000-8000-000000000001", status: "ready", blueprint_id: "practice-blueprint",
   analysis_version: "mvp-v9", processing_stage: "completed", analysis_preview: null, error_message: null
 };
 const blueprint = {
@@ -42,9 +43,7 @@ const blueprint = {
       phonology_tags: [] }
   ]
 };
-const entry = `${origin}/?${new URLSearchParams({
-  sourceUrl: blueprint.source_url, title: blueprint.title, contentId: job.content_id, jobId: job.id, learnerLevel: "B2"
-})}#transcript-0-01`;
+const entry = `${origin}/practice/${job.content_id}?learnerLevel=B2#transcript-0-01`;
 const requestedViewport = Number(process.env.LIBITU_NAV_VIEWPORT ?? 0);
 const viewports = [{ width: 1440, height: 1000 }, { width: 768, height: 1024 }, { width: 390, height: 844 }]
   .filter((viewport) => !requestedViewport || viewport.width === requestedViewport);
@@ -88,6 +87,7 @@ try {
         if (route.request().method() === "GET" && url.pathname.startsWith(`/api/blueprints/${job.content_id}/sentences/`)
           && url.pathname.endsWith("/sound")) return route.fulfill({ status: 404, json: { detail: "Sound guide is outside this navigation fixture." }, headers });
         requests.push(`${route.request().method()} ${url.pathname}`);
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
         throw new Error(`Unexpected API call: ${url.pathname}`);
@@ -117,20 +117,31 @@ try {
       } };
     });
     await page.goto(entry, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await page.waitForFunction(() => window.__activePlayer?.ready);
+    const workspaceFrame = await page.locator(".youtube-player iframe").elementHandle();
+    const initialPlayers = await page.evaluate(() => window.__players.length);
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
+    await page.locator(".stage-one-segment-card").first().waitFor();
+    assert.equal(await workspaceFrame.evaluate(node => node.isConnected), true, "picker retains the actual iframe");
+    assert.equal(await page.locator("[data-workspace-media-host]").isVisible(), false, "picker hides and pauses the host");
     await startSegment(page, 0);
+    assert.equal(await page.evaluate(() => window.__players.length), initialPlayers, "Reader → picker → preparation → Shadow creates no additional players");
+    assert.equal(await workspaceFrame.evaluate(node => node === document.querySelector(".youtube-player iframe")), true);
     const nav = page.locator(".stage-two-sentence-navigation");
     const items = page.locator(".stage-two-sentences ol button");
     assert.equal(await items.count(), 4);
     assert.match(await nav.innerText(), /Sentence 1 of 4/);
     assert.equal(await page.getByRole("button", { name: "Previous sentence", exact: true }).isDisabled(), true);
     assert.equal(await page.evaluate(() => window.__activePlayer.playing), false);
-    assert.equal(new URL(page.url()).searchParams.get("stage"), "2");
+    assert.equal(new URL(page.url()).pathname, `/practice/${job.content_id}/shadow`);
     const iframe = await page.locator(".youtube-player iframe").elementHandle();
 
     await page.getByRole("button", { name: "Next sentence", exact: true }).click();
     assert.match(await nav.innerText(), /Sentence 2 of 4/);
     const sentenceId = new URL(page.url()).searchParams.get("sentenceId");
+    const mission = new URL(await page.getByRole("link", { name: "Stage 3 - Mission", exact: true }).getAttribute("href"), origin);
+    assert.equal(new URL(mission.searchParams.get("returnTo"), origin).searchParams.get("sentenceId"), sentenceId,
+      "copied Mission links follow native sentence replacement");
     assert.equal(sentenceId, blueprint.transcript[1].id, "Stage 2 retains the shared server sentence ID");
     assert.ok((await items.nth(1).innerText()).includes(blueprint.transcript[1].parts[0]),
       "punctuation inside a finalized sentence does not create more practice units");
@@ -200,11 +211,11 @@ try {
     assert.equal(new URL(page.url()).searchParams.get("learnerLevel"), "B2");
     await page.waitForFunction(() => window.__activePlayer?.ready);
     assert.equal(await page.evaluate(() => window.__activePlayer.playing), false);
-    assert.deepEqual(requests, Array(2).fill([`GET /api/jobs/${job.id}`, `GET /api/blueprints/${job.content_id}`]).flat());
+    assert.deepEqual(requests, Array(2).fill([`GET /api/content/${job.content_id}`, `GET /api/blueprints/${job.content_id}`]).flat());
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, "no horizontal page overflow");
     const playerGeometry = await page.locator(".stage-two-shadow-player").evaluate((container) => {
       const box = container.getBoundingClientRect();
-      const frame = container.querySelector("iframe").getBoundingClientRect();
+      const frame = document.querySelector("[data-workspace-media-host] iframe").getBoundingClientRect();
       return { width: box.width, height: box.height, frameWidth: frame.width, frameHeight: frame.height };
     });
     assert.ok(Math.abs(playerGeometry.width - playerGeometry.frameWidth) < 1
@@ -220,7 +231,8 @@ try {
     await page.waitForFunction(() => new URL(location.href).searchParams.get("sentenceId") !== "obsolete-sentence");
     await page.getByRole("button", { name: "Back to segments", exact: true }).click();
     assert.equal(new URL(page.url()).searchParams.has("stage"), false);
-    assert.equal(await page.evaluate(() => window.__players.every((player) => player.destroyed)), true);
+    assert.equal(await page.evaluate(() => window.__players.filter(player => !player.destroyed).length), 1);
+    assert.equal(await page.evaluate(() => window.__activePlayer.playing), false, "back to picker pauses the retained player");
     await startSegment(page, 1);
     assert.match(await nav.innerText(), /Sentence 1 of 1/);
     assert.equal(await page.getByRole("button", { name: "Previous sentence", exact: true }).isDisabled(), true);
@@ -235,7 +247,7 @@ try {
     invalid.searchParams.set("segmentId", "removed-segment");
     await page.goto(invalid.href, { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).waitFor();
-    await page.waitForFunction(() => !new URL(location.href).searchParams.has("stage"));
+    await page.waitForFunction(() => !location.pathname.endsWith("/shadow"));
     assert.equal(await page.locator(".stage-two-shadow").count(), 0);
     assert.deepEqual(errors, []);
     console.log(`Stage 2 navigation passed at ${viewport.width}px`);

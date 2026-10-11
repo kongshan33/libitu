@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mkdtemp } from "node:fs/promises";
@@ -33,8 +34,7 @@ const blueprint = { id: job.blueprint_id, content_id: content, title: "Save your
   })),
   segments: [{ id: "practice-segment", sequence: 1, title: "Opening", summary: "Practice the opening.",
     start_ms: 1000, end_ms: 7000, transcript_start_index: 0, transcript_end_index: 2, phonology_tags: [], recommended: true }] };
-const entry = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title, contentId: content,
-  jobId: job.id, learnerLevel: "B2", stage: "2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
+const entry = `${origin}/practice/${content}/shadow?${new URLSearchParams({ learnerLevel: "B2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
 
 // Test-only Clerk resource emitter: exercises the real React auth boundary and return
 // options without credentials. It does not establish hosted Clerk/OAuth correctness.
@@ -118,7 +118,7 @@ try {
   await page.addInitScript(installFixture);
 
     await page.addInitScript(({audioBase64})=>{
-      const post=data=>window.postMessage({type:'LIBITU_BUFFER_EVENT',version:3,...data},location.origin);
+      const post=data=>window.postMessage({type:'LIBITU_BUFFER_EVENT',version:4,...data},location.origin);
       window.addEventListener('message',({data})=>{
         if(data?.type!=='LIBITU_BUFFER_REQUEST')return;
         const reply={sessionId:data.sessionId,requestId:data.requestId};
@@ -134,6 +134,7 @@ try {
     if(req.method()==='OPTIONS')return route.fulfill({status:204,headers});
     const json=(value,status=200)=>route.fulfill({json:value,status,headers});
     if(url.pathname.startsWith('/api/')) {
+      if (url.pathname === `/api/content/${blueprint.content_id}`) return json(contentContextFixture(blueprint, job));
       if(url.pathname===`/api/jobs/${job.id}`)return json(job);
       if(url.pathname===`/api/blueprints/${content}`)return json(blueprint);
       if(url.pathname.endsWith('/sound'))return json({version:'sound-rules-v1',content_id:content,sentence_id:row.id,sentence_text:row.parts[0],dialect:'en-US',provider:'cmudict-rules',lexicon_version:'fixture',tokens:[],candidates:[],coverage:{total:0,known:0},warnings:[]});
@@ -164,6 +165,7 @@ try {
     if(url.origin===origin)return route.continue();return route.fulfill({contentType:'application/javascript',body:''});
   });
   await page.goto(entry,{waitUntil:'domcontentloaded',timeout:60000});
+  await page.locator('.stage-two-audio-settings > summary').click();
   await page.getByRole('checkbox',{name:'Analyze captured reference audio on the server',exact:true}).check();
   await page.getByRole('button',{name:'Enable reference audio',exact:true}).click();
   await page.getByText('Analyzing reference words and pitch…',{exact:true}).waitFor();

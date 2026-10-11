@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { installSignedInPractice } from "./helpers/signed-in-practice.mjs";
 import { createRequire } from "node:module";
@@ -27,7 +28,7 @@ header.writeUInt32LE(16_000, 24); header.writeUInt32LE(32_000, 28); header.write
 header.writeUInt16LE(16, 34); header.write("data", 36); header.writeUInt32LE(pcm.length, 40);
 const wav = Buffer.concat([header, pcm]), wavPath = join(directory, "voice.wav");
 writeFileSync(wavPath, wav);
-const job = { id: "buffered-job", content_id: "buffered-content", status: "ready",
+const job = { id: "buffered-job", content_id: "a0000000-0000-4000-8000-000000000004", status: "ready",
   blueprint_id: "buffered-blueprint", analysis_version: "mvp-v9", processing_stage: "completed",
   analysis_preview: null, error_message: null };
 const texts = ["Let us begin. We can learn to speak clearly.", "Here is another sentence to practice.",
@@ -51,8 +52,7 @@ const blueprint = { id: job.blueprint_id, content_id: job.content_id, title: "Bu
   corpus_items: [], transcript, segments: [{ id: "buffered-segment", sequence: 1, title: "Buffered practice",
     summary: "Listen and repeat.", start_ms: 1000, end_ms: 16000, transcript_start_index: 0,
     transcript_end_index: 3, phonology_tags: [] }] };
-const entry = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title,
-  contentId: job.content_id, jobId: job.id })}`;
+const entry = `${origin}/practice/${job.content_id}`;
 
 function soundGuide(row) {
   const text = row.parts[0];
@@ -96,6 +96,7 @@ try {
       if (url.pathname.startsWith("/api/")) {
         if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
         assert.equal(request.method(), "GET", "buffered preparation never uploads media or starts server analysis");
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
         if (url.pathname === "/api/references/capability") return route.fulfill({ json: { available: false, input_mode: null }, headers });
@@ -120,7 +121,7 @@ try {
       window.__visibility = "visible";
       Object.defineProperty(document, "visibilityState", { configurable: true, get: () => window.__visibility });
       window.__setVisibility = (state) => { window.__visibility = state; document.dispatchEvent(new Event("visibilitychange")); };
-      const post = (data) => window.postMessage({ type: "LIBITU_BUFFER_EVENT", version: 3, ...data }, location.origin);
+      const post = (data) => window.postMessage({ type: "LIBITU_BUFFER_EVENT", version: 4, ...data }, location.origin);
       window.__grantBuffer = () => {
         const request = window.__bufferRequests.findLast((item) => item.action === "arm");
         if (!request) throw new Error("The page did not arm a reference session");
@@ -135,7 +136,7 @@ try {
         start: request.start, end: request.end, durationMs: 5000, mimeType: "audio/wav", audioBase64 });
       window.addEventListener("message", ({ data }) => {
         if (data?.type !== "LIBITU_BUFFER_REQUEST") return;
-        if (data.version !== 3) throw new Error("Expected buffered reference protocol v3");
+        if (data.version !== 4) throw new Error("Expected buffered reference protocol v3");
         window.__bufferRequests.push(data);
         const response = { sessionId: data.sessionId, requestId: data.requestId };
         if (data.action === "ping") post({ ...response, status: "available" });
@@ -306,41 +307,31 @@ try {
       await page.getByText("Recording your voice", { exact: true }).waitFor();
       await page.waitForTimeout(5000);
       await page.getByRole("button", { name: "Stop recording", exact: true }).click();
-      const rhythm = page.getByRole("region", { name: "Rhythm comparison", exact: true, includeHidden: true });
-      const melody = page.getByRole("region", { name: "Melody comparison", exact: true, includeHidden: true });
-      const sound = page.getByRole("region", { name: "Sound guide", exact: true, includeHidden: true });
+      // The current comparison UI exposes normalized local pitch while word
+      // alignment remains pending; obsolete AcousticComparisonPanel labels are not used.
+      const rhythm = page.locator(".layer-comparison-rhythm");
+      const melody = page.locator(".layer-comparison-melody");
+      const sound = page.locator(".layer-comparison-sound");
       await layers.getByRole("tab", { name: "Rhythm", exact: true }).click();
-      await rhythm.getByText("Your voice: Analysis ready.", { exact: true }).waitFor({ timeout: 100_000 });
-      await rhythm.getByText("Reference: Analysis ready.", { exact: true }).waitFor();
-      await rhythm.getByText(/Your speaking span is/).waitFor();
-      assert.equal(await rhythm.locator(".rhythm-stress-word").count(), texts[0].split(" ").length);
-      await rhythm.getByText("Caption positions · approximate", { exact: true }).waitFor();
-      assert.equal((await rhythm.locator(".rhythm-phrases").innerText()).replace(/\s+/g, " ").includes("Let us begin."), true);
-      await rhythm.screenshot({ path: `/tmp/libitu-rhythm-local-${viewport.width}.png` });
-      assert.equal(await rhythm.locator(".stage-two-acoustic-chart").count(), 0, "Rhythm uses text-based pauses without a duplicate speech timeline");
-      assert.equal(await rhythm.locator(".stage-two-chart-reference").count(), 0);
-      assert.equal(await rhythm.getByRole("rowheader", { name: "Pitch range", exact: true }).count(), 0);
+      assert.equal(await rhythm.locator(".paired-reference .paired-word strong").count(), texts[0].split(" ").length);
+      assert.match(await rhythm.innerText(), /dictionary syllable stress/);
       assert.ok(!(await rhythm.innerText()).includes("NaN"));
-      const rhythmTable = await rhythm.locator("table").elementHandle();
+      const rhythmRows = await rhythm.locator(".paired-grid").elementHandle();
       await layers.getByRole("tab", { name: "Melody", exact: true }).click();
-      await melody.getByText("Reference: Analysis ready.", { exact: true }).waitFor();
-      await melody.getByText("Your voice: Analysis ready.", { exact: true }).waitFor();
-      assert.ok(await melody.locator(".stage-two-chart-reference").count() > 0);
-      assert.ok(await melody.locator(".stage-two-chart-yours").count() > 0);
-      assert.equal(await melody.locator(".stage-two-region-reference").count(), 0);
-      assert.equal(await melody.getByRole("rowheader", { name: "Speaking span", exact: true }).count(), 0);
+      await page.waitForFunction(() => [".paired-reference-trace path", ".paired-learner-trace path"]
+        .every(selector => (document.querySelector(selector)?.getAttribute("d")?.length ?? 0) > 10), undefined, { timeout: 100_000 });
       assert.ok(!(await melody.innerText()).includes("NaN"));
       const pitchPlot = await melody.locator("svg[role=img]").elementHandle();
       const workers = await page.evaluate(() => window.__workerStarts);
       const players = await page.evaluate(() => window.__players.length);
+      assert.equal(players, 1, "Reader, preparation and Shadow share one player instance");
       assert.ok(workers >= 3, "reference and learner recordings each run actual local acoustic inference");
       await layers.getByRole("tab", { name: "Sound", exact: true }).click();
-      assert.equal(await sound.getByText("Not evaluated", { exact: true }).count(), 2,
-        "timing and pitch cannot certify Sound realization for either speaker");
+      assert.match(await sound.innerText(), /not (?:yet |been )?evaluated/i, "timing and pitch cannot certify Sound realization");
       await layers.getByRole("tab", { name: "Rhythm", exact: true }).click();
-      assert.equal(await rhythmTable.evaluate((element) => element.isConnected), true);
+      assert.equal(await rhythmRows.evaluate(element => element.isConnected), true);
       await layers.getByRole("tab", { name: "Melody", exact: true }).click();
-      assert.equal(await pitchPlot.evaluate((element) => element.isConnected), true);
+      assert.equal(await pitchPlot.evaluate(element => element.isConnected), true);
       assert.equal(await page.evaluate(() => window.__workerStarts), workers, "layer switches do not repeat acoustic inference");
       assert.equal(await page.evaluate(() => window.__players.length), players, "layer switches retain the player");
       assert.ok(assets.some((url) => url.includes(".wasm")), "the real same-origin ONNX WASM runtime was loaded");

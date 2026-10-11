@@ -1,11 +1,8 @@
-import { installReferenceCapture } from "./reference-capture.js";
 import { installBufferedCapture } from "./buffer-capture.js";
 import { readCurrentYouTubeCaptionTrack, captionTrackToTranscript } from "./youtube-captions.js";
 import { createFreshCaptionReader } from "./fresh-captions.js";
 
-const mediaLease = { owner: null };
-const referenceCapture = installReferenceCapture(chrome, undefined, mediaLease);
-const bufferedCapture = installBufferedCapture(chrome, undefined, { mediaLease, ready: referenceCapture.ready });
+const bufferedCapture = installBufferedCapture(chrome);
 const freshCaptions = createFreshCaptionReader(chrome);
 const WEB_BASE_URL = "http://localhost:3000";
 const HANDOFF_PREFIX = "libituHandoff:";
@@ -24,16 +21,14 @@ chrome.action.onClicked.addListener((tab) => {
     void bufferedCapture.onToolbarClick(tab);
     return;
   }
-  if (referenceCapture.handlesTab(tab)) {
-    void referenceCapture.onToolbarClick(tab);
-    return;
-  }
   if (!videoIdFromUrl(tab.url)) {
     reportError(tab, "Open a YouTube video to start Libitu.");
     return;
   }
   launch(tab).catch((error) => reportError(tab, error.message));
 });
+
+chrome.tabs.onRemoved.addListener((tabId) => { void chrome.storage.session.remove(`libituContentTab:${tabId}`); });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   freshCaptions.onTabUpdated(tabId, changeInfo);
@@ -43,7 +38,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   for (const key of languageChecks.keys()) {
     if (key.startsWith(`${tabId}:`)) languageChecks.delete(key);
   }
-  if (bufferedCapture.handlesTab({ id: tabId, url: changeInfo.url }) || referenceCapture.handlesTab({ url: changeInfo.url })) return;
+  if (bufferedCapture.handlesTab({ id: tabId, url: changeInfo.url })) return;
   chrome.action.setBadgeText({ tabId, text: "" });
   chrome.action.setTitle({ tabId, title: "Open Libitu" });
 });
@@ -88,6 +83,17 @@ async function openStageOne(tab, videoId) {
   chrome.action.setBadgeText({ tabId: tab.id, text: "" });
   chrome.action.setTitle({ tabId: tab.id, title: "Open Libitu" });
   const records = await chrome.storage.session.get(null);
+  for (const [key, binding] of Object.entries(records)) {
+    if (!key.startsWith("libituContentTab:") || binding.videoId !== videoId) continue;
+    try {
+      const existing = await chrome.tabs.get(Number(key.split(":")[1]));
+      const current = new URL(existing.url);
+      if (current.origin === WEB_BASE_URL && new RegExp(`^/practice/${binding.contentId}(?:/(?:segments|shadow))?$`).test(current.pathname)) {
+        await chrome.tabs.update(existing.id, { active: true });
+        return { opened: true };
+      }
+    } catch { /* Closed tabs cannot be reused. */ }
+  }
   for (const [key, record] of Object.entries(records)) {
     if (!key.startsWith(HANDOFF_PREFIX)) continue;
     if (Date.now() - record.createdAt > HANDOFF_TTL_MS) {
@@ -130,7 +136,7 @@ async function openStageOne(tab, videoId) {
     language: snapshot.language,
     handoffId: id
   });
-  const stageTab = await chrome.tabs.create({ url: `${WEB_BASE_URL}/?${params}` });
+  const stageTab = await chrome.tabs.create({ url: `${WEB_BASE_URL}/practice/import?${params}` });
   record.stageTabId = stageTab.id;
   await chrome.storage.session.set({ [HANDOFF_PREFIX + id]: { ...current, stageTabId: stageTab.id } });
   return { opened: true };
@@ -255,7 +261,7 @@ function normalizeLanguageCode(value) {
 async function readHandoff(id, sender) {
   if (typeof id !== "string" || sender.frameId !== 0 || !sender.tab) throw new Error("Invalid Stage 1 handoff.");
   const url = new URL(sender.url);
-  if (url.origin !== WEB_BASE_URL || url.searchParams.get("handoffId") !== id) throw new Error("Invalid Stage 1 handoff.");
+  if (url.origin !== WEB_BASE_URL || url.pathname !== "/practice/import" || sender.id !== chrome.runtime.id || url.searchParams.get("handoffId") !== id) throw new Error("Invalid Stage 1 handoff.");
   const record = (await chrome.storage.session.get(HANDOFF_PREFIX + id))[HANDOFF_PREFIX + id];
   if (!record || Date.now() - record.createdAt > HANDOFF_TTL_MS) return { unavailable: true };
   if (url.searchParams.get("sourceUrl") !== record.snapshot.canonicalUrl) throw new Error("The handoff belongs to another video.");

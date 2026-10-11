@@ -1,3 +1,27 @@
+/** Read-only API projection; caption payloads and private processing details are excluded. */
+export type ContentJobSummary = {
+  id: string;
+  content_id: string;
+  analysis_version: string;
+  status: "pending" | "processing" | "ready" | "failed";
+  attempt_count: number;
+};
+
+export type ContentContext = {
+  content: {
+    content_id: string;
+    kind: "youtube";
+    source_url: string;
+    title: string | null;
+    language: string | null;
+  };
+  processing: {
+    analysis_version: string;
+    blueprint_available: boolean;
+    job: ContentJobSummary | null;
+  };
+};
+
 export type LogicNode = {
   id: string;
   title: string;

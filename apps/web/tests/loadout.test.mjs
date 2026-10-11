@@ -162,9 +162,10 @@ test("adopting a stale device-draft position cannot select a different draft", a
 });
 
 test("return paths retain source context and reject external or encoded redirect forms", () => {
-  assert.equal(safeReturnPath("/?contentId=video&stage=2&sentenceId=s1#sound"), "/?contentId=video&stage=2&sentenceId=s1#sound");
-  const source = "/?title=My%20Video&sourceUrl=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dexample#My%20section";
-  assert.equal(safeReturnPath(source), source);
+  assert.equal(safeReturnPath("/practice/a0000000-0000-4000-8000-000000000001/shadow?segmentId=seg&sentenceId=s1#sound"), "/practice/a0000000-0000-4000-8000-000000000001/shadow?segmentId=seg&sentenceId=s1#sound");
+  assert.equal(safeReturnPath("/?contentId=video&stage=2&sentenceId=s1#sound"), "/", "obsolete root links are not restored");
+  const source = "/?sourceUrl=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dabcdefghijk&title=My+Video#My%20section";
+  assert.equal(safeReturnPath(source), "/");
   for (const path of ["https://evil.test", "//evil.test", "/\\evil.test", "/%5Cevil.test", "/%2Fevil.test", "/%0aevil.test", "/loadout", "/speaking/id"]) assert.equal(safeReturnPath(path), "/");
 });
 

@@ -4054,3 +4054,7 @@ svg {
 .stage-two-audio-preference .practice-retention { min-height: 32px; font-size: 12px; }
 .stage-two-audio-preference p { margin: 4px 0 0 24px; color: var(--color-text-secondary); font-size: 11px; line-height: 1.6; }
 .stage-two-audio-preference input { flex-shrink: 0; }
+
+/* A single content-scoped iframe follows view slots without being reparented. */
+.workspace-media-host { position: fixed; z-index: 2; visibility: hidden; background: #111; border-radius: var(--radius-lg); overflow: hidden; }
+.workspace-media-slot { min-width: 0; }

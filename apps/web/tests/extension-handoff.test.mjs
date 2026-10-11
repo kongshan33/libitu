@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, mock, test } from "node:test";
 import { setImmediate as nextTurn } from "node:timers/promises";
-import { readCaptionTrack, readExtensionCaptions, readExtensionTranscript } from "../features/stage-one/api/extension-handoff.ts";
-import { loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
+import { readCaptionTrack, readExtensionCaptions } from "../features/stage-one/api/extension-handoff.ts";
+import { resolveLearningSource } from "../features/stage-one/api/stage-one-api.ts";
 
 let listeners;
 let request;
@@ -54,19 +54,19 @@ test("caption track bounds reject oversized events, segments, text and payloads"
 });
 
 test("only matching same-window handoff responses are accepted", async () => {
-  const loading = readExtensionTranscript("handoff");
+  const loading = readExtensionCaptions("handoff");
   reply({ phase: "ready", transcriptText: "Wrong origin" }, { origin: "https://example.com" });
   reply({ phase: "ready", transcriptText: "Wrong request", requestId: "unrelated" });
   assert.equal(listeners.size, 1);
   reply({ phase: "connected" });
   reply({ phase: "ready", transcriptText: "0:01\tCorrect captions." });
-  assert.equal(await loading, "0:01\tCorrect captions.");
+  assert.equal((await loading).transcriptText, "0:01\tCorrect captions.");
   assert.equal(listeners.size, 0);
 });
 
 test("cancelling handoff removes its listener and ignores late captions", async () => {
   const controller = new AbortController();
-  const loading = readExtensionTranscript("handoff", controller.signal);
+  const loading = readExtensionCaptions("handoff", controller.signal);
   controller.abort();
   await assert.rejects(loading, { name: "AbortError" });
   assert.equal(listeners.size, 0);
@@ -76,19 +76,18 @@ test("an absent bridge or stalled capture has a bounded fallback", async () => {
   mock.timers.enable({ apis: ["setTimeout"] });
   window.setTimeout = setTimeout;
   window.clearTimeout = clearTimeout;
-  const absent = readExtensionTranscript("absent");
+  const absent = readExtensionCaptions("absent");
   mock.timers.tick(1_500);
-  assert.equal(await absent, undefined);
-  const stalled = readExtensionTranscript("stalled");
+  assert.deepEqual(await absent, {});
+  const stalled = readExtensionCaptions("stalled");
   reply({ phase: "connected" });
   mock.timers.tick(10_000);
-  assert.equal(await stalled, undefined);
+  assert.deepEqual(await stalled, {});
   assert.equal(listeners.size, 0);
 });
 
-test("handoff captions are resolved once, and job IDs are exposed before analysis completes", async () => {
+test("import resolves matching handoff captions without starting processing", async () => {
   const calls = [];
-  const resolved = [];
   const source = { kind: "youtube", sourceUrl: "https://www.youtube.com/watch?v=test", title: "Test", handoffId: "handoff" };
   mock.method(globalThis, "fetch", async (url, init) => {
     calls.push([new URL(url).pathname, init.body ? JSON.parse(init.body) : null]);
@@ -98,13 +97,12 @@ test("handoff captions are resolved once, and job IDs are exposed before analysi
         chapters: [], logic_flow: [], corpus_items: [], transcript: [] };
     return new Response(JSON.stringify(data));
   });
-  const loading = loadStageOneBlueprint(source, undefined, { onResolved: (ids) => resolved.push(ids) });
+  const loading = resolveLearningSource(source);
   await nextTurn();
   assert.equal(calls.length, 0);
   reply({ phase: "ready", transcriptText: "0:01\tFrom the browser.", captionTrack });
-  assert.equal((await loading).contentId, "content");
+  assert.equal((await loading).content_id, "content");
   assert.equal(calls[0][1].transcript_text, "0:01\tFrom the browser.");
   assert.deepEqual(calls[0][1].caption_track, captionTrack);
-  assert.deepEqual(calls.map(([path]) => path), ["/api/content/resolve", "/api/jobs", "/api/blueprints/content"]);
-  assert.deepEqual(resolved, [{ contentId: "content", jobId: "job" }]);
+  assert.deepEqual(calls.map(([path]) => path), ["/api/content/resolve"]);
 });

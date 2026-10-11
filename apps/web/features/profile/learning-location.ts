@@ -1,7 +1,9 @@
+import { parseLearningLocation } from "../navigation/learning-location.ts";
+import { safeReturnPath } from "../navigation/return-location.ts";
 export type LearningLocation = { href: string; title: string; updatedAt: string };
 export type LearningVisit = { owner: string | null; sourceId: string | null; blockedSourceId: string | null };
 
-const STORAGE_PREFIX = "libitu:learning-location:v1:";
+const STORAGE_PREFIX = "libitu:learning-location:v2:";
 const IDENTIFIER = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,199}$/;
 const CONTROL_CHARACTERS = /\p{Cc}/u;
 
@@ -29,24 +31,11 @@ export function safeLearningHref(value: string): string | null {
   if (value.length > 4096 || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || CONTROL_CHARACTERS.test(value)) return null;
   try {
     const url = new URL(value, "https://libitu.local");
-    if (url.origin !== "https://libitu.local" || url.pathname !== "/") return null;
-    const contentId = url.searchParams.get("contentId");
-    if (!contentId || !IDENTIFIER.test(contentId)) return null;
-    const params = new URLSearchParams({ contentId });
-    const source = url.searchParams.get("sourceUrl");
-    const canonical = canonicalLearningSource(source);
-    if (!canonical) return null;
-    params.set("sourceUrl", canonical);
-    const stage = url.searchParams.get("stage");
-    if (stage === "2") {
-      const segmentId = url.searchParams.get("segmentId");
-      const sentenceId = url.searchParams.get("sentenceId");
-      if (!segmentId || !IDENTIFIER.test(segmentId) || (sentenceId !== null && !IDENTIFIER.test(sentenceId))) return null;
-      params.set("stage", "2");
-      params.set("segmentId", segmentId);
-      if (sentenceId) params.set("sentenceId", sentenceId);
-    } else if (stage && stage !== "1") return null;
-    return `/?${params}`;
+    if (url.origin !== "https://libitu.local") return null;
+    const location = parseLearningLocation(url);
+    if (!["reader", "segments", "shadow"].includes(location.kind)) return null;
+    const href = safeReturnPath(value);
+    return href === "/" ? null : href;
   } catch { return null; }
 }
 
@@ -70,7 +59,7 @@ export function readLearningLocation(owner: string | null | undefined, storage?:
     const raw = target?.getItem(key);
     if (!raw || raw.length > 8192) return null;
     const saved = JSON.parse(raw) as Partial<LearningLocation> & { version?: number; owner?: string };
-    if (!saved || saved.version !== 1 || saved.owner !== owner || typeof saved.href !== "string"
+    if (!saved || saved.version !== 2 || saved.owner !== owner || typeof saved.href !== "string"
       || typeof saved.title !== "string" || !saved.title.trim() || saved.title.length > 300 || CONTROL_CHARACTERS.test(saved.title)
       || typeof saved.updatedAt !== "string" || saved.updatedAt.length > 32 || !Number.isFinite(Date.parse(saved.updatedAt))) return null;
     const href = safeLearningHref(saved.href);
@@ -87,7 +76,7 @@ export function rememberLearningLocation(owner: string, location: LearningLocati
   try {
     const target = storage ?? (typeof window === "undefined" ? null : window.localStorage);
     if (!target) return false;
-    target.setItem(key, JSON.stringify({ version: 1, owner, href, title, updatedAt: location.updatedAt }));
+    target.setItem(key, JSON.stringify({ version: 2, owner, href, title, updatedAt: location.updatedAt }));
     return true;
   } catch { return false; }
 }

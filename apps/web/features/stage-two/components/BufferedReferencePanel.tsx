@@ -13,8 +13,9 @@ export function BufferedReferencePanel({ capture, playable, children, compact = 
 }) {
   const { state } = capture;
   const enabled = state.phase === "enabled";
-  const setup = state.phase === "checking" || state.phase === "armed";
+  const setup = state.phase === "checking" || state.phase === "preparing" || state.phase === "armed";
   const status = state.phase === "checking" ? "Checking the Libitu extension…"
+    : state.phase === "preparing" ? "Preparing reference audio setup…"
     : state.phase === "armed" ? "Click Libitu in Chrome’s toolbar on this tab once to enable reference preparation."
     : state.recording ? "Preparing reference audio while you listen at 1×."
     : enabled ? "Ready to prepare audio during normal 1× listening. This session continues into Shadow."
@@ -23,6 +24,7 @@ export function BufferedReferencePanel({ capture, playable, children, compact = 
     const connection = state.recording ? "Preparing reference"
       : enabled ? "Reference connected"
         : state.phase === "checking" ? "Checking extension"
+          : state.phase === "preparing" ? "Preparing audio setup"
           : state.phase === "armed" ? "Finish setup in Chrome"
             : "Reference audio off";
     return <section className="stage-two-reference buffered-reference stage-two-reference-compact" aria-label="Reference preparation">

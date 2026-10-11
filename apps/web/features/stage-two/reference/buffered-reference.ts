@@ -1,9 +1,9 @@
 import type { SentenceUnit } from "@libitu/types/stage-two";
-import type { ReferenceClip, ReferenceRange, ReferenceTelemetry } from "./reference-capture";
+import type { ReferenceClip, ReferenceRange, ReferenceTelemetry } from "./reference-types";
 
 export type BufferedReferenceState = {
   sourceKey: string | null;
-  phase: "idle" | "checking" | "armed" | "enabled" | "error";
+  phase: "idle" | "checking" | "preparing" | "armed" | "enabled" | "error";
   ranges: ReferenceRange[];
   retainedBytes: number;
   recording: boolean;
@@ -12,7 +12,9 @@ export type BufferedReferenceState = {
 export type BufferedTelemetry = ReferenceTelemetry & { epochTime: number; generation: number };
 export type BufferedReferenceRequest = {
   type: "LIBITU_BUFFER_REQUEST";
-  version: 3;
+  version: 4;
+  contentId?: string;
+  videoId?: string;
   sessionId: string;
   requestId: string;
   action: "ping" | "arm" | "heartbeat" | "close" | "observe" | "extract";
@@ -30,6 +32,7 @@ export type BufferedReferenceEnvironment = {
   clearTimeout(timer: Timer): void;
 };
 export const BUFFER_PING_TIMEOUT_MS = 2_000;
+export const BUFFER_PREPARE_TIMEOUT_MS = 10_000;
 export const BUFFER_ARM_TIMEOUT_MS = 40_000;
 export const BUFFER_EXTRACT_TIMEOUT_MS = 10_000;
 export const BUFFER_HEARTBEAT_MS = 10_000;
@@ -158,7 +161,7 @@ export class BufferedReferenceController {
       request.deadline = this.environment.setTimeout(() => this.finish(request, undefined,
         new Error("The extension did not return this reference clip. Try again.")), BUFFER_EXTRACT_TIMEOUT_MS);
       try {
-        this.environment.send({ type: "LIBITU_BUFFER_REQUEST", version: 3, sessionId: session.id,
+        this.send({ type: "LIBITU_BUFFER_REQUEST", version: 4, sessionId: session.id,
           requestId: request.id, action: "extract", ...range });
       } catch { this.finish(request, undefined, new Error("The reference connection was interrupted.")); }
     });
@@ -169,14 +172,17 @@ export class BufferedReferenceController {
     if (!value || typeof value !== "object") return;
     const message = value as Record<string, unknown>;
     const session = this.session;
-    if (!session || message.type !== "LIBITU_BUFFER_EVENT" || message.version !== 3 || message.sessionId !== session.id) return;
+    if (!session || message.type !== "LIBITU_BUFFER_EVENT" || message.version !== 4 || message.sessionId !== session.id) return;
     if (message.requestId === session.id) {
       if (message.status === "available" && this.state.phase === "checking") {
+        this.publish({ ...this.state, phase: "preparing", error: null });
+        this.deadline(session, BUFFER_PREPARE_TIMEOUT_MS, "Audio setup did not finish. Enable reference audio again to retry.");
+        this.sendSession(session, "arm");
+      } else if (message.status === "armed" && this.state.phase === "preparing") {
         this.publish({ ...this.state, phase: "armed", error: null });
         this.deadline(session, BUFFER_ARM_TIMEOUT_MS,
           "Click the Libitu Chrome toolbar button on this tab to enable practice audio, or enable it again to retry.");
-        this.sendSession(session, "arm");
-      } else if (message.status === "enabled" && this.state.phase === "armed") {
+      } else if (message.status === "enabled" && ["preparing", "armed"].includes(this.state.phase)) {
         this.clearDeadline(session);
         this.lastObservation = null;
         this.lastSent = null;
@@ -221,12 +227,22 @@ export class BufferedReferenceController {
     this.state = emptyBufferedReferenceState();
   }
 
+  private send(request: BufferedReferenceRequest) {
+    let contentId: string | undefined;
+    let videoId: string | undefined;
+    try {
+      const [id, source] = JSON.parse(this.state.sourceKey ?? "null");
+      contentId = id; videoId = new URL(source).searchParams.get("v") ?? undefined;
+    } catch { /* An invalid identity is rejected by the extension. */ }
+    this.environment.send({ ...request, contentId, videoId });
+  }
+
   private sendObservation(telemetry: BufferedTelemetry) {
     const session = this.session;
     if (!session) return;
     this.lastSent = telemetry;
     try {
-      this.environment.send({ type: "LIBITU_BUFFER_REQUEST", version: 3, sessionId: session.id,
+      this.send({ type: "LIBITU_BUFFER_REQUEST", version: 4, sessionId: session.id,
         requestId: session.id, action: "observe", telemetry });
     } catch { this.failSession(session, "The reference connection was interrupted. Enable practice audio again."); }
   }
@@ -234,7 +250,7 @@ export class BufferedReferenceController {
   private sendSession(session: Session, action: "ping" | "arm" | "heartbeat") {
     if (this.session !== session) return;
     try {
-      this.environment.send({ type: "LIBITU_BUFFER_REQUEST", version: 3, sessionId: session.id,
+      this.send({ type: "LIBITU_BUFFER_REQUEST", version: 4, sessionId: session.id,
         requestId: session.id, action });
     } catch { this.failSession(session, "The reference connection was interrupted. Enable practice audio again."); }
   }
@@ -274,7 +290,7 @@ export class BufferedReferenceController {
     this.clearDeadline(session);
     if (session.heartbeat !== null) this.environment.clearTimeout(session.heartbeat);
     try {
-      this.environment.send({ type: "LIBITU_BUFFER_REQUEST", version: 3, sessionId: session.id,
+      this.send({ type: "LIBITU_BUFFER_REQUEST", version: 4, sessionId: session.id,
         requestId: session.id, action: "close" });
     } catch { /* Local references are already released if the bridge disappeared. */ }
   }

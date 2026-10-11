@@ -1,18 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { chromeStoreHref, hasReaderSource, videoEntryHref } from "../features/landing/entry.ts";
-import { loadStageOneBlueprint } from "../features/stage-one/api/stage-one-api.ts";
+import { chromeStoreHref, videoEntryHref } from "../features/landing/entry.ts";
+import { resolveLearningSource } from "../features/stage-one/api/stage-one-api.ts";
 
 const canonical = "https://www.youtube.com/watch?v=abcdefghijk";
-
-test("home only enters a reader when a source or recovery identity exists", () => {
-  for (const params of [{}, { utm_source: "campaign" }, { redirect_url: "/profile" }, { sourceUrl: " " },
-    { title: "A title", language: "en", stage: "2" }]) assert.equal(hasReaderSource(params), false);
-  for (const key of ["sourceUrl", "contentId", "jobId", "handoffId"]) {
-    assert.equal(hasReaderSource({ [key]: "source", stage: "2", sentenceId: "saved" }), true);
-    assert.equal(hasReaderSource({ [key]: ["", "source"] }), true);
-  }
-});
 
 test("watch, share, mobile and Shorts links normalize to one source", () => {
   for (const value of [canonical, "  youtu.be/abcdefghijk?si=tracking  ",
@@ -21,7 +12,7 @@ test("watch, share, mobile and Shorts links normalize to one source", () => {
     const href = videoEntryHref(value);
     assert.ok(href);
     const url = new URL(href, "https://libitu.example");
-    assert.equal(url.pathname, "/");
+    assert.equal(url.pathname, "/practice/import");
     assert.equal(url.searchParams.get("sourceUrl"), canonical);
     assert.deepEqual([...url.searchParams.keys()], ["sourceUrl"]);
   }
@@ -51,7 +42,7 @@ test("only a configured Chrome Web Store listing becomes an installation link", 
   }
 });
 
-test("a pasted source uses the existing resolve/job/blueprint flow without a demo title", async () => {
+test("a pasted source resolves identity without a demo title or processing work", async () => {
   const requests = [];
   const previous = globalThis.fetch;
   const previousWindow = globalThis.window;
@@ -68,14 +59,12 @@ test("a pasted source uses the existing resolve/job/blueprint flow without a dem
     return new Response(JSON.stringify(result), { status: 200 });
   };
   try {
-    const resolved = [];
-    const result = await loadStageOneBlueprint({ kind: "youtube", sourceUrl: canonical, title: "" }, undefined,
-      { onResolved: (ids) => resolved.push(ids) });
+    const result = await resolveLearningSource({ kind: "youtube", sourceUrl: canonical, title: "" });
     assert.equal(result.title, "Actual video title");
     assert.equal(requests[0].body.source_url, canonical);
     assert.equal("title" in requests[0].body, false);
     assert.equal("language" in requests[0].body, false);
-    assert.deepEqual(resolved, [{ contentId: "landing-content", jobId: "landing-job" }]);
+    assert.deepEqual(requests.map(request => request.path), ["/api/content/resolve"]);
   } finally {
     globalThis.fetch = previous;
     if (previousWindow === undefined) delete globalThis.window;

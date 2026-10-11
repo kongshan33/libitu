@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   BufferedReferenceController, bufferedRangeCovered, BUFFER_ARM_TIMEOUT_MS,
-  BUFFER_EXTRACT_TIMEOUT_MS, BUFFER_HEARTBEAT_MS, BUFFER_PING_TIMEOUT_MS
+  BUFFER_EXTRACT_TIMEOUT_MS, BUFFER_HEARTBEAT_MS, BUFFER_PING_TIMEOUT_MS, BUFFER_PREPARE_TIMEOUT_MS
 } from "../features/stage-two/reference/buffered-reference.ts";
 
 const sentence = { id: "sentence-v3-source-0-4", startMs: 10_000, endMs: 12_000 };
@@ -52,7 +52,7 @@ function fixture() {
     const sessionId = commands.at(-1)?.sessionId;
     const requestId = ["complete", "missing"].includes(status)
       ? commands.findLast((command) => command.action === "extract")?.requestId : sessionId;
-    controller.handleMessage({ type: "LIBITU_BUFFER_EVENT", version: 3, sessionId, requestId, status, ...extra });
+    controller.handleMessage({ type: "LIBITU_BUFFER_EVENT", version: 4, sessionId, requestId, status, ...extra });
   }
   function arm() { controller.enable(); event("available"); event("armed"); }
   function enable() { arm(); event("enabled"); }
@@ -79,7 +79,7 @@ test("mount and telemetry cause no messages until explicit enable; arming never 
   assert.equal(f.controller.getSnapshot().phase, "armed");
   f.event("enabled");
   assert.equal(f.controller.getSnapshot().phase, "enabled");
-  assert.equal(f.commands.every((command) => command.version === 3 && command.requestId === command.sessionId), true);
+  assert.equal(f.commands.every((command) => command.version === 4 && command.requestId === command.sessionId), true);
   f.controller.dispose();
 });
 
@@ -294,7 +294,7 @@ test("disposal emits no state update and supports Strict Mode remount; foreign e
   const f = fixture(); f.enable();
   const count = f.states.length;
   for (const value of [null, {}, { type: "LIBITU_BUFFER_EVENT", version: 2 },
-    { type: "LIBITU_BUFFER_EVENT", version: 3, sessionId: "foreign", requestId: "foreign", status: "closed" }]) {
+    { type: "LIBITU_BUFFER_EVENT", version: 4, sessionId: "foreign", requestId: "foreign", status: "closed" }]) {
     f.controller.handleMessage(value);
   }
   assert.equal(f.states.length, count);
@@ -304,4 +304,29 @@ test("disposal emits no state update and supports Strict Mode remount; foreign e
   f.controller.setSource("content-one|video-one");
   f.enable(); assert.equal(f.controller.getSnapshot().phase, "enabled");
   f.controller.dispose();
+});
+
+test("availability does not announce toolbar readiness before arm acknowledgement", () => {
+  const f = fixture(); f.controller.enable(); f.event("available");
+  assert.equal(f.controller.getSnapshot().phase, "preparing");
+  f.event("available");
+  assert.equal(f.commands.filter(command => command.action === "arm").length, 1);
+  f.advance(BUFFER_PREPARE_TIMEOUT_MS - 1);
+  assert.equal(f.controller.getSnapshot().phase, "preparing");
+  f.event("armed"); assert.equal(f.controller.getSnapshot().phase, "armed");
+  f.advance(1); assert.equal(f.controller.getSnapshot().phase, "armed");
+  f.controller.dispose();
+});
+
+test("preparation cancellation and timeout ignore late armed/enabled responses", () => {
+  for (const cancel of [true, false]) {
+    const f = fixture(); f.controller.enable(); f.event("available");
+    if (cancel) f.controller.disable(); else f.advance(BUFFER_PREPARE_TIMEOUT_MS);
+    assert.equal(f.commands.at(-1).action, "close");
+    const phase = f.controller.getSnapshot().phase;
+    assert.equal(phase, cancel ? "idle" : "error");
+    f.event("armed"); f.event("enabled");
+    assert.equal(f.controller.getSnapshot().phase, phase);
+    f.controller.dispose();
+  }
 });

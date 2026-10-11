@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
@@ -56,8 +57,7 @@ const blueprint = { id: job.blueprint_id, content_id: contentId, title: "Local r
   logic_flow: [{ id: "local-logic", title: "Practice", subtitle: "Listen and repeat.", time: "0:01" }], corpus_items: [], transcript,
   segments: [{ id: "local-segment", sequence: 1, title: "Local alignment", summary: "Listen and repeat.", start_ms: 1000,
     end_ms: 11000, transcript_start_index: 0, transcript_end_index: 2, phonology_tags: [], recommended: true }] };
-const entry = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title,
-  contentId, jobId: job.id, stage: "2", segmentId: "local-segment", sentenceId: transcript[0].id })}`;
+const entry = `${origin}/practice/${contentId}/shadow?${new URLSearchParams({ segmentId: "local-segment", sentenceId: transcript[0].id })}`;
 function annotation(row) {
   const text = row.parts[0];
   const tokens = [...text.matchAll(/[A-Za-z]+/g)].map((match, index) => ({ index, text: match[0],
@@ -95,7 +95,7 @@ function installLocalTransport({ audioBase64 }) {
       });
     }
   };
-  const post = data => window.postMessage({ type: "LIBITU_BUFFER_EVENT", version: 3, ...data }, location.origin);
+  const post = data => window.postMessage({ type: "LIBITU_BUFFER_EVENT", version: 4, ...data }, location.origin);
   window.__grantLocalReference = () => {
     const request = window.__localBufferRequests.findLast(item => item.action === "arm");
     if (!request) throw new Error("Missing explicit reference arm request.");
@@ -106,7 +106,7 @@ function installLocalTransport({ audioBase64 }) {
     requestId: window.__localBufferSession, status: "coverage", ranges: [{ start: 1, end: 6 }], retainedBytes: 160_000, recording: false });
   window.addEventListener("message", ({ data }) => {
     if (data?.type !== "LIBITU_BUFFER_REQUEST") return;
-    if (data.version !== 3) throw new Error("Expected buffered reference protocol v3.");
+    if (data.version !== 4) throw new Error("Expected buffered reference protocol v3.");
     window.__localBufferRequests.push(data);
     const response = { sessionId: data.sessionId, requestId: data.requestId };
     if (data.action === "ping") post({ ...response, status: "available" });
@@ -165,6 +165,7 @@ try {
         "access-control-allow-methods": "GET,POST,PUT,OPTIONS" };
       if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
       if (url.pathname.startsWith("/api/")) {
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (url.pathname === `/api/blueprints/${contentId}`) return route.fulfill({ json: blueprint, headers });
         if (url.pathname === "/api/references/capability") return route.fulfill({ json: { available: false, input_mode: null }, headers });

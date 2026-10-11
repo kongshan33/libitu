@@ -1,8 +1,5 @@
 from uuid import UUID
 
-import asyncio
-import logging
-
 from fastapi import APIRouter, HTTPException, Request, Response, WebSocket, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
@@ -16,12 +13,10 @@ from app.services.speaking_service import (
 )
 from app.schemas.speaking_runtime import RealtimeStart, RealtimeTicket, SpeakingWorkspace
 from app.services import speaking_runtime_state
-from app.services.speaking_runtime import accept_connection, stop_local
+from app.services.speaking_runtime import accept_connection
+from app.services.speaking_lifecycle import end_speaking_session, delete_speaking_session
 from app.schemas.speaking_feedback import FeedbackRequest, SpeakingFeedback
 from app.services.speaking_feedback_service import read_feedback, request_feedback
-
-log = logging.getLogger(__name__)
-
 
 class SpeakingRoute(APIRoute):
     def get_route_handler(self):
@@ -87,15 +82,7 @@ async def realtime_connection(websocket: WebSocket, session_id: UUID, runtime_id
 
 @router.post("/sessions/{session_id}/end")
 async def end_mission(session_id: UUID, current_user: CurrentUserDep) -> SpeakingWorkspace:
-    result = await asyncio.to_thread(speaking_runtime_state.end_session, current_user.id, str(session_id))
-    await stop_local(str(session_id))
-    try:
-        await asyncio.to_thread(request_feedback, current_user.id, str(session_id))
-    except HTTPException:
-        # End remains successful. A durable worker repairs the enqueue gap, and the
-        # Analytics page can explicitly request the same idempotent report.
-        log.warning("Speaking mission ended; feedback enqueue awaits recovery.")
-    return result
+    return await end_speaking_session(current_user.id, str(session_id))
 
 
 @router.post("/sessions/{session_id}/feedback")
@@ -110,6 +97,5 @@ def get_feedback(session_id: UUID, current_user: CurrentUserDep) -> SpeakingFeed
 
 @router.delete("/sessions/{session_id}", status_code=204)
 async def delete_mission(session_id: UUID, current_user: CurrentUserDep) -> Response:
-    await asyncio.to_thread(speaking_runtime_state.delete_session, current_user.id, str(session_id))
-    await stop_local(str(session_id))
+    await delete_speaking_session(current_user.id, str(session_id))
     return Response(status_code=204)

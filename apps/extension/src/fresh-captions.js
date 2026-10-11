@@ -1,10 +1,11 @@
+import { contentIdAt, contentIdentityMatches, currentContentDocumentMatches, verifyContentSource } from "./content-identity.js";
 import { readCurrentYouTubeCaptionTrack } from "./youtube-captions.js";
 
 const WEB_ORIGIN = "http://localhost:3000";
 const TIMEOUT = Symbol("fresh-caption-timeout");
 
 /** Independent, read-only recovery for old text-only handoffs and cached pages. */
-export function createFreshCaptionReader(chrome) {
+export function createFreshCaptionReader(chrome, verifySource = verifyContentSource) {
   // One pending request per requesting tab, at most four across the extension.
   // Entries disappear on completion; neither successes nor failures are cached.
   const active = new Map();
@@ -12,14 +13,13 @@ export function createFreshCaptionReader(chrome) {
   function read(message, sender) {
     const language = typeof message?.language === "string" ? message.language.trim().replaceAll("_", "-").toLowerCase() : "";
     const videoId = message?.videoId;
-    if (sender?.frameId !== 0 || !Number.isInteger(sender.tab?.id)
+    if (message?.version !== 4 || !contentIdentityMatches(message, sender) || sender?.frameId !== 0 || !Number.isInteger(sender.tab?.id)
       || typeof sender.documentId !== "string" || !sender.documentId || sender.documentId.length > 128
       || (chrome.runtime.id && sender.id !== chrome.runtime.id)
       || (sender.origin !== undefined && sender.origin !== WEB_ORIGIN)
       || typeof message?.requestId !== "string" || !/^[\w-]{1,100}$/.test(message.requestId)
       || typeof videoId !== "string" || !/^[\w-]{11}$/.test(videoId)
       || youtubeVideoId(message.sourceUrl) !== videoId
-      || !webSourceMatches(sender.url, videoId) || !webSourceMatches(sender.tab.url, videoId)
       || language.length > 35 || !/^en(?:-[a-z0-9]{2,8})*$/.test(language)) {
       return Promise.resolve({ status: "invalid_request" });
     }
@@ -33,12 +33,12 @@ export function createFreshCaptionReader(chrome) {
     if (active.size >= 4) return Promise.resolve({ status: "busy" });
 
     const operation = { ownerTabId, requestId: message.requestId, documentId: sender.documentId,
-      videoId, language, sourceTabId: undefined, stale: false, finished: false, work: undefined };
+      contentId: message.contentId, videoId, language, sourceTabId: undefined, stale: false, finished: false, work: undefined };
     const isCurrent = async () => {
       if (operation.stale || operation.finished) return false;
       try {
         const owner = await chrome.tabs.get(ownerTabId);
-        if (!webSourceMatches(owner.url, videoId)) return false;
+        if (!webSourceMatches(owner.url, message.contentId) || !await currentContentDocumentMatches(chrome, message, sender)) return false;
         if (operation.sourceTabId !== undefined) {
           const source = await chrome.tabs.get(operation.sourceTabId);
           if (youtubeVideoId(source.url) !== videoId) return false;
@@ -48,6 +48,7 @@ export function createFreshCaptionReader(chrome) {
     };
 
     operation.work = withTimeout((async () => {
+      if (!await verifySource(message.contentId, videoId)) return { status: "invalid_request" };
       if (!await isCurrent()) return { status: "stale" };
       const tabs = await chrome.tabs.query({ url: "https://www.youtube.com/watch*" });
       // A timed-out query must never cause a delayed subtitle request.
@@ -85,7 +86,7 @@ export function createFreshCaptionReader(chrome) {
   function onTabUpdated(tabId, changeInfo) {
     for (const operation of active.values()) {
       if (tabId === operation.ownerTabId && (changeInfo.status === "loading"
-        || (changeInfo.url && !webSourceMatches(changeInfo.url, operation.videoId)))) operation.stale = true;
+        || (changeInfo.url && !webSourceMatches(changeInfo.url, operation.contentId)))) operation.stale = true;
       if (tabId === operation.sourceTabId && (changeInfo.status === "loading"
         || (changeInfo.url && youtubeVideoId(changeInfo.url) !== operation.videoId))) operation.stale = true;
     }
@@ -102,12 +103,8 @@ function youtubeVideoId(value) {
   } catch { return undefined; }
 }
 
-function webSourceMatches(value, videoId) {
-  try {
-    const url = new URL(value);
-    return url.origin === WEB_ORIGIN && url.pathname === "/" && url.searchParams.getAll("sourceUrl").length === 1
-      && youtubeVideoId(url.searchParams.get("sourceUrl")) === videoId;
-  } catch { return false; }
+function webSourceMatches(value, contentId) {
+  return contentIdAt(value) === contentId;
 }
 
 function withTimeout(work, milliseconds) {

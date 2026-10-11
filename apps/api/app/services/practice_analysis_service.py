@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from hashlib import sha256
+from typing import Literal
 
 from fastapi import HTTPException
 from app.config import get_settings
@@ -22,6 +23,31 @@ def owned(repo: PracticeAnalysisRepository, owner: str, attempt: str) -> dict:
     if not row:
         raise HTTPException(404, "This take has no server analysis")
     return row
+
+
+def read(repo: PracticeAnalysisRepository, owner: str, attempt: str) -> AnalysisView | None:
+    attempt_owned(repo, owner, attempt)
+    row = repo.get(owner, attempt)
+    return view(repo, owner, row) if row else None
+
+
+def control(repo: PracticeAnalysisRepository, owner: str, attempt: str, action: Literal["retry", "cancel"]) -> AnalysisView:
+    row = owned(repo, owner, attempt)
+    if action == "retry" and not view(repo, owner, row).retryable:
+        raise HTTPException(409, "This analysis cannot be retried. Record a new take.")
+    current = repo.control(owner, attempt, action)
+    if current is None:
+        raise HTTPException(404, "This take has no server analysis")
+    return view(repo, owner, current)
+
+
+def delete(repo: PracticeAnalysisRepository, owner: str, attempt: str) -> None:
+    row = owned(repo, owner, attempt)
+    # Persist the tombstone/fence before touching the audio. Repeated deletion or
+    # the existing cleanup worker can finish an interrupted object removal.
+    if repo.control(owner, attempt, "delete") is None:
+        raise HTTPException(404, "This take has no server analysis")
+    repo.remove_audio(row)
 
 
 def reference_for(attempt: dict, reference_id: str | None) -> dict | None:

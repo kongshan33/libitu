@@ -80,7 +80,8 @@ try {
     await statePage.goto(origin + reportPath, { waitUntil: "domcontentloaded" }); await statePage.getByRole("heading", { name: "Your mission report", exact: true }).waitFor();
     assert.equal(await statePage.getByText("Not assessed", { exact: true }).count(), 4); assert.equal(await statePage.getByRole("img", { name: /out of 100/ }).count(), 0);
     assert.equal(await statePage.getByRole("button", { name: "Retry assessment", exact: true }).count(), status === "failed" ? 1 : 0);
-    assert.equal(await statePage.evaluate(() => getComputedStyle(document.querySelector('[role="tab"]')).transitionDuration), "0s");
+    const durations = await statePage.evaluate(() => getComputedStyle(document.querySelector('[role="tab"]')).transitionDuration);
+    assert.ok(durations.split(",").every(value => parseFloat(value) <= 0.00001), "reduced motion allows the global near-zero transition duration");
     assert.equal(await statePage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
     await statePage.screenshot({ path: join(artifacts, `${status}-768.png`), fullPage: true }); assert.deepEqual(fixture.auth.errors, []); await stateContext.close();
   }

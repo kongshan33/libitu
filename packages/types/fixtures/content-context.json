@@ -1,0 +1,14 @@
+{
+  "content": {
+    "content_id": "test-content",
+    "kind": "youtube",
+    "source_url": "https://www.youtube.com/watch?v=abcdefghijk",
+    "title": null,
+    "language": null
+  },
+  "processing": {
+    "analysis_version": "mvp-v9",
+    "blueprint_available": true,
+    "job": null
+  }
+}

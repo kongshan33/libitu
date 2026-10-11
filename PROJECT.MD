@@ -4,7 +4,7 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-04
+  updated: 2026-10-10
 ```
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
@@ -18,6 +18,14 @@ The provisional launch market is overseas. Mainland-China-specific hosting and r
 Stage 2 browser-captured references can now be uploaded for private server ASR/MFA/VAD/F0 analysis without a file-source registration. Verified reference prosody is cached and paired with the exact saved learner take. Sound/Rhythm each use two compact Reference / Your voice rows; Melody uses one normalized chart with linked full-word labels and playback highlighting. Registered file adapters remain supported. General remote acquisition and validated pronunciation detection remain planned. See [current implementation](design/docs/STAGE_TWO_BROWSER_REFERENCE_SERVER.md).
 
 ## Repository status
+
+Routing and responsibility architecture (2026-10-10): R0–R5 are implemented. At the user's request R3 directly replaces root query learning URLs with `/practice/import` and content-based Reader/segments/Shadow routes, and enables extension v4 only (extension 0.2.0). No legacy route adapter, dual protocol or entry switch remains active. R4's required link producers, content-tab mapping and owner-bound continuation v2 are included; old continuation records are ignored. The content layout retains the controller, reference cache and actual MediaHost across navigation; public content reads/retry semantics and root save ownership remain unchanged. R5 removes the retired v2 capture runtime, Web fallback and legacy entry loader; route state comes from the URL and the content controller accepts resolved IDs only. Invalid client-side links clear prior activation state so Back can recover. Extension source verification reads the shared public `content.content_id` contract. After an import SPA transition, the original sender URL is used only for origin checks; the live top-level document URL and document ID establish current content ownership. Web/extension must update together. Verification and the outstanding real-toolbar tabCapture boundary are tracked in TASK.MD. No database migration or deployment was performed.
+
+Reference setup latency correction (2026-10-10): v4 `ping` is a local capability probe. Explicit `arm` performs one read of `/api/content/{id}/identity`, using public metadata without blueprint/job reads; concurrent identical arms share that check. Passive content-tab reuse uses a separate verified `register` action. The Web UI stays in preparing until the extension acknowledges armed; cancellation, document/source changes and late results cannot re-arm a closed setup. Toolbar capture authorization is unchanged. Reload the extension and Web page together.
+
+Import loading correction (2026-10-10): `/practice/import` reuses the Reader skeleton for both route loading and pending caption handoff/content resolution. It creates no player while waiting; failures show a separate error/retry panel. The shared content layout chooses its cold-entry skeleton from the target pathname: Reader uses the Reader shell; segments/Shadow use skeletons matching their respective page structures. Once content is ready, internal navigation retains that content while the next route loads; no nested content-route loading boundary replaces it. The fallback reads no search parameters or workspace data. Caption/resolve/analysis sequencing and the persistent media owner are unchanged.
+
+Navigation prefetch (2026-10-10): internal links retain viewport prefetch and warm their full destination on pointer, keyboard or touch intent. Ready Reader warms segment selection; selection warms preparation; preparation warms the exact Shadow route and component code. Known form/action destinations also warm on intent or overlap existing confirmation work. New session/content IDs still require successful creation/resolution before navigation. Prefetch never mounts destination client effects, resolves captions, creates sessions or starts recording. Stage 2 skeletons show only the broad selection/preparation/Shadow layout: a heading, sidebar, video and analysis block as applicable. Per-sentence rows, imitation controls and nested analysis/history details are omitted at the user’s request; responsive ordering is retained.
 
 Route loading correction (2026-10-08): the shared root loading boundary is stage-neutral. Valid Stage 2 deep links initialize the reader directly in Shadow and retain the practice skeleton through blueprint/auth loading; invalid segments return to the reader.
 

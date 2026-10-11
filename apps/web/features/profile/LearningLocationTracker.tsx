@@ -1,5 +1,6 @@
 "use client";
 
+import { useCurrentLocation } from "../navigation/use-current-location";
 import { useEffect, useRef } from "react";
 import { STAGE_TWO_LOCATION_CHANGED } from "../stage-two/location";
 import {
@@ -12,6 +13,7 @@ export function LearningLocationTracker({ authLoaded, owner, ready, contentId, s
   authLoaded: boolean; owner: string | null | undefined; ready: boolean;
   contentId: string | null; sourceUrl: string | null | undefined; title: string;
 }) {
+  const location = useCurrentLocation();
   const visitRef = useRef<LearningVisit | null>(null);
   useEffect(() => {
     if (!authLoaded) return;
@@ -24,9 +26,7 @@ export function LearningLocationTracker({ authLoaded, owner, ready, contentId, s
     function remember() {
       const current = new URL(window.location.href);
       // A stale reader cannot overwrite the destination of a different navigation.
-      if (current.pathname !== "/" || (current.searchParams.has("contentId") && current.searchParams.get("contentId") !== contentId)) return;
-      current.searchParams.set("contentId", contentId!);
-      current.searchParams.set("sourceUrl", source!);
+      if (current.pathname.split("/")[2] !== contentId) return;
       rememberLearningLocation(owner!, {
         href: current.pathname + current.search, title, updatedAt: new Date().toISOString()
       });
@@ -38,6 +38,6 @@ export function LearningLocationTracker({ authLoaded, owner, ready, contentId, s
       window.removeEventListener(STAGE_TWO_LOCATION_CHANGED, remember);
       window.removeEventListener("popstate", remember);
     };
-  }, [authLoaded, contentId, owner, ready, sourceUrl, title]);
+  }, [authLoaded, contentId, owner, ready, sourceUrl, title, location]);
   return null;
 }

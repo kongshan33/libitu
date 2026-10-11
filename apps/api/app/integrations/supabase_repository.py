@@ -118,8 +118,56 @@ class SupabaseRepository:
             caption_track=caption_track,
         )
 
+    def get_public_youtube_content(self, content_id: str) -> ContentResolveResponse | None:
+        """A metadata-only read; never load the private caption payload."""
+        rows = self._request("GET", "/contents", params={
+            "id": f"eq.{content_id}", "kind": "eq.youtube", "visibility": "eq.public",
+            "select": "id,kind,normalized_key,source_url,title,language", "limit": "1",
+        }).json()
+        return ContentResolveResponse(content_id=rows[0]["id"], **{
+            key: value for key, value in rows[0].items() if key != "id"
+        }) if rows else None
+
+    def create_job_once(self, job: ProcessingJob) -> ProcessingJob:
+        try:
+            rows = self._request("POST", "/processing_jobs", params={"on_conflict": "content_id,analysis_version"},
+                headers={"Prefer": "resolution=ignore-duplicates,return=representation"},
+                json=self._job_payload(job)).json()
+        except httpx.HTTPStatusError as error:
+            # Concurrent deterministic-ID inserts can hit the other unique index
+            # (the primary key) before ON CONFLICT's content/version arbiter.
+            if error.response.status_code != 409 or error.response.json().get("code") != "23505":
+                raise
+            current = self.find_job(job.content_id, job.analysis_version)
+            if current is None:
+                raise
+            return current
+        current = ProcessingJob.model_validate(rows[0]) if rows else self.find_job(job.content_id, job.analysis_version)
+        if current is None:
+            raise RuntimeError("Processing job creation did not return a row")
+        return current
+
+    def compare_and_swap_job(self, previous: ProcessingJob, updated: ProcessingJob) -> ProcessingJob | None:
+        """One SQL UPDATE predicates the generation AND state; no read/write lock gap."""
+        if (updated.id, updated.content_id, updated.analysis_version) != (previous.id, previous.content_id, previous.analysis_version):
+            raise ValueError("A processing transition cannot change identity")
+        rows = self._request("PATCH", "/processing_jobs", params={
+            "id": f"eq.{previous.id}", "content_id": f"eq.{previous.content_id}",
+            "analysis_version": f"eq.{previous.analysis_version}", "status": f"eq.{previous.status.value}",
+            "attempt_count": f"eq.{previous.attempt_count}",
+        }, headers={"Prefer": "return=representation"}, json=self._job_payload(updated)).json()
+        return ProcessingJob.model_validate(rows[0]) if rows else None
+
     def save_job(self, job: ProcessingJob) -> None:
-        payload = {
+        self._request(
+            "POST", "/processing_jobs?on_conflict=id",
+            headers={"Prefer": "resolution=merge-duplicates,return=minimal"},
+            json=self._job_payload(job),
+        )
+
+    @staticmethod
+    def _job_payload(job: ProcessingJob) -> dict:
+        return {
             "id": job.id,
             "content_id": job.content_id,
             "analysis_version": job.analysis_version,
@@ -133,12 +181,6 @@ class SupabaseRepository:
             "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "stage_timings_ms": job.stage_timings_ms,
         }
-        self._request(
-            "POST",
-            "/processing_jobs?on_conflict=id",
-            headers={"Prefer": "resolution=merge-duplicates,return=minimal"},
-            json=payload,
-        )
 
     def get_job(self, job_id: str) -> ProcessingJob | None:
         rows = self._request(

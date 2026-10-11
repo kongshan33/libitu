@@ -1,5 +1,7 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { DirectionButton, DirectionLink } from "@/components/ui/direction-button";
@@ -8,7 +10,7 @@ import { AppHeader } from "@/components/AppHeader";
 
 import { ButtonLink } from "@/components/ui/button";
 
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import Image from "next/image";
 import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
@@ -31,7 +33,7 @@ export function ProfilePage({ history = false }: { history?: boolean }) {
     <div className={styles.shell}>
       {!isLoaded ? <ContentSkeleton label="Loading your account…" /> : !userId ? <section className={styles.gate}>
         <span className={styles.gateIcon}><UserRound size={30} aria-hidden="true" /></span><div className={styles.eyebrow}>Your personal learning space</div><h1>Make your practice count.</h1><p>Sign in to see your saved practice, grow your corpus and pick up where you left off.</p>
-        <DirectionButton variant="primary" className={styles.primary} type="button" onClick={() => { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in to view my learning <ArrowRight size={16} aria-hidden="true" /></DirectionButton>
+        <DirectionButton variant="primary" className={styles.primary} type="button" onClick={() => { const url = currentAuthReturnUrl(); clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in to view my learning <ArrowRight size={16} aria-hidden="true" /></DirectionButton>
         <Link className={styles.textLink} href="/">Back to practice</Link>
       </section> : <AccountLearning key={`${userId}:${history}`} owner={userId} history={history} />}
     </div>

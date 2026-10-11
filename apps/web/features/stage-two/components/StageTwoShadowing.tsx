@@ -6,28 +6,25 @@ import { Button } from "@/components/ui/button";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Info, Pause, Play, Repeat2 } from "lucide-react";
-import { LoadoutLink } from "../../navigation/LoadoutLink";
 import type { StageOneSegment, TranscriptLine } from "@libitu/types/stage-one";
 import type { SentenceUnit } from "@libitu/types/stage-two";
-import { YouTubePlayer, type YouTubePlayerHandle, type YouTubeTelemetry } from "../../stage-one/components/YouTubePlayer";
+import { WorkspacePlayer } from "../../learning-workspace/MediaHost";
+import { type YouTubePlayerHandle, type YouTubeTelemetry } from "../../stage-one/components/YouTubePlayer";
 import { buildSentenceUnits, sentenceAtTime } from "../sentences";
 import { readStageTwoLocation, replaceStageTwoLocation } from "../location";
+import { useCurrentLocation } from "../../navigation/use-current-location";
 import { useSentenceRecording } from "../recording/use-sentence-recording";
 import { SentenceRecordingPanel } from "./SentenceRecordingPanel";
-import { useReferenceCapture } from "../reference/use-reference-capture";
-import { ReferenceAudioPanel } from "./ReferenceAudioPanel";
 import { StageTwoSelect } from "./StageTwoSelect";
 import { type AudioAnalysisView } from "./AcousticComparisonPanel";
 import { useReferenceAnalysis } from "../analysis/use-reference-analysis";
 import { buildReferenceKey } from "../analysis/reference-analysis-cache";
-import type { ReferenceClip } from "../reference/reference-capture";
 import { useAudioFeatures } from "../analysis/use-audio-features";
 import { useSoundGuide } from "../sound/use-sound-guide";
 import { PracticeLayers, PracticeLayerShortcuts, type PracticeLayer } from "./PracticeLayers";
 import { CaptionTimedText } from "../../playback/CaptionTimedText";
 import { CaptionWordClock } from "../../playback/caption-word-clock";
-import { WordTimingNotice } from "../../playback/WordTimingNotice";
-import { useBufferedReferenceContext, type BufferedReferenceSession } from "../reference/use-buffered-reference";
+import { useBufferedReferenceContext } from "../reference/use-buffered-reference";
 import type { ReferenceAnalysisCache } from "../analysis/reference-analysis-cache";
 import { useBufferedAnalysis } from "../analysis/use-buffered-analysis";
 import { BufferedReferencePanel } from "./BufferedReferencePanel";
@@ -51,8 +48,7 @@ type Props = {
   title: string;
   transcript: TranscriptLine[];
   timingRecovery?: ReactNode;
-  bufferedReference?: BufferedReferenceSession;
-  sharedReferenceCache?: ReferenceAnalysisCache;
+  sharedReferenceCache: ReferenceAnalysisCache;
   captureGeneration?: number;
   onBack(): void;
 };
@@ -60,21 +56,13 @@ type Props = {
 const noLocalRecording: AudioAnalysisView = { features: null, pending: false, error: null, retry() {} };
 
 export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transcript, onBack, timingRecovery,
-  bufferedReference, sharedReferenceCache, captureGeneration = 1 }: Props) {
+  sharedReferenceCache, captureGeneration = 1 }: Props) {
   const sentences = useMemo(() => buildSentenceUnits(contentId, segment, transcript), [contentId, segment, transcript]);
-  // StageOneReader provides the session through context. The optional prop is
-  // retained for standalone callers; the context covers dynamic/remounted
-  // Stage 2 views without creating a second Chrome authorization session or
-  // showing the legacy panel.
-  const contextBufferedReference = useBufferedReferenceContext();
-  const activeBufferedReference = bufferedReference ?? contextBufferedReference;
-  // The component is keyed by content/segment/source; a stale URL ID falls back safely.
-  const [selectedId, setSelectedId] = useState<string | null>(() => {
-    const location = typeof window === "undefined" ? null : readStageTwoLocation(new URL(window.location.href));
-    return location?.segmentId === segment.id ? location.sentenceId : null;
-  });
+  const activeBufferedReference = useBufferedReferenceContext();
+  const href = useCurrentLocation();
+  const location = readStageTwoLocation(new URL(href, "https://libitu.invalid"));
+  const selectedId = location?.segmentId === segment.id ? location.sentenceId : null;
   const selected = sentences.find((sentence) => sentence.id === selectedId) ?? sentences[0] ?? null;
-  const timingRows = useMemo(() => selected ? [selected] : [], [selected]);
   const selectedIndex = selected ? sentences.indexOf(selected) : -1;
   const playerRef = useRef<YouTubePlayerHandle>(null);
   const [bufferPreparing, setBufferPreparing] = useState(false);
@@ -82,9 +70,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
   const [learnerClock] = useState(() => new CaptionWordClock());
   const [savedClip,setSavedClip] = useState<{url:string;id:string|null}|null>(null);
   const cancelReferenceRef = useRef<(() => void) | null>(null);
-  const listeningIntent = useRef(false);
-  const previouslyPlaying = useRef(false);
-  const completedReferences = useRef(new WeakSet<ReferenceClip>());
   const persistence = usePracticePersistence();
   const outbox = persistence?.outbox;
   const [retainRecording, setRetainRecording] = useState(false);
@@ -112,7 +97,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
   }, [contentId, outbox]);
   const pauseReference = useCallback(() => {
     window.dispatchEvent(new Event("libitu:practice-playback"));
-    listeningIntent.current = false;
     cancelReferenceRef.current?.();
     playerRef.current?.pause();
   }, []);
@@ -128,22 +112,16 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
     window.dispatchEvent(new Event("libitu:practice-playback"));
     recorder.cancel(); pauseReplay();
   }, [recorder, pauseReplay]);
-  const referenceRange = useMemo(() => selected ? { start: selected.startMs / 1000, end: selected.endMs / 1000 } : null,
-    [selected]);
-  const reference = useReferenceCapture(selected?.id ?? null, referenceRange, playerRef, beforeCapture);
   const referenceKey = selected ? buildReferenceKey(contentId, sourceUrl ?? "",
     selected.id, selected.startMs, selected.endMs) : null;
-  const { releaseClip } = reference;
-  const acceptReference = useCallback((clip: ReferenceClip) => releaseClip(clip), [releaseClip]);
-  const referenceAnalysis = useReferenceAnalysis(referenceKey, reference.state.clip, acceptReference, sharedReferenceCache,
-    selected ? { contentId, sentenceId: selected.id, text: selected.text, startMs: selected.startMs, endMs: selected.endMs } : undefined);
+  const referenceAnalysis = useReferenceAnalysis(referenceKey, sharedReferenceCache);
   const demanded = useMemo(() => sentences.slice(Math.max(0, selectedIndex), Math.max(0, selectedIndex) + 3), [sentences, selectedIndex]);
   const bufferedAnalysis = useBufferedAnalysis(contentId, sourceUrl ?? "", demanded,
     bufferPreparing ? undefined : activeBufferedReference ?? undefined, referenceAnalysis.cache);
   const { features, error: analysisError, pending: analysisPending, retry, canRetry } = referenceAnalysis;
   const referenceView = useMemo(() => ({ features, error: analysisError, pending: analysisPending, retry, canRetry }),
     [features, analysisError, analysisPending, retry, canRetry]);
-  const referenceBusy = reference.isBusy() || bufferPreparing;
+  const referenceBusy = bufferPreparing;
   const listRef = useRef<HTMLOListElement>(null);
   const [scope, setScope] = useState<"sentence" | "segment">("sentence");
   const [loop, setLoop] = useState(true);
@@ -174,19 +152,16 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
   const start = activeScope === "sentence" && selected ? selected.startMs : segment.startMs ?? 0;
   const end = activeScope === "sentence" && selected ? selected.endMs : segment.endMs ?? 0;
   const playable = Boolean(sourceUrl && end > start);
-  const referenceEligible = Boolean(!cloud.available && !activeBufferedReference && selected && selected.endMs - selected.startMs <= 60_000 && scope === "sentence" && rate === 1);
   const initialStart = useRef(start);
   const playingSentence = referencePlaying ? sentenceAtTime(sentences, time * 1000) : null;
   const progress = Math.min(100, Math.max(0, (time * 1000 - start) / Math.max(1, end - start) * 100));
   const suspendBuffered = activeBufferedReference?.suspend;
-  const cancelLegacyReference = reference.cancel;
   useEffect(() => {
     if (!cloud.available) return;
     playerRef.current?.pause();
-    cancelLegacyReference();
     suspendBuffered?.();
     setBufferPreparing(false);
-  }, [cloud.available, cancelLegacyReference, suspendBuffered]);
+  }, [cloud.available, suspendBuffered]);
 
 
   function startRecording() {
@@ -199,12 +174,11 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
 
   useEffect(() => {
     cancelReferenceRef.current = () => {
-      cancelLegacyReference();
       suspendBuffered?.();
       setBufferPreparing(false);
     };
     return () => { cancelReferenceRef.current = null; };
-  }, [cancelLegacyReference, suspendBuffered]);
+  }, [suspendBuffered]);
 
   const bufferedCovered = Boolean(selected && activeBufferedReference?.covers({ start: selected.startMs / 1000, end: selected.endMs / 1000 }));
   useEffect(() => {
@@ -224,12 +198,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
   }, [bufferPreparing, activeBufferedReference?.state.phase, suspendBuffered, selected]);
 
   useEffect(() => {
-    function hide() { if (document.visibilityState === "hidden") listeningIntent.current = false; }
-    document.addEventListener("visibilitychange", hide);
-    return () => document.removeEventListener("visibilitychange", hide);
-  }, []);
-
-  useEffect(() => {
     // One controller owns both scopes. Toggling repeat never starts playback.
     const player = playerRef.current;
     if (referenceBusy) return;
@@ -245,31 +213,11 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
     replaceStageTwoLocation({ segmentId: segment.id, sentenceId: selected?.id });
   }, [segment.id, selected?.id]);
 
-  useEffect(() => {
-    const cached = Boolean(referenceKey && referenceAnalysis.has(referenceKey));
-    reference.setReferenceReady(cached);
-    const clip = reference.state.clip;
-    if (!clip || !cached || completedReferences.current.has(clip)) return;
-    completedReferences.current.add(clip);
-    // Finalizing the first reference pauses the player. Continue the user's loop
-    // once the analysis queue owns the bytes, with capture disabled by the cache.
-    if (listeningIntent.current && loop && scope === "sentence" && selected
-      && clip.sentenceId === selected.id && clip.rangeStart === selected.startMs / 1000
-      && clip.rangeEnd === selected.endMs / 1000 && reference.state.sessionPhase === "enabled"
-      && !recording.isBusy() && !recording.replaying && document.visibilityState !== "hidden") {
-      playerRef.current?.setRange({ start: clip.rangeStart, end: clip.rangeEnd, loop: true });
-      playerRef.current?.play();
-    }
-  }, [reference, referenceKey, referenceAnalysis, recording, loop, scope, selected]);
-
   function selectSentence(sentence: SentenceUnit) {
     cloud.pause();
     activeBufferedReference?.suspend();
     setBufferPreparing(false);
     setTextHidden(false);
-    listeningIntent.current = false;
-    reference.setEligible(false);
-    reference.changeSentence(sentence.id, { start: sentence.startMs / 1000, end: sentence.endMs / 1000 });
     recording.changeSentence(sentence.id);
     // Cancel the old range immediately, before React commits the new selection.
     const player = playerRef.current;
@@ -277,7 +225,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
     player?.setRange({ start: sentence.startMs / 1000, end: sentence.endMs / 1000, loop });
     player?.seekTo(sentence.startMs / 1000);
     setScope("sentence");
-    setSelectedId(sentence.id);
     setTime(sentence.startMs / 1000);
     replaceStageTwoLocation({ segmentId: segment.id, sentenceId: sentence.id });
   }
@@ -291,9 +238,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
     cloud.pause();
     activeBufferedReference?.suspend();
     setBufferPreparing(false);
-    listeningIntent.current = false;
-    reference.setEligible(false);
-    reference.cancel();
     recording.recorder.cancel();
     recording.pauseReplay();
     const nextStart = next === "sentence" && selected ? selected.startMs : segment.startMs ?? 0;
@@ -329,9 +273,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
 
   function leave() {
     cloud.pause();
-    listeningIntent.current = false;
-    reference.clear();
-    if (!sharedReferenceCache) referenceAnalysis.cache.clear();
     activeBufferedReference?.suspend();
     recording.clear();
     playerRef.current?.pause();
@@ -345,11 +286,9 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
       playerRef.current?.pause();
       return;
     }
-    if (!next && previouslyPlaying.current && !reference.isBusy()) listeningIntent.current = false;
-    previouslyPlaying.current = next;
     if (next) {
       window.dispatchEvent(new Event("libitu:practice-playback"));
-      listeningIntent.current = true; recording.pauseReplay();
+      recording.pauseReplay();
     }
     setPlaying(next);
   }
@@ -369,10 +308,7 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
       }
       return;
     }
-    reference.setEligible(referenceEligible && !recording.isBusy() && !recording.replaying
-      && document.visibilityState !== "hidden" && sample.rate === 1 && !sample.blockedByPausedSeek);
-    reference.setReferenceReady(Boolean(referenceKey && referenceAnalysis.has(referenceKey)));
-    reference.sample(sample);
+
   }
 
   function togglePlayback() {
@@ -383,14 +319,7 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
       return;
     }
     if (playing) { pauseReference(); return; }
-    listeningIntent.current = true;
-    const eligible = referenceEligible && !recording.isBusy() && document.visibilityState !== "hidden";
-    reference.setEligible(eligible);
-    // Listening again is also the retry path for an unusable or failed reference.
-    if (eligible && reference.state.sessionPhase === "enabled"
-      && (analysisError || features?.quality.status === "insufficient")) referenceAnalysis.invalidate();
-    reference.setReferenceReady(Boolean(referenceKey && referenceAnalysis.has(referenceKey)));
-    if (!reference.play()) playerRef.current?.play();
+    playerRef.current?.play();
   }
 
   function prepareBufferedSentence() {
@@ -411,7 +340,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
           <h1>{segment.title}</h1>
           <p>{title} · {clock(segment.startMs ?? 0)} – {clock(segment.endMs ?? 0)}</p>
         </div>
-        {/* <LoadoutLink className="stage-two-shadow-back">Open loadout</LoadoutLink> */}
         <DirectionButton variant="secondary" className="stage-two-shadow-back" type="button" onClick={leave}>
           <ArrowLeft aria-hidden="true" /> Back to segments
         </DirectionButton>
@@ -468,7 +396,7 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
           <section className="stage-two-practice-media" aria-label="Listen and record">
             <div className="stage-two-practice-video">
               <div className="stage-two-shadow-player">
-                <YouTubePlayer ref={playerRef} sourceUrl={sourceUrl ?? ""} title={title}
+                <WorkspacePlayer ref={playerRef} sourceUrl={sourceUrl ?? ""} title={title}
                   wordClock={cloud.available ? undefined : wordClock}
                   onTimeChange={(value) => {
                     if (!cloud.available || playing) setTime(value);
@@ -533,8 +461,7 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
                   {bufferPreparing ? <Button variant="secondary" size="inherit" type="button" onClick={pauseReference}>Cancel preparation</Button> : null}
                   {analysisError || bufferedAnalysis.error ? <p role="alert">{analysisError ?? bufferedAnalysis.error}
                     <Button variant="secondary" size="inherit" type="button" onClick={() => { bufferedAnalysis.retry(); retry(); }}>Retry reference analysis</Button></p> : null}
-                </BufferedReferencePanel> : <ReferenceAudioPanel compact capture={reference} playable={playable && Boolean(selected)} eligible={referenceEligible}
-                  pending={analysisPending} features={features} analysisError={analysisError} />}
+                </BufferedReferencePanel> : null}
                 {!cloud.available ? <div className="capture-analysis-status" aria-label="Browser reference analysis">
                   <p role="status">{captured.entry?.pending?'Preparing reference upload…':captured.row?.state==='completed'?'Reference analysis ready.':captured.row?.state==='queued'||captured.row?.state==='processing'?'Analyzing reference words and pitch…':captured.row?.state==='deleted'?'Reference deleted.':captured.row?.state==='partially_completed'?'Reference needs review; available measurements are shown.':captured.row?.state==='awaiting_upload'?'Reference upload incomplete. Keep this page open and retry.':captured.row?.state==='failed'||captured.row?.state==='cancelled'?'Reference analysis stopped. Retry analysis.':'Play the sentence to capture its reference audio.'}</p>
                   {captured.entry?.error?<p role="alert">{captured.entry.error}</p>:null}
@@ -595,7 +522,6 @@ export function StageTwoShadowing({ contentId, segment, sourceUrl, title, transc
             onAnalysisSelect={selectAnalysis} onAnalysisRestore={restoreAnalysis} selectedAnalysisId={analysisAttempt} playbackClock={learnerClock}
             blocked={recording.isBusy() || referenceBusy}
             onPlay={() => {
-              listeningIntent.current = false;
               cancelReferenceRef.current?.();
               playerRef.current?.pause();
               recording.pauseReplay();

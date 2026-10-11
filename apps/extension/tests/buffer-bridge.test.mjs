@@ -4,9 +4,9 @@ import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { setImmediate as nextTurn } from "node:timers/promises";
 const code = readFileSync(new URL("../src/buffer-bridge.js", import.meta.url), "utf8");
-const arm = { type: "LIBITU_BUFFER_REQUEST", version: 3, action: "arm", sessionId: "session-1", requestId: "session-1" };
+const arm = { type: "LIBITU_BUFFER_REQUEST", version: 4, contentId: "a0000000-0000-4000-8000-000000000001", videoId: "first-video", action: "arm", sessionId: "session-1", requestId: "session-1" };
 const extract = { ...arm, action: "extract", requestId: "clip-1", start: 10, end: 20 };
-const initial = "http://localhost:3000/?contentId=content-1&sourceUrl=video-1";
+const initial = "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001";
 function fixture({ top = true, url = initial } = {}) {
   const callbacks = {}; const calls = []; const replies = []; let listener;
   const window = { location: new URL(url), addEventListener: (type, handler) => { callbacks[type] = handler; },
@@ -14,17 +14,17 @@ function fixture({ top = true, url = initial } = {}) {
   window.top = top ? window : {};
   const chrome = { runtime: { id: "libitu", onMessage: { addListener: (fn) => { listener = fn; } }, sendMessage: async (message) => {
     calls.push(message);
-    return ["arm", "ping"].includes(message.action) ? { type: "LIBITU_BUFFER_EVENT", version: 3, sessionId: message.sessionId,
+    return ["arm", "ping", "register"].includes(message.action) ? { type: "LIBITU_BUFFER_EVENT", version: 4, sessionId: message.sessionId,
       requestId: message.requestId, status: message.action === "arm" ? "armed" : "available" } : { accepted: true };
   } } };
-  runInNewContext(code, { window, chrome, URL });
+  runInNewContext(code, { window, chrome, URL, crypto });
   return { window, callbacks, calls, replies,
     async send(message, extra = {}) { callbacks.message?.({ data: message, source: window, origin: window.location.origin, ...extra }); await nextTurn(); },
     runtime(message, sender = { id: "libitu" }) { let result; listener?.(message, sender, (value) => { result = value; }); return result; }
   };
 }
 test("buffer bridge accepts only same-origin top-frame messages and whitelists observation fields", async () => {
-  for (const options of [{ top: false }, { url: "http://evil.test/" }, { url: `${initial}&stage=3` }]) {
+  for (const options of [{ top: false }, { url: "http://evil.test/" }, { url: `${initial}/unknown` }]) {
     const f = fixture(options); await f.send(arm); assert.equal(f.calls.length, 0);
   }
   const f = fixture(); await f.send(arm, { source: {} }); await f.send(arm, { origin: "http://evil.test" });
@@ -34,19 +34,19 @@ test("buffer bridge accepts only same-origin top-frame messages and whitelists o
 });
 test("same-document Stage 1/2 and sentence/segment navigation preserve a session; another source rejects it", async () => {
   const f = fixture(); await f.send(arm);
-  f.window.location = new URL(`${initial}&stage=2&segmentId=two&sentenceId=three#melody`);
+  f.window.location = new URL(`${initial}/shadow?segmentId=two&sentenceId=three#melody`);
   assert.equal(f.runtime({ type: "LIBITU_BUFFER_VERIFY", sessionId: arm.sessionId }).available, true);
   await f.send(extract);
-  f.runtime({ type: "LIBITU_BUFFER_EVENT", version: 3, status: "complete", sessionId: arm.sessionId, requestId: extract.requestId });
+  f.runtime({ type: "LIBITU_BUFFER_EVENT", version: 4, status: "complete", sessionId: arm.sessionId, requestId: extract.requestId });
   assert.equal(f.replies.at(-1).status, "complete");
-  f.window.location = new URL(initial.replace("content-1", "content-2"));
+  f.window.location = new URL(initial.replace("a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002"));
   assert.equal(f.runtime({ type: "LIBITU_BUFFER_VERIFY", sessionId: arm.sessionId }).available, false);
   await f.send({ ...arm, action: "observe", telemetry: {} });
   assert.equal(f.calls.at(-1).action, "extract");
 });
 test("late or foreign extract events are discarded and pagehide releases the grant", async () => {
   const f = fixture(); await f.send(arm); await f.send(extract);
-  const event = { type: "LIBITU_BUFFER_EVENT", version: 3, status: "complete", sessionId: arm.sessionId, requestId: extract.requestId };
+  const event = { type: "LIBITU_BUFFER_EVENT", version: 4, status: "complete", sessionId: arm.sessionId, requestId: extract.requestId };
   f.runtime(event, { id: "other" }); f.runtime({ ...event, requestId: "other" }); assert.equal(f.replies.length, 1);
   f.runtime(event); f.runtime(event); assert.equal(f.replies.length, 2);
   f.callbacks.pagehide(); await nextTurn(); assert.equal(f.calls.at(-1).action, "close");
@@ -55,5 +55,13 @@ test("late or foreign extract events are discarded and pagehide releases the gra
 test("availability probes do not exhaust session capacity", async () => {
   const f = fixture();
   for (let i = 0; i < 12; i++) await f.send({ ...arm, action: "ping", sessionId: `probe-${i}`, requestId: `probe-${i}` });
+  await f.send(arm); assert.equal(f.replies.at(-1).status, "armed");
+});
+
+test("verified registrations release their probe slot without arming capture", async () => {
+  const f = fixture();
+  for (let i = 0; i < 12; i++) await f.send({ ...arm, action: "register", sessionId: `register-${i}`, requestId: `register-${i}` });
+  assert.equal(f.calls.length, 12);
+  assert.equal(f.replies.every(reply => reply.status === "available"), true);
   await f.send(arm); assert.equal(f.replies.at(-1).status, "armed");
 });

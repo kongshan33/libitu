@@ -1,3 +1,4 @@
+import { parseLearningLocation } from "../../navigation/learning-location.ts";
 import type { CaptionTrack } from "@libitu/types/stage-one";
 import { readCaptionTrack } from "./extension-handoff.ts";
 
@@ -42,26 +43,13 @@ export function captionVideoId(sourceUrl: string | undefined): string | null {
   } catch { return null; }
 }
 
-/** Bind old content-only links before asking the extension to inspect a matching tab. */
 export function bindFreshCaptionSource(source: FreshCaptionSource): boolean {
-  const url = new URL(window.location.href);
-  const contentId = url.searchParams.get("contentId");
-  const sourceUrl = url.searchParams.get("sourceUrl");
-  if ((contentId && contentId !== source.contentId) || (sourceUrl && captionVideoId(sourceUrl) !== source.videoId)
-    || captionVideoId(source.sourceUrl) !== source.videoId) return false;
-  const canonical = `https://www.youtube.com/watch?v=${source.videoId}`;
-  if (!contentId || sourceUrl !== canonical) {
-    url.searchParams.set("contentId", source.contentId);
-    url.searchParams.set("sourceUrl", canonical);
-    window.history.replaceState(window.history.state, "", url);
-  }
-  return true;
+  return freshCaptionSourceMatches(source);
 }
-
 export function freshCaptionSourceMatches(source: FreshCaptionSource): boolean {
-  const url = new URL(window.location.href);
-  return url.searchParams.get("contentId") === source.contentId
-    && captionVideoId(url.searchParams.get("sourceUrl") ?? undefined) === source.videoId;
+  const location = parseLearningLocation(new URL(window.location.href));
+  return ["reader", "segments", "shadow"].includes(location.kind) && "source" in location
+    && location.source.contentId === source.contentId && captionVideoId(source.sourceUrl) === source.videoId;
 }
 
 /** Independent of the expiring launch handoff. It cannot create tabs, content or jobs. */
@@ -91,7 +79,7 @@ export function requestFreshCaptions(source: FreshCaptionSource, signal?: AbortS
     function onMessage(event: MessageEvent) {
       if (event.source !== window || event.origin !== window.location.origin) return;
       const data = event.data;
-      if (data?.type !== "LIBITU_FRESH_CAPTIONS_RESPONSE" || data.requestId !== requestId || data.videoId !== source.videoId) return;
+      if (data?.type !== "LIBITU_FRESH_CAPTIONS_RESPONSE" || data.version !== 4 || data.requestId !== requestId || data.videoId !== source.videoId) return;
       if (!freshCaptionSourceMatches(source)) { finish({ status: "stale" }); return; }
       if (!STATUSES.has(data.status)) return;
       const captionTrack = readCaptionTrack(data.captionTrack);
@@ -102,7 +90,7 @@ export function requestFreshCaptions(source: FreshCaptionSource, signal?: AbortS
     }
     window.addEventListener("message", onMessage);
     signal?.addEventListener("abort", abort, { once: true });
-    window.postMessage({ type: "LIBITU_FRESH_CAPTIONS_REQUEST", requestId,
+    window.postMessage({ type: "LIBITU_FRESH_CAPTIONS_REQUEST", version: 4, contentId: source.contentId, requestId,
       sourceUrl: `https://www.youtube.com/watch?v=${source.videoId}`, videoId: source.videoId, language: source.language ?? "en" }, window.location.origin);
   });
 }

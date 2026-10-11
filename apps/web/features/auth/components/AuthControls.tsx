@@ -1,5 +1,7 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { Button, ButtonLink } from "@/components/ui/button";
 
 import { Show, UserButton, useClerk } from "@clerk/nextjs";
@@ -8,12 +10,12 @@ export function AuthControls({ showProfileLink = true, buttonSize = "inherit" }:
   const clerk = useClerk();
 
   function signIn() {
-    const returnUrl = window.location.href;
+    const returnUrl = currentAuthReturnUrl();
     clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
   }
 
   function signUp() {
-    const returnUrl = window.location.href;
+    const returnUrl = currentAuthReturnUrl();
     clerk.openSignUp({ forceRedirectUrl: returnUrl, signInForceRedirectUrl: returnUrl });
   }
 

@@ -9,6 +9,8 @@ meta:
 
 This roadmap orders implementation by dependency and product risk. Each phase must produce a testable learner outcome before the next phase expands scope.
 
+Routing architecture update (2026-10-10): R3 directly enables `/practice/import`, `/practice/{contentId}`, `/segments` and `/shadow` with a shared content layout/media host. Main steps push; selection and explicit returns replace. The user removed compatibility requirements: root query learning links and old extension protocols are unsupported, entry links use new paths, continuation uses v2 only, and Web/extension 0.2.0 must update together. R4 entry work is included; R5 cleanup is implemented. See [architecture](ROUTING_AND_RESPONSIBILITY_ARCHITECTURE.md) and TASK.MD for checks and the outstanding real-toolbar capture qualification. No product phase, provider, database schema or consent boundary changes.
+
 ## Phase 0: maintain the engineering baseline
 
 Goal: keep every workspace installable and verifiable from the repository root.

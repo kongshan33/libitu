@@ -1,5 +1,7 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { DirectionLink } from "@/components/ui/direction-button";
@@ -12,7 +14,7 @@ import { Textarea, Input } from "@/components/ui/field";
 
 import { Button } from "@/components/ui/button";
 
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useEffect, useRef, useState } from "react";
@@ -22,12 +24,12 @@ import { useSavedCorpus } from "../../corpus/useSavedCorpus";
 import { createSpeakingApi, getSpeakingOptions, SpeakingApiError } from "../api/speaking-api";
 import { useLoadoutDraft } from "../hooks/useLoadoutDraft";
 import { expressionText, prepareSubmission, resolveSelection, selectionError, toggleSelection, type LoadoutDraft } from "../draft";
-import { safeReturnPath } from "../navigation";
+import { missionHref } from "../../navigation/return-location";
 import { CorpusPicker } from "./CorpusPicker";
 import { LoadoutPreview, StartIcon } from "./LoadoutPreview";
 import styles from "./Loadout.module.css";
 
-export function LoadoutPage() {
+export function LoadoutPage({ returnTo = "/", reportImport: reportOrigin = null, replaceMissing = false }: { returnTo?: string; reportImport?: string | null; replaceMissing?: boolean } = {}) {
   const { isLoaded, userId, getToken } = useAuth();
   const clerk = useClerk();
   const router = useRouter();
@@ -37,14 +39,12 @@ export function LoadoutPage() {
   const [options, setOptions] = useState<SpeakingOptions | null>(null);
   const [optionsError, setOptionsError] = useState<string | null>(null);
   const [optionsAttempt, setOptionsAttempt] = useState(0);
-  const [returnTo, setReturnTo] = useState("/");
   const [query, setQuery] = useState("");
-  const [reportImport, setReportImport] = useState<string | null>(null);
+  const reportImport = reportOrigin ? `${reportOrigin === "saved" ? "The mission was saved as an additional draft below. Your current setup is unchanged." : "Your previous mission is ready to adjust."}${replaceMissing ? " Some original items were deleted. Remove unavailable selections and choose replacements before starting." : ""}` : null;
   const [source, setSource] = useState("");
   const [submission, setSubmission] = useState<{ owner: string | null; busy: boolean; error: string | null; authError: boolean }>({ owner: null, busy: false, error: null, authError: false });
   const inFlight = useRef<AbortController | null>(null);
 
-  useEffect(() => { const params = new URL(window.location.href).searchParams; setReturnTo(safeReturnPath(params.get("returnTo"))); if (params.has("reportImport")) setReportImport(`${params.get("reportImport") === "saved" ? "The mission was saved as an additional draft below. Your current setup is unchanged." : "Your previous mission is ready to adjust."}${params.has("replaceMissing") ? " Some original items were deleted. Remove unavailable selections and choose replacements before starting." : ""}`); }, []);
   useEffect(() => {
     const controller = new AbortController();
     setOptionsError(null);
@@ -80,7 +80,7 @@ export function LoadoutPage() {
   }
   async function signIn() {
     if (!await local.update(draft)) return;
-    const returnUrl = window.location.href;
+    const returnUrl = currentAuthReturnUrl();
     clerk.openSignIn({ forceRedirectUrl: returnUrl, signUpForceRedirectUrl: returnUrl });
   }
   async function start() {
@@ -95,7 +95,7 @@ export function LoadoutPage() {
       controller.signal.throwIfAborted();
       const session = await createSpeakingApi(owner, getToken).create(prepared.submission!.request, controller.signal);
       controller.signal.throwIfAborted();
-      router.push(`/speaking/${encodeURIComponent(session.id)}?returnTo=${encodeURIComponent(returnTo)}`);
+      router.push(missionHref("session", returnTo, session.id));
     } catch (error) {
       if (!controller.signal.aborted) setSubmission({ owner, busy: false,
         error: error instanceof Error ? error.message : "Your mission could not be saved. Please retry.",

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import styles from "./BrandLogo.module.css";
 
 /** The landing wordmark, scaled by its existing header without moving the tagline. */

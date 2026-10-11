@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { installSignedInPractice } from "./helpers/signed-in-practice.mjs";
 import { createRequire } from "node:module";
@@ -91,6 +92,7 @@ try {
           if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
           requests.push(`${request.method()} ${url.pathname}`);
           assert.equal(request.method(), "GET", "timing status is computed locally without writes or analysis requests");
+          if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
           if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
           if (url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
           const row = blueprint.transcript.find((line) => url.pathname === `/api/blueprints/${job.content_id}/sentences/${line.id}/sound`);
@@ -122,8 +124,7 @@ try {
           destroy() { this.destroyed = true; this.playing = false; }
         } };
       });
-      const url = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title,
-        contentId: job.content_id, jobId: job.id })}`;
+      const url = `${origin}/practice/${job.content_id}`;
       await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60_000 });
       await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).waitFor();
       await page.waitForFunction(() => window.__activePlayer?.ready);

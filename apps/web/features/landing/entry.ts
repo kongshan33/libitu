@@ -1,14 +1,4 @@
-import { captionVideoId } from "../stage-one/api/fresh-captions.ts";
-
-export type HomeSearchParams = Record<string, string | string[] | undefined>;
-
-/** Marketing/auth parameters alone must never start a demo processing job. */
-export function hasReaderSource(params: HomeSearchParams): boolean {
-  return ["sourceUrl", "contentId", "jobId", "handoffId"].some((key) => {
-    const value = params[key];
-    return (Array.isArray(value) ? value : [value]).some((part) => Boolean(part?.trim()));
-  });
-}
+import { canonicalVideoSource, learningHref } from "../navigation/learning-location.ts";
 
 export function videoEntryHref(input: string): string | null {
   const value = input.trim();
@@ -18,10 +8,10 @@ export function videoEntryHref(input: string): string | null {
   try {
     const url = new URL(candidate);
     if (url.port) return null;
-    const videoId = captionVideoId(candidate);
-    if (!videoId) return null;
+    const sourceUrl = canonicalVideoSource(candidate);
+    if (!sourceUrl) return null;
     // Do not infer language or propagate tracking/redirect parameters from a paste.
-    return `/?${new URLSearchParams({ sourceUrl: `https://www.youtube.com/watch?v=${videoId}` })}`;
+    return learningHref({ sourceUrl });
   } catch { return null; }
 }
 

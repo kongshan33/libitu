@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mkdir } from "node:fs/promises";
-import { installLoadoutFixture, fixtureContentId, shadowBlueprint, shadowJob, loadoutOwner } from "./helpers/loadout-fixture.mjs";
+import { installLoadoutFixture, fixtureContentId, loadoutOwner } from "./helpers/loadout-fixture.mjs";
 import { installSpeakingFixture, speakingSessionId } from "./helpers/speaking-fixture.mjs";
 import { installAnalyticsFixture } from "./helpers/analytics-fixture.mjs";
 import { installProfileFixture } from "./helpers/profile-fixture.mjs";
@@ -32,8 +32,7 @@ try {
         headers: { ...route.request().headers(), accept: "*/*", "sec-fetch-dest": "empty" } }) }); }
       catch { await route.abort().catch(() => {}); }
     });
-    const source = `contentId=${fixtureContentId}&jobId=${shadowJob.id}&sourceUrl=${encodeURIComponent(shadowBlueprint.source_url)}`;
-    const routes = { landing: "/", reader: `/?${source}`, shadow: `/?${source}&stage=2&segmentId=loadout-segment&sentenceId=sentence-v2-loadout`, loadout: "/loadout", corpus: "/corpus", speaking: `/speaking/${speakingSessionId}`, analytics: `/speaking/${speakingSessionId}/analytics`, profile: "/profile", history: "/profile/history" };
+    const routes = { landing: "/", reader: `/practice/${fixtureContentId}`, shadow: `/practice/${fixtureContentId}/shadow?segmentId=loadout-segment&sentenceId=sentence-v2-loadout`, loadout: "/loadout", corpus: "/corpus", speaking: `/speaking/${speakingSessionId}`, analytics: `/speaking/${speakingSessionId}/analytics`, profile: "/profile", history: "/profile/history" };
     try {
       await page.goto(origin + routes[name], { waitUntil: "commit", timeout: 60000 });
       await page.locator('a[aria-label="Libitu home"] b').first().waitFor();

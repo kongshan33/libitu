@@ -3,15 +3,14 @@ import { createRequire } from "node:module";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fixtureContentId, fixtureRecords, installLoadoutFixture, loadoutOwner,
-  shadowBlueprint, shadowJob } from "./helpers/loadout-fixture.mjs";
+import { fixtureContentId, fixtureRecords, installLoadoutFixture, loadoutOwner } from "./helpers/loadout-fixture.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
 const origin = process.env.LIBITU_TEST_URL ?? "http://localhost:3000";
 const artifacts = await mkdtemp(join(tmpdir(), "libitu-loadout-"));
-const returnTo = `/?${new URLSearchParams({ contentId: fixtureContentId, stage: "2", segmentId: "loadout-segment" })}#practice`;
-const entry = `${origin}/loadout?${new URLSearchParams({ contentId: fixtureContentId, returnTo })}`;
+const returnTo = `/practice/${fixtureContentId}/shadow?segmentId=loadout-segment#practice`;
+const entry = `${origin}/loadout?${new URLSearchParams({ returnTo })}`;
 const structures = fixtureRecords.filter((record) => record.item.kind === "structure");
 const expressions = fixtureRecords.filter((record) => record.item.kind !== "structure");
 const requestedViewport = Number(process.env.LIBITU_LOADOUT_VIEWPORT ?? 0);
@@ -75,10 +74,12 @@ try {
       assert.equal(await page.getByRole("button", { name: `Remove ${expressions[2].item.text}`, exact: true }).count(), 1);
       await choose(page, "Source", fixtureContentId);
       assert.equal(await page.getByRole("button", { name: `Remove ${expressions[2].item.text}`, exact: true }).count(), 0);
+      await remove(page, expressions[2]).waitFor();
       assert.equal(await remove(page, expressions[2]).count(), 1, "source filtering retains preview selections");
       await page.getByLabel("Search corpus", { exact: true }).fill("");
       await choose(page, "Source", "");
       await guestStart.click();
+      await page.waitForFunction(() => window.__loadoutAuthCalls.length > 0);
       const authCall = await page.evaluate(() => window.__loadoutAuthCalls.at(-1));
       assert.equal(authCall.forceRedirectUrl, page.url());
       assert.equal(authCall.signUpForceRedirectUrl, page.url());
@@ -128,9 +129,9 @@ try {
       await page.reload({ waitUntil: "domcontentloaded" });
       await waitForSelected(page, 8);
       assert.equal(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "Agree on a revised project deadline");
-      assert.equal(await page.getByLabel("Scenario type", { exact: true }).inputValue(), "everyday");
-      assert.equal(await page.getByLabel("Difficulty", { exact: true }).inputValue(), "challenging");
-      assert.equal(await page.getByLabel("Feedback level", { exact: true }).inputValue(), "detailed");
+      assert.equal(await page.getByRole("combobox", { name: "Scenario type", exact: true }).innerText(), "Everyday life");
+      assert.equal(await page.getByRole("combobox", { name: "Difficulty", exact: true }).innerText(), "Challenging");
+      assert.equal(await page.getByRole("combobox", { name: "Feedback level", exact: true }).innerText(), "Detailed");
       assert.equal(await logic.getAttribute("aria-pressed"), "true");
       assert.equal(new URL(page.url()).searchParams.get("returnTo"), returnTo);
 
@@ -196,8 +197,7 @@ try {
 
   const tabsContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const tabA = await tabsContext.newPage();
-  const tabsReturnTo = `/?${new URLSearchParams({ sourceUrl: shadowBlueprint.source_url,
-    title: shadowBlueprint.title, contentId: fixtureContentId, jobId: shadowJob.id })}`;
+  const tabsReturnTo = `/practice/${fixtureContentId}`;
   const tabsEntry = `${origin}/loadout?${new URLSearchParams({ returnTo: tabsReturnTo })}`;
   const tabsState = await installLoadoutFixture(tabA, { origin, initialOwner: loadoutOwner, shadow: true });
   await tabA.goto(tabsEntry, { waitUntil: "domcontentloaded" });
@@ -302,6 +302,7 @@ try {
   await select(page, expressions[0]).waitFor();
   await page.getByLabel("Mission goal", { exact: true }).fill("Private account A goal");
   await select(page, expressions[0]).click();
+  await page.waitForFunction(() => document.querySelector('[data-pending]')?.getAttribute('data-pending') === 'false');
   await page.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await page.waitForFunction(() => [...document.querySelectorAll("button")]
     .some((button) => button.textContent?.includes("Start mission") && !button.disabled));
@@ -316,6 +317,7 @@ try {
   await waitForSelected(page, 0);
   assert.notEqual(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "Private account A goal");
   await page.getByLabel("Mission goal", { exact: true }).fill("A new device draft");
+  await page.waitForFunction(() => document.querySelector('[data-pending]')?.getAttribute('data-pending') === 'false');
   await page.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await page.getByRole("button", { name: "Use device draft", exact: true }).waitFor();
   await waitForSelected(page, 1);
@@ -367,8 +369,7 @@ try {
   const savedContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const savedPage = await savedContext.newPage();
   const savedState = await installLoadoutFixture(savedPage, { origin, records: [], shadow: true });
-  const readerEntry = `${origin}/?${new URLSearchParams({ sourceUrl: shadowBlueprint.source_url,
-    title: shadowBlueprint.title, contentId: fixtureContentId, jobId: shadowJob.id, learnerLevel: "B2" })}#practice`;
+  const readerEntry = `${origin}/practice/${fixtureContentId}?learnerLevel=B2#practice`;
   await savedPage.goto(readerEntry, { waitUntil: "domcontentloaded" });
   await savedPage.getByRole("button", { name: "Save to corpus", exact: true }).click();
   await savedPage.getByRole("button", { name: "Remove from corpus", exact: true }).waitFor();
@@ -378,6 +379,7 @@ try {
   assert.equal(new URL(savedPage.url()).searchParams.get("returnTo"), savedReturnUrl.pathname + savedReturnUrl.search + savedReturnUrl.hash);
   await savedPage.getByLabel("Mission goal", { exact: true }).fill("Share a fair assessment of the plan");
   await select(savedPage, expressions[0]).click();
+  await savedPage.waitForFunction(() => document.querySelector('[data-pending]')?.getAttribute('data-pending') === 'false');
   await savedPage.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await savedPage.getByRole("button", { name: "Start mission", exact: true }).click();
   await savedPage.waitForURL(/\/speaking\/[a-f0-9-]+/);
@@ -393,9 +395,7 @@ try {
   const shadowContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const shadowPage = await shadowContext.newPage();
   const shadowState = await installLoadoutFixture(shadowPage, { origin, initialOwner: loadoutOwner, shadow: true });
-  const shadowEntry = `${origin}/?${new URLSearchParams({ sourceUrl: shadowBlueprint.source_url,
-    title: shadowBlueprint.title, contentId: fixtureContentId, jobId: shadowJob.id, learnerLevel: "B2",
-    stage: "2", segmentId: "loadout-segment", sentenceId: "sentence-v2-loadout" })}#practice`;
+  const shadowEntry = `${origin}/practice/${fixtureContentId}/shadow?${new URLSearchParams({ learnerLevel: "B2", segmentId: "loadout-segment", sentenceId: "sentence-v2-loadout" })}#practice`;
   await shadowPage.goto(shadowEntry, { waitUntil: "domcontentloaded" });
   await shadowPage.getByRole("button", { name: "Record sentence", exact: true }).waitFor();
   let releasePractice;
@@ -408,7 +408,7 @@ try {
   await pendingPractice;
   await shadowPage.locator(".practice-save-banner").waitFor();
   assert.equal(shadowState.practiceRequests.length, 1, "completed take entered the save outbox");
-  await shadowPage.getByRole("link", { name: "Open loadout", exact: true }).click();
+  await shadowPage.getByRole("link", { name: "Stage 3 - Mission", exact: true }).click();
   await shadowPage.getByRole("heading", { name: "Mission loadout", exact: true }).waitFor();
   assert.equal(shadowState.practiceCompleted, 0, "the save remains pending across client route navigation");
   assert.equal(await shadowPage.evaluate(() => window.__loadoutPlayers.every((player) => player.destroyed)), true);

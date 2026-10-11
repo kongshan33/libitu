@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.schemas.analysis import BlueprintAnalysisPreview
 
@@ -29,6 +29,16 @@ class JobCreateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     content_id: str
+    retry_failed: bool | None = None
+    expected_attempt_count: int | None = Field(default=None, ge=0, strict=True)
+
+    @model_validator(mode="after")
+    def retry_condition(self) -> "JobCreateRequest":
+        if self.retry_failed is True and self.expected_attempt_count is None:
+            raise ValueError("An explicit retry requires expected_attempt_count.")
+        if self.retry_failed is not True and self.expected_attempt_count is not None:
+            raise ValueError("expected_attempt_count is only accepted for an explicit retry.")
+        return self
 
 
 class ProcessingJob(BaseModel):

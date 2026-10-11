@@ -9,7 +9,7 @@ import { replaceStageTwoLocation, STAGE_TWO_LOCATION_CHANGED } from "../features
 const contentId = "a0000000-0000-4000-8000-000000000001";
 const source = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 const updatedAt = "2026-10-02T04:00:00.000Z";
-const href = `/?${new URLSearchParams({ contentId, sourceUrl: source, stage: "2", segmentId: "segment-1", sentenceId: "sentence-2" })}`;
+const href = `/practice/${contentId}/shadow?segmentId=segment-1&sentenceId=sentence-2`;
 
 function storage() {
   const data = new Map();
@@ -21,8 +21,8 @@ test("learning destinations retain exact Shadow selection but discard job, hando
   for (const key of ["jobId", "handoffId", "transcriptText", "token", "redirect", "title", "autoplay"]) incoming.searchParams.set(key, "private-value");
   incoming.hash = "private-fragment";
   const safe = safeLearningHref(incoming.pathname + incoming.search + incoming.hash);
-  assert.equal(safe, href);
-  assert.equal(safe.includes("private"), false);
+  assert.equal(safe, null);
+  assert.equal(safeLearningHref(href), href);
   assert.equal(canonicalLearningSource("https://youtu.be/dQw4w9WgXcQ?token=private#fragment"), source);
   assert.equal(canonicalLearningSource("https://www.youtube.com/watch?v=abc123"), null);
 });
@@ -46,9 +46,9 @@ test("last learning location is isolated per account and safely optional when st
   const blocked = { getItem() { throw new Error("blocked"); }, setItem() { throw new Error("quota"); } };
   assert.equal(readLearningLocation("user_a", blocked), null);
   assert.equal(rememberLearningLocation("user_a", { href, title: "Source", updatedAt }, blocked), false);
-  local.setItem("libitu:learning-location:v1:user_b", local.getItem("libitu:learning-location:v1:user_a"));
+  local.setItem("libitu:learning-location:v2:user_b", local.getItem("libitu:learning-location:v2:user_a"));
   assert.equal(readLearningLocation("user_b", local), null);
-  local.setItem("libitu:learning-location:v1:user_a", "{broken");
+  local.setItem("libitu:learning-location:v2:user_a", "{broken");
   assert.equal(readLearningLocation("user_a", local), null);
 });
 
@@ -69,7 +69,7 @@ test("account changes cannot adopt a mounted source, while a new source starts a
 test("Shadow URL updates notify the tracker once per changed sentence, without playback", () => {
   const original = globalThis.window;
   const events = [];
-  const location = { href: "https://libitu.test/?contentId=c&jobId=j" };
+  const location = { href: "https://libitu.test/practice/a0000000-0000-4000-8000-000000000001" };
   globalThis.window = {
     location, history: { state: null, replaceState(_state, _unused, next) { location.href = String(next); } },
     dispatchEvent(event) { events.push(event.type); }
@@ -79,6 +79,6 @@ test("Shadow URL updates notify the tracker once per changed sentence, without p
     replaceStageTwoLocation({ segmentId: "segment-1", sentenceId: "sentence-2" });
     assert.deepEqual(events, [STAGE_TWO_LOCATION_CHANGED]);
     assert.equal(new URL(location.href).searchParams.get("sentenceId"), "sentence-2");
-    assert.equal(new URL(location.href).searchParams.get("jobId"), "j");
+    assert.equal(new URL(location.href).pathname, "/practice/a0000000-0000-4000-8000-000000000001/shadow");
   } finally { globalThis.window = original; }
 });

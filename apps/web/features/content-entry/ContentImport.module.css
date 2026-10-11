@@ -1,0 +1,6 @@
+.error { max-width: 640px; margin: 64px auto; padding: 24px; }
+.error h1 { margin: 0 0 16px; font-size: 24px; }
+.error p { color: var(--color-text-secondary); line-height: 1.6; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 24px; }
+.actions button { padding: 8px 16px; border: 1px solid var(--color-border-secondary); border-radius: 6px; background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; }
+.actions a { color: var(--color-text-secondary); }

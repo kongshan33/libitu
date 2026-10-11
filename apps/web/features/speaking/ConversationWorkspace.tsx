@@ -1,5 +1,7 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { DirectionLink } from "@/components/ui/direction-button";
@@ -12,21 +14,22 @@ import { Button, ButtonLink } from "@/components/ui/button";
 
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useRouteIntent, useRoutePrefetch } from "../navigation/use-route-prefetch";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowUp, Check, ChevronDown, ChevronRight, Expand, MessageSquare, Mic, MicOff, Minimize, Pause, Radio, RefreshCw, Square, Trash2, X } from "lucide-react";
 import type { SpeakingEvidence, SpeakingMessage, SpeakingWorkspace } from "@libitu/types/speaking";
-import { safeReturnPath } from "../loadout/navigation";
+import { missionHref } from "../navigation/return-location";
 import { useConversation } from "./use-conversation";
 import { validEvidence, observedItemIds } from "./evidence";
 import styles from "./Speaking.module.css";
 
-export function ConversationWorkspace({ sessionId }: { sessionId: string }) {
+export function ConversationWorkspace({ sessionId, returnTo = "/" }: { sessionId: string; returnTo?: string }) {
   const { isLoaded, userId, getToken } = useAuth();
   const clerk = useClerk();
   if (!isLoaded) return <><AppHeader active="mission" /><main className={styles.page}><ContentSkeleton label="Checking sign-in…" /></main></>;
-  if (!userId) return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.gate}><BrandLogo className={styles.logo} /><h1>Sign in to view your mission</h1><p>Your saved mission and conversation belong to your account.</p><Button variant="primary" size="inherit" className={styles.primary} onClick={() => { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in</Button></section></main></>;
-  return <OwnedConversation key={`${userId}:${sessionId}`} owner={userId} sessionId={sessionId} getToken={getToken} />;
+  if (!userId) return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.gate}><BrandLogo className={styles.logo} /><h1>Sign in to view your mission</h1><p>Your saved mission and conversation belong to your account.</p><Button variant="primary" size="inherit" className={styles.primary} onClick={() => { const url = currentAuthReturnUrl(); clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in</Button></section></main></>;
+  return <OwnedConversation key={`${userId}:${sessionId}`} owner={userId} sessionId={sessionId} returnTo={returnTo} getToken={getToken} />;
 }
 function HighlightedMessage({ message, evidence, onSelect }: { message: SpeakingMessage; evidence: SpeakingEvidence[]; onSelect: (value: SpeakingEvidence) => void }) {
   const matches = validEvidence(message, evidence);
@@ -63,8 +66,10 @@ function TrainingSidebar({ workspace, onSelect, hint, onHint, canHint }: { works
     <section className={styles.hintPanel}><h2>Need a hand?</h2>{hint ? <p>{hint}</p> : <p>Get one suggestion from your selected language.</p>}<Button variant="secondary" size="inherit" type="button" onClick={onHint} disabled={!canHint}>Get a hint</Button></section>
   </>;
 }
-function OwnedConversation({ owner, sessionId, getToken }: { owner: string; sessionId: string; getToken: () => Promise<string | null> }) {
+function OwnedConversation({ owner, sessionId, returnTo, getToken }: { owner: string; sessionId: string; returnTo: string; getToken: () => Promise<string | null> }) {
   const router = useRouter();
+  const reportIntent = useRouteIntent(missionHref("analytics", returnTo, sessionId));
+  const prefetch = useRoutePrefetch();
   const { state, controller } = useConversation(owner, sessionId, getToken);
   const [view, setView] = useState<"voice" | "chat">("voice");
   const [focused, setFocused] = useState(false);
@@ -72,9 +77,7 @@ function OwnedConversation({ owner, sessionId, getToken }: { owner: string; sess
   const [text, setText] = useState("");
   const [selectedEvidence, setSelectedEvidence] = useState<SpeakingEvidence | null>(null);
   const [confirmAction, setConfirmAction] = useState<"end" | "delete" | null>(null);
-  const [returnTo, setReturnTo] = useState("/");
   const bottom = useRef<HTMLDivElement>(null);
-  useEffect(() => { setReturnTo(safeReturnPath(new URL(window.location.href).searchParams.get("returnTo"))); }, []);
   const workspace = state.workspace;
   const ended = state.connection === "ended";
   const connected = state.connection === "connected";
@@ -86,13 +89,14 @@ function OwnedConversation({ owner, sessionId, getToken }: { owner: string; sess
   async function submit() { const value = text.trim(); if (!value || !controller || state.pending || ended) return; setView("chat"); setText(""); await controller.submit(value); }
   async function confirm() {
     if (!controller) return;
-    if (confirmAction === "delete") { if (await controller.delete()) router.replace(`/loadout?returnTo=${encodeURIComponent(returnTo)}`); }
-    else { if (await controller.end()) { setConfirmAction(null); router.push(`/speaking/${encodeURIComponent(sessionId)}/analytics`); } }
+    prefetch(confirmAction === "delete" ? missionHref("loadout", returnTo) : missionHref("analytics", returnTo, sessionId));
+    if (confirmAction === "delete") { if (await controller.delete()) router.replace(missionHref("loadout", returnTo)); }
+    else { if (await controller.end()) { setConfirmAction(null); router.push(missionHref("analytics", returnTo, sessionId)); } }
   }
   const voiceTitle = ended ? "Conversation ended" : connecting ? "Connecting…" : state.connection === "paused" ? "Conversation paused" : state.connection === "disconnected" ? "Ready to reconnect" : !connected ? "Ready when you are" : state.phase === "thinking" ? "Thinking…" : state.phase === "speaking" ? "Your partner is speaking" : state.microphone ? "Listening…" : "Microphone off";
   const voiceHelp = ended ? "Review your transcript and language evidence." : connecting ? "Preparing your conversation." : state.connection === "paused" ? "Paused while you were away. Resume when ready." : state.connection === "disconnected" ? "Your finalized transcript is saved. Reconnect when ready." : !connected ? "Start, then speak naturally. You can also type below." : state.phase === "speaking" ? "Speak to interrupt, or use Stop speaking." : state.microphone ? "Turns are detected automatically." : "Keep typing, or enable your microphone.";
   return <><AppHeader active="mission" /><main className={styles.page}><section className={`${styles.shell} ${focused ? styles.focused : ""}`} aria-label="Speaking mission">
-    <div className={styles.topbar} aria-label="Mission controls"><DirectionLink className={styles.back} href={`/loadout?returnTo=${encodeURIComponent(returnTo)}`}><ArrowLeft size={14} aria-hidden="true" /><span>Loadout</span></DirectionLink><span className={styles.topspacer} />{workspace && !ended ? <Button variant="secondary" size="inherit" type="button" className={styles.endButton} onClick={() => setConfirmAction("end")} disabled={state.busy}>End mission</Button> : null}</div>
+    <div className={styles.topbar} aria-label="Mission controls"><DirectionLink className={styles.back} href={missionHref("loadout", returnTo)}><ArrowLeft size={14} aria-hidden="true" /><span>Loadout</span></DirectionLink><span className={styles.topspacer} />{workspace && !ended ? <Button {...reportIntent} variant="secondary" size="inherit" type="button" className={styles.endButton} onClick={() => setConfirmAction("end")} disabled={state.busy}>End mission</Button> : null}</div>
     {!workspace ? <div className={styles.empty}>{state.error ? <><h1>Mission unavailable</h1><p role="alert">{state.error}</p><Button variant="primary" size="inherit" type="button" className={styles.primary} onClick={() => void controller?.load()}>Retry loading mission</Button></> : <ContentSkeleton label="Loading your saved mission…" variant="cards" />}</div> : <>
       <div className={styles.mission}><div className={styles.eyebrow}>{workspace.session.scenario_type === "workplace" ? "Workplace" : "Everyday life"} · {workspace.session.difficulty} · {workspace.session.feedback_level} feedback</div><h1>{workspace.session.goal}</h1><p>{ended ? "Saved conversation · read-only review" : "Use your selected language in a natural conversation."}</p></div>
       {workspace.session.logic_template ? <section className={styles.logic} aria-label="Conversation strategy"><div><strong>{workspace.session.logic_template.title}</strong><span>Practice guide</span></div><ol>{workspace.session.logic_template.steps.map((step, index) => <li key={`${index}:${step}`}>{index > 0 ? <ChevronRight size={12} aria-hidden="true" /> : null}<span>{step}</span></li>)}</ol></section> : null}
@@ -108,7 +112,7 @@ function OwnedConversation({ owner, sessionId, getToken }: { owner: string; sess
             </div>}
           {evidence ? <section className={styles.evidenceDetail} aria-label="Language evidence"><Button variant="ghost" size="inherit" shape="circle" type="button" className={styles.iconButton} aria-label="Close evidence" onClick={() => setSelectedEvidence(null)}><X size={14} /></Button><strong>“{evidence.quote}”</strong><p>{evidence.reason}</p><span>{evidence.match_type} match · {evidence.appropriateness === "appropriate" ? "Appropriate in this context" : evidence.appropriateness === "uncertain" ? "Context not confirmed" : "Context needs attention"} · {evidence.prompted ? "Prompted" : "Independent"}</span></section> : null}
           {!ended ? <div className={styles.composerArea}><form className={styles.composer} onSubmit={event => { event.preventDefault(); void submit(); }}><Textarea shape="pill" aria-label="Message your AI partner" placeholder="Or send a message…" value={text} rows={1} maxLength={4000} disabled={state.busy} onChange={event => setText(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void submit(); } }} /><Button variant="primary" size="inherit" shape="circle" type="submit" className={styles.sendButton} aria-label="Send message" disabled={!text.trim() || !!state.pending || connecting || state.busy || state.conflict}><ArrowUp size={18} /></Button><Button variant="record" size="inherit" shape="circle" recording={state.microphone} type="button" className={`${styles.micButton} ${state.microphone ? styles.micActive : ""}`} aria-label={state.microphone ? "Mute microphone" : "Enable microphone"} aria-pressed={state.microphone} disabled={state.microphoneBusy || connecting || state.busy || state.conflict} onClick={() => { if (!connected) void controller?.start(true); else void controller?.setMicrophone(!state.microphone); }}>{state.microphone ? <Mic size={20} /> : <MicOff size={20} />}</Button></form><div className={styles.composerHelp}><span>{text.length ? `${text.length}/4000 · Shift+Enter for a new line` : "Text is saved · audio is not retained by Libitu"}</span><Button variant="ghost" size="inherit" type="button" disabled={!connected} onClick={() => { setTrainingOpen(true); setFocused(false); controller?.hint(); }}>Need a hint?</Button></div>{!connected && view === "chat" ? <Button variant="ghost" size="inherit" type="button" className={styles.quiet} loading={connecting} loadingLabel="Connecting…" onClick={() => void controller?.start(false)} disabled={!canStart || state.conflict}><RefreshCw size={12} aria-hidden="true" />Connect for text</Button> : null}</div>
-            : <div className={styles.review}><Check size={16} aria-hidden="true" /><p>Mission complete. Review the actual transcript and evidence above.</p><ButtonLink variant="primary" size="inherit" className={styles.primary} href={`/speaking/${encodeURIComponent(sessionId)}/analytics`}>View mission report</ButtonLink><Button variant="danger" size="inherit" type="button" className={styles.deleteButton} onClick={() => setConfirmAction("delete")}><Trash2 size={13} aria-hidden="true" />Delete mission</Button></div>}
+            : <div className={styles.review}><Check size={16} aria-hidden="true" /><p>Mission complete. Review the actual transcript and evidence above.</p><ButtonLink variant="primary" size="inherit" className={styles.primary} href={missionHref("analytics", returnTo, sessionId)}>View mission report</ButtonLink><Button variant="danger" size="inherit" type="button" className={styles.deleteButton} onClick={() => setConfirmAction("delete")}><Trash2 size={13} aria-hidden="true" />Delete mission</Button></div>}
         </section>
         <aside className={`${styles.sidebar} ${trainingOpen ? styles.sidebarOpen : ""}`} aria-label="Training sidebar"><TrainingSidebar workspace={workspace} onSelect={chooseEvidence} hint={workspace.hint} onHint={() => controller?.hint()} canHint={connected} /></aside>
       </div>

@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./content-context-fixture.mjs";
 import assert from "node:assert/strict";
 
 export const loadoutOwner = "loadout-browser-a";
@@ -126,6 +127,7 @@ export async function installLoadoutFixture(page, {
       if (url.pathname === "/api/speaking/options") return route.fulfill({ headers,
         json: { logic_templates: logicTemplates, max_structures: 3, max_expressions: 5, min_items: 1 } });
       if (shadow) {
+        if (url.pathname === `/api/content/${fixtureContentId}`) return route.fulfill({ json: contentContextFixture(shadowBlueprint, shadowJob), headers });
         if (url.pathname === `/api/jobs/${shadowJob.id}`) return route.fulfill({ json: shadowJob, headers });
         if (url.pathname === `/api/blueprints/${fixtureContentId}`) return route.fulfill({ json: shadowBlueprint, headers });
         if (url.pathname.includes("/sound")) return route.fulfill({ status: 404, json: { detail: "Outside navigation fixture." }, headers });

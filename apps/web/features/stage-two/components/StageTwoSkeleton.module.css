@@ -1,0 +1,20 @@
+.practice { grid-column: 1 / -1; min-width: 0; min-height: 0; display: flex; overflow: hidden; background: var(--color-background-primary); }
+.frame { display: flex; flex-direction: column; width: 100%; min-width: 0; min-height: 0; }
+.heading, .caption, .video, .sidebar, .analysis, .timeline, .card { display: block; border-radius: 8px; background: var(--color-background-tertiary); animation: pulse 1.6s ease-in-out infinite; }
+.heading { width: min(65%, 320px); height: 24px; margin: 8px 0; }
+.title { max-width: 360px; }
+.caption { width: 65%; height: 16px; }
+.sidebar { height: 260px; margin: 20px 16px; }
+.media { padding: 24px 0; }
+.video { aspect-ratio: 16 / 9; width: min(100%, 760px); margin: 0 auto; }
+.analysis { height: 160px; }
+.picker, .preparation { padding: 24px; overflow: auto; }
+.timeline { height: 48px; margin-bottom: 24px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.card { min-height: 160px; }
+.preparation { display: grid; gap: 24px; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes pulse { 50% { opacity: .5; } }
+@media (max-width: 1023px) { .practice { overflow: visible; } .sidebar { height: 120px; } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .cards { grid-template-columns: 1fr; } .picker, .preparation { padding: 14px; } }
+@media (prefers-reduced-motion: reduce) { .heading, .caption, .video, .sidebar, .analysis, .timeline, .card { animation: none; } }

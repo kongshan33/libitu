@@ -43,7 +43,7 @@ declare global {
   }
 }
 
-type YouTubePlayerProps = {
+export type YouTubePlayerProps = {
   sourceUrl: string;
   title: string;
   onPlaybackChange(isPlaying: boolean): void;

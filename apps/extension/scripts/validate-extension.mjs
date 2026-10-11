@@ -9,7 +9,6 @@ const backgroundSource = readFileSync(join(root, manifest.background.service_wor
 
 const requiredFiles = [
   manifest.background?.service_worker,
-  "src/reference-capture.js",
   "src/buffer-capture.js",
   "src/buffer-pcm.js",
   "src/buffer-offscreen.js",
@@ -17,7 +16,7 @@ const requiredFiles = [
   "src/youtube-captions.js",
   "src/fresh-captions.js",
   "src/reference-offscreen.html",
-  "src/reference-offscreen.js",
+  "src/content-identity.js",
   ...(manifest.content_scripts ?? []).flatMap((script) => script.js ?? []),
   ...(manifest.web_accessible_resources ?? []).flatMap((group) => group.resources ?? []),
 ].filter(Boolean);

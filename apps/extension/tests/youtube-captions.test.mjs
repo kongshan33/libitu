@@ -180,20 +180,20 @@ test("DOM fallback preserves repeated segments, including identical text and tim
   assert.equal(result, "0:01\tAgain.\n0:01\tAgain.");
 });
 
-test("Stage 1 bridge forwards safe track and compatibility text together", async () => {
+test("v4 import bridge forwards safe track and transcript together", async () => {
   const code = readFileSync(new URL("../src/stage-one-bridge.js", import.meta.url), "utf8");
   let onMessage;
   const sent = [];
   const captionTrack = { version: "youtube-json3-v1", video_id: "first-video", language: "en", kind: "asr", events: [events[1]] };
   const window = {
-    location: { origin: "http://localhost:3000", search: "?handoffId=test-handoff" },
+    location: { pathname: "/practice/import", origin: "http://localhost:3000", search: "?handoffId=test-handoff" },
     addEventListener: (_type, listener) => { onMessage = listener; },
     postMessage: (message, origin) => sent.push({ message, origin })
   };
-  runInNewContext(code, { window, URLSearchParams, chrome: { runtime: {
+  runInNewContext(code, { window, URLSearchParams, crypto, chrome: { runtime: {
     sendMessage: async () => ({ transcriptText: "0:00.040\thave you", captionTrack })
   } } });
-  onMessage({ source: window, origin: window.location.origin, data: { type: "LIBITU_HANDOFF_REQUEST", handoffId: "test-handoff", requestId: "one" } });
+  onMessage({ source: window, origin: window.location.origin, data: { type: "LIBITU_HANDOFF_REQUEST", version: 4, handoffId: "test-handoff", requestId: "one" } });
   await Promise.resolve();
   assert.equal(sent[0].message.phase, "connected");
   assert.equal(sent[1].message.phase, "ready");

@@ -1,5 +1,7 @@
 "use client";
 
+import { currentAuthReturnUrl } from "@/features/navigation/return-location";
+
 import { ContentSkeleton } from "@/components/ui/ContentSkeleton";
 
 import { DirectionLink } from "@/components/ui/direction-button";
@@ -10,24 +12,26 @@ import { Button, ButtonLink } from "@/components/ui/button";
 
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useRouteIntent } from "../navigation/use-route-prefetch";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowUpRight, BookPlus, Check, ChevronRight, RefreshCw } from "lucide-react";
 import type { FeedbackDimension, FeedbackDimensionId, FeedbackReference, FeedbackRefactor, SpeakingFeedback } from "@libitu/types/speaking";
 import { createCorpusRemote } from "../corpus/corpus-api";
 import { createSpeakingApi } from "../loadout/api/speaking-api";
+import { missionHref } from "../navigation/return-location";
 import { importMissionDraft } from "../loadout/draft";
 import { createFeedbackApi } from "./api";
 import { FeedbackController, feedbackPending } from "./controller";
 import { DIMENSIONS, draftFromMission, retryMissionRequest, suggestionRecord, validReference } from "./model";
 import styles from "./Analytics.module.css";
 
-export function AnalyticsPage({ sessionId }: { sessionId: string }) {
+export function AnalyticsPage({ sessionId, returnTo = "/" }: { sessionId: string; returnTo?: string }) {
   const { isLoaded, userId, getToken } = useAuth();
   const clerk = useClerk();
   if (!isLoaded) return <><AppHeader active="mission" /><main className={styles.page}><ContentSkeleton label="Checking sign-in…" /></main></>;
-  if (!userId) return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.gate}><BrandLogo className={styles.logo} /><h1>Sign in to view your report</h1><p>Your conversation and feedback belong to your account.</p><Button variant="primary" size="inherit" className={styles.primary} onClick={() => { const url = window.location.href; clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in</Button></section></main></>;
-  return <OwnedReport key={`${userId}:${sessionId}`} owner={userId} sessionId={sessionId} getToken={getToken} />;
+  if (!userId) return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.gate}><BrandLogo className={styles.logo} /><h1>Sign in to view your report</h1><p>Your conversation and feedback belong to your account.</p><Button variant="primary" size="inherit" className={styles.primary} onClick={() => { const url = currentAuthReturnUrl(); clerk.openSignIn({ forceRedirectUrl: url, signUpForceRedirectUrl: url }); }}>Sign in</Button></section></main></>;
+  return <OwnedReport key={`${userId}:${sessionId}`} owner={userId} sessionId={sessionId} returnTo={returnTo} getToken={getToken} />;
 }
 function EvidenceLinks({ references, report, onSelect }: { references: FeedbackReference[]; report: SpeakingFeedback; onSelect: (reference: FeedbackReference) => void }) {
   const valid = references.filter(reference => validReference(reference, report.messages));
@@ -60,8 +64,9 @@ function Overview({ report }: { report: SpeakingFeedback }) {
     <text x="110" y="16" textAnchor="middle">Task fit</text><text x="187" y="96">Transfer</text><text x="110" y="190" textAnchor="middle">Scenario fit</text><text x="34" y="96" textAnchor="end">Naturalness</text>
   </svg> : <p className={styles.overviewNotice}>A complete chart appears when all four dimensions have enough evidence. Unavailable scores are left blank.</p>}<p className={styles.small}>AI assessments describe this conversation. Naturalness is based on text, not pronunciation or speech timing.</p></section>;
 }
-function OwnedReport({ owner, sessionId, getToken }: { owner: string; sessionId: string; getToken: () => Promise<string | null> }) {
+function OwnedReport({ owner, sessionId, returnTo, getToken }: { owner: string; sessionId: string; returnTo: string; getToken: () => Promise<string | null> }) {
   const router = useRouter();
+  const loadoutIntent = useRouteIntent(missionHref("loadout", returnTo));
   const [state, setState] = useState<FeedbackController["state"]>({ report: null, loading: true, error: null, errorStatus: null, pollingPaused: false });
   const controller = useRef<FeedbackController | null>(null);
   const action = useRef<AbortController | null>(null);
@@ -106,14 +111,14 @@ function OwnedReport({ owner, sessionId, getToken }: { owner: string; sessionId:
       if (adjust || imported.missing) {
         const result = await importMissionDraft(window.localStorage, owner, imported.draft, { isCurrent: () => !signal.aborted });
         signal.throwIfAborted(); if (!result) return;
-        router.push(`/loadout?reportImport=${result}${imported.missing ? "&replaceMissing=1" : ""}`); return;
+        router.push(missionHref("loadout", returnTo, undefined, { reportImport: result, replaceMissing: imported.missing > 0 })); return;
       }
       const storageKey = `libitu:mission-retry:${owner}:${sessionId}`;
       let clientId = window.sessionStorage.getItem(storageKey);
       if (!clientId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) { clientId = crypto.randomUUID(); window.sessionStorage.setItem(storageKey, clientId); }
       const session = await createSpeakingApi(owner, getToken).create(retryMissionRequest(report.session, records, clientId), signal);
       signal.throwIfAborted(); window.sessionStorage.removeItem(storageKey);
-      router.push(`/speaking/${encodeURIComponent(session.id)}`);
+      router.push(missionHref("session", returnTo, session.id));
     });
   }
   const selected = report?.result?.dimensions.find(dimension => dimension.id === activeDimension);
@@ -122,7 +127,7 @@ function OwnedReport({ owner, sessionId, getToken }: { owner: string; sessionId:
   const userNumbers = new Map(report?.messages.filter(message => message.role === "user").map((message, index) => [message.id, index + 1]));
   return <><AppHeader active="mission" /><main className={styles.page}><section className={styles.shell} aria-label="Speaking analytics">
     <div className={styles.topbar}><span className={styles.stagePill}>Stage 5 · Analytics</span></div>
-    <div className={styles.heading}><DirectionLink className={styles.back} href={`/speaking/${encodeURIComponent(sessionId)}`}><ArrowLeft size={14} aria-hidden="true" /> Conversation review</DirectionLink><div className={styles.eyebrow}>Reflect, then try again</div><h1>{report ? "Your mission report" : "Speaking report"}</h1><p>{report?.session.goal ?? "Feedback grounded in your conversation."}</p>{report ? <div className={styles.context}><span>{report.session.scenario_type === "workplace" ? "Workplace" : "Everyday life"}</span><span>{report.session.difficulty}</span>{report.session.logic_template ? <span>{report.session.logic_template.title}</span> : null}<span>{report.session.turn_count} user {report.session.turn_count === 1 ? "turn" : "turns"}</span></div> : null}</div>
+    <div className={styles.heading}><DirectionLink className={styles.back} href={missionHref("session", returnTo, sessionId)}><ArrowLeft size={14} aria-hidden="true" /> Conversation review</DirectionLink><div className={styles.eyebrow}>Reflect, then try again</div><h1>{report ? "Your mission report" : "Speaking report"}</h1><p>{report?.session.goal ?? "Feedback grounded in your conversation."}</p>{report ? <div className={styles.context}><span>{report.session.scenario_type === "workplace" ? "Workplace" : "Everyday life"}</span><span>{report.session.difficulty}</span>{report.session.logic_template ? <span>{report.session.logic_template.title}</span> : null}<span>{report.session.turn_count} user {report.session.turn_count === 1 ? "turn" : "turns"}</span></div> : null}</div>
     {state.error ? <div className={styles.statusBox} role="alert"><h2>{state.errorStatus === 404 ? "Report unavailable" : "Report not ready to show"}</h2><p>{state.error}</p>{state.errorStatus !== 404 && state.errorStatus !== 409 ? <Button variant="secondary" size="inherit" onClick={() => void controller.current?.refresh()} disabled={state.loading} loading={state.loading} loadingLabel="Loading…">Reload report</Button> : null}</div> : null}
     {!report && state.loading ? <ContentSkeleton label="Loading your saved report…" variant="cards" /> : null}
     {report ? <>
@@ -147,7 +152,7 @@ function OwnedReport({ owner, sessionId, getToken }: { owner: string; sessionId:
       </div><aside className={styles.sidebar} aria-label="Report summary and next steps">
         <Overview report={report} />
         <section><h2 className={styles.sideTitle}>Session at a glance</h2><dl className={styles.stats}><div><dt>User turns</dt><dd>{stats?.user_turns ?? report.session.turn_count}</dd></div><div><dt>Assessed turns</dt><dd>{stats?.assessed_turns ?? "—"}</dd></div><div><dt>Unconfirmed turns</dt><dd>{stats?.excluded_turns ?? "—"}</dd></div><div><dt>Average words / turn</dt><dd>{stats ? stats.average_words.toFixed(1) : "—"}</dd></div><div><dt>Expressions used</dt><dd>{stats ? `${stats.used_expressions} / ${stats.selected_expressions}` : "—"}</dd></div><div><dt>Structures used</dt><dd>{stats ? `${stats.used_structures} / ${stats.selected_structures}` : "—"}</dd></div></dl></section>
-        <section><h2 className={styles.sideTitle}>Keep the practice going</h2><div className={styles.nextSteps}><Button variant="primary" size="inherit" type="button" className={styles.primary} disabled={!!busy} loading={busy === "retry"} loadingLabel="Preparing mission…" onClick={() => void nextMission(false)}><span>Retry this mission<small>Same goal, settings and selected language</small></span><ChevronRight size={16} aria-hidden="true" /></Button><Button variant="secondary" size="inherit" type="button" disabled={!!busy} loading={busy === "adjust"} loadingLabel="Preparing loadout…" onClick={() => void nextMission(true)}><span>Adjust loadout<small>Save this setup without replacing your draft</small></span><ChevronRight size={16} aria-hidden="true" /></Button><ButtonLink variant="secondary" size="inherit" href="/loadout"><span>New mission<small>Open mission setup</small></span><ChevronRight size={16} aria-hidden="true" /></ButtonLink></div>{actionError ? <p className={styles.error} role="alert">{actionError}</p> : null}</section>
+        <section><h2 className={styles.sideTitle}>Keep the practice going</h2><div className={styles.nextSteps}><Button variant="primary" size="inherit" type="button" className={styles.primary} disabled={!!busy} loading={busy === "retry"} loadingLabel="Preparing mission…" onClick={() => void nextMission(false)}><span>Retry this mission<small>Same goal, settings and selected language</small></span><ChevronRight size={16} aria-hidden="true" /></Button><Button {...loadoutIntent} variant="secondary" size="inherit" type="button" disabled={!!busy} loading={busy === "adjust"} loadingLabel="Preparing loadout…" onClick={() => void nextMission(true)}><span>Adjust loadout<small>Save this setup without replacing your draft</small></span><ChevronRight size={16} aria-hidden="true" /></Button><ButtonLink variant="secondary" size="inherit" href="/loadout"><span>New mission<small>Open mission setup</small></span><ChevronRight size={16} aria-hidden="true" /></ButtonLink></div>{actionError ? <p className={styles.error} role="alert">{actionError}</p> : null}</section>
         <p className={styles.small}>This report stays linked to the original mission. Starting again creates a separate conversation.</p>
       </aside></div>
     </> : null}

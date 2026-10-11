@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/field";
 
 import { Button } from "@/components/ui/button";
 
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
 import { useEffect, useRef, useState } from "react";
 import { X, ExternalLink } from "lucide-react";
 import type { CorpusSelectionAnalysis, CorpusSelectionContext, FunctionalTag } from "@libitu/types/stage-one";

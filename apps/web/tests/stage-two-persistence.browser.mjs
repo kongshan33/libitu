@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { mkdtemp } from "node:fs/promises";
@@ -22,8 +23,7 @@ const blueprint = { id: job.blueprint_id, content_id: content, title: "Save your
   })),
   segments: [{ id: "practice-segment", sequence: 1, title: "Opening", summary: "Practice the opening.",
     start_ms: 1000, end_ms: 7000, transcript_start_index: 0, transcript_end_index: 2, phonology_tags: [], recommended: true }] };
-const entry = `${origin}/?${new URLSearchParams({ sourceUrl: blueprint.source_url, title: blueprint.title, contentId: content,
-  jobId: job.id, learnerLevel: "B2", stage: "2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
+const entry = `${origin}/practice/${content}/shadow?${new URLSearchParams({ learnerLevel: "B2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
 
 // Test-only Clerk resource emitter: exercises the real React auth boundary and return
 // options without credentials. It does not establish hosted Clerk/OAuth correctness.
@@ -83,6 +83,7 @@ try {
         "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS" };
       if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
       if (url.pathname.startsWith("/api/")) {
+        if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
         if (url.pathname === `/api/blueprints/${content}`) return route.fulfill({ json: blueprint, headers });
         if (url.pathname.includes("/sound")) return route.fulfill({ status: 404, json: { detail: "Not part of persistence fixture" }, headers });

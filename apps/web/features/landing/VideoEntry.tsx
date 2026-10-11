@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/field";
 import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Link2 } from "lucide-react";
+import { useRouteIntent } from "../navigation/use-route-prefetch";
 import { videoEntryHref } from "./entry";
 import styles from "./LandingPage.module.css";
 
@@ -17,6 +18,7 @@ export function VideoEntry() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
+  const routeIntent = useRouteIntent(videoEntryHref(value));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -54,7 +56,7 @@ export function VideoEntry() {
           value={value} onChange={(event) => changeValue(event.target.value)}
           aria-invalid={Boolean(error)} aria-describedby={`video-help${error ? " video-error" : ""}`} />
       </div>
-      <DirectionButton variant="primary" className={styles.primaryButton} type="submit" loading={pending} loadingLabel="Opening video…">
+      <DirectionButton {...routeIntent} variant="primary" className={styles.primaryButton} type="submit" loading={pending} loadingLabel="Opening video…">
         Analyze video<ArrowRight size={17} aria-hidden="true" />
       </DirectionButton>
     </div>

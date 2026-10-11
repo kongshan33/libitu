@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { installLoadoutFixture, loadoutOwner, fixtureContentId, shadowJob, shadowBlueprint } from "./helpers/loadout-fixture.mjs";
+import { installLoadoutFixture, loadoutOwner, fixtureContentId } from "./helpers/loadout-fixture.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
@@ -80,8 +80,8 @@ for (const width of process.env.LIBITU_BUTTON_WIDTH ? [Number(process.env.LIBITU
     await dialog.getByRole("button", { name: "Close corpus detail", exact: true }).click();
     assert.equal(await page.getByRole("button", { name: "All items", exact: true }).getAttribute("data-variant"), null, "selection controls are not action buttons");
 
-    const query = new URLSearchParams({ contentId: fixtureContentId, jobId: shadowJob.id, sourceUrl: shadowBlueprint.source_url, stage: "2", segmentId: "loadout-segment", sentenceId: "sentence-v2-loadout" });
-    await page.goto(`${origin}/?${query}`, { waitUntil: "commit", timeout: 60000 });
+    const query = new URLSearchParams({ segmentId: "loadout-segment", sentenceId: "sentence-v2-loadout" });
+    await page.goto(`${origin}/practice/${fixtureContentId}/shadow?${query}`, { waitUntil: "commit", timeout: 60000 });
     console.log(`Checking ${width}: recording`);
     const record = page.getByRole("button", { name: "Record sentence", exact: true });
     await record.waitFor(); assert.equal(await color(record), "rgb(26, 26, 26)");

@@ -1,0 +1,93 @@
+[
+  {
+    "name": "landing",
+    "href": "/",
+    "kind": "landing"
+  },
+  {
+    "name": "root learning removed",
+    "href": "/?contentId=old&stage=2",
+    "kind": "landing"
+  },
+  {
+    "name": "import",
+    "href": "/practice/import?sourceUrl=https%3A%2F%2Fyoutu.be%2Fabcdefghijk",
+    "kind": "import",
+    "sourceUrl": "https://www.youtube.com/watch?v=abcdefghijk"
+  },
+  {
+    "name": "reader",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001",
+    "kind": "reader",
+    "contentId": "a0000000-0000-4000-8000-000000000001"
+  },
+  {
+    "name": "picker",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/segments",
+    "kind": "segments"
+  },
+  {
+    "name": "prepare",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/segments?segmentId=s&step=prepare",
+    "kind": "segments",
+    "segmentId": "s"
+  },
+  {
+    "name": "shadow",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/shadow?segmentId=s&sentenceId=n&learnerLevel=B2",
+    "kind": "shadow",
+    "learnerLevel": "B2",
+    "segmentId": "s",
+    "sentenceId": "n"
+  },
+  {
+    "name": "missing segment",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/shadow",
+    "kind": "invalid"
+  },
+  {
+    "name": "bad step",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/segments?step=wrong",
+    "kind": "invalid"
+  },
+  {
+    "name": "duplicate",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/shadow?segmentId=a&segmentId=b",
+    "kind": "invalid"
+  },
+  {
+    "name": "metadata",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001?sourceUrl=bad",
+    "kind": "invalid"
+  },
+  {
+    "name": "legacy level",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001?level=B2",
+    "kind": "invalid"
+  },
+  {
+    "name": "bad level",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001?learnerLevel=Z1",
+    "kind": "invalid"
+  },
+  {
+    "name": "bad encoding",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001?learnerLevel=%ZZ",
+    "kind": "invalid"
+  },
+  {
+    "name": "bad UTF8",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001?learnerLevel=%EF%BF%BD",
+    "kind": "invalid"
+  },
+  {
+    "name": "unsupported path",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/other",
+    "kind": "invalid"
+  },
+  {
+    "name": "bad id",
+    "href": "/practice/a0000000-0000-4000-8000-000000000001/shadow?segmentId=%2Fbad",
+    "kind": "invalid"
+  }
+]

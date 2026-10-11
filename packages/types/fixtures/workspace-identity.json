@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Reader",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001",
+    "contentId": "a0000000-0000-4000-8000-000000000001"
+  },
+  {
+    "name": "picker",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001/segments",
+    "contentId": "a0000000-0000-4000-8000-000000000001"
+  },
+  {
+    "name": "prepare",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001/segments?segmentId=s&step=prepare",
+    "contentId": "a0000000-0000-4000-8000-000000000001"
+  },
+  {
+    "name": "Shadow selection",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001/shadow?segmentId=s&sentenceId=n",
+    "contentId": "a0000000-0000-4000-8000-000000000001"
+  },
+  {
+    "name": "display params",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001?learnerLevel=B2&returnTo=%2Fprofile#sound",
+    "contentId": "a0000000-0000-4000-8000-000000000001"
+  },
+  {
+    "name": "root",
+    "url": "http://localhost:3000/?contentId=a0000000-0000-4000-8000-000000000001",
+    "contentId": null
+  },
+  {
+    "name": "import",
+    "url": "http://localhost:3000/practice/import?sourceUrl=video",
+    "contentId": null
+  },
+  {
+    "name": "foreign",
+    "url": "http://127.0.0.1:3000/practice/a0000000-0000-4000-8000-000000000001",
+    "contentId": null
+  },
+  {
+    "name": "wrong port",
+    "url": "http://localhost:3001/practice/a0000000-0000-4000-8000-000000000001",
+    "contentId": null
+  },
+  {
+    "name": "credentials",
+    "url": "http://user@localhost:3000/practice/a0000000-0000-4000-8000-000000000001",
+    "contentId": null
+  },
+  {
+    "name": "arbitrary child",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001/settings",
+    "contentId": null
+  },
+  {
+    "name": "bad ID",
+    "url": "http://localhost:3000/practice/content-one",
+    "contentId": null
+  },
+  {
+    "name": "encoded slash",
+    "url": "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001%2Fshadow",
+    "contentId": null
+  }
+]

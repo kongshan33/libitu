@@ -4,7 +4,7 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { installProfileFixture, otherProfileOwner, profileContentId,
-  profileHistory, profileOwner, profileSessionId, profileSourceUrl } from "./helpers/profile-fixture.mjs";
+  profileHistory, profileOwner, profileSessionId } from "./helpers/profile-fixture.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
@@ -82,12 +82,11 @@ try {
 
       const resumeLink = page.locator(`a[href^="/speaking/${profileSessionId}"]`).first();
       assert.ok(await resumeLink.count(), "unfinished Mission has a recovery destination");
-      const sourceLink = page.locator(`a[href*="contentId=${profileContentId}"]`).first();
+      const sourceLink = page.locator(`a[href^="/practice/${profileContentId}"]`).first();
       assert.ok(await sourceLink.count(), "saved source has a valid recovery destination");
       const sourceDestination = new URL(await sourceLink.getAttribute("href"), origin);
-      assert.equal(sourceDestination.searchParams.get("contentId"), profileContentId);
-      assert.equal(sourceDestination.searchParams.get("sourceUrl"), profileSourceUrl,
-        "server history includes the matching video rather than a fallback demo player");
+      assert.equal(sourceDestination.pathname, `/practice/${profileContentId}`);
+      assert.equal(sourceDestination.search, "", "content metadata is resolved by the content service");
       await layout(page, `profile-${viewport.width}`);
 
       await page.goto(`${origin}/profile/history`, { waitUntil: "domcontentloaded" });
@@ -100,8 +99,8 @@ try {
         "failed pagination retains previously loaded records");
       await page.getByRole("button", { name: "Retry", exact: true }).click();
       await page.getByText(profileHistory[22].title, { exact: true }).waitFor();
-      assert.equal(await page.getByRole("link", { name: new RegExp(profileHistory[22].title) }).count(), 0,
-        "a historical take without its source URL never links to a different video");
+      assert.equal(await page.getByRole("link", { name: new RegExp(profileHistory[22].title) }).getAttribute("href"), `/practice/${profileContentId}`,
+        "a historical take resolves its source by content ID even without display metadata");
       assert.equal(await more.count(), 0, "history stops at its final server page");
       assert.deepEqual(state.requests.filter((request) => request.path === "/api/profile/history").map((request) => Number(request.query.offset ?? 0)), [0, 20, 20]);
       assert.equal(await page.getByText(profileHistory[0].title, { exact: true }).count(), 1, "pagination appends without duplicating records");
@@ -195,10 +194,9 @@ try {
   const locationContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const locationPage = await locationContext.newPage();
   const locationState = await installProfileFixture(locationPage, { origin });
-  const savedHref = `/?${new URLSearchParams({ contentId: profileContentId, sourceUrl: profileSourceUrl,
-    stage: "2", segmentId: "segment-one", sentenceId: "sentence-three" })}`;
+  const savedHref = `/practice/${profileContentId}/shadow?${new URLSearchParams({ segmentId: "segment-one", sentenceId: "sentence-three" })}`;
   await locationPage.addInitScript(({ owner, href }) => {
-    localStorage.setItem(`libitu:learning-location:v1:${owner}`, JSON.stringify({ version: 1, owner,
+    localStorage.setItem(`libitu:learning-location:v2:${owner}`, JSON.stringify({ version: 2, owner,
       href, title: "The source I last visited", updatedAt: "2026-10-02T04:00:00Z" }));
   }, { owner: profileOwner, href: savedHref });
   await locationPage.goto(`${origin}/profile`, { waitUntil: "domcontentloaded" });

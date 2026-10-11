@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/field";
 
 import { Button } from "@/components/ui/button";
 
-import Link from "next/link";
+import Link from "@/components/ui/PrefetchLink";
+import { useRouteIntent } from "../navigation/use-route-prefetch";
 import { useRouter } from "next/navigation";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useDeferredValue, useMemo, useState } from "react";
@@ -35,6 +36,7 @@ function LibraryContent({ owner }: { owner: string | null }) {
   const corpus = useSavedCorpus();
   const clerk = useClerk();
   const router = useRouter();
+  const loadoutIntent = useRouteIntent("/loadout?returnTo=%2Fcorpus");
   const [filters, setFilters] = useState<LibraryFilters>(emptyFilters);
   const [sort, setSort] = useState<LibrarySort>("recent");
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -100,7 +102,7 @@ function LibraryContent({ owner }: { owner: string | null }) {
         </article>)}
       </div>
     </section>
-    {selectedKeys.length ? <div className={styles.tray} aria-label="Selected corpus actions"><div><strong>{selectedKeys.length} selected</strong><small>Loadout: up to 3 structures + 5 expressions</small></div><Button variant="secondary" size="inherit" type="button" disabled={adding} onClick={() => { setSelected([]); setMessage(null); }}>Clear selection</Button><DirectionButton variant="primary" type="button" className={styles.primary} disabled={disabled} loading={adding} loadingLabel="Saving…" onClick={() => void addToLoadout()}>Add to Loadout<ArrowRight size={15} /></DirectionButton>{message ? <p role="alert">{message} <Link href="/loadout?returnTo=%2Fcorpus">Open Loadout</Link></p> : null}</div> : null}
+    {selectedKeys.length ? <div className={styles.tray} aria-label="Selected corpus actions"><div><strong>{selectedKeys.length} selected</strong><small>Loadout: up to 3 structures + 5 expressions</small></div><Button variant="secondary" size="inherit" type="button" disabled={adding} onClick={() => { setSelected([]); setMessage(null); }}>Clear selection</Button><DirectionButton {...loadoutIntent} variant="primary" type="button" className={styles.primary} disabled={disabled} loading={adding} loadingLabel="Saving…" onClick={() => void addToLoadout()}>Add to Loadout<ArrowRight size={15} /></DirectionButton>{message ? <p role="alert">{message} <Link href="/loadout?returnTo=%2Fcorpus">Open Loadout</Link></p> : null}</div> : null}
     {activeRecord && active ? <CorpusItemDialog key={active.key} record={activeRecord} initialEdit={active.edit} busy={corpus.busy} error={corpus.error} onClose={() => setActive(null)} onUpdate={corpus.update} onRemove={corpus.remove} onHydrate={corpus.hydrate} /> : null}
   </div>;
 }

@@ -32,14 +32,10 @@ test("profile uses no-store and sanitizes persistence failures", async (t) => {
 });
 
 test("history retains a canonical source for old blueprints and never navigates to an arbitrary host", () => {
-  const href = profileSourceHref("source-1", "https://youtu.be/abcdef12345?secret=discarded");
-  const url = new URL(href, "https://libitu.local");
-  assert.equal(url.pathname, "/");
-  assert.equal(url.searchParams.get("contentId"), "source-1");
-  assert.equal(url.searchParams.get("sourceUrl"), "https://www.youtube.com/watch?v=abcdef12345");
-  assert.equal(url.searchParams.has("stage"), false, "historical segment identity is not invented");
-  assert.equal(profileSourceHref("source-1", "https://untrusted.example/watch?v=abcdef12345"), null);
-  assert.equal(historyHref({ kind: "shadowing", content_id: "source-1", source_url: null }), null);
+  const href = profileSourceHref("a0000000-0000-4000-8000-000000000001", "https://untrusted.example/watch?v=abcdef12345");
+  assert.equal(href, "/practice/a0000000-0000-4000-8000-000000000001");
+  assert.equal(profileSourceHref("invalid-id", "https://youtu.be/abcdef12345"), null);
+  assert.equal(historyHref({ kind: "shadowing", content_id: "a0000000-0000-4000-8000-000000000001", source_url: null }), href);
   assert.equal(historyHref({ kind: "speaking", session_id: "session-1" }), "/speaking/session-1?returnTo=%2Fprofile");
 });
 

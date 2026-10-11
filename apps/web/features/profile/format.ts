@@ -1,5 +1,5 @@
 import type { HistoryItem } from "./types";
-import { canonicalLearningSource } from "./learning-location.ts";
+import { CONTENT_ID, learningHref } from "../navigation/learning-location.ts";
 
 export function recordedDuration(milliseconds: number): string {
   const seconds = Math.floor(Math.max(0, milliseconds) / 1000);
@@ -30,9 +30,9 @@ export function historyAction(item: HistoryItem): string {
   return report ? ({ queued: "Report queued", processing: "Report in progress", failed: "Report needs retry", insufficient_data: "Limited evidence", partial: "Partial report", ready: "View report" })[report.status] : "View report";
 }
 
-export function profileSourceHref(contentId: string, sourceUrl: string | null | undefined): string | null {
-  const source = canonicalLearningSource(sourceUrl);
-  return source ? `/?${new URLSearchParams({ contentId, sourceUrl: source })}` : null;
+export function profileSourceHref(contentId: string, _sourceUrl: string | null | undefined): string | null {
+  void _sourceUrl; // Display metadata cannot override the server-owned content source.
+  return CONTENT_ID.test(contentId) ? learningHref({ contentId }) : null;
 }
 
 export function activityDate(value: string, month = false): string {

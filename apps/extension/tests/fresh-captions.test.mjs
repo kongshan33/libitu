@@ -1,3 +1,4 @@
+import { contentIdAt, contentIdentityMatches, currentContentDocumentMatches } from "../src/content-identity.js";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
@@ -6,15 +7,15 @@ import { setImmediate as nextTurn } from "node:timers/promises";
 import { readCurrentYouTubeCaptionTrack } from "../src/youtube-captions.js";
 
 const source = readFileSync(new URL("../src/fresh-captions.js", import.meta.url), "utf8")
-  .replace('import { readCurrentYouTubeCaptionTrack } from "./youtube-captions.js";', "").replace(/^export /gm, "");
+  .replace('import { readCurrentYouTubeCaptionTrack } from "./youtube-captions.js";', "").replace(/^import .*;$/gm, "").replace(/^export /gm, "");
 const videoId = "first-video";
 const sourceUrl = `https://www.youtube.com/watch?v=${videoId}`;
-const webUrl = `http://localhost:3000/?contentId=old-content&sourceUrl=${encodeURIComponent(sourceUrl)}`;
+const webUrl = "http://localhost:3000/practice/a0000000-0000-4000-8000-000000000001";
 const track = {
   version: "youtube-json3-v1", video_id: videoId, language: "en", kind: "asr",
   events: [{ tStartMs: 1040, dDurationMs: 1500, segs: [{ utf8: "We" }, { utf8: " can.", tOffsetMs: 300 }] }]
 };
-const request = { type: "LIBITU_READ_FRESH_CAPTIONS", requestId: "fresh-one", sourceUrl, videoId, language: "en" };
+const request = { type: "LIBITU_READ_FRESH_CAPTIONS", version: 4, contentId: "a0000000-0000-4000-8000-000000000001", documentNonce: "document-nonce-12345", requestId: "fresh-one", sourceUrl, videoId, language: "en" };
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 function harness({ quickTimeout = false } = {}) {
@@ -22,9 +23,10 @@ function harness({ quickTimeout = false } = {}) {
   const webTab = { id: 2, windowId: 1, active: true, url: webUrl };
   const tabs = new Map([[1, sourceTab], [2, webTab]]);
   const calls = [];
-  const state = { result: Promise.resolve({ captionTrack: structuredClone(track) }), query: undefined };
+  const state = { result: Promise.resolve({ captionTrack: structuredClone(track) }), query: undefined, documentId: "web-document" };
   const chrome = {
     runtime: { id: "test-extension" },
+    webNavigation: { getFrame: async () => ({ url: tabs.get(2)?.url, documentId: state.documentId }) },
     tabs: {
       get: async (id) => { if (!tabs.has(id)) throw new Error("Closed tab"); return tabs.get(id); },
       query: async (options) => { calls.push(["query", options]); return state.query ?? [...tabs.values()]; }
@@ -32,7 +34,7 @@ function harness({ quickTimeout = false } = {}) {
     scripting: { executeScript: async (options) => { calls.push(["inject", options]); return [{ result: await state.result }]; } }
   };
   const reader = runInNewContext(`${source}\ncreateFreshCaptionReader(chrome);`, {
-    chrome, URL, TextEncoder, readCurrentYouTubeCaptionTrack, clearTimeout,
+    chrome, URL, TextEncoder, contentIdAt, contentIdentityMatches, currentContentDocumentMatches, verifyContentSource: async () => true, readCurrentYouTubeCaptionTrack, clearTimeout,
     setTimeout: (callback, milliseconds) => setTimeout(callback, quickTimeout ? Math.min(milliseconds, 10) : milliseconds)
   });
   const sender = { id: chrome.runtime.id, frameId: 0, documentId: "web-document", tab: webTab, url: webTab.url, origin: "http://localhost:3000" };
@@ -61,7 +63,6 @@ test("fresh requests reject unrelated senders, missing URL binding and cross-vid
   for (const variant of [
     { sender: { frameId: 1 } }, { sender: { id: "another-extension" } }, { sender: { documentId: "" } },
     { sender: { origin: "https://example.com" } }, { sender: { url: webUrl.replace("localhost", "example.com") } },
-    { sender: { url: "http://localhost:3000/?contentId=old-content" } },
     { sender: { tab: { id: 2, url: "http://localhost:3000/?contentId=old-content" } } },
     { request: { sourceUrl: "https://www.youtube.com/watch?v=other-video" } },
     { request: { videoId: "other-video" } }, { request: { language: "fr" } },
@@ -178,7 +179,7 @@ function bridgeHarness({ quickTimeout = false } = {}) {
   const window = { location: { href: webUrl, origin: "http://localhost:3000", search: new URL(webUrl).search },
     addEventListener: (_type, listener) => { onMessage = listener; }, postMessage: (reply) => replies.push(reply) };
   window.top = window;
-  runInNewContext(code, { window, URL, URLSearchParams, clearTimeout,
+  runInNewContext(code, { window, URL, URLSearchParams, clearTimeout, crypto,
     setTimeout: (callback, milliseconds) => setTimeout(callback, quickTimeout ? Math.min(milliseconds, 10) : milliseconds),
     chrome: { runtime: { sendMessage: (message) => { calls.push(message); return state.result; } } } });
   const dispatch = (data = { ...request, type: "LIBITU_FRESH_CAPTIONS_REQUEST" }, event = {}) =>
@@ -194,7 +195,7 @@ test("the top-frame fresh bridge works without handoffId and forwards only proto
   assert.equal(h.calls.length, 1);
   assert.equal(h.calls[0].type, "LIBITU_READ_FRESH_CAPTIONS");
   assert.equal(h.calls[0].handoffId, undefined);
-  assert.deepEqual(clone(h.replies[0]), { type: "LIBITU_FRESH_CAPTIONS_RESPONSE", requestId: request.requestId,
+  assert.deepEqual(clone(h.replies[0]), { type: "LIBITU_FRESH_CAPTIONS_RESPONSE", version: 4, requestId: request.requestId,
     videoId, status: "ready", captionTrack: track });
 });
 
@@ -246,4 +247,14 @@ test("fresh bridge preserves observer reasons and labels channel rejection as co
   h.dispatch();
   await nextTurn();
   assert.equal(h.replies.at(-1).status, "bridge_error");
+});
+
+test("fresh captions follow import navigation but reject a replaced requesting document", async () => {
+  const h = harness();
+  const imported = { ...h.sender, url: "http://localhost:3000/practice/import" };
+  assert.equal((await h.reader.read(request, imported)).status, "ready");
+  h.state.documentId = "replacement-document";
+  const previousCalls = h.calls.length;
+  assert.equal((await h.reader.read(request, imported)).status, "stale");
+  assert.equal(h.calls.length, previousCalls, "replaced documents cannot initiate caption reads");
 });

@@ -1,3 +1,4 @@
+import { contentContextFixture } from "./helpers/content-context-fixture.mjs";
 import assert from "node:assert/strict";
 import { installSignedInPractice } from "./helpers/signed-in-practice.mjs";
 import { createRequire } from "node:module";
@@ -6,7 +7,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
 const origin = process.env.LIBITU_TEST_URL ?? "http://localhost:3000";
 const videoId = "YIokM_4i1i0";
-const job = { id: "recovery-job", content_id: "recovery-content", status: "ready", blueprint_id: "recovery-blueprint",
+const job = { id: "recovery-job", content_id: "a0000000-0000-4000-8000-000000000005", status: "ready", blueprint_id: "recovery-blueprint",
   processing_stage: "completed", analysis_version: "mvp-v9", analysis_preview: null, error_message: null };
 const blueprint = {
   id: job.blueprint_id, content_id: job.content_id, source_url: `https://youtu.be/${videoId}?si=cached-share`,
@@ -46,7 +47,7 @@ const observerFailures = [
 async function reply(page, status = "ready") {
   await page.evaluate(({ status, track }) => {
     const request = window.__freshRequests.at(-1);
-    window.postMessage({ type: "LIBITU_FRESH_CAPTIONS_RESPONSE", requestId: request.requestId,
+    window.postMessage({ type: "LIBITU_FRESH_CAPTIONS_RESPONSE", version: 4, requestId: request.requestId,
       videoId: request.videoId, status, ...(status === "ready" ? { captionTrack: track } : {}) }, location.origin);
   }, { status, track });
 }
@@ -69,6 +70,7 @@ try {
         if (url.pathname.startsWith("/api/")) {
           if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
           requests.push(`${request.method()} ${url.pathname}`);
+          if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
           if (url.pathname === `/api/jobs/${job.id}` && request.method() === "GET") return route.fulfill({ json: job, headers });
           if (url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
           if (url.pathname === `/api/content/${job.content_id}/caption-timing`) {
@@ -98,16 +100,7 @@ try {
         navigator.mediaDevices.getUserMedia = () => { window.__microphoneRequests++; return new Promise(() => {}); };
         window.addEventListener("message", ({ data }) => {
           if (data?.type === "LIBITU_FRESH_CAPTIONS_REQUEST") window.__freshRequests.push(data);
-          if (data?.type !== "LIBITU_REFERENCE_REQUEST") return;
-          window.__referenceRequests.push(data);
-          const base = { type: "LIBITU_REFERENCE_EVENT", version: 2, sessionId: data.sessionId, requestId: data.requestId };
-          if (data.action === "ping") window.postMessage({ ...base, status: "available" }, location.origin);
-          if (data.action === "arm") {
-            window.__referenceSession = data.sessionId;
-            window.postMessage({ ...base, status: "armed" }, location.origin);
-            window.postMessage({ ...base, status: "enabled" }, location.origin);
-          }
-          if (data.action === "close") window.__referenceSession = null;
+          if (data?.type === "LIBITU_REFERENCE_REQUEST") window.__referenceRequests.push(data);
         });
         window.YT = { Player: class {
           time = 0; rate = 1; playing = false; ready = false;
@@ -124,13 +117,13 @@ try {
           destroy() { this.destroyed = true; this.playing = false; }
         } };
       });
-      const params = new URLSearchParams({ contentId: job.content_id, jobId: job.id, learnerLevel: "B2", sourceUrl: blueprint.source_url });
+      const params = new URLSearchParams({ learnerLevel: "B2" });
       if (scenario === "practice-pending") {
-        params.set("stage", "2"); params.set("segmentId", blueprint.segments[0].id); params.set("sentenceId", blueprint.transcript[0].id);
+        params.set("segmentId", blueprint.segments[0].id); params.set("sentenceId", blueprint.transcript[0].id);
       }
-      await page.goto(`${origin}/?${params}`, { waitUntil: "domcontentloaded", timeout: 60_000 });
+      await page.goto(`${origin}/practice/${job.content_id}${scenario === "practice-pending" ? "/shadow" : ""}?${params}`, { waitUntil: "domcontentloaded", timeout: 60_000 });
       await page.waitForFunction(() => window.__freshRequests.length === 1 && window.__activePlayer?.ready);
-      assert.equal(new URL(page.url()).searchParams.get("sourceUrl"), `https://www.youtube.com/watch?v=${videoId}`);
+      assert.equal(new URL(page.url()).searchParams.get("sourceUrl"), null);
       assert.equal(await page.evaluate(() => window.__freshRequests[0].sourceUrl), `https://www.youtube.com/watch?v=${videoId}`);
       const iframe = await page.locator(".youtube-player iframe").elementHandle();
       assert.equal(updateRoute, undefined, "cached content appears before the extension replies");
@@ -204,10 +197,10 @@ try {
         await page.getByRole("button", { name: "Retry word timing", exact: true }).click();
         await page.waitForFunction(() => window.__freshRequests.length === 2);
         // Same video but a new content URL must invalidate the in-flight recovery.
-        await page.evaluate(() => { const url = new URL(location.href); url.searchParams.set("contentId", "other-content"); history.replaceState(history.state, "", url); });
+        await page.evaluate(() => { const url = new URL(location.href); url.searchParams.set("contentId", "other-content"); history.replaceState(null, "", url); });
         await reply(page);
-        await page.getByRole("button", { name: "Retry word timing", exact: true }).waitFor();
-        assert.match(await page.locator(".caption-timing-recovery").innerText(), /source changed/);
+        await page.locator(".stage-status[role='alert']").waitFor();
+        assert.match(await page.locator(".stage-status").innerText(), /metadata belongs/);
         assert.equal(updateRoute, undefined);
         assert.ok(!requests.some((request) => request.startsWith("POST")), "absent/stale extension replies never trigger an API write");
       }
