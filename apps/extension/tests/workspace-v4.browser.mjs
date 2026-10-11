@@ -113,6 +113,9 @@ try {
     }, contentId);
     await page.waitForFunction(() => events.filter(event => event.status === 'armed').length === 2);
     assert.deepEqual(await worker.evaluate(async () => (await chrome.storage.session.get('libituBufferedSession')).libituBufferedSession), session);
+    await page.evaluate(id => history.replaceState(null, '', `/practice/${id}/shadow?segmentId=s&sentenceId=next`), contentId);
+    await page.waitForTimeout(300);
+    assert.deepEqual(await worker.evaluate(async () => (await chrome.storage.session.get('libituBufferedSession')).libituBufferedSession), session);
   }
   await page.reload();
   await page.waitForFunction(()=>events.length===0);

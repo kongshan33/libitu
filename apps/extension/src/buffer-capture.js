@@ -236,12 +236,10 @@ export function installBufferedCapture(chromeApi, clock = {
   });
   chromeApi.tabs.onUpdated.addListener((tabId, change) => {
     if (current?.tabId !== tabId) return;
-    // A same-document Stage 1 → Stage 2 history update can be reported with a
-    // transient loading status. Keep the source-owned stream alive while the
-    // normalized Libitu URL is unchanged; a real reload without a URL still
-    // closes the document-bound session.
+    // A loading status does not identify a new document. History updates can
+    // report loading while the same content/document still owns the capture.
+    // Full reloads are released by pagehide and webNavigation.onCommitted.
     if (change.url && bufferedSourceUrl(change.url) !== current.url) void finish(current);
-    else if (!change.url && change.status === "loading") void finish(current);
   });
   chromeApi.webNavigation?.onCommitted.addListener((details) => {
     if (current?.tabId === details.tabId && details.frameId === 0 && details.documentId !== current.documentId) void finish(current);

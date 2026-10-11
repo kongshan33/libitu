@@ -4,10 +4,22 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-10-10
+  updated: 2026-10-11
 ```
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
+
+## Cross-page loading ownership — 2026-10-11
+
+- [x] Remove the overlapping root and generic Corpus, Loadout and profile route skeletons; keep page-owned auth/data loading states and dedicated practice/speaking boundaries.
+- [x] Verify cold Landing, Corpus, profile and Loadout entries show no unrelated generic loading shell; preserve the existing practice cold-entry skeletons.
+- Verification: root lint/build/test pass (336 Web tests; other workspaces cached). A local-browser cold-entry check sees no generic loading shell on Landing, Corpus, profile or Loadout; client navigation to profile/Corpus/Loadout likewise shows only page-owned placeholders, and returning to Landing shows its hero without a skeleton. The production-build `workspace-loading.browser.mjs` passes Reader, segments, Shadow and import cold entries at 1440/390 px, including server first frame and delayed content. No backend or extension loading behavior changes.
+
+## Stage 2 sentence-switch audio ownership — 2026-10-11
+
+- [x] Keep the v4 extension session on URL-less `tabs.onUpdated` loading notifications and same-content sentence query changes. Release on verified document replacement or source exit.
+- [x] Cover status-only loading in extension unit tests and sentence replacement plus real reload in the unpacked Chrome fixture.
+- Verification: root lint/build/test pass (114 extension tests; unchanged API/Web tasks may use cache). The unpacked Chrome fixture retains the armed session after sentence `replaceState` and releases it after reload. That fixture does not invoke the real toolbar/tabCapture grant; live authorized sentence switching still needs manual acceptance after reloading the local extension and page.
 
 ## Routing and responsibility migration — 2026-10-10
 

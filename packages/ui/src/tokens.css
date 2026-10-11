@@ -1,13 +1,14 @@
 :root {
   --color-background-primary: #ffffff;
-  --color-background-secondary: #f5f2ef;
-  --color-background-subtle: #faf9f7;
-  --color-background-tertiary: #eeecea;
-  --color-text-primary: #1a1a1a;
-  --color-text-secondary: #5f5e5a;
+--color-background-subtle: #faf9f8;
+  --color-background-secondary: #f5f4f2;
+  --color-background-tertiary: #eeedea;
+ --color-text-primary: #000000;
+  --color-text-secondary: #4e4e4e;
   --color-text-tertiary: #777169;
-  --color-border-tertiary: rgb(78 50 23 / 12%);
-  --color-border-secondary: rgb(78 50 23 / 22%);
+ --color-border-tertiary: rgb(34 33 31 / 10%);
+  --color-border-secondary: rgb(34 33 31 / 18%);
+  --color-border-primary: rgb(34 33 31 / 30%);
   --color-brand-dot: #9b93d9;
   --color-overlay: rgb(26 24 22 / 32%);
   --color-danger: #a3372b;

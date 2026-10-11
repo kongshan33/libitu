@@ -326,6 +326,8 @@ content、analysis version 和重试次数分别校验。新客户端不携带 j
 
 2026-10-10 加载边界与预取修正：内容 layout 的 Suspense 在冷进入时按 pathname 选择 fallback；Reader 使用 ReaderLoadingShell，segments/Shadow 使用各自页面结构的骨架。fallback 不读取 searchParams 或 workspace 数据，避免其自身再次挂起。移除上一轮新增的内容路由 loading：已有内容时保留当前工作区，等待导航提交，不用整页骨架替换。共享 provider/MediaHost 保持原有生命周期；扩展点击后的字幕 preflight 等待保持现状。
 
+2026-10-11 跨页加载修正：全局 `app/loading.tsx` 与 Corpus、Loadout、Profile 的通用路由骨架会先后覆盖页面自身的登录／数据加载骨架，造成连续闪切。移除这些重叠边界；Landing 直接呈现，三个页面使用各自已有的页面内加载状态。保留 import、内容工作区和 speaking 的专属边界；已就绪页面的客户端导航等待目标提交。
+
 内部链接保留 viewport 预取，并在 hover/focus/touch 时预取完整目标。Reader 就绪后预取选段；选段确定后预取准备；准备阶段预取准确 Shadow URL 和组件代码。预取不挂载目标客户端副作用，不导入字幕、不创建任务/会话、不启动录音。新 content/session ID 仍需业务成功后才能导航，不猜测目标。Shadow 骨架仅保留标题、侧栏、视频和分析区域的大致轮廓，复用真实布局的响应式顺序；不再模拟逐句列表、按钮、分析子面板和历史条目。选段与准备也使用简洁块状占位。
 
 路由 loading 表达进入页面；业务 job 状态表达长期处理。流式内容按区域及时替换 skeleton；局部参考分析、单次上传失败留在对应面板或根通知栈。共享内容加载失败影响内容工作区，但不能卸载根级 outbox。未知 URL 使用 not-found，已知页面的网络失败保留 retry，不伪装成不存在。

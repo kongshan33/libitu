@@ -4,7 +4,7 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-10
+  updated: 2026-10-11
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
@@ -20,6 +20,14 @@ This log records decisions that constrain product behavior or architecture. Add 
 - **Relationship**: the accepted root-link compatibility, anonymous Reader, authenticated Shadow and cross-page save decisions remain in force. This proposal does not mark new routes or APIs as implemented or supersede current product behavior.
 
 ## Accepted decisions
+
+### 2026-10-11: Give general pages one visible loading owner
+
+The root `loading.tsx` and generic Corpus, Loadout and profile route fallbacks stacked ahead of page-owned auth/data placeholders during navigation. Remove those broad fallbacks for these synchronous page shells: a client transition may keep the prior page until commit, then the destination renders its own loading regions. Landing has no business-data loading state. Keep import/content workspace and speaking fallbacks where server work can suspend before the page shell exists. This supersedes the earlier decision to retain a stage-neutral root fallback, without changing content processing, auth gating or media lifetime.
+
+### 2026-10-11: Release practice audio on document identity, not a loading hint
+
+An update event containing only `status: loading` does not establish that the top-level Chrome document or content source changed. Keep the existing content-owned v4 session through same-document sentence and query updates. Close it when a different content URL is reported, `webNavigation.onCommitted` establishes a new top-level document, the page exits, the tab closes, or the existing timeout/error rules apply. This restores the accepted one-authorization-across-sentences contract without broadening capture permission; the toolbar gesture remains required to start capture.
 
 ### 2026-10-10: Verify the current Chrome document after SPA import
 

@@ -88,6 +88,18 @@ test("setup never grants audio; same-document Stage 1 to Stage 2 reuse requires 
   assert.equal(f.events.at(-1).status, "closed");
 });
 
+test("sentence selection keeps the authorized document through status-only loading", async () => {
+  const f = fixture(); await f.enabled();
+  const session = f.stored.libituBufferedSession;
+  await f.update({ status: "loading" });
+  await f.update({ status: "complete" });
+  await f.update({ status: "loading", url: `${page.url}/shadow?segmentId=s&sentenceId=next` });
+  assert.equal((await f.dispatch(observation, { ...sender, tab: { ...page, url: `${page.url}/shadow?segmentId=s&sentenceId=next` } })).accepted, true);
+  assert.equal(f.stored.libituBufferedSession, session);
+  assert.equal(f.calls.filter(([type]) => type === "close").length, 0);
+  await f.dispatch({ ...arm, action: "close" });
+});
+
 test("untrusted origins, frames, documents and old source URLs cannot control or receive media", async () => {
   const f = fixture();
   for (const origin of [{ ...sender, frameId: 1 }, { ...sender, id: "foreign" }, { ...sender, url: "http://evil.test" },
@@ -121,7 +133,7 @@ test("paused and stale pages, full navigation, source changes, toolbar stop and 
     const f = fixture(); await f.enabled();
     if (cause === "lease") await f.expire(45_000);
     if (cause === "maximum") await f.expire(30 * 60_000);
-    if (cause === "reload") await f.update({ status: "loading" });
+    if (cause === "reload") { await f.update({ status: "loading" }); await f.documentChange(); }
     if (cause === "source") await f.update({ url: page.url.replace("a0000000-0000-4000-8000-000000000001", "a0000000-0000-4000-8000-000000000002") });
     if (cause === "toolbar") await f.controller.onToolbarClick(page);
     if (cause === "document") await f.documentChange();
@@ -193,7 +205,7 @@ test("cancel, source/document changes and tab closure fence delayed arming", asy
     if (cause === "source") { f.state.url = "http://localhost:3000/profile"; await f.update({ url: f.state.url }); }
     if (cause === "document") { f.state.documentId = "replacement"; await f.documentChange(); }
     if (cause === "removed") await f.remove();
-    if (cause === "reload") await f.update({ status: "loading" });
+    if (cause === "reload") { f.state.documentId = "replacement"; await f.update({ status: "loading" }); await f.documentChange(); }
     release(true); await pending;
     assert.equal(f.calls.some(([kind, value]) => kind === "badge" && value.text === "ON?"), false, cause);
     assert.equal(f.stored.libituBufferedSession, undefined, cause);

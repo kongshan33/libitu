@@ -1258,7 +1258,7 @@ svg {
   margin: 0 12px 14px;
   border: 0.5px solid var(--color-border-tertiary);
   border-radius: var(--radius-lg);
-  background: rgb(245 242 239 / 80%);
+  background-color: var(--color-background-secondary);
   padding: 12px;
   box-shadow: var(--shadow-warm);
 }
