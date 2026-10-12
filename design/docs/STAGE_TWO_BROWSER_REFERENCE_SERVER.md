@@ -14,6 +14,8 @@ Reference upload ownership survives sentence/stage navigation within the signed-
 
 The default browser reference cache still provides quick local VAD/F0 previews, but no longer starts the large local phoneme-alignment model. The local alignment engine and its isolated tests remain available; its prior paired UI is superseded by server-verified pairing.
 
+2026-10-12 sentence identity correction: reference snapshots use the same derived blueprint view as the public Web blueprint read. A cached raw blueprint may retain earlier sentence IDs after caption timing recovery; those rows are not the current display contract. Saved-capture recovery and preparation validate the current projected sentence ID and exact bounds without rewriting cached analysis. A recovery/upload error suppresses the idle playback instruction and retains the explicit alert/retry.
+
 ## Three layers
 
 Video and shared practice controls stay above the three-layer workspace, following the prototype.

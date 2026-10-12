@@ -4,7 +4,7 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-11
+  updated: 2026-10-12
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
@@ -20,6 +20,10 @@ This log records decisions that constrain product behavior or architecture. Add 
 - **Relationship**: the accepted root-link compatibility, anonymous Reader, authenticated Shadow and cross-page save decisions remain in force. This proposal does not mark new routes or APIs as implemented or supersede current product behavior.
 
 ## Accepted decisions
+
+### 2026-10-12: Reference snapshots use the displayed server sentence view
+
+The public blueprint route derives source-bound sentences and segments from current caption timing while keeping persisted semantic analysis immutable. Reference recovery/capability/preparation must resolve against that same projection rather than raw stored rows, so a valid displayed sentence can be captured and recovered by its exact ID and bounds. A missing saved reference returns null only after current sentence validation; unknown sentences and changed bounds remain errors. The UI must not show its idle playback instruction alongside a recovery/upload failure. No client-supplied sentence text, ID alias, cache rewrite or new media permission is introduced.
 
 ### 2026-10-11: Retain original video records with direct Stage 1 entry
 

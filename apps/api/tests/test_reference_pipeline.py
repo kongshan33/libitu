@@ -89,8 +89,8 @@ def setup(monkeypatch, tmp_path):
         sha256=sha256(data).hexdigest(), path=str(source), size=len(data))
     monkeypatch.setattr(sources, 'grants', lambda: [grant])
     line = TranscriptLine(id='sentence-v3-test', time='2:00', parts=['Hello hello.'], start_ms=START, end_ms=START+1000,
-        segmentation_version='sentence-v3', source_token_start=0, source_token_end=2)
-    blueprint = Blueprint(id=str(uuid4()), content_id=CONTENT, title='Synthetic', summary='', logic_flow=[], key_points=[],
+        segmentation_version='sentence-v3-test', source_token_start=0, source_token_end=2)
+    blueprint = Blueprint(id=str(uuid4()), content_id=CONTENT, segmentation_version='sentence-v3-test', title='Synthetic', summary='', logic_flow=[], key_points=[],
         scenario_suggestions=[], transcript=[line], segments=[BlueprintSegment(id='segment', title='Test', summary='',
         start_ms=START, end_ms=START+1000, transcript_start_index=0, transcript_end_index=1)])
     monkeypatch.setattr(service, 'get_blueprint', lambda _: blueprint)
@@ -290,6 +290,47 @@ def test_browser_capture_without_file_grant_upload_and_recovery(captured):
     app.dependency_overrides[require_user] = lambda: AuthenticatedUser(id='bob')
     assert client.get(path).status_code == 404
     assert client.get('/api/references/captures/latest', params=query).json() is None
+
+
+def test_capture_snapshot_uses_the_same_caption_view_as_the_blueprint_route(captured, monkeypatch):
+    from app.services import blueprint_service
+    from app.schemas.captions import CaptionTrack
+
+    client, repo, blueprint, data, _ = captured
+    original_track = CaptionTrack(video_id='reference-video', language='en', events=[{
+        'tStartMs': START, 'dDurationMs': 1000, 'segs': [{'utf8': 'Hello hello.'}],
+    }])
+    current_track = CaptionTrack(video_id='reference-video', language='en', events=[{
+        'tStartMs': START, 'dDurationMs': 1000,
+        'segs': [{'utf8': 'Hello ', 'tOffsetMs': 0}, {'utf8': 'hello.', 'tOffsetMs': 500}],
+    }])
+    stored = blueprint_service.build_caption_timing_view(blueprint, original_track)
+    original = stored.model_dump()
+    monkeypatch.setattr(blueprint_service, 'get_caption_track', lambda *args, **kwargs: current_track)
+    monkeypatch.setattr(service, 'get_blueprint', lambda _: stored)
+    monkeypatch.setattr('app.routers.blueprints.get_blueprint', lambda _: stored)
+    response = client.get(f'/api/blueprints/{CONTENT}')
+    assert response.status_code == 200
+    view = response.json()
+    segment, sentence = view['segments'][0], view['transcript'][0]
+    assert sentence['id'] != stored.transcript[0].id
+    assert segment['id'] == stored.segments[0].id
+    query = {'content_id': CONTENT, 'segment_id': segment['id'], 'sentence_id': sentence['id']}
+
+    latest = client.get('/api/references/captures/latest', params=query)
+    assert latest.status_code == 200, latest.text
+    assert latest.json() is None and not repo.rows
+    payload = {**capture_payload(data), **query, 'start_ms': sentence['start_ms'], 'end_ms': sentence['end_ms']}
+    prepared = client.post('/api/references/captures', json=payload)
+    assert prepared.status_code == 202, prepared.text
+    row = prepared.json()
+    assert repo.rows[row['id']]['snapshot']['sentences'] == [{
+        'id': sentence['id'], 'text': 'Hello hello.', 'start_ms': sentence['start_ms'], 'end_ms': sentence['end_ms'],
+    }]
+    assert client.get('/api/references/captures/latest', params=query).json()['id'] == row['id']
+    assert client.post('/api/references/captures', json={**payload, 'start_ms': payload['start_ms'] + 1}).status_code == 409
+    assert client.get('/api/references/captures/latest', params={**query, 'sentence_id': 'unknown'}).status_code == 404
+    assert stored.model_dump() == original
 
 
 def test_browser_capture_rejects_wrong_timing_hash_and_duration(captured):

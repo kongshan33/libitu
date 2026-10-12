@@ -4,10 +4,17 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-10-11
+  updated: 2026-10-12
 ```
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
+
+## Reference sentence identity — 2026-10-12
+
+- [x] Reproduce saved-capture recovery returning `Sentence not found` when a raw cached caption sentence ID differs from the public derived blueprint view; confirm the mismatch on the reported video with read-only source checks.
+- [x] Snapshot the same normalized sentence/segment view for reference recovery, capability and preparation; preserve exact bounds and source/owner validation, without rewriting semantic caches.
+- [x] Hide the idle playback instruction when reference recovery or upload has an error; retain the alert and retry action.
+- Verification: targeted API tests pass (50). The new regression previously failed with 404; it now covers empty recovery, prepare/recovery reuse, wrong-bound rejection, unknown-sentence rejection and cache immutability. Root lint/build/test pass (820 API, 338 Web, 114 extension; 1,272 total). Production-build `browser-reference-server.browser.mjs` passes at 1440/390 px, including error-state copy, read-only retry before capture, WAV upload, bound learner/reference analysis, refresh recovery and deletion. Auth, playback and server-analysis results are fixtures with synthetic audio. A read-only snapshot against the reported public video now finds its displayed sentence and exact 1,839–10,080 ms range. No live toolbar capture/upload, database write/migration or deployment was performed.
 
 ## Original video history — 2026-10-11
 

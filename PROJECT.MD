@@ -4,7 +4,7 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-11
+  updated: 2026-10-12
 ```
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
@@ -18,6 +18,8 @@ The provisional launch market is overseas. Mainland-China-specific hosting and r
 Stage 2 browser-captured references can now be uploaded for private server ASR/MFA/VAD/F0 analysis without a file-source registration. Verified reference prosody is cached and paired with the exact saved learner take. Sound/Rhythm each use two compact Reference / Your voice rows; Melody uses one normalized chart with linked full-word labels and playback highlighting. Registered file adapters remain supported. General remote acquisition and validated pronunciation detection remain planned. See [current implementation](design/docs/STAGE_TWO_BROWSER_REFERENCE_SERVER.md).
 
 ## Repository status
+
+Reference sentence identity correction (2026-10-12): reference capability, saved-capture recovery and preparation snapshot the same derived blueprint view used by the public blueprint route. Recovered caption timing can change sentence identities without rewriting cached semantic analysis; references no longer search those raw cached rows for a displayed sentence. Exact server-owned sentence/bounds, access and upload validation remain enforced. The browser reference panel suppresses its idle playback instruction when recovery/upload has an error.
 
 Original video history (2026-10-11): `/profile` now has an Original videos section, and `/profile/history` supports Videos alongside the unified list. Authenticated ready-content visits update the existing `user_content_states` record; surviving owned Shadow/corpus sources also populate the list. One row per public YouTube content ID opens `/practice/{contentId}` directly in Stage 1. No new migration, playback, analysis request, practice-count or streak inflation is introduced. Failed visit saves offer Retry; account switching does not adopt an already mounted source. See [profile implementation](design/docs/PROFILE_IMPLEMENTATION.md).
 

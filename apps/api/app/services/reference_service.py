@@ -15,13 +15,17 @@ from app.schemas.reference import MAX_SEGMENT_MS, PrepareReference, PrepareCaptu
 from app.services.acoustics import sources
 from app.services.acoustics.audio import AudioFailure, RATE, normalize
 from app.services.acoustics.engine import engine_identity
-from app.services.blueprint_service import get_blueprint
+from app.services.blueprint_service import get_blueprint, personalize_blueprint
 
 
 def snapshot(repo: ReferenceRepository, owner: str, content: str, segment_id: str) -> dict:
     if not repo.source_available(owner, content):
         raise HTTPException(404, "Reference source not found")
     blueprint = get_blueprint(content)
+    # The public blueprint route derives current sentence identities and segment
+    # ranges from recovered captions. References must snapshot that same view.
+    if blueprint is not None:
+        blueprint = personalize_blueprint(blueprint, learner_level=None)
     segment = next((s for s in blueprint.segments if s.id == segment_id), None) if blueprint else None
     if segment is None or segment.start_ms is None or segment.end_ms is None:
         raise HTTPException(409, "Return to Stage 1 and select a current timed segment.")

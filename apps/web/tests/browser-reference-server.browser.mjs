@@ -113,7 +113,7 @@ try {
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
   const context=await browser.newContext({viewport}),page=await context.newPage();page.setDefaultTimeout(20000);
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  let reference=null,attempt=null,analysis=null,allowReference=false,uploads=0,prepares=0;
+  let reference=null,attempt=null,analysis=null,allowReference=false,uploads=0,prepares=0,recoveryFails=true;
   const row=blueprint.transcript[1],voice=analysisFixture({sentence_text:row.parts[0]}).result.reference;
   await page.addInitScript(installFixture);
 
@@ -139,7 +139,8 @@ try {
       if(url.pathname===`/api/blueprints/${content}`)return json(blueprint);
       if(url.pathname.endsWith('/sound'))return json({version:'sound-rules-v1',content_id:content,sentence_id:row.id,sentence_text:row.parts[0],dialect:'en-US',provider:'cmudict-rules',lexicon_version:'fixture',tokens:[],candidates:[],coverage:{total:0,known:0},warnings:[]});
       if(url.pathname==='/api/references/capability')return json({available:false,input_mode:null});
-      if(url.pathname==='/api/references/captures/latest')return json(reference?.state==='deleted'?null:reference);
+      if(url.pathname==='/api/references/captures/latest')return recoveryFails
+        ? json({detail:'Sentence not found'},404) : json(reference?.state==='deleted'?null:reference);
       if(url.pathname==='/api/references/captures') {
         const data=req.postDataJSON();assert.equal(data.sentence_id,row.id);assert.equal(data.start_ms,4000);assert.equal(data.end_ms,7000);assert.match(data.sha256,/^[0-9a-f]{64}$/);prepares++;
         reference={id:'capture-ref',content_id:content,segment_id:'practice-segment',source_kind:'browser_capture',state:'awaiting_upload',input_mode:'upload',start_ms:4000,end_ms:7000,audio_ready:false,results:[],analysis_version:'fixture',expires_at:'2099-01-01T00:00:00Z',error_code:null};return json(reference,202);
@@ -165,6 +166,13 @@ try {
     if(url.origin===origin)return route.continue();return route.fulfill({contentType:'application/javascript',body:''});
   });
   await page.goto(entry,{waitUntil:'domcontentloaded',timeout:60000});
+  await page.locator('.capture-analysis-status').getByRole('alert').waitFor();
+  assert.equal(await page.getByText('Play the sentence to capture its reference audio.',{exact:true}).count(),0,
+    'failed recovery must not show the idle capture instruction');
+  recoveryFails=false;
+  await page.locator('.capture-analysis-status').getByRole('button',{name:'Retry reference analysis',exact:true}).click();
+  await page.getByText('Play the sentence to capture its reference audio.',{exact:true}).waitFor();
+  assert.equal(prepares,0);assert.equal(uploads,0,'read-only recovery retry must not prepare or upload audio');
   await page.locator('.stage-two-audio-settings > summary').click();
   await page.getByRole('checkbox',{name:'Analyze captured reference audio on the server',exact:true}).check();
   await page.getByRole('button',{name:'Enable reference audio',exact:true}).click();
