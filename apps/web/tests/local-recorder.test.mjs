@@ -484,3 +484,17 @@ test("MIME negotiation tolerates failed advertised encoders and falls back to th
   recorder.dispose();
   assert.equal(stream.track.stops, 1);
 });
+
+test('Quick can record a long 2x turn without changing the default Detailed limit', async () => {
+  const f = fixture();
+  const start = f.controller.start(90_000);
+  f.requests.at(-1).resolve(microphone());
+  await start;
+  f.advance(60_000);
+  assert.equal(f.controller.getSnapshot().phase, 'recording');
+  f.advance(30_000);
+  assert.equal(f.controller.getSnapshot().phase, 'stopping');
+  f.recorders.at(-1).finish();
+  assert.equal(f.controller.getSnapshot().clip.durationMs, 90_000);
+  assert.equal(MAX_RECORDING_DURATION_MS, 60_000);
+});

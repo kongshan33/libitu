@@ -237,6 +237,7 @@ try {
       await preparation.getByText(/2 references analyzed/).waitFor({ timeout: 100_000 });
       assert.ok(assets.some((url) => url.endsWith("silero_vad_v5.onnx")), "references use actual local Silero model assets");
       await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
       await page.locator(".stage-two-shadow").waitFor();
       await waitPlayer();
       const shadowReference = page.getByRole("region", { name: "Reference preparation", exact: true });

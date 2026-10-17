@@ -412,3 +412,19 @@ def test_word_progress_repository_pages_beyond_data_api_cap_and_filters_owner():
     finally:
         database._client.close()
         repo.storage.close()
+
+
+def test_quick_long_take_uses_trusted_sentence_duration(setup, monkeypatch):
+    client, _ = setup
+    sentence = TranscriptLine(id=SENTENCE, segmentation_version="sentence-v2", time="0:00", parts=["Hello there."],
+                              source_token_start=0, source_token_end=2, start_ms=1000, end_ms=46000)
+    monkeypatch.setattr(practice_service, "find_blueprint_sentence", lambda *_: sentence)
+    data = {**payload(False), "duration_ms": 90_000}
+    assert client.post("/api/practice/attempts", json=data).status_code == 201
+    data = {**payload(False), "duration_ms": 91_001}
+    assert client.post("/api/practice/attempts", json=data).status_code == 422
+
+
+def test_short_sentence_does_not_authorize_arbitrary_long_recordings(setup):
+    client, _ = setup
+    assert client.post("/api/practice/attempts", json={**payload(False), "duration_ms": 61_001}).status_code == 422

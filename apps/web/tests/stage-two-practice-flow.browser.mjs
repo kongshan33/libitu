@@ -14,7 +14,7 @@ const blueprint={id:'practice-blueprint',content_id:content,title:'Practice flow
  transcript:texts.map((text,i)=>({id:`sentence-v2-flow-${i}`,time:`0:0${i*3+1}`,parts:[text],start_ms:i*3000+1000,end_ms:i*3000+4000,source_token_start:i*5,source_token_end:i*5+practiceTokens(text).length,segmentation_version:'sentence-v2',boundary_source:'syntax_merge',boundary_confidence:'medium'})),
  segments:[{id:'flow-segment',sequence:1,title:'Opening',summary:'Practice.',start_ms:1000,end_ms:10000,transcript_start_index:0,transcript_end_index:3,phonology_tags:[]}]};
 const job={id:'flow-job',content_id:content,status:'ready',blueprint_id:blueprint.id,analysis_version:'mvp-v9',processing_stage:'completed',analysis_preview:null,error_message:null};
-const entry=`${origin}/practice/${content}/shadow?segmentId=flow-segment&sentenceId=${blueprint.transcript[0].id}`;
+const entry=`${origin}/practice/${content}/shadow?shadowMode=detailed&segmentId=flow-segment&sentenceId=${blueprint.transcript[0].id}`;
 const wavePath=`${output}/microphone-tone.wav`,wave=Buffer.alloc(44+128000);
 wave.write('RIFF');wave.writeUInt32LE(wave.length-8,4);wave.write('WAVEfmt ',8);wave.writeUInt32LE(16,16);wave.writeUInt16LE(1,20);wave.writeUInt16LE(1,22);
 wave.writeUInt32LE(16000,24);wave.writeUInt32LE(32000,28);wave.writeUInt16LE(2,32);wave.writeUInt16LE(16,34);wave.write('data',36);wave.writeUInt32LE(128000,40);
@@ -103,8 +103,8 @@ try {for(const width of [1440,390]){
  await page.goto(entry,{waitUntil:'domcontentloaded',timeout:90000});try{await page.locator('.shadow-practice-prompt').waitFor();}catch(error){await page.screenshot({path:`${output}/failed-initial-${width}.png`,fullPage:true});throw error;}
  assert.equal(await page.locator('.stage-two-layers').count(),0,'layers hidden before recording');
  assert.equal(await page.locator('.shadow-word-mask').count(),5);assert.equal(await page.locator('.stage-two-sentences').getByText(texts[0],{exact:true}).count(),1);
- assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).borderRadius),'999px');
- assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)');
+ assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).borderRadius),await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).getPropertyValue('--radius-md').trim()));
+ assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(83, 74, 183)');
  for(const text of ['Try another take, or move to the next sentence.','Sentence timings are approximate.','Listen first, then record your voice.'])assert.equal(await page.getByText(text,{exact:true}).count(),0);
  const originalUrl=page.url();
  await page.getByRole('button',{name:'Collapse sentence list',exact:true}).click();
@@ -146,7 +146,7 @@ try {for(const width of [1440,390]){
  assert.equal(await page.locator('.shadow-recording-waveform rect').count(),16);
  assert.equal(await page.locator('.shadow-recording-waveform').evaluate(el=>el.getBoundingClientRect().width),96);
  await page.waitForFunction(()=>[...document.querySelectorAll('.shadow-recording-waveform rect')].some(bar=>Number(bar.getAttribute('height'))>2));
- assert.equal(await page.locator('.stage-two-record-stop').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(163, 55, 43)');
+ assert.equal(await page.locator('.stage-two-record-stop').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(83, 74, 183)');
  await page.waitForFunction(()=>Math.abs(document.querySelector('.stage-two-sentences').getBoundingClientRect().width-56)<1);
  assert.equal(await page.getByRole('button',{name:'Expand sentence list',exact:true}).isDisabled(),true);
  assert.equal(await page.locator('.shadow-directory-text').first().isVisible(),false);

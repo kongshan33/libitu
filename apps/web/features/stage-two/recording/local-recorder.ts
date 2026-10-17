@@ -52,6 +52,7 @@ const browserEnvironment: RecordingEnvironment = {
 };
 
 type Attempt = {
+  maxDurationMs: number;
   sentenceId: string;
   stream: MediaStream | null;
   recorder: MediaRecorder | null;
@@ -118,9 +119,11 @@ export class LocalSentenceRecorder {
     this.publish({ phase: "idle", sentenceId, clip: null, elapsedMs: 0, error: null });
   }
 
-  async start(): Promise<void> {
+  async start(maxDurationMs = MAX_RECORDING_DURATION_MS): Promise<void> {
     if (this.attempt || !this.state.sentenceId) return;
+    if (!Number.isFinite(maxDurationMs) || maxDurationMs <= 0 || maxDurationMs > 2_147_483_647) return;
     const attempt: Attempt = {
+      maxDurationMs,
       sentenceId: this.state.sentenceId,
       stream: null, recorder: null, chunks: [], startedAt: null, stoppedAt: null,
       tick: null, autoStop: null, finalizing: null, recorderListeners: [], trackListeners: []
@@ -176,7 +179,7 @@ export class LocalSentenceRecorder {
       if (this.attempt !== attempt || this.state.phase !== "recording") return;
       attempt.autoStop = this.environment.setTimeout(() => {
         if (this.attempt === attempt) this.stop();
-      }, MAX_RECORDING_DURATION_MS);
+      }, attempt.maxDurationMs);
       this.scheduleTick(attempt);
     } catch (error) {
       this.fail(attempt, recordingError(error));
@@ -241,7 +244,7 @@ export class LocalSentenceRecorder {
     attempt.tick = this.environment.setTimeout(() => {
       if (this.attempt !== attempt || this.state.phase !== "recording") return;
       const elapsedMs = this.elapsed(attempt);
-      if (elapsedMs >= MAX_RECORDING_DURATION_MS) {
+      if (elapsedMs >= attempt.maxDurationMs) {
         this.stop();
         return;
       }

@@ -35,22 +35,22 @@ export function SentenceRecordingPanel({ recording, sentenceNumber, disabled = f
       </div>
       <div className="stage-two-recording-controls">
         {state.phase === "recording" ? (
-          <Button variant="record" size="inherit" shape="pill" recording type="button" className="stage-two-record-stop" aria-label="Stop recording" onClick={() => recording.recorder.stop()}>
+          <Button variant="primary" size="lg" recording type="button" className="stage-two-record-stop" aria-label="Stop recording" onClick={() => recording.recorder.stop()}>
             <Square aria-hidden="true" /> {compact ? `Stop · ${duration(state.elapsedMs)}` : "Stop recording"}
           </Button>
         ) : (
-          <Button variant="record" size="inherit" shape="pill" type="button" className="stage-two-record-start" aria-label={state.clip ? "Record again" : "Record sentence"}
+          <Button variant="primary" size="lg" type="button" className="stage-two-record-start" aria-label={state.clip ? "Record again" : "Record sentence"}
             aria-describedby={startDescriptionId} loading={state.phase === "requesting" || state.phase === "stopping"} loadingLabel={state.phase === "stopping" ? "Finishing…" : "Waiting…"} disabled={!sentenceNumber || busy || disabled || startDisabled} onClick={recording.start}>
             <Mic aria-hidden="true" /> {state.clip ? "Record again" : compact ? "Record" : "Record sentence"}
           </Button>
         )}
         {busy ? (
-          <Button variant="secondary" size="inherit" shape="pill" type="button" className="stage-two-record-cancel" aria-label="Cancel recording"
+          <Button variant="secondary" size="inherit" type="button" className="stage-two-record-cancel" aria-label="Cancel recording"
             onClick={onCancel??(()=>recording.recorder.cancel())}><X aria-hidden="true" /> {compact ? "Cancel" : "Cancel recording"}</Button>
         ) : null}
         {state.clip ? (
           <>
-            {!historical?<><Button variant="secondary" size="inherit" shape="pill" type="button" className="stage-two-record-replay"
+            {!historical?<><Button variant="secondary" size="inherit" type="button" className="stage-two-record-replay"
               aria-label={replaying ? "Pause recording" : "Replay recording"}
               disabled={busy || disabled} onClick={() => void recording.toggleReplay()}>
               {replaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}

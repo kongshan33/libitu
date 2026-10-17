@@ -23,7 +23,7 @@ const blueprint = {
   segments: [{ id: "recording-segment", sequence: 1, title: "Opening", summary: "Practice the opening.",
     start_ms: 1000, end_ms: 10000, transcript_start_index: 0, transcript_end_index: 3, phonology_tags: [] }]
 };
-const entry = `${origin}/practice/${job.content_id}/shadow?${new URLSearchParams({
+const entry = `${origin}/practice/${job.content_id}/shadow?${new URLSearchParams({ shadowMode: "detailed",
   segmentId: blueprint.segments[0].id, sentenceId: blueprint.transcript[0].id
 })}`;
 

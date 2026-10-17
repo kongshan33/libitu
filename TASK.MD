@@ -9,6 +9,24 @@ meta:
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
+## Stage 2 Quick and Review — 2026-10-17
+
+- [x] Unify Quick and Detailed primary actions on the shared purple button variant, removing Quick paint overrides and Detailed black recording buttons.
+
+- [x] Hide Quick Redo while paused, leaving Resume as the restart action; preserve Redo availability in all other states and Detailed behavior.
+
+- [x] Quick-only pause/countdown clarification: cancel unfinished audio on Pause, replay the current sentence on Resume, and wait 2 seconds after reference playback before opening the microphone. Preserve completed takes, Done/automatic saves and Detailed. Countdown/cancellation tests and recorder regressions pass (379 Web tests); synthetic browser verification covers prepare/record pauses and unchanged history counts.
+
+- [x] Fix desktop Quick setup clipping: scroll the settings body independently and keep Start in a non-shrinking footer. Review shares the scrollable content boundary; Detailed is unaffected. Verified Start bounds and hit target at 1280×720 and 1024×600, including expanded settings; TypeScript and lint pass. User-reported hydration diff was an injected `data-eusoft-scrollable-element` attribute on the loading skeleton, absent from application markup.
+
+- [x] Fix Review sibling key collision and Detailed desktop grid disruption; place the mode switch in the existing header. Verified 1440px desktop and 543px narrow layouts, real saved Review results without new duplicate-key errors, 376 Web tests, TypeScript and lint.
+
+- [x] Implement the approved Quick/Review prototype and default to Quick; preserve the original Detailed component and style.
+- [x] Use original sentence duration × 2 for recording with early Done; expand server decoding and trusted database duration validation. Hosted migration applied.
+- [x] Reuse background persistence/analysis, bounded temporary replay, segment history, filters and existing three-layer evidence; allow learner-only analysis without Reference.
+- [x] Cover long recordings, queue/filter/status boundaries and save/microphone recovery; verify desktop/mobile presentation with a synthetic browser fixture. Root test/lint/build pass: 1002 API, 376 Web and 114 extension tests. Real microphone/provider accuracy is not established by this fixture.
+
+
 ## Stage 2 practice refactor — 2026-10-12
 
 - [x] Offline Rhythm CWT feasibility experiment (2026-10-16): independently implement continuous prominence from existing 10ms features, save full experimental learner curves, cache exact experimental Reference results, measure first/warm/cached computation, and record uncertainty/feature ablations. Six human clips plus two timing-only repeated-feature loads; 33 focused checks pass. [Report](design/benchmarks/rhythm-cwt-20261016/README.md).

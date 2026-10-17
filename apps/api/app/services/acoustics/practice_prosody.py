@@ -14,14 +14,14 @@ from app.services.acoustics.transcribe import transcribe
 from app.services.acoustics.word_check import check_words, checked_tokens, content_check
 
 
-def normalize_take(source: Path, target: Path) -> float:
+def normalize_take(source: Path, target: Path, max_duration: float = 61) -> float:
     try:
         subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-protocol_whitelist", "file,pipe", "-i", str(source),
-            "-t", "62", "-vn", "-ac", "1", "-ar", str(RATE), "-c:a", "pcm_s16le", str(target)],
+            "-t", str(max_duration + 1), "-vn", "-ac", "1", "-ar", str(RATE), "-c:a", "pcm_s16le", str(target)],
             capture_output=True, check=True, timeout=90)
         with wave.open(str(target)) as audio:
             duration = audio.getnframes() / audio.getframerate()
-        if not .15 <= duration <= 61:
+        if not .15 <= duration <= max_duration:
             raise AudioFailure("recording_duration_invalid")
         return duration
     except (subprocess.SubprocessError, wave.Error, EOFError, FileNotFoundError) as error:

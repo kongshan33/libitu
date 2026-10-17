@@ -52,6 +52,7 @@ async function startSegment(page, index) {
   await page.locator(".stage-one-segment-card").nth(index).click();
   await page.getByRole("button", { name: /Begin Stage 2/ }).click();
   await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
   await page.locator(".stage-two-shadow").waitFor();
   await page.waitForFunction(() => window.__activePlayer?.ready && !window.__activePlayer.destroyed);
 }

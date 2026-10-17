@@ -9,6 +9,17 @@ meta:
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
+## Stage 2 Quick and Review — 2026-10-17
+
+Follow-up: place the mode switch inside Detailed’s existing header so it does not consume a row of the outer reader grid. Keep the original practice area and layer styles. Review gives the sibling word-result and analysis components distinct take-scoped keys, preventing duplicate-key reconciliation errors.
+
+Implement `design/prototypes/libitu_quick_shadowing_and_review.html` as Quick and Review, defaulting to Quick, while preserving the original Detailed component and styles. User clarification supersedes the prototype's silence detection and Reference lock: record for twice the original sentence duration with early Done; show eligible learner-only layers when Reference is missing. Reuse real word checks and acoustic evidence, never prototype example scores or unimplemented sound judgments.
+
+Quick may record without Reference; freeze an available uploaded Reference ID at recording start. Detailed keeps its original preparation behavior and 60-second recorder default. Per-take duration is checked against trusted source bounds by the API, decoder and database, with a one-second tolerance and the legacy 61-second floor. Hosted migration: `20261017121513_quick_shadowing_duration`. Existing upload byte limits and consent are unchanged.
+
+Quick-only clarification (2026-10-17): Pause or tab hiding cancels and discards an unfinished recording; completed takes remain saved. Resume always replays the current sentence. Reference/video playback ends with a visible 2-second preparation countdown before requesting the microphone. Cancellation, mode changes and stale timer callbacks cannot start a late recording. The countdown is excluded from the original-duration × 2 recording budget; Done and automatic completion still save. Detailed behavior is unchanged. Temporary audio replay is capped at 30 takes / 64 MiB and does not survive reload; later account playback requires explicit retention. Browser acceptance uses synthetic inputs and does not validate model accuracy.
+
+
 ## Accepted Stage 2 refactor contract
 
 ### 2026-10-16: Publish coarse server signals before MFA

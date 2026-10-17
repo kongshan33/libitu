@@ -26,7 +26,7 @@ const blueprint = {
   segments: [{ id: "sound-segment", sequence: 1, title: "Practice", summary: "Explore possible readings.",
     start_ms: 1000, end_ms: 31000, transcript_start_index: 0, transcript_end_index: 6, phonology_tags: [] }]
 };
-const entry = `${origin}/practice/${job.content_id}/shadow?${new URLSearchParams({ segmentId: blueprint.segments[0].id, sentenceId: blueprint.transcript[0].id })}`;
+const entry = `${origin}/practice/${job.content_id}/shadow?${new URLSearchParams({ shadowMode: "detailed", segmentId: blueprint.segments[0].id, sentenceId: blueprint.transcript[0].id })}`;
 
 // These responses exercise the rendering contract; they are not a dictionary or detector evaluation.
 function annotation(index) {
@@ -353,6 +353,7 @@ try {
     await page.locator(".stage-one-segment-card").first().click();
     await page.getByRole("button", { name: /Begin Stage 2/ }).click();
     await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
     await detail.waitFor();
     assert.equal(await layer("Sound").getAttribute("aria-selected"), "true", "a new practice starts on the Sound layer");
     assert.ok(counts[0] > firstCount, "a new practice receives a new source-bound guide cache");

@@ -9,6 +9,17 @@ meta:
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
 
+## Stage 2 Quick and Review — 2026-10-17
+
+Desktop setup follow-up: Quick settings scroll within the workspace, with Start kept in a separate footer so it remains accessible in short windows. Review also scrolls within its available height; Detailed layout is unchanged.
+
+Follow-up: place the mode switch inside Detailed’s existing header so it does not consume a row of the outer reader grid. Keep the original practice area and layer styles. Review gives the sibling word-result and analysis components distinct take-scoped keys, preventing duplicate-key reconciliation errors.
+
+Stage 2 defaults to Quick, with range selection, optional short-sentence skipping, playback/text settings, sequential listening and recording, background analysis, round summaries and targeted practice. Each recording lasts twice the original sentence duration (independent of playback speed), or ends early with Done. Quick waits through a visible 2-second preparation countdown after playback; Pause discards unfinished audio and Resume replays the current sentence. Completed takes and Detailed behavior are unchanged. Detailed retains the original component and styles. Review restores segment history, filters results, selects takes, replays available audio and reuses existing three-layer evidence; absent Reference still permits learner-only analysis.
+
+The recorder, API, decoder and database now support the source-derived Quick duration. Migration `20261017121513_quick_shadowing_duration` is applied to hosted Libitu; application deployment is separate. Existing upload byte limits and retention consent remain. Validation: root test/lint/build pass (1002 API, 376 Web, 114 extension tests); desktop/mobile browser checks used synthetic media/API fixtures, including 90-second recording and save recovery. No pronunciation accuracy claim follows from these checks.
+
+
 ## Current objective
 
 Build the smallest reliable loop from a supported YouTube video to a saved corpus item and an AI speaking session. Keep reading and intensive listening compatible with the architecture, but do not let them delay the first complete loop.

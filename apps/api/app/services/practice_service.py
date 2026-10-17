@@ -49,6 +49,9 @@ def build_attempt(repo: PracticeRepository, owner: str, payload: AttemptCreate) 
     if sentence is None or sentence.start_ms is None or sentence.end_ms is None:
         raise HTTPException(409, "This sentence is no longer available. Return to Stage 1 and select it again.")
     text = "".join(part if isinstance(part, str) else part.text for part in sentence.parts)
+    # Trusted source bounds allow a full 2x Quick turn; preserve legacy 60s takes.
+    if payload.duration_ms > max(61_000, 2 * (sentence.end_ms - sentence.start_ms) + 1_000):
+        raise HTTPException(422, "Recording exceeds twice this sentence duration")
     support = payload.text_support
     if support is not None:
         validate_text_support(support, text)

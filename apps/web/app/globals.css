@@ -3079,12 +3079,6 @@ svg {
   transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-.stage-two-recording-compact .stage-two-recording-controls .stage-two-record-start:hover:not(:disabled),
-.stage-two-recording-compact .stage-two-recording-controls .stage-two-record-stop:hover:not(:disabled) {
-  border-color: #242424;
-  background: #242424;
-}
-
 .stage-two-recording-compact .stage-two-record-delete {
   width: 44px;
   flex: 0 0 44px;

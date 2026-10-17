@@ -23,7 +23,7 @@ const blueprint = { id: job.blueprint_id, content_id: content, title: "Save your
   })),
   segments: [{ id: "practice-segment", sequence: 1, title: "Opening", summary: "Practice the opening.",
     start_ms: 1000, end_ms: 7000, transcript_start_index: 0, transcript_end_index: 2, phonology_tags: [], recommended: true }] };
-const entry = `${origin}/practice/${content}/shadow?${new URLSearchParams({ learnerLevel: "B2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
+const entry = `${origin}/practice/${content}/shadow?${new URLSearchParams({ shadowMode: "detailed", learnerLevel: "B2", segmentId: "practice-segment", sentenceId: blueprint.transcript[1].id })}#practice`;
 
 // Test-only Clerk resource emitter: exercises the real React auth boundary and return
 // options without credentials. It does not establish hosted Clerk/OAuth correctness.
@@ -138,6 +138,7 @@ try {
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
     await page.locator(".stage-one-picker-begin").click();
     await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
     await page.getByRole("heading", { name: "Sign in to start Shadow" }).waitFor();
     assert.equal(await page.evaluate(() => window.__authCalls.length), 2);
     assert.equal(new URL(page.url()).searchParams.get("sentenceId"), blueprint.transcript[0].id);

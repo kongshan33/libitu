@@ -13,6 +13,11 @@ Routing architecture update (2026-10-10): R3 directly enables `/practice/import`
 
 Stage 2 practice refactor update (2026-10-12): execute [the accepted contract](STAGE_TWO_REFACTOR_CONTRACT.md) in six ordered steps: contract (complete), backend three-tier gate (implemented), persistence/feedback (implemented; both migrations applied to hosted Libitu), practice UI (implemented and locally verified at desktop/mobile), full navigation/history acceptance (implemented; hosted directory RPC verified), then final wider regression/documentation. Reuse existing original-video reference acquisition. This is the next Stage 2 workspace increment, not delivery of new Sound detectors or remote file acquisition. TASK.MD tracks implementation.
 
+## Stage 2 Quick and Review — 2026-10-17
+
+Delivered the approved Quick/Review prototype with Quick as the default and the original Detailed presentation preserved. Added continuous practice, original-duration × 2 recording, early Done, background analysis, segment review/history and learner-only evidence without Reference. Quick now inserts a 2-second preparation countdown after playback; Pause discards unfinished audio and Resume replays the current sentence, without changing Detailed. Recorder/API/decoder/database duration support is implemented; hosted migration `20261017121513_quick_shadowing_duration` is applied. Root test/lint/build and desktop/mobile fixture acceptance pass. Application deployment and real microphone/provider acceptance are separate; pronunciation-effect validation remains outstanding.
+
+
 ## Phase 0: maintain the engineering baseline
 
 Goal: keep every workspace installable and verifiable from the repository root.

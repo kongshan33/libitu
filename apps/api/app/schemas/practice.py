@@ -46,7 +46,7 @@ class AttemptCreate(BaseModel):
     client_id: UUID
     content_id: UUID
     sentence_id: str = Field(min_length=1, max_length=200)
-    duration_ms: int = Field(gt=0, le=61000)
+    duration_ms: int = Field(gt=0, le=2_147_483_647)
     playback_rate: float = Field(ge=0.25, le=2)
     text_visible: bool
     recording: RecordingRetention | None = None

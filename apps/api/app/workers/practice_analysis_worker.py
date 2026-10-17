@@ -57,7 +57,7 @@ def process(repo, row, token, settings, lane="combined"):
                     raise AudioFailure("recording_integrity_failed")
                 source = work / "input"
                 source.write_bytes(data)
-                normalize_take(source, wav)
+                normalize_take(source, wav, max(61, 2 * (attempt["end_ms"] - attempt["start_ms"]) / 1000 + 1))
             if row["analysis_version"] == GATED_ANALYSIS_VERSION:
                 process_checked(repo, row, token, settings, attempt, wav, work, lost, lane)
                 return

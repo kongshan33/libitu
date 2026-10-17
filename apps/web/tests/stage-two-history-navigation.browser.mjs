@@ -16,7 +16,7 @@ const blueprint={id:'directory-blueprint',content_id:content,title:'History and 
   segments:[{id:'directory-segment',sequence:1,title:'Opening',summary:'Practice.',start_ms:1000,end_ms:13000,transcript_start_index:0,transcript_end_index:4,phonology_tags:[]},
     {id:'short-segment',sequence:2,title:'Short sentences',summary:'Practice.',start_ms:13000,end_ms:19000,transcript_start_index:4,transcript_end_index:6,phonology_tags:[]}]};
 const job={id:'directory-job',content_id:content,status:'ready',blueprint_id:blueprint.id,analysis_version:'mvp-v9',processing_stage:'completed',analysis_preview:null,error_message:null};
-const entry=(sentence=blueprint.transcript[0].id,segment='directory-segment')=>`${origin}/practice/${content}/shadow?segmentId=${segment}${sentence?`&sentenceId=${sentence}`:''}`;
+const entry=(sentence=blueprint.transcript[0].id,segment='directory-segment')=>`${origin}/practice/${content}/shadow?shadowMode=detailed&segmentId=${segment}${sentence?`&sentenceId=${sentence}`:''}`;
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream']});
 try {for(const width of [1440,390]){
   const context=await browser.newContext({viewport:{width,height:1000},permissions:['microphone']});

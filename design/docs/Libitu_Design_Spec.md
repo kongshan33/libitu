@@ -11,6 +11,15 @@ meta:
 
 This specification defines the current Libitu MVP product and interaction model. Use it for product behavior and user experience. Use `MVP_SYSTEM_DESIGN.md` for system boundaries, `BACKEND_SYSTEM_DESIGN.md` for API implementation, and `DESIGN.md` for visual direction.
 
+## Stage 2 Quick and Review — 2026-10-17
+
+Stage 2 offers Quick (default), Detailed and Review. Detailed retains the existing practice layout. Quick and Detailed use the shared purple primary-button variant with consistent default corners and interaction states; secondary actions remain neutral. Quick follows [the approved prototype](../prototypes/libitu_quick_shadowing_and_review.html): select a sentence range, optionally skip sentences under four words, choose speed, text support and automatic/manual advance, then listen and record sequentially. Recording lasts twice the original sentence duration, independent of playback speed; Done ends early. After the reference finishes, show a 2-second preparation countdown before opening the microphone; this does not consume recording time. Pause discards the unfinished recording and cancels preparation, while Resume always replays the current sentence. Earlier completed takes remain saved. While paused, show Resume and hide Redo; Redo availability in other states is unchanged. Detailed behavior is unchanged. Provide redo, skip, round summaries and targeted practice. Analysis continues in the background.
+
+Review lists practiced sentences in the segment, filters latest results, selects historical takes, replays available audio and exposes the existing Sound/Rhythm/Melody layers. Keep the real 60/85 word gates; no Reference still permits eligible learner-only analysis. Display pending, failed and unchecked states separately from word-match outcomes. Prototype example scores and sound judgments are not evidence.
+
+Server analysis and recording retention remain separate preferences. Temporary replay is limited to the page session and a bounded cache; later playback requires retention. Mobile layouts stack the directory and content. Reference acquisition continues through the existing Detailed preparation flow.
+
+
 ## Shared visual identity
 
 Existing web brand links share the landing `libitu.` wordmark, including its light-purple dot. Header-specific size and tagline placement remain intact. Shared warm-neutral surfaces, radius tiers and restrained elevation support the existing dense workspaces. Purple primary actions and learning/status semantic colors remain; retain current layout, spacing, responsive breakpoints and font stack in the first consistency pass. Interactive controls expose visible keyboard focus and respect reduced-motion preferences. `DESIGN.md` supplies reference treatments within these boundaries.

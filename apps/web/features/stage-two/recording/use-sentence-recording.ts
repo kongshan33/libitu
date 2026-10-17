@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LocalSentenceRecorder, type RecordingState } from "./local-recorder";
 
 export function useSentenceRecording(sentenceId: string | null, pauseReference: () => void,
-  onCompleted?: (clip: NonNullable<RecordingState["clip"]>) => void) {
+  onCompleted?: (clip: NonNullable<RecordingState["clip"]>) => void, stopOnHide = false) {
   const [state, setState] = useState<RecordingState>({
     phase: "idle", sentenceId: null, clip: null, elapsedMs: 0, error: null
   });
@@ -60,7 +60,7 @@ export function useSentenceRecording(sentenceId: string | null, pauseReference: 
       if (document.visibilityState !== "hidden") return;
       pauseReference();
       pauseReplay();
-      recorder.cancel();
+      if (stopOnHide && recorder.getSnapshot().phase === "recording") recorder.stop(); else recorder.cancel();
     }
     window.addEventListener("pagehide", hidePage);
     document.addEventListener("visibilitychange", changeVisibility);
@@ -70,7 +70,7 @@ export function useSentenceRecording(sentenceId: string | null, pauseReference: 
       replayEpoch.current += 1;
       recorder.dispose();
     };
-  }, [recorder, pauseReference, pauseReplay]);
+  }, [recorder, pauseReference, pauseReplay, stopOnHide]);
 
   function isBusy() {
     const phase = recorder.getSnapshot().phase;
@@ -84,13 +84,13 @@ export function useSentenceRecording(sentenceId: string | null, pauseReference: 
     recorder.setSentence(next);
   }
 
-  function start() {
+  function start(maxDurationMs?: number) {
     if (!sentenceId || isBusy()) return;
     pauseReference();
     pauseReplay();
     setReplayError(null);
     recorder.setSentence(sentenceId);
-    void recorder.start();
+    void recorder.start(maxDurationMs);
   }
 
   async function toggleReplay() {
@@ -122,7 +122,7 @@ export function useSentenceRecording(sentenceId: string | null, pauseReference: 
   }
 
   return {
-    state, recorder, isBusy, changeSentence, start, clear, pauseReplay, attachAudio, audioRef,
+    state, recorder, isBusy, changeSentence, start: () => start(), startWithDuration: start, clear, pauseReplay, attachAudio, audioRef,
     replaying, replayError, toggleReplay, onReplayPlay,
     onReplayPause: () => setReplaying(false),
     onReplayError: (url: string) => {
