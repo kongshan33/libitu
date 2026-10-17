@@ -92,7 +92,7 @@ try {
     await page.route("**/*", async (route) => {
       const request = route.request();
       const url = new URL(request.url());
-      const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type" };
+      const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type,authorization", "access-control-allow-methods":"GET,POST,PUT,DELETE,OPTIONS" };
       if (url.pathname.startsWith("/api/")) {
         if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
         apiCalls.push(`${request.method()} ${url.pathname}`);
@@ -101,6 +101,7 @@ try {
         if (request.method() === "GET" && url.pathname === `/api/blueprints/${job.content_id}`) return route.fulfill({ json: blueprint, headers });
         if (request.method() === "GET" && url.pathname.startsWith(`/api/blueprints/${job.content_id}/sentences/`)
           && url.pathname.endsWith("/sound")) return route.fulfill({ status: 404, json: { detail: "Sound guide is outside this recorder fixture." }, headers });
+        if(request.method()==='PUT'&&url.pathname===`/api/profile/videos/${job.content_id}`)return route.fulfill({json:{},headers});
         throw new Error(`Unexpected product API call: ${request.method()} ${url.pathname}`);
       }
       if (url.origin === origin || url.hostname.endsWith(".clerk.accounts.dev")) return route.continue();
@@ -164,9 +165,9 @@ try {
     const panel = page.locator(".stage-two-recording");
     const audio = panel.locator("audio");
     const next = page.getByRole("button", { name: "Next sentence", exact: true });
-    await page.getByRole("button", { name: "Play sentence", exact: true }).click();
+    await page.getByRole("button", { name: "Listen", exact: true }).click();
     await startRecording(page);
-    assert.equal(await page.getByRole("button", { name: "Play sentence", exact: true }).isDisabled(), true);
+    assert.equal(await page.getByRole("button", { name: "Listen", exact: true }).isDisabled(), true);
     await page.waitForTimeout(250); // Let the original seek settle before bypassing the custom Play control.
     await page.evaluate(() => window.__activePlayer.playVideo());
     assert.equal(await page.evaluate(() => window.__activePlayer.playing), false, "native YouTube play is blocked during capture");
@@ -273,7 +274,7 @@ try {
     assert.equal(await audio.count(), 0, "reload restores sentence selection without the recording");
     assert.equal(new URL(page.url()).searchParams.get("sentenceId"), blueprint.transcript[0].id);
     assert.deepEqual(mediaUploads, []);
-    assert.ok(apiCalls.length > 0 && apiCalls.every((call) => call.startsWith("GET ")), "practice never uploads microphone data");
+    assert.ok(apiCalls.length > 0 && apiCalls.every((call) => call.startsWith("GET ")||call===`PUT /api/profile/videos/${job.content_id}`), "practice never uploads microphone data");
     assert.deepEqual(errors, []);
     console.log(`Stage 2 real MediaRecorder with synthetic microphone passed at ${viewport.width}px`);
     await context.close();

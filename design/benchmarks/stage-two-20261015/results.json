@@ -1,0 +1,2810 @@
+{
+  "measured_at": "2026-10-15",
+  "environment": {
+    "browser": "Chrome localhost:3000",
+    "api": "loopback FastAPI fixture on127.0.0.1:8012, actual application routes",
+    "database_storage": "hosted Supabase ulrdykwhggcaspylines",
+    "workers": "actual reference and learner worker mains, one each, localCPU",
+    "logical_cpus": 8,
+    "ram_gib": 16,
+    "audio_seconds": 3.74625,
+    "source_words": 9,
+    "reference_bytes": 119958,
+    "learner_ogg_bytes": 35683,
+    "inference": "real MFA3.3.9; resident faster-whisper1.2.1 small.en CPU int8 threads2 beam5; both gates unchanged",
+    "cache": "warm compiled MFA lexicon; no cached reference result per run; all worker audio reads hit local cache"
+  },
+  "method": {
+    "start": "browser event before Reference registration POST; raw PUT timestamps retained separately",
+    "end": "double requestAnimationFrame after actual usePracticeAnalysis result reaches existing three-layer components",
+    "reference_poll_seconds": 2.5,
+    "learner_poll": "unchanged production hook:2500ms after prior response",
+    "fixtures": "synthetic audio and immutable source blueprint; isolated owner authentication fixture, no real learner history touched",
+    "excluded": "capturing original video, human recording duration, audio synthesis/loading/hashing, Clerk authentication overhead, worker startup",
+    "limitations": "three same-input local runs, not production latency distribution or old/new sequential A/B; no exact failure exception type captured; active machine load not controlled",
+    "trace_semantics": "end events run in finally and do not guarantee success; first_claim_to_finish includes queue retry and waiting"
+  },
+  "findings": [
+    "MFA overlapped in all runs; first round9.296s simultaneous MFA. No exact end-to-end speedup percentage inferred.",
+    "Round2 Reference results write encountered HTTPError after5.011s, released lease for retry.18.004s from retry acknowledgement to next claim; MFA repeated23.250s.",
+    "Round2 learner checkpoint reused on resume without audio read/decode/ASR/MFA.",
+    "All final results completed with available comparison and full_85_plus9/9word matches.",
+    "Normal round3 was slower than round1 with same input; no measured CPU/IO attribution for variance.",
+    "After all3runs completed, unrelated blueprint worker Upstash TLS ConnectTimeout caused pnpm dev group exit; not included in measured timings."
+  ],
+  "recommendations_in_order": [
+    "P0: retain computed Reference payload and retry the same fenced results write a bounded number of times on transient errors; do not immediately rerun MFA. Stop on lost lease/cancel/delete.",
+    "P1: prototype resident isolated MFA aligner per worker, reusing model/lexicon/tokenizer while keeping per-utterance data private; verify same-audio evidence equivalence before rollout.",
+    "P2: reduce serial DB calls in registration/upload/status; status currently reads attempt twice plus analysis and reference/source checks. Preserve owner/revocation boundaries, consider single scoped RPC.",
+    "P3: wake checkpoint-complete learners on Reference completion instead of fixed15s backoff; use terminal result notification or shorter bounded polling. Not primary cause in runs1/3.",
+    "Operational: isolate service supervisors so blueprint network failure cannot terminate acoustic workers; avoid duplicate local worker stacks."
+  ],
+  "runs": [
+    {
+      "run": "f8fe422b-637b-46ea-850f-ebe532ad0dca",
+      "reference_id": "508d5022-003f-59a2-87a2-86980417a162",
+      "take_id": "cdd15887-58eb-5813-b817-6e6fb7ae6e07",
+      "metrics": {
+        "reference_upload_start": 0.0,
+        "reference_upload_ack": 10.789,
+        "learner_registration_start": 10.79,
+        "learner_upload_start": 13.404,
+        "learner_upload_ack": 17.739,
+        "word_check_rendered": 25.867,
+        "reference_rendered": 40.25,
+        "result_rendered": 50.746,
+        "learner_upload_to_render": 37.342,
+        "learner_registration_to_render": 39.956,
+        "reference_finish_to_render": 2.621,
+        "learner_finish_to_render": 2.961,
+        "reference_first_claim_to_finish": 24.54,
+        "learner_first_claim_to_finish": 29.149,
+        "reference_put_to_ready": 33.8
+      },
+      "requests": [
+        {
+          "path": "/benchmark/fixture",
+          "method": "GET",
+          "start": -0.241,
+          "duration": 0.194
+        },
+        {
+          "path": "/api/references/captures",
+          "method": "POST",
+          "start": 0.004,
+          "duration": 6.444
+        },
+        {
+          "path": "/api/references/REF/audio",
+          "method": "PUT",
+          "start": 6.45,
+          "duration": 4.315
+        },
+        {
+          "path": "/api/practice/attempts",
+          "method": "POST",
+          "start": 10.794,
+          "duration": 1.094
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "POST",
+          "start": 11.889,
+          "duration": 1.514
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 13.402,
+          "duration": 0.536
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 16.545,
+          "duration": 0.544
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis/audio",
+          "method": "PUT",
+          "start": 13.404,
+          "duration": 4.334
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 17.757,
+          "duration": 1.266
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 19.904,
+          "duration": 0.646
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 21.541,
+          "duration": 0.803
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 23.293,
+          "duration": 0.546
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 25.048,
+          "duration": 0.791
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 26.555,
+          "duration": 0.555
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 28.438,
+          "duration": 0.801
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 29.738,
+          "duration": 0.515
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 31.801,
+          "duration": 0.789
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 33.399,
+          "duration": 0.495
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 35.26,
+          "duration": 0.832
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 36.489,
+          "duration": 0.512
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 38.594,
+          "duration": 0.794
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 39.639,
+          "duration": 0.601
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 41.889,
+          "duration": 0.916
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 45.739,
+          "duration": 0.755
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 49.143,
+          "duration": 1.365
+        }
+      ],
+      "timeline": [
+        {
+          "lane": "reference",
+          "event": "process.start",
+          "t": 13.09,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.start",
+          "t": 13.348,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.start",
+          "t": 13.348,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.end",
+          "t": 13.352,
+          "elapsed": 0.004,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.end",
+          "t": 13.352,
+          "elapsed": 0.004,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.start",
+          "t": 13.354,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.end",
+          "t": 14.236,
+          "elapsed": 0.881,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 14.236,
+          "elapsed": 0.0,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 14.502,
+          "elapsed": 0.266,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.start",
+          "t": 14.502,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.end",
+          "t": 14.504,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.start",
+          "t": 14.504,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.start",
+          "t": 14.504,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.start",
+          "t": 14.882,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.start",
+          "t": 18.636,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.read_audio.start",
+          "t": 18.91,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "cache.get.start",
+          "t": 18.911,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "cache.get.end",
+          "t": 18.914,
+          "elapsed": 0.003,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.read_audio.end",
+          "t": 18.914,
+          "elapsed": 0.004,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "decode.start",
+          "t": 18.916,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.start",
+          "t": 18.917,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "ffmpeg",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.end",
+          "t": 19.015,
+          "elapsed": 0.098,
+          "action": null,
+          "phase": null,
+          "category": "ffmpeg",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "decode.end",
+          "t": 19.017,
+          "elapsed": 0.1,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 19.017,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "checking_words",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 19.304,
+          "elapsed": 0.287,
+          "action": "checkpoint",
+          "phase": "checking_words",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "word_check.start",
+          "t": 19.304,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "word_check.end",
+          "t": 24.759,
+          "elapsed": 5.455,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 24.76,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "word_check_complete",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 25.594,
+          "elapsed": 0.835,
+          "action": "checkpoint",
+          "phase": "word_check_complete",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 25.594,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 25.862,
+          "elapsed": 0.268,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "learner_acoustics.start",
+          "t": 25.862,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "extract.start",
+          "t": 25.863,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "extract.end",
+          "t": 26.488,
+          "elapsed": 0.625,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "align.start",
+          "t": 26.489,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.start",
+          "t": 26.88,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.end",
+          "t": 36.176,
+          "elapsed": 21.294,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.end",
+          "t": 36.177,
+          "elapsed": 21.674,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.end",
+          "t": 36.18,
+          "elapsed": 21.677,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 36.182,
+          "elapsed": 0.0,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 37.368,
+          "elapsed": 1.187,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 37.369,
+          "elapsed": 0.0,
+          "action": "finish",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 37.629,
+          "elapsed": 0.26,
+          "action": "finish",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "process.end",
+          "t": 38.022,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.end",
+          "t": 45.465,
+          "elapsed": 18.585,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "align.end",
+          "t": 45.468,
+          "elapsed": 18.979,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "learner_acoustics.end",
+          "t": 45.472,
+          "elapsed": 19.61,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 45.473,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 46.336,
+          "elapsed": 0.863,
+          "action": "checkpoint",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 46.336,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 46.942,
+          "elapsed": 0.606,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 46.943,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 47.505,
+          "elapsed": 0.562,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "comparison.start",
+          "t": 47.505,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "comparison.end",
+          "t": 47.512,
+          "elapsed": 0.007,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 47.513,
+          "elapsed": 0.0,
+          "action": "finish",
+          "phase": "finished",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 47.785,
+          "elapsed": 0.272,
+          "action": "finish",
+          "phase": "finished",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.end",
+          "t": 47.832,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        }
+      ],
+      "storage_uploads": [
+        {
+          "lane": "api",
+          "seconds": 2.03,
+          "bucket": "reference-audio"
+        },
+        {
+          "lane": "api",
+          "seconds": 1.239,
+          "bucket": "practice-analysis-inputs"
+        }
+      ],
+      "mfa_overlap_seconds": 9.296
+    },
+    {
+      "run": "6dd5ea39-0fdf-411c-8206-621a42ad1e68",
+      "reference_id": "2b1f7716-edbd-5924-9948-dfeb6ed880f7",
+      "take_id": "d217d9fa-9ad9-5280-863a-e150d754dc63",
+      "metrics": {
+        "reference_upload_start": 0.0,
+        "reference_upload_ack": 5.844,
+        "learner_registration_start": 5.845,
+        "learner_upload_start": 8.641,
+        "learner_upload_ack": 12.294,
+        "word_check_rendered": 20.406,
+        "reference_rendered": 77.202,
+        "result_rendered": 80.131,
+        "learner_upload_to_render": 71.49,
+        "learner_registration_to_render": 74.286,
+        "reference_finish_to_render": 1.489,
+        "learner_finish_to_render": 1.161,
+        "reference_first_claim_to_finish": 68.303,
+        "learner_first_claim_to_finish": 67.613,
+        "reference_put_to_ready": 74.56
+      },
+      "requests": [
+        {
+          "path": "/benchmark/fixture",
+          "method": "GET",
+          "start": -0.047,
+          "duration": 0.015
+        },
+        {
+          "path": "/api/references/captures",
+          "method": "POST",
+          "start": 0.0,
+          "duration": 2.641
+        },
+        {
+          "path": "/api/references/REF/audio",
+          "method": "PUT",
+          "start": 2.642,
+          "duration": 3.201
+        },
+        {
+          "path": "/api/practice/attempts",
+          "method": "POST",
+          "start": 5.846,
+          "duration": 1.145
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "POST",
+          "start": 6.992,
+          "duration": 1.648
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 8.512,
+          "duration": 1.083
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis/audio",
+          "method": "PUT",
+          "start": 8.641,
+          "duration": 3.653
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 12.288,
+          "duration": 0.654
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 12.301,
+          "duration": 0.898
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 15.556,
+          "duration": 0.539
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 16.088,
+          "duration": 0.905
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 18.598,
+          "duration": 0.6
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 19.549,
+          "duration": 0.841
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 21.701,
+          "duration": 0.556
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 22.998,
+          "duration": 0.864
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 27.44,
+          "duration": 0.567
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 27.442,
+          "duration": 1.397
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 30.55,
+          "duration": 0.554
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 31.512,
+          "duration": 0.832
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 33.612,
+          "duration": 0.529
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 35.005,
+          "duration": 0.835
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 36.645,
+          "duration": 0.556
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 38.511,
+          "duration": 1.401
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 39.702,
+          "duration": 1.112
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 42.56,
+          "duration": 1.439
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 43.853,
+          "duration": 0.587
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 46.994,
+          "duration": 0.546
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 46.501,
+          "duration": 1.347
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 50.109,
+          "duration": 0.58
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 50.511,
+          "duration": 1.378
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 53.203,
+          "duration": 0.636
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 54.39,
+          "duration": 1.349
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 56.347,
+          "duration": 0.543
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 58.24,
+          "duration": 1.35
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 59.511,
+          "duration": 1.079
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 62.097,
+          "duration": 1.551
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 63.446,
+          "duration": 0.653
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 66.292,
+          "duration": 1.397
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 66.612,
+          "duration": 1.178
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 70.318,
+          "duration": 0.577
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 70.311,
+          "duration": 1.479
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 73.49,
+          "duration": 0.554
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 74.54,
+          "duration": 1.5
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 76.551,
+          "duration": 0.64
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 78.553,
+          "duration": 1.489
+        }
+      ],
+      "timeline": [
+        {
+          "lane": "reference",
+          "event": "process.start",
+          "t": 7.41,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.start",
+          "t": 7.675,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.start",
+          "t": 7.675,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.end",
+          "t": 7.676,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.end",
+          "t": 7.676,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.start",
+          "t": 7.678,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.end",
+          "t": 8.021,
+          "elapsed": 0.343,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 8.021,
+          "elapsed": 0.0,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 8.295,
+          "elapsed": 0.273,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.start",
+          "t": 8.296,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.end",
+          "t": 8.296,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.start",
+          "t": 8.297,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.start",
+          "t": 8.297,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.start",
+          "t": 8.3,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.start",
+          "t": 11.357,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.read_audio.start",
+          "t": 11.675,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "cache.get.start",
+          "t": 11.675,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "cache.get.end",
+          "t": 11.676,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.read_audio.end",
+          "t": 11.676,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "decode.start",
+          "t": 11.677,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.start",
+          "t": 11.677,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "ffmpeg",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.end",
+          "t": 11.774,
+          "elapsed": 0.097,
+          "action": null,
+          "phase": null,
+          "category": "ffmpeg",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "decode.end",
+          "t": 11.775,
+          "elapsed": 0.098,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 11.775,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "checking_words",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 12.043,
+          "elapsed": 0.267,
+          "action": "checkpoint",
+          "phase": "checking_words",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "word_check.start",
+          "t": 12.043,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "word_check.end",
+          "t": 17.447,
+          "elapsed": 5.404,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 17.447,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "word_check_complete",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 18.407,
+          "elapsed": 0.959,
+          "action": "checkpoint",
+          "phase": "word_check_complete",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 18.407,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 18.649,
+          "elapsed": 0.241,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "learner_acoustics.start",
+          "t": 18.649,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "extract.start",
+          "t": 18.649,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "extract.end",
+          "t": 19.003,
+          "elapsed": 0.354,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "align.start",
+          "t": 19.004,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.start",
+          "t": 19.007,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.end",
+          "t": 26.076,
+          "elapsed": 17.776,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.end",
+          "t": 26.078,
+          "elapsed": 17.781,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.end",
+          "t": 26.081,
+          "elapsed": 17.785,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 26.082,
+          "elapsed": 0.0,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 31.092,
+          "elapsed": 5.011,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 31.137,
+          "elapsed": 0.0,
+          "action": "retry",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 32.124,
+          "elapsed": 0.987,
+          "action": "retry",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "process.end",
+          "t": 32.395,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.end",
+          "t": 36.018,
+          "elapsed": 17.012,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "align.end",
+          "t": 36.02,
+          "elapsed": 17.017,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "learner_acoustics.end",
+          "t": 36.023,
+          "elapsed": 17.375,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 36.024,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 36.823,
+          "elapsed": 0.799,
+          "action": "checkpoint",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 36.823,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 37.367,
+          "elapsed": 0.544,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 37.367,
+          "elapsed": 0.0,
+          "action": "wait_reference",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 37.631,
+          "elapsed": 0.264,
+          "action": "wait_reference",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.end",
+          "t": 37.677,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "process.start",
+          "t": 50.128,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.start",
+          "t": 50.407,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.start",
+          "t": 50.408,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.end",
+          "t": 50.41,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.end",
+          "t": 50.41,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.start",
+          "t": 50.411,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.end",
+          "t": 50.889,
+          "elapsed": 0.478,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 50.889,
+          "elapsed": 0.0,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 51.153,
+          "elapsed": 0.264,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.start",
+          "t": 51.154,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.end",
+          "t": 51.155,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.start",
+          "t": 51.155,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.start",
+          "t": 51.155,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.start",
+          "t": 51.159,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.end",
+          "t": 74.408,
+          "elapsed": 23.25,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.end",
+          "t": 74.413,
+          "elapsed": 23.258,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.end",
+          "t": 74.417,
+          "elapsed": 23.262,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 74.419,
+          "elapsed": 0.0,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 75.454,
+          "elapsed": 1.035,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 75.456,
+          "elapsed": 0.0,
+          "action": "finish",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 75.713,
+          "elapsed": 0.257,
+          "action": "finish",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "process.end",
+          "t": 76.06,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.start",
+          "t": 77.017,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 77.287,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 77.545,
+          "elapsed": 0.257,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 77.546,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 78.097,
+          "elapsed": 0.551,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 78.1,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 78.678,
+          "elapsed": 0.578,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "comparison.start",
+          "t": 78.678,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "comparison.end",
+          "t": 78.68,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 78.681,
+          "elapsed": 0.0,
+          "action": "finish",
+          "phase": "finished",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 78.97,
+          "elapsed": 0.289,
+          "action": "finish",
+          "phase": "finished",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.end",
+          "t": 78.971,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        }
+      ],
+      "storage_uploads": [
+        {
+          "lane": "api",
+          "seconds": 1.654,
+          "bucket": "reference-audio"
+        },
+        {
+          "lane": "api",
+          "seconds": 1.064,
+          "bucket": "practice-analysis-inputs"
+        }
+      ],
+      "mfa_overlap_seconds": 7.069
+    },
+    {
+      "run": "a7d23e0f-cf96-4a3e-bef6-5e34af3c1409",
+      "reference_id": "56391b26-a2e9-5d0d-bba7-2d4388e60623",
+      "take_id": "d560aeb2-73e7-5260-b3e6-5e2f6a54ad9a",
+      "metrics": {
+        "reference_upload_start": 0.0,
+        "reference_upload_ack": 5.805,
+        "learner_registration_start": 5.806,
+        "learner_upload_start": 8.885,
+        "learner_upload_ack": 13.009,
+        "word_check_rendered": 29.518,
+        "reference_rendered": 44.998,
+        "result_rendered": 57.191,
+        "learner_upload_to_render": 48.306,
+        "learner_registration_to_render": 51.385,
+        "reference_finish_to_render": 1.958,
+        "learner_finish_to_render": 2.879,
+        "reference_first_claim_to_finish": 37.149,
+        "learner_first_claim_to_finish": 40.807,
+        "reference_put_to_ready": 42.363
+      },
+      "requests": [
+        {
+          "path": "/benchmark/fixture",
+          "method": "GET",
+          "start": -0.056,
+          "duration": 0.013
+        },
+        {
+          "path": "/api/references/captures",
+          "method": "POST",
+          "start": 0.001,
+          "duration": 2.634
+        },
+        {
+          "path": "/api/references/REF/audio",
+          "method": "PUT",
+          "start": 2.635,
+          "duration": 3.168
+        },
+        {
+          "path": "/api/practice/attempts",
+          "method": "POST",
+          "start": 5.806,
+          "duration": 1.385
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "POST",
+          "start": 7.198,
+          "duration": 1.686
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 8.334,
+          "duration": 1.162
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 12.084,
+          "duration": 0.604
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis/audio",
+          "method": "PUT",
+          "start": 8.89,
+          "duration": 4.118
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 13.022,
+          "duration": 0.829
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 15.584,
+          "duration": 2.223
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 17.816,
+          "duration": 0.874
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 20.346,
+          "duration": 0.639
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 21.285,
+          "duration": 0.799
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 23.893,
+          "duration": 0.569
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 24.757,
+          "duration": 0.884
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 27.497,
+          "duration": 0.613
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 28.408,
+          "duration": 1.072
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 30.857,
+          "duration": 0.537
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 32.005,
+          "duration": 0.838
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 34.293,
+          "duration": 0.552
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 35.9,
+          "duration": 0.842
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 37.489,
+          "duration": 0.58
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 39.692,
+          "duration": 0.901
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 40.594,
+          "duration": 0.598
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 43.139,
+          "duration": 0.799
+        },
+        {
+          "path": "/api/references/REF",
+          "method": "GET",
+          "start": 43.788,
+          "duration": 1.201
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 46.894,
+          "duration": 0.796
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 51.259,
+          "duration": 0.933
+        },
+        {
+          "path": "/api/practice/attempts/TAKE/analysis",
+          "method": "GET",
+          "start": 55.642,
+          "duration": 1.453
+        }
+      ],
+      "timeline": [
+        {
+          "lane": "reference",
+          "event": "process.start",
+          "t": 5.892,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.start",
+          "t": 6.351,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.start",
+          "t": 6.351,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "cache.get.end",
+          "t": 6.352,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.read_audio.end",
+          "t": 6.352,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.start",
+          "t": 6.355,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "extract.end",
+          "t": 7.065,
+          "elapsed": 0.71,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 7.065,
+          "elapsed": 0.0,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 7.348,
+          "elapsed": 0.283,
+          "action": "heartbeat",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.start",
+          "t": 7.349,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "crop.end",
+          "t": 7.351,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.start",
+          "t": 7.351,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.start",
+          "t": 7.352,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.start",
+          "t": 7.357,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.start",
+          "t": 13.505,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.read_audio.start",
+          "t": 13.773,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "cache.get.start",
+          "t": 13.774,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "cache.get.end",
+          "t": 13.775,
+          "elapsed": 0.001,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": true
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.read_audio.end",
+          "t": 13.775,
+          "elapsed": 0.002,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "decode.start",
+          "t": 13.777,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.start",
+          "t": 13.778,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "ffmpeg",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.end",
+          "t": 13.908,
+          "elapsed": 0.13,
+          "action": null,
+          "phase": null,
+          "category": "ffmpeg",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "decode.end",
+          "t": 13.909,
+          "elapsed": 0.132,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 13.91,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "checking_words",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 14.176,
+          "elapsed": 0.267,
+          "action": "checkpoint",
+          "phase": "checking_words",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "word_check.start",
+          "t": 14.177,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "word_check.end",
+          "t": 25.619,
+          "elapsed": 11.442,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 25.619,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "word_check_complete",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 26.419,
+          "elapsed": 0.799,
+          "action": "checkpoint",
+          "phase": "word_check_complete",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 26.419,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 26.726,
+          "elapsed": 0.308,
+          "action": "checkpoint",
+          "phase": "analyzing_all",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "learner_acoustics.start",
+          "t": 26.727,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "extract.start",
+          "t": 26.727,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "extract.end",
+          "t": 27.507,
+          "elapsed": 0.78,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "align.start",
+          "t": 27.509,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.start",
+          "t": 27.519,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "subprocess.end",
+          "t": 41.692,
+          "elapsed": 34.336,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "align.end",
+          "t": 41.694,
+          "elapsed": 34.343,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "reference_acoustics.end",
+          "t": 41.698,
+          "elapsed": 34.347,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 41.7,
+          "elapsed": 0.0,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 42.768,
+          "elapsed": 1.069,
+          "action": "results",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.start",
+          "t": 42.769,
+          "elapsed": 0.0,
+          "action": "finish",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "ReferenceRepository.fenced.end",
+          "t": 43.04,
+          "elapsed": 0.272,
+          "action": "finish",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "reference",
+          "event": "process.end",
+          "t": 43.377,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "subprocess.end",
+          "t": 51.883,
+          "elapsed": 24.364,
+          "action": null,
+          "phase": null,
+          "category": "mfa",
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "align.end",
+          "t": 51.885,
+          "elapsed": 24.376,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "learner_acoustics.end",
+          "t": 51.892,
+          "elapsed": 25.166,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 51.892,
+          "elapsed": 0.0,
+          "action": "checkpoint",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 52.718,
+          "elapsed": 0.826,
+          "action": "checkpoint",
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 52.719,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 53.432,
+          "elapsed": 0.713,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.start",
+          "t": 53.434,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "reference_lookup.end",
+          "t": 54.023,
+          "elapsed": 0.589,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "comparison.start",
+          "t": 54.024,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "comparison.end",
+          "t": 54.028,
+          "elapsed": 0.005,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.start",
+          "t": 54.029,
+          "elapsed": 0.0,
+          "action": "finish",
+          "phase": "finished",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "PracticeAnalysisRepository.fenced.end",
+          "t": 54.312,
+          "elapsed": 0.283,
+          "action": "finish",
+          "phase": "finished",
+          "category": null,
+          "hit": null
+        },
+        {
+          "lane": "learner",
+          "event": "process.end",
+          "t": 54.358,
+          "elapsed": 0.0,
+          "action": null,
+          "phase": null,
+          "category": null,
+          "hit": null
+        }
+      ],
+      "storage_uploads": [
+        {
+          "lane": "api",
+          "seconds": 1.492,
+          "bucket": "reference-audio"
+        },
+        {
+          "lane": "api",
+          "seconds": 1.313,
+          "bucket": "practice-analysis-inputs"
+        }
+      ],
+      "mfa_overlap_seconds": 14.173
+    }
+  ],
+  "sources": [
+    "apps/api/app/workers/acoustic_worker.py:100",
+    "apps/api/app/workers/practice_analysis_worker.py:140",
+    "apps/api/app/services/acoustics/engine.py:75",
+    "apps/api/app/services/practice_analysis_service.py:32",
+    "apps/web/features/stage-two/persistence/use-practice-analysis.ts:18",
+    "supabase/migrations/20261012123602_practice_word_gate.sql:47",
+    "https://supabase.com/docs/guides/database/functions"
+  ],
+  "cleanup": {
+    "temporary_page_removed": true,
+    "synthetic_owner_remaining_analyses": 0,
+    "synthetic_owner_remaining_references": 0,
+    "normal_dev_startup_verified": true
+  }
+}

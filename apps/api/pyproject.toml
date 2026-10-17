@@ -11,6 +11,7 @@ dependencies = [
   "httpx>=0.27.0",
   "pydantic>=2.8.0",
   "pydantic-settings>=2.4.0",
+  "python-multipart==0.0.32",
   "sherpa-onnx>=1.13.6,<2",
   "sherpa-onnx-core>=1.13.6,<2",
   "spacy==3.8.16",
@@ -26,6 +27,7 @@ en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/dow
 [project.optional-dependencies]
 acoustics = [
   "numpy==2.2.6",
+  "PyWavelets==1.8.0",
   "praat-parselmouth==0.4.7",
   "onnxruntime==1.22.1",
   "faster-whisper==1.2.1",

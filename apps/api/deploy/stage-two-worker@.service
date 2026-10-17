@@ -1,0 +1,21 @@
+[Unit]
+Description=Libitu Stage 2 %i lane
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/libitu/apps/api
+EnvironmentFile=/etc/libitu/api.env
+Environment=ACOUSTIC_SCHEDULER_PATH=/var/lib/libitu/acoustic-scheduler
+ExecStart=/opt/libitu/apps/api/.venv/bin/python -m app.workers.stage_two_worker --lane %i
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=15
+User=libitu
+StateDirectory=libitu
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

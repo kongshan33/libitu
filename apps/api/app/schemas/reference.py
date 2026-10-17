@@ -6,6 +6,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 from app.schemas.acoustic_base import StrictModel
 from app.schemas.practice_analysis import VoiceProsody
+from app.schemas.captions import CaptionWordTiming
+from app.schemas.signal_prosody import SignalProsody
 
 MAX_REFERENCE_BYTES = 32 * 1024 * 1024
 MAX_SEGMENT_MS = 600_000
@@ -32,6 +34,7 @@ class SentenceSnapshot(StrictModel):
     text: str = Field(min_length=1, max_length=12000)
     start_ms: int = Field(ge=0)
     end_ms: int = Field(gt=0)
+    word_timings: list[CaptionWordTiming] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def ordered(self):
@@ -83,13 +86,14 @@ class Measurements(StrictModel):
 
 class SentenceResult(StrictModel):
     sentence_id: str
-    status: Literal["completed", "partial", "failed"]
+    status: Literal["completed", "partial", "failed", "coarse_ready"]
     alignment: Alignment
     measurements: Measurements | None = None
     error_code: str | None = None
     # No detector probabilities, actual IPA, stress labels or pronunciation score.
     observations: list[dict] = Field(default_factory=list, max_length=0)
     prosody: VoiceProsody | None = None
+    coarse: SignalProsody | None = None
 
 
 class ReferenceView(BaseModel):

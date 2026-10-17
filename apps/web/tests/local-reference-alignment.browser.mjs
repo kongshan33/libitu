@@ -225,7 +225,7 @@ try {
       await reference.getByRole("button", { name: "Enable reference audio", exact: true }).click();
       await reference.getByText(/Click Libitu in Chrome/).waitFor();
       await page.evaluate(() => window.__grantLocalReference());
-      await reference.getByText("Reference connected", { exact: true }).waitFor();
+      await reference.getByText("This sentence has not been prepared", { exact: true }).waitFor();
       await page.evaluate(() => window.__publishLocalCoverage());
       console.log(`Reference capture supplied (${viewport.width}px); waiting for real local inference.`);
       await page.waitForFunction(() => {
@@ -264,7 +264,7 @@ try {
       assert.equal(await page.evaluate(() => window.__localWorkerStarts), workersBefore, "switching layers reuses inference");
       assert.equal(await page.evaluate(() => window.__localPlayer.state), 2, "layer switching never starts playback");
 
-      await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).check();
+      await page.getByRole("checkbox", { name: "Server analysis", exact: true }).check();
       await page.getByRole("button", { name: "Record sentence", exact: true }).click();
       await page.getByText("Recording your voice", { exact: true }).waitFor();
       await page.waitForTimeout(1400);

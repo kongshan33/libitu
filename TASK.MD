@@ -9,6 +9,64 @@ meta:
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
+## Stage 2 practice refactor — 2026-10-12
+
+- [x] Offline Rhythm CWT feasibility experiment (2026-10-16): independently implement continuous prominence from existing 10ms features, save full experimental learner curves, cache exact experimental Reference results, measure first/warm/cached computation, and record uncertainty/feature ablations. Six human clips plus two timing-only repeated-feature loads; 33 focused checks pass. [Report](design/benchmarks/rhythm-cwt-20261016/README.md).
+- [ ] Rhythm validation: collect retained same-sentence Reference/Take evidence and independent human prominence annotations. The requested latest Take had no retained recording and cleaned analysis input; paired user accuracy remains untested. Production integration is now tracked separately below; validation against human labels is still outstanding.
+
+- [x] Reduce analysis transport and repeated MFA setup: one learner upload for analysis plus consented retention, verified local worker handoff with durable fallback, bounded cleanup, versioned compiled dictionary reuse and file-change-aware verification. Cover consent, deletion, retention-only retry and cache corruption; benchmark cold and warm runs separately.
+
+- [x] Distinguish saved-reference lookup from upload in the preparation card and recording guide; cover a capture arriving during lookup and desktop/mobile lookup presentation.
+
+- [x] Remove Reference secondary ASR (2026-10-14): source-transcript MFA, explicit evidence basis, preserved audio/alignment checks, compatible pairing/status and independent reference cache version. Learner ASR/60/85 gates and original acquisition remain unchanged. Verification recorded in the refactor contract.
+
+- [x] Correct Reference status copy (2026-10-14): distinguish uploaded/incomplete analysis from missing audio in both status surfaces, show content/alignment reasons, and label retries according to the existing operation. Keep validation and acquisition unchanged. Verification recorded in the refactor contract.
+
+- [x] Add missing-reference guidance before new analyzed recordings (2026-10-14): Prepare reference uses existing acquisition; record buttons and shortcuts wait for upload, permit queued/processing reference analysis, and freeze the exact reference ID. Keep replay and local-only recording independent. No historical attachment/resume or new deletion button. Validation is recorded in the refactor contract.
+
+- [x] Fix local API worker startup (2026-10-14): remove the four-script concurrency cap that prevented the fifth persistent reference worker from starting. A bounded five-script reproduction confirms all five start before any exits with the explicit concurrency setting. Root lint/build/test pass (883 API tests; unchanged Web/extension checks use cache). The missing local reference worker was started and verified claiming queued work; backlog completion and Ready for the selected take are not yet verified. Original reference acquisition is unchanged.
+
+Target contract: [Stage 2 refactor](design/docs/STAGE_TWO_REFACTOR_CONTRACT.md). Execute these steps in order; the original-video reference acquisition module is reused unchanged.
+
+- [x] Step 1: define deterministic word matching, <60% / 60–<85% / >=85% tiers, staged analysis, recognition feedback and text-support snapshots.
+- [x] Step 2: implement backend word gate, durable intermediate results and sound-only/full analysis scope; verify the required stage-checkpoint migration locally; applied to the hosted database during step 3.
+- [x] Step 3: implement persistence migrations, recognition feedback, text-support metadata and legacy result recovery; apply and verify both migrations on hosted Libitu.
+- [x] Step 4: implement separate Listen/Record, concealed prompt/support snapshots, three-tier outcomes, recognition feedback and disabled analysis tabs; retain original reference acquisition.
+- [x] Step 5: restore full-content practiced markers from surviving owned records plus pending takes; finish short-sentence navigation, paginated take restoration, stable selection and audio-only/full deletion recovery. The service-only directory RPC is applied to hosted Libitu.
+- [ ] Step 6: complete root checks, desktop/mobile regression and implementation documentation.
+- Step 1 verification: documentation contracts cross-checked against current schemas, learner worker, ASR and reference ownership. No runtime/API/database changes or runtime test claims.
+- Step 2 verification: backend gate and local PostgreSQL queue fixtures pass, including partial mapped comparisons, ASR/checkpoint reuse and service-role permission/fencing checks. Root lint/build/test pass: 856 API tests pass (2 existing optional tests skipped), 338 Web and 114 extension tests pass (unchanged workspace checks use cache). No frontend presentation or reference acquisition change; step 2 itself did not apply hosted changes (applied in step 3).
+
+- Step 3 verification: root lint/build/test pass (877 API pass, 2 existing optional tests skipped; 340 Web and 114 extension pass). Four local SQL fixtures pass under service_role. Hosted migrations `20261012123602_practice_word_gate` and `20261012123612_practice_support_feedback` applied successfully to `ulrdykwhggcaspylines`; columns, invoker/search-path/client privileges and rollback-only synthetic checkpoint/feedback/deletion smoke verified; no synthetic profiles remain. Advisors are unchanged with informational notices only. No application deployment, live model call or new UI acceptance is claimed. Step 4 now collects modern support metadata; old records retain legacy display.
+
+- Step 4 verification: new practice-flow browser fixture and existing MediaRecorder/resource regression pass at 1440/390 px with synthetic microphone audio and fixture identity/player/server results. The new fixture verifies no mic request on Listen, one reference arm retained across sentence changes, text-support start/final peek positions, all three gates, recognition feedback without an override, single player ownership, short-sentence skip and historical result restore. Existing recorder regression verifies replacement/cancellation, late grants, native playback exclusion, visibility/pagehide/refresh and resource release. Screenshots inspected. Root-check final results are recorded in the refactor contract. No original-audio acquisition change, database migration, application deployment or live model/platform accuracy qualification in this step.
+
+- Step 5 verification: root lint/build/test and desktop/mobile practice/history/recording checks are recorded in the refactor contract. `practice_directory_progress.sql` passes locally and against hosted Libitu with 1,100 synthetic sentences inside a rolled-back transaction. Owner/content isolation, duplicate takes, audio-only deletion and final record deletion are verified; no synthetic profiles remain. Original reference acquisition is unchanged; no application deployment. Step 6 remains the final wider regression milestone.
+
+## Stage 2 directory, Ready and centered controls — 2026-10-13
+
+Stage 2 direct component restoration (2026-10-13): at the user’s explicit request, copy SoundComparison.tsx, LayerComparison.tsx (including Rhythm and PitchOverlay), and LayerFocus.tsx verbatim from /Users/river/Documents/Libitu. Their internal presentation now matches that workspace byte for byte; existing shared CSS already matches. Own Sound conceal/reveal state in StageTwoShadowing via the original controlled props, scoped to the selected sentence/take. Keep prototype status badges, recording-state visibility, word gates and source/reference acquisition outside these restored components. Word differences remain in the separate word-check result; unavailable acoustic measurements remain blank in the data adapter, while the original Sound practice-target cues are retained. Verified: restored component files match the source workspace byte for byte; root lint/build/test pass. Desktop/mobile fixture browser regressions pass for Sound/Rhythm/Melody, original reveal controls, reference lifecycle, all word gates, recording-state visibility, history, cancellation and deletion. Browser checks used this worktree on port 3001 because port 3000 is running the main workspace; no user recording or hosted data was changed by these checks.
+
+Stage 2 analysis state clarification (2026-10-13): verified the fetched origin/main at d84bd9d. Keep its internal Sound/Rhythm/Melody layout, diagrams and explanation panel; prototype styling applies only to compact layer status badges. Hide layers before recording, during microphone/encoding work and until the selected take has a durable word check (or completed legacy evidence). Then retain the exact 60/85 gates, show locks, pending ellipses, insufficient/interrupted dashes or colored evidence badges. Sound has no aggregate score: use a completion mark, with an asterisk for matched-only scope; Rhythm/Melody display real experimental similarity scores when present, otherwise a completion mark for available measurements. Existing unpaired learner evidence remains viewable. Deleted/no-analysis takes hide layers; retry/error controls remain available. Source/reference acquisition is unchanged. Verified: root lint/build/test (355 Web tests, API/extension suites) and 1440/390 px fixture browser checks cover hidden/checking/pending states, all three gates, original Sound controls, historical selection, cancelled replacement recording and deleted analysis. Screenshots inspected for desktop Sound and mobile Melody.
+
+Stage 2 analysis appearance restoration (2026-10-13): restore the main-worktree presentation of the three analysis layers: 52 px tabs and the original Sound Shadow mode/Hide text/Reveal all toolbar; status badges follow the prototype as clarified below. Remove refactor-only mobile workspace and unmatched-word box overrides. Keep the 60/85% gates, disabled tabs, exact take/reference mapping and truthful unmatched-word notes. Sound review visibility stays local to the selected take; it does not alter recording support snapshots or the word-check result. Rhythm/Pitch drawing and LayerFocus were not restyled by this refactor. Verified: root lint/build/test and 1440/390 px browser regression, including original tab height, functional Sound Hide text/Reveal all and preserved gate/history behavior.
+
+
+- [x] Display source text with right-aligned practiced, best reliable word-match and >=85% pass status; hide the directory text during recording by automatically folding the rail.
+- [x] Extend progress reads over all surviving takes with keyset-paged count projection; keep owner/content isolation and deletion semantics without new schema.
+- [x] Preserve completed Reference Ready over local preview/setup, with prototype green status styling and visible error/deletion states.
+- [x] Center media buttons and the waveform separately; restore shared black Record/red Stop roles and media pill geometry.
+- [x] Updated desktop/mobile practice regression covers auto-fold, shared paint, centered controls/waveform, best-match restoration, historical selection and highest-analysis deletion fallback. Browser-reference capture/upload/binding/refresh/delete regression passes; root lint/build/test passes (353 Web, 883 API, 114 extension). Hosted read-only REST count projection/join syntax check passes; no database migration or deployment.
+
+## Stage 2 prototype appearance correction — 2026-10-12
+
+- [x] Match the prototype’s expanded sentence list and narrow numbered rail; retain text-free practiced markers, short-sentence rules and keyboard/manual selection.
+- [x] Remove “Try another take, or move to the next sentence.”, “Sentence timings are approximate.” and “Listen first, then record your voice.”
+- [x] Restyle original-reference preparation as an integrated compact video/status card; retain actual extension setup, prepare/cancel/retry/delete and upload consent.
+- [x] Match purple Record/red Stop styling with an elapsed timer and a live microphone waveform sharing the existing recorder stream; close the monitor on cleanup.
+- [x] Match the upward Practice settings panel with segmented Speed/Text, loop checkbox and Sentence/Whole segment range; support outside click/Escape and portal selection.
+- Verification is recorded in the refactor contract; the original refactor’s step 6 wider acceptance remains separate. No database or application deployment for this visual correction.
+
 ## Reference sentence identity — 2026-10-12
 
 - [x] Reproduce saved-capture recovery returning `Sentence not found` when a raw cached caption sentence ID differs from the public derived blueprint view; confirm the mismatch on the reported video with read-only source checks.
@@ -772,3 +830,99 @@ Post-M3 production data and content-rights work (planned, not implemented):
 2026-09-30 layer guidance correction: restore the right-side Layer focus, Feedback and Tip cards for Sound, Rhythm and Melody. Sound guidance follows the selected phenomenon and uses the current sentence’s rule suggestions; conceal mode also hides word-specific sidebar text. Desktop places guidance beside the layer canvas; narrow screens place it below. The video remains above the workspace. Removing the experimental score sidebar did not authorize removing instructional guidance; no illustrative scores or detected-error claims are restored.
 
 Verification for the September 30 correction: root lint/build/test passed (805 tests). Desktop 1440 px and mobile 390 px browser regression passed, including focus-card positioning, Sound filter synchronization, concealed-text protection, all three layer tips and saved-take recovery. Screenshots were inspected. The upload test now waits for observable state instead of assuming hashing completes within 10 ms.
+
+
+2026-10-15 Reference retry repair: preparing the same browser capture after deletion/expiry now allocates a new deterministic generation; active generations remain idempotent and historical rows/take bindings are never revived. HTTP 410 during upload/status/retry clears stale readiness and stops polling, allowing explicit preparation again. MFA version probes use isolated temporary runtime directories, cache only exact successful version checks and distinguish process startup failures from version mismatches. The UI distinguishes alignment-service outages, timeouts and alignment failures from caption timing/coverage failures. Reference still uses source-transcript MFA with quality checks; acquisition and learner ASR/60–85 gates are unchanged.
+
+
+2026-10-15: moved MFA version validation to both workers’ startup. Added regression coverage for successful multi-job startup, mismatch, process failure, missing executable and timeout before claims; sentence alignment rejects any version subprocess in its regression test. Offline analysis and the full acoustic smoke also validate once at entry; the latency benchmark preserves historical per-job probes only in its baseline.
+
+Verification: root lint/build/test passed (926 API, 368 web, 114 extension). After restarting the local dev stack, both acoustic workers logged a successful MFA 3.3.9 startup check. No database migration or audio/result rewrite was required.
+
+
+2026-10-15: unified Reference and learner server-analysis controls, default enabled, with account/browser-scoped persisted off. Kept historical audio retention independent and default disabled; updated both capture and registered-file entry paths, guidance, disclosures and browser regressions.
+
+Unified-analysis verification: root lint/build/test passed. Desktop (1440 px) and mobile (390 px) browser regression passed for default-on analysis, separate default-off retention, persisted off after refresh, saved-result recovery, single combined learner upload and registered-file preparation/upload gating. Source capability resolves before browser-capture auto-upload to avoid preparing both adapters.
+
+
+2026-10-15 Sound presentation: restore the supplied screenshot’s text-first default appearance. All shows candidate phonology marks/linking arcs without per-word acoustic measurement clutter, even after analysis completes. Vowel len. explicitly shows retained vowel durations; Linking shows measured boundary pauses. Keep the existing wrapping typography, IPA reveal, Reference/Your voice rows, guidance sidebar, tab state badges, Rhythm/Melody and server analysis/gates unchanged. This is a presentation adjustment, not a rollback of analysis or a fabricated pending state.
+
+
+2026-10-15: learner acoustic analysis now runs independently of pending Reference analysis after the unchanged 60/85 word gate. Save the learner checkpoint before waiting; resume final comparison without downloading, decoding, ASR or MFA again. Queue claiming permits missing learner checkpoints even after ASR succeeds, including lease recovery. The hosted `parallel_learner_acoustics` migration updates the claim predicate only; owner, expiry, lease and service-role boundaries remain intact.
+
+Learner workers preload one isolated resident `small.en` process before claiming jobs. Reuse the existing CPU/int8/two-thread model, English/beam-5/temperature-0 settings and reliability thresholds. Requests are serialized per worker, timeout at 180 seconds, and kill/reap the child on failure; the next request rebuilds it. Reference still uses source-transcript MFA; acquisition and audio/alignment quality rules are unchanged. Extra workers each retain their own model memory; parallelism requires both workers and sufficient CPU/RAM, and cold MFA lexicon initialization may still serialize.
+
+
+Parallel-analysis verification (2026-10-15): root lint/build/test passed (941 API, 368 Web, 114 extension; unchanged Web/extension tasks cached). Disposable PostgreSQL with all repository migrations passed the queue regression, including crash recovery after ASR, durable acoustic checkpoint waiting, retry-budget preservation, stale leases, owner isolation and deletion. Hosted claim migration applied and verified: service role can claim, anon/authenticated cannot. Security advisor has no warning/error (existing informational private.content_payloads RLS-without-policy notice). Local dev stack restarted; both MFA startup checks passed and the learner worker confirmed resident ASR readiness before claiming. The real same-input ASR benchmark recorded 8.794 s → 5.490 s median across three runs, identical evidence, 2.839 s one-time startup; end-to-end parallel wall time remains unmeasured.
+
+
+2026-10-15 parallel end-to-end measurement: three real storage/queue/inference/UI runs with 3.746-second synthetic speech completed in 50.746/80.131/57.191 s from Reference registration, or 37.342/71.490/48.306 s from learner audio PUT. MFA remains the largest compute stage (17–34 s/invocation). Run 2 found Reference result-save HTTPError causing backoff and repeated MFA; learner checkpoint resume avoided recomputation. Audio local cache hit throughout; final persist-to-display delay 1.161–2.961 s. Fixture auth/source and local environment limit generalization. No additional optimization was shipped in this measurement. Evidence/method/next candidates: design/benchmarks/stage-two-20261015/results.json and STAGE_TWO_REFACTOR_CONTRACT.md. Synthetic data/test page cleaned, regular dev restored.
+
+
+- [x] Progressive server acoustics (2026-10-16): full eligible-Take frames; cached Reference signal; MFA-independent coarse F0/energy CWT; actual ASR/subtitle boundary provenance; durable checkpoints; preliminary/final UI transitions; unchanged exact gates and audio acquisition. Hosted schema migration applied.
+- [x] Local compute benchmark: public 4.22s audio, three ASR→coarse runs 5.953/5.433/8.354s with no MFA; no upload/queue/DB/UI time included. [Method and results](design/benchmarks/progressive-acoustics-20261016/README.md).
+- [ ] Target CPU deployment benchmark, under-load contention comparison and retained same-sentence user/Reference effect validation. Separate fast/fine worker lanes, CPU isolation and ASR/extraction parallelism are not implemented by the progressive-publication increment.
+
+Progressive verification: root lint/build/test passed (964 API, 370 Web, 114 extension), followed by 42 focused API checks including Reference-MFA-failure fallback. Disposable PostgreSQL passed existing word-gate and new full-frame/preview checkpoint regressions; stale leases, immutable frames and parent deletion were covered. Hosted migration columns and service-only grants verified. Desktop 1440px/mobile 390px browser flow passed on the final dev code with screenshots under `/tmp/libitu-progressive-ui-final`; previews upgrade to original final layers, remain gated and disappear during replacement recording/deletion. Local API/Reference/learner workers are running; both MFA startup checks and resident ASR startup passed. `UV_FROZEN=true pnpm dev` avoids unnecessary dependency re-resolution after a transient GitHub model metadata timeout. Cloud application deployment and cloud end-to-end timing are not claimed.
+
+## 2026-10-16 independent acoustic workers
+
+Implemented: separate `stage_two_worker --lane fast|fine` processes, started together by `pnpm dev`. Fast handles learner ASR/word gates and server F0/energy/CWT for Takes and References; fine handles MFA and final comparisons. A service-only PostgreSQL lane claim and fenced handoff (`20261016111833_acoustic_worker_lanes`) preserve checkpoints, reset the downstream retry budget and invalidate the fast lease atomically. Each lane prioritizes eligible Takes over References. Fast startup preloads ASR without probing MFA; fine alone verifies MFA. Old combined entrypoints/claim RPCs reject use. Original audio acquisition, quality checks, recognition settings and 60%/85% thresholds are unchanged.
+
+Local macOS scheduling: fine runs at nice 10 with native library threads capped at one; a separate supervisor pauses/resumes the MFA process group when the fast lane holds a shared activity lock. Parent heartbeats continue, locks release on crashes, and the supervisor reaps MFA if its owning worker exits. Active MFA timeout excludes pauses with a bounded additional 900 seconds of wall time. Empty queue polling does not pause MFA. Both workers must share the scheduler directory/account. This prioritizes first results and may extend fine completion under load; it is not hard CPU affinity. Optional disjoint Linux CPU sets and systemd templates are provided but not validated on a cloud host. No production worker deployment is implied.
+
+Validation and timing: see [local lane comparison](design/benchmarks/worker-lanes-20261016/README.md). The local benchmark separates controlled CPU/queue timing from real hosted-storage/local-worker polling; browser paint and target-cloud timings are not inferred from either. Existing previews remain visible through fine processing/failure; no frontend redesign or new matching classes.
+
+## 2026-10-17 submission latency increment
+
+- [x] One multipart Take submission; transactional registration and durable-upload-before-queue finalization.
+- [x] Independent history retention and safe replay after uncertain responses, input cleanup or retention failure.
+- [x] Atomic feature/coarse publication plus fast-to-fine handoff, with lease and word-gate fences.
+- [x] Disposable PostgreSQL registration/replay/deletion/rollback and atomic handoff regressions; migration applied to connected Supabase.
+- [ ] Realtime/event-driven queue wakeups, async cloud storage, streaming microphone uploads and Reference prewarming remain separate future work.
+
+Measurement and verification: [submission benchmark](design/benchmarks/submission-20261017/README.md).
+
+Submission benchmark (2026-10-17): public 4.22s clip, prepared Reference, three alternating trials per mode using new checkpoint workers. Median submit 7.188→3.030s; word feedback rendered 18.550→11.918s; preliminary curves rendered 18.550→14.550s. Browser harness reuses production submission/polling/visual components; target-cloud and whole-practice-page performance are not inferred. Fixture rows/audio cleaned. Root lint/build/test passed (984 API, 370 Web, 114 extension); current desktop/mobile practice and browser-reference suites passed. Legacy file-reference suite still has a pre-submission obsolete UI assertion; see benchmark record.
+
+## 2026-10-17 analysis status read latency
+
+- [x] Consolidate status polling into a service-only statement snapshot; preserve 404 versus no-analysis null, owner/source access, deletion, expiry and local grant checks.
+- [x] Return only current-sentence coarse evidence; keep raw private checkpoints out of the read response.
+- [x] Test one-call behavior, comparison removal after revocation, local grant revalidation and SQL owner/deletion/source isolation; apply hosted migration.
+- [x] Root lint/build/test pass (996 API, 370 Web, 114 extension).
+- Timing evidence and scope: [result-query benchmark](design/benchmarks/result-query-20261017/README.md). Realtime, ASR tuning, streaming upload and asynchronous cloud storage remain separate work.
+
+Result-query benchmark (2026-10-17): three alternating trials per mode with identical merged submission and prepared Reference. Median status request before preliminary output 0.828→0.272s; word feedback rendered 13.285→10.700s; preliminary curves rendered 14.089→12.017s from submission start. Read database round trips reduced from 3/5/7 to one. ASR remains the largest fast-path compute stage (5.665s median). Fixture rows/audio cleaned and hosted zero counts verified. Local browser harness scope and small-sample limits: [report](design/benchmarks/result-query-20261017/README.md).
+
+
+## 2026-10-17 optional Reference for learner analysis
+
+Reference preparation is optional. With server analysis enabled, a learner may record immediately without uploaded Reference audio; the Take freezes a null Reference identity and follows the existing word check, fast signal checkpoint, and fine learner alignment pipeline. It completes with learner measurements and no comparison score, without waiting for Reference. The unchanged below-60%, 60–<85% Sound-only, and >=85% all-layer gates still apply. Existing eligible References can be bound at recording start and use the paired flow. Active original-audio capture still blocks simultaneous microphone recording.
+
+The UI describes optional Reference comparison and promotes completed learner-only fine results beyond the preliminary badge. Learner-only CWT tables omit the empty Reference column and determine uncertainty from learner evidence; absence of a comparison alone does not invalidate that evidence. Reference acquisition, quality checks, server-analysis preference and independent history-retention switch are unchanged. A Reference prepared after a null-reference Take is not retroactively attached in this increment. Existing backend nullable Reference support and worker completion are reused; no schema migration is required.
+
+Verification: root lint/build/test passed (999 API, 370 Web, 114 extension). Reference-free practice browser regression passed at 1440px and 390px with synthetic microphone audio and fixture API results, including null-reference submissions, all matching tiers, preview-to-final display and history navigation. Worker regression verifies independent fast/fine completion without waiting or comparison scores; targeted service/worker tests passed 45 cases. These checks do not measure live inference accuracy or latency.
+
+Paired Reference browser regression also passed at desktop/mobile: missing-Reference keyboard recording and cancel, original capture/upload, analysis retry without reacquisition, paired Take completion, independent retention preference, refresh and Reference deletion. Deletion now leaves new learner-only recording available.
+
+2026-10-17 UI cleanup: remove the duplicate optional-Reference card above sentence practice. Reference preparation, status and retry remain in the existing upper Reference panel; sentence practice leads directly with the sentence and recording controls. Learner-only analysis and consent/retention settings are unchanged.
+
+Duplicate Reference card removal verified: root lint/build/test pass; desktop/mobile browser Reference preparation, retry, recording, refresh and deletion regression passes. First browser attempt hit a page-navigation timeout during concurrent build; retry after build succeeded.
+
+2026-10-17 presentation change: hide preliminary Rhythm/Melody curves and Preview badges in sentence practice. Word feedback remains immediate; eligible layers show a brief pending state until fine evidence is available. Failed/cancelled fine work shows unavailable rather than coarse fallback. Completed learner measurements remain viewable without a valid Reference. Fine layer presentation, background checkpoints, 60/85 gates, original acquisition and retention are unchanged. Earlier first-curve benchmarks describe the previous preview UI, not the current time to visible final layers.
+
+Preview removal verified: root lint/build/test pass (371 Web; unchanged API 999 and extension 114 cached). Desktop/mobile practice browser regression passes at 1440/390px: coarse output renders only pending text and ellipsis badges, final results appear normally, matching gates/history/recording remain intact. Pending-layer screenshot inspected.
+
+2026-10-17 final-layer benchmark after hiding Preview: three real 4.22s learner-only trials rendered full learner layers at 43.211/36.676/47.717s from submission start (median 43.211s), word checks at median 13.077s. Median after upload acknowledgment: 39.443s. Sampled MFA process interval 20.1–29.6s is the largest observed stage. Public audio, local CPU plus hosted Supabase, fixture auth/source and production render components; no inference accuracy/cloud performance claim. Duplicate old test workers removed before timing; fixtures cleaned afterward. [Evidence and limits](design/benchmarks/final-layers-20261017/README.md).
+
+
+### 2026-10-17 Reference loading presentation cleanup
+
+Remove the duplicate yellow preparation progress bar and amber preparation/analysis backgrounds in Shadow; keep the video playback progress indicator. Restore existing sentence References silently without a visible Checking state or analysis spinner. While availability is unresolved, show neutral Reference copy (or the existing extension-off/setup controls), then show the actual resolved status. Directory practice progress reports learner Takes and best word matches, not Reference availability; retain the cached background lookup and upload deduplication. Audio acquisition, recording availability and analysis gates are unchanged.
+
+Validation: root lint/build and 371 web tests pass; desktop/mobile browser Reference recovery/upload regression passes. A focused browser run confirms transparent preparation background, no duplicate progress bar, retained video progress and cancellation pause. Root tests had 998 API passes and one CPU subprocess timing failure (missing PID file at the 0.3-second timeout); that exact test passed in isolation. The older full buffered-reference browser suite remains blocked by its pre-recording Rhythm-tab expectation, which conflicts with the current locked-layer UI; it was not counted as passing.
+
+2026-10-17 Enable setup follow-up: show the setup spinner only during the extension handshake. Once armed and waiting for a toolbar click, stop the spinner, show “Click Libitu in Chrome’s toolbar”, and retain the setup instructions and Cancel action. The extension protocol, authorization and audio acquisition remain unchanged.
+
+Enable follow-up verification: root lint/build/test passed (999 API, 371 Web, 114 extension tests). Desktop/mobile browser Reference regression holds the armed state before granting access and confirms no spinner, visible toolbar instructions and an enabled Cancel action, then completes upload and recovery.

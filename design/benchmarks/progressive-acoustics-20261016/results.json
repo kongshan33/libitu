@@ -1,0 +1,118 @@
+{
+  "scope": "local CPU; no upload/database/browser latency; no accuracy labels",
+  "version": "server-prominence-v1",
+  "samples": [
+    {
+      "id": "current-reference",
+      "audio_sec": 1.28,
+      "coarse_median_ms": 21.63,
+      "coarse_max_ms": 26.39,
+      "fine_ms": 25.91,
+      "boundary_source_for_timing": "cached_mfa_proxy",
+      "coarse_duration_channel": false,
+      "uncertain_words": 3,
+      "words": 4,
+      "fine_duration_channel": true
+    },
+    {
+      "id": "cmu-arctic-bdl-arctic_a0003",
+      "audio_sec": 3.365,
+      "coarse_median_ms": 49.79,
+      "coarse_max_ms": 93.81,
+      "fine_ms": 38.89,
+      "boundary_source_for_timing": "cached_mfa_proxy",
+      "coarse_duration_channel": false,
+      "uncertain_words": 5,
+      "words": 11,
+      "fine_duration_channel": true
+    },
+    {
+      "id": "cmu-arctic-slt-arctic_a0005",
+      "audio_sec": 1.485,
+      "coarse_median_ms": 18.35,
+      "coarse_max_ms": 36.93,
+      "fine_ms": 21.01,
+      "boundary_source_for_timing": "cached_mfa_proxy",
+      "coarse_duration_channel": false,
+      "uncertain_words": 5,
+      "words": 5,
+      "fine_duration_channel": true
+    },
+    {
+      "id": "speechocean762-000360034",
+      "audio_sec": 4.22,
+      "coarse_median_ms": 32.9,
+      "coarse_max_ms": 44.15,
+      "fine_ms": 37.58,
+      "boundary_source_for_timing": "cached_mfa_proxy",
+      "coarse_duration_channel": false,
+      "uncertain_words": 3,
+      "words": 10,
+      "fine_duration_channel": true
+    },
+    {
+      "id": "speechocean762-000360036",
+      "audio_sec": 2.957,
+      "coarse_median_ms": 20.51,
+      "coarse_max_ms": 22.28,
+      "fine_ms": 23.74,
+      "boundary_source_for_timing": "cached_mfa_proxy",
+      "coarse_duration_channel": false,
+      "uncertain_words": 0,
+      "words": 6,
+      "fine_duration_channel": true
+    },
+    {
+      "id": "speechocean762-010270131",
+      "audio_sec": 2.47,
+      "coarse_median_ms": 22.41,
+      "coarse_max_ms": 27.39,
+      "fine_ms": 23.51,
+      "boundary_source_for_timing": "cached_mfa_proxy",
+      "coarse_duration_channel": false,
+      "uncertain_words": 3,
+      "words": 6,
+      "fine_duration_channel": true
+    }
+  ],
+  "public_learner": {
+    "id": "speechocean762-000360034",
+    "model_startup_sec": 5.406,
+    "runs": [
+      {
+        "asr_sec": 5.346,
+        "extract_sec": 0.572,
+        "cwt_sec": 0.035,
+        "first_signal_sec": 5.953,
+        "matched": 10,
+        "source": 10,
+        "tier": "full_85_plus",
+        "asr_word_timings": 10,
+        "uncertain_words": 5
+      },
+      {
+        "asr_sec": 4.994,
+        "extract_sec": 0.404,
+        "cwt_sec": 0.036,
+        "first_signal_sec": 5.433,
+        "matched": 10,
+        "source": 10,
+        "tier": "full_85_plus",
+        "asr_word_timings": 10,
+        "uncertain_words": 5
+      },
+      {
+        "asr_sec": 7.902,
+        "extract_sec": 0.406,
+        "cwt_sec": 0.047,
+        "first_signal_sec": 8.354,
+        "matched": 10,
+        "source": 10,
+        "tier": "full_85_plus",
+        "asr_word_timings": 10,
+        "uncertain_words": 5
+      }
+    ],
+    "mfa_invocations": 0
+  }
+}

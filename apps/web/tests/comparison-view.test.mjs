@@ -39,3 +39,12 @@ test('word slots preserve unvoiced gaps and highlight only valid half-open inter
  assert.equal(comparisonWordAtTime([view.yours.words[0],view.yours.words[0]],20),null);
  const path=trace(wordCurve(voice.words),0,100,6);assert.equal((path.match(/M/g)||[]).length,4);assert.equal((path.match(/L/g)||[]).length,0);
 });
+
+test('source-transcript reference supplies measurements without claiming ASR matching',()=>{
+ const source={...voice,content:{status:'source_transcript',transcript:'',reason:'source_transcript_not_asr_verified'}};
+ const view=comparisonView({...args,server:{sentence_id:'s',prosody:source}});
+ assert.ok(view.reference.words.some(word=>word.duration!==null));
+ assert.ok(view.reference.curve.length);
+ const failed=comparisonView({...args,server:{sentence_id:'s',prosody:{...source,alignment_status:'unavailable',words:[]}}});
+ assert.ok(failed.reference.words.every(word=>word.duration===null));
+});

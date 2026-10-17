@@ -1,0 +1,170 @@
+{
+  "scope": "Chromium benchmark harness using production Outbox/API/poll hook/ProgressiveComparison; real local API, hosted DB/storage and independent workers; fixture auth and blueprint; prepared Reference",
+  "reference": {
+    "create_and_upload_sec": 5.8378472029580735,
+    "ready_sec": 34.278261659957934
+  },
+  "cleanup": "rows and audio removed",
+  "trials": [
+    {
+      "mode": "serial_read",
+      "attempt": "3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "submit_sec": 3.588263,
+      "word_visible_sec": 15.00269999998808,
+      "coarse_visible_sec": 15.00269999998808,
+      "final_state": "completed"
+    },
+    {
+      "mode": "snapshot_read",
+      "attempt": "a6a13ac6-437a-5d8f-95d1-afa78c27b8c7",
+      "submit_sec": 2.647838,
+      "word_visible_sec": 12.21769999998808,
+      "coarse_visible_sec": 12.21769999998808,
+      "final_state": "completed"
+    },
+    {
+      "mode": "serial_read",
+      "attempt": "69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "submit_sec": 2.765374,
+      "word_visible_sec": 13.284599999964238,
+      "coarse_visible_sec": 13.284599999964238,
+      "final_state": "completed"
+    },
+    {
+      "mode": "snapshot_read",
+      "attempt": "237af2d6-a1fd-5dca-95ca-177259933d5c",
+      "submit_sec": 2.627017,
+      "word_visible_sec": 10.653800000011922,
+      "coarse_visible_sec": 11.936800000011921,
+      "final_state": "completed"
+    },
+    {
+      "mode": "serial_read",
+      "attempt": "78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "submit_sec": 2.7058530000000003,
+      "word_visible_sec": 10.672299999952317,
+      "coarse_visible_sec": 14.088599999964238,
+      "final_state": "completed"
+    },
+    {
+      "mode": "snapshot_read",
+      "attempt": "091c5e0a-42c3-539b-81e5-569dea8680d9",
+      "submit_sec": 2.673645,
+      "word_visible_sec": 10.700100000023841,
+      "coarse_visible_sec": 12.017,
+      "final_state": "completed"
+    }
+  ],
+  "modes": {
+    "serial_read": {
+      "submit_sec": {
+        "median": 2.765374,
+        "min": 2.7058530000000003,
+        "max": 3.588263,
+        "n": 3
+      },
+      "word_visible_sec": {
+        "median": 13.284599999964238,
+        "min": 10.672299999952317,
+        "max": 15.00269999998808,
+        "n": 3
+      },
+      "coarse_visible_sec": {
+        "median": 14.088599999964238,
+        "min": 13.284599999964238,
+        "max": 15.00269999998808,
+        "n": 3
+      },
+      "status_before_coarse_sec": {
+        "median": 0.8281479970319197,
+        "min": 0.75149071397027,
+        "max": 2.4025601370376535,
+        "n": 17
+      },
+      "status_all_sec": {
+        "median": 1.3622320329886861,
+        "min": 0.75149071397027,
+        "max": 6.026402237999719,
+        "n": 45
+      },
+      "database_calls": [
+        3,
+        5,
+        7
+      ]
+    },
+    "snapshot_read": {
+      "submit_sec": {
+        "median": 2.647838,
+        "min": 2.627017,
+        "max": 2.673645,
+        "n": 3
+      },
+      "word_visible_sec": {
+        "median": 10.700100000023841,
+        "min": 10.653800000011922,
+        "max": 12.21769999998808,
+        "n": 3
+      },
+      "coarse_visible_sec": {
+        "median": 12.017,
+        "min": 11.936800000011921,
+        "max": 12.21769999998808,
+        "n": 3
+      },
+      "status_before_coarse_sec": {
+        "median": 0.27170702250441536,
+        "min": 0.2525016420404427,
+        "max": 0.4072780329734087,
+        "n": 24
+      },
+      "status_all_sec": {
+        "median": 0.28402680496219546,
+        "min": 0.2525016420404427,
+        "max": 0.44377217697910964,
+        "n": 83
+      },
+      "database_calls": [
+        1
+      ]
+    }
+  },
+  "fast_stages": {
+    "publish_handoff:coarse_ready": {
+      "median": 0.4795,
+      "min": 0.438,
+      "max": 0.511,
+      "n": 6
+    },
+    "checkpoint:checking_words": {
+      "median": 0.273,
+      "min": 0.251,
+      "max": 0.328,
+      "n": 6
+    },
+    "checkpoint:word_check_complete": {
+      "median": 0.917,
+      "min": 0.836,
+      "max": 1.133,
+      "n": 6
+    },
+    "cwt": {
+      "median": 0.041499999999999995,
+      "min": 0.033,
+      "max": 0.056,
+      "n": 6
+    },
+    "asr_word_check": {
+      "median": 5.665,
+      "min": 5.13,
+      "max": 6.879,
+      "n": 6
+    },
+    "signal_extraction": {
+      "median": 0.3105,
+      "min": 0.265,
+      "max": 0.356,
+      "n": 6
+    }
+  }
+}

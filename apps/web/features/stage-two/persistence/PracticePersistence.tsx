@@ -12,8 +12,7 @@ import { createReferenceApi, type ReferenceApi } from "../server-reference/api";
 import { CaptureUploads } from '../server-reference/capture-uploads';
 
 const Context = createContext<{ api: PracticeApi; referenceApi: ReferenceApi; outbox: PracticeOutbox; state: PracticeSaveState;
-  analyze: boolean; setAnalyze(value: boolean): void; captures: CaptureUploads; captureVersion: number;
-  analyzeReference: boolean; setAnalyzeReference(value: boolean): void } | null>(null);
+  analyze: boolean; setAnalyze(value: boolean): void; captures: CaptureUploads; captureVersion: number } | null>(null);
 
 type AccountResources = {
   owner: string; api: PracticeApi; referenceApi: ReferenceApi;
@@ -24,12 +23,11 @@ type AccountResources = {
 export function PracticePersistence({ children }: { children: ReactNode }) {
   const { isLoaded, userId, getToken } = useAuth();
   const [resources, setResources] = useState<AccountResources | null>(null);
-  const [state, setState] = useState<PracticeSaveState>({ pending: 0, errors: [], savedVersion: 0 });
+  const [state, setState] = useState<PracticeSaveState>({ pending: 0, pendingSentences: [], errors: [], savedVersion: 0 });
   const [captureVersion, setCaptureVersion] = useState(0);
-  const [preferences, setPreferences] = useState({ owner: "", analyze: false, analyzeReference: false });
+  const [preferences, setPreferences] = useState({ owner: "", analyze: true });
   const active = isLoaded && resources?.owner === userId ? resources : null;
   const analyze = Boolean(active && preferences.owner === active.owner && preferences.analyze);
-  const analyzeReference = Boolean(active && preferences.owner === active.owner && preferences.analyzeReference);
 
   useEffect(() => {
     if (!isLoaded || !userId) return;
@@ -40,10 +38,9 @@ export function PracticePersistence({ children }: { children: ReactNode }) {
     let live = true;
     const offSaves = outbox.subscribe(value => { if (live) setState(value); });
     const offCaptures = captures.subscribe(() => { if (live) setCaptureVersion(value => value + 1); });
-    let analyze = false, analyzeReference = false;
-    try { analyze = localStorage.getItem(`libitu:analysis-consent:${userId}`) === "practice-analysis-v1"; } catch { /* Session-only preference. */ }
-    try { analyzeReference = localStorage.getItem(`libitu:reference-consent:${userId}`) === "reference-analysis-v1"; } catch { /* Session-only preference. */ }
-    setPreferences({ owner: userId, analyze, analyzeReference });
+    let analyze = true;
+    try { analyze = localStorage.getItem(`libitu:server-analysis:v1:${userId}`) !== "off"; } catch { /* Session-only preference. */ }
+    setPreferences({ owner: userId, analyze });
     setState(outbox.state);
     setCaptureVersion(0);
     setResources({ owner: userId, api, referenceApi, outbox, captures });
@@ -57,14 +54,7 @@ export function PracticePersistence({ children }: { children: ReactNode }) {
   function setAnalyze(value: boolean) {
     if (!active) return;
     setPreferences(current => ({ ...current, owner: active.owner, analyze: value }));
-    try { if (value) localStorage.setItem(`libitu:analysis-consent:${active.owner}`, "practice-analysis-v1");
-      else localStorage.removeItem(`libitu:analysis-consent:${active.owner}`); } catch { /* Session-only preference. */ }
-  }
-  function setAnalyzeReference(value: boolean) {
-    if (!active) return;
-    setPreferences(current => ({ ...current, owner: active.owner, analyzeReference: value }));
-    try { if (value) localStorage.setItem(`libitu:reference-consent:${active.owner}`, "reference-analysis-v1");
-      else localStorage.removeItem(`libitu:reference-consent:${active.owner}`); } catch { /* Session-only preference. */ }
+    try { localStorage.setItem(`libitu:server-analysis:v1:${active.owner}`, value ? "on" : "off"); } catch { /* Session-only preference. */ }
   }
   useEffect(() => {
     function warn(event: BeforeUnloadEvent) {
@@ -75,7 +65,7 @@ export function PracticePersistence({ children }: { children: ReactNode }) {
   }, [active]);
 
   return <Context.Provider value={active ? { api: active.api, referenceApi: active.referenceApi, outbox: active.outbox,
-    captures: active.captures, state, analyze, setAnalyze, captureVersion, analyzeReference, setAnalyzeReference } : null}>
+    captures: active.captures, state, analyze, setAnalyze, captureVersion } : null}>
     {active && (active.captures.pendingUploads || state.pending) ? <aside className="practice-save-notifications" aria-label="Audio saving notifications">
       {active.captures.pendingUploads ? <div className="practice-save-banner" role="status">
         <LoaderCircle className="practice-save-spinner" size={20} aria-hidden="true" />

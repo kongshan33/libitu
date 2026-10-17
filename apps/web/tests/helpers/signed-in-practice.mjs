@@ -1,8 +1,11 @@
 // Shared synthetic identity for local playback/recording regression suites.
 // Real login transitions and persistence behavior are covered separately.
-export async function installSignedInPractice(page) {
-  await page.addInitScript(() => {
+export async function installSignedInPractice(page, { serverAnalysis = false } = {}) {
+  await page.addInitScript(({serverAnalysis}) => {
     const owner = "practice-browser-fixture";
+    // These suites exercise local media unless they explicitly request analysis.
+    try { localStorage.setItem(`libitu:server-analysis:v1:${owner}`, serverAnalysis ? 'on' : 'off'); }
+    catch { /* Opaque-origin fixture frames do not own the app preference. */ }
     const user = { id: owner, organizationMemberships: [] };
     const session = { id: "session-fixture", user, status: "active",
       lastActiveToken: { jwt: { claims: { sub: owner } } },
@@ -12,7 +15,7 @@ export async function installSignedInPractice(page) {
       telemetry: { record() {} }, __internal_environment: {}, load: async () => {},
       addListener: (callback, options) => { if (!options?.skipInitialEmit) callback(resources); return () => {}; },
       mountUserButton() {}, unmountUserButton() {}, __internal_updateProps() {} };
-  });
+  }, {serverAnalysis});
   await page.route(/clerk\.(accounts\.dev|com)/, (route) => route.fulfill({ contentType: "application/javascript", body: "/* local identity fixture */" }));
   // Local playback suites have no previously uploaded private reference.
   await page.route(/\/api\/references\/(captures\/latest|capability)(\?|$)/, route => {

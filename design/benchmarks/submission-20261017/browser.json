@@ -1,0 +1,230 @@
+[
+  {
+    "mode": "legacy",
+    "start_epoch_ms": 1792229128986,
+    "word_visible_sec": 18.67339999997616,
+    "coarse_visible_sec": 18.6735,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "4fa8914b-518f-569c-b64d-cfaa66e62c81",
+    "requests": [
+      {
+        "path": "/api/practice/attempts",
+        "method": "POST",
+        "startTime": 1792229129095.01,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2020.414,
+        "responseEnd": 2042.278
+      },
+      {
+        "path": "/api/practice/attempts/4fa8914b-518f-569c-b64d-cfaa66e62c81/analysis",
+        "method": "POST",
+        "startTime": 1792229131120.2332,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2085.223,
+        "responseEnd": 2086.869
+      },
+      {
+        "path": "/api/practice/attempts/4fa8914b-518f-569c-b64d-cfaa66e62c81/analysis/audio",
+        "method": "PUT",
+        "startTime": 1792229133215.106,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3885.698,
+        "responseEnd": 3892.616
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "merged",
+    "start_epoch_ms": 1792229177051,
+    "word_visible_sec": 16.168,
+    "coarse_visible_sec": 16.168099999964237,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "7724ef14-f730-55c8-8e04-028dd97dcee6",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792229177086.0688,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3472.235,
+        "responseEnd": 3482.33
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "legacy",
+    "start_epoch_ms": 1792229223151,
+    "word_visible_sec": 18.550199999988077,
+    "coarse_visible_sec": 18.550199999988077,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "4d803dc0-649c-5ab4-ac03-b4d26edc69a6",
+    "requests": [
+      {
+        "path": "/api/practice/attempts",
+        "method": "POST",
+        "startTime": 1792229223179.853,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1121.425,
+        "responseEnd": 1133.624
+      },
+      {
+        "path": "/api/practice/attempts/4d803dc0-649c-5ab4-ac03-b4d26edc69a6/analysis",
+        "method": "POST",
+        "startTime": 1792229224304.251,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1880.75,
+        "responseEnd": 1882.461
+      },
+      {
+        "path": "/api/practice/attempts/4d803dc0-649c-5ab4-ac03-b4d26edc69a6/analysis/audio",
+        "method": "PUT",
+        "startTime": 1792229226190.896,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 4173.309,
+        "responseEnd": 4176.965
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "merged",
+    "start_epoch_ms": 1792229268110,
+    "word_visible_sec": 11.023,
+    "coarse_visible_sec": 13.707100000023841,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "c3fcfe22-d401-5e84-b67d-77692d75ce7d",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792229268132.795,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2867.404,
+        "responseEnd": 2874.697
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "legacy",
+    "start_epoch_ms": 1792229305854,
+    "word_visible_sec": 15.0445,
+    "coarse_visible_sec": 17.679,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "485ab683-ef8b-5c9b-812b-00303a6eb3e2",
+    "requests": [
+      {
+        "path": "/api/practice/attempts",
+        "method": "POST",
+        "startTime": 1792229305875.142,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1065.851,
+        "responseEnd": 1073.922
+      },
+      {
+        "path": "/api/practice/attempts/485ab683-ef8b-5c9b-812b-00303a6eb3e2/analysis",
+        "method": "POST",
+        "startTime": 1792229306944.026,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1847.308,
+        "responseEnd": 1848.977
+      },
+      {
+        "path": "/api/practice/attempts/485ab683-ef8b-5c9b-812b-00303a6eb3e2/analysis/audio",
+        "method": "PUT",
+        "startTime": 1792229308794.2002,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3982.037,
+        "responseEnd": 3983.669
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "merged",
+    "start_epoch_ms": 1792229346963,
+    "word_visible_sec": 11.9175,
+    "coarse_visible_sec": 14.550400000035763,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "e69470f9-2a84-55c6-9552-769bb1f90df1",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792229346986.0388,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3022.081,
+        "responseEnd": 3029.94
+      }
+    ],
+    "final_state": "completed"
+  }
+]

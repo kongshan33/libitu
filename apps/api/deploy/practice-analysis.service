@@ -1,15 +1,18 @@
 [Unit]
-Description=Libitu learner audio analysis
+Description=Libitu Stage 2 fast lane (legacy unit name)
 After=network-online.target
 
 [Service]
 Type=simple
 WorkingDirectory=/opt/libitu/apps/api
 EnvironmentFile=/etc/libitu/api.env
-ExecStart=/opt/libitu/apps/api/.venv/bin/python -m app.workers.practice_analysis_worker
+Environment=ACOUSTIC_SCHEDULER_PATH=/var/lib/libitu/acoustic-scheduler
+ExecStart=/opt/libitu/apps/api/.venv/bin/python -m app.workers.stage_two_worker --lane fast
 Restart=on-failure
 RestartSec=5
 User=libitu
+StateDirectory=libitu
+KillMode=control-group
 NoNewPrivileges=true
 PrivateTmp=true
 

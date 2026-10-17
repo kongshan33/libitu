@@ -14,7 +14,7 @@ from app.integrations.reference_repository import ReferenceRepository
 from app.schemas.reference import MAX_SEGMENT_MS, PrepareReference, PrepareCapture, ReferenceView, SentenceSnapshot
 from app.services.acoustics import sources
 from app.services.acoustics.audio import AudioFailure, RATE, normalize
-from app.services.acoustics.engine import engine_identity
+from app.services.acoustics.reference_prosody import reference_identity, reference_version
 from app.services.blueprint_service import get_blueprint, personalize_blueprint
 
 
@@ -40,7 +40,8 @@ def snapshot(repo: ReferenceRepository, owner: str, content: str, segment_id: st
                 or line.start_ms < segment.start_ms or line.end_ms > segment.end_ms):
             raise HTTPException(409, "Sentence timing changed. Select the segment again.")
         sentences.append(SentenceSnapshot(id=line.id, text="".join(p if isinstance(p, str) else p.text for p in line.parts),
-                                          start_ms=line.start_ms, end_ms=line.end_ms).model_dump())
+                                          start_ms=line.start_ms, end_ms=line.end_ms,
+                                          word_timings=line.word_timings or []).model_dump())
     if len({s['id'] for s in sentences}) != len(sentences):
         raise HTTPException(409, "Shared sentence identity is ambiguous.")
     return {"start_ms": segment.start_ms, "end_ms": segment.end_ms, "sentences": sentences,
@@ -69,19 +70,27 @@ def prepare_capture(repo: ReferenceRepository, owner: str, payload: PrepareCaptu
     if payload.end_ms - payload.start_ms > 60_000:
         raise HTTPException(422, 'Capture analysis supports sentences up to 60 seconds.')
     settings = get_settings()
-    if not settings.practice_asr_model_path or not settings.practice_asr_model_sha256:
-        raise HTTPException(503, 'Server speech analysis is not configured yet.')
-    engine = engine_identity(settings)
+    identity = reference_identity(settings)
     data = {**data, 'sentences': [sentence], 'start_ms': payload.start_ms, 'end_ms': payload.end_ms,
             'source_kind': 'browser_capture', 'capture_id': payload.capture_id,
             'consent_version': payload.consent_version, 'input_bytes': payload.size,
-            'engine': engine, 'asr_sha256': settings.practice_asr_model_sha256}
+            **identity}
     fingerprint = sha256(json.dumps([owner, content, data, payload.sha256], sort_keys=True).encode()).hexdigest()
     identifier = str(uuid5(NAMESPACE_URL, f'browser-reference:{fingerprint}'))
+    # Identical retries reuse the live generation. Explicit preparation after
+    # deletion/expiry gets a new identity without reviving historical references.
+    for _ in range(32):
+        existing = repo.get(owner, identifier)
+        if existing is None or (existing['state'] != 'deleted'
+                and datetime.fromisoformat(existing['expires_at']) > datetime.now(timezone.utc)):
+            break
+        identifier = str(uuid5(NAMESPACE_URL, f'browser-reference:{fingerprint}:after:{identifier}'))
+    else:
+        raise HTTPException(409, 'Capture this sentence again to prepare a new reference.')
     if repo.get(owner, identifier) is None:
         repo.create({'id': identifier, 'user_id': owner, 'content_id': content, 'segment_id': payload.segment_id,
             'source_id': 'browser_capture', 'source_fingerprint': fingerprint, 'input_mode': 'upload',
-            'input_sha256': payload.sha256, 'analysis_version': sha256(json.dumps([engine, data['asr_sha256']], sort_keys=True).encode()).hexdigest(),
+            'input_sha256': payload.sha256, 'analysis_version': reference_version(settings),
             'snapshot': data, 'start_ms': payload.start_ms, 'end_ms': payload.end_ms, 'state': 'awaiting_upload',
             'expires_at': (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()})
     return ReferenceView.model_validate(owned(repo, owner, identifier))
@@ -92,8 +101,12 @@ def latest_capture(repo: ReferenceRepository, owner: str, content: str, segment:
     sentence = next((s for s in data['sentences'] if s['id'] == sentence_id), None)
     if not sentence:
         raise HTTPException(404, 'Sentence not found')
+    settings = get_settings()
+    identity, version = reference_identity(settings), reference_version(settings)
     for row in repo.recent_captures(owner, content, segment):
-        if sources.is_browser_capture(row) and row['snapshot'].get('reference_version') == data['reference_version'] \
+        if sources.is_browser_capture(row) and row['analysis_version'] == version \
+                and all(row['snapshot'].get(key) == value for key, value in identity.items()) \
+                and row['snapshot'].get('reference_version') == data['reference_version'] \
                 and row['snapshot'].get('sentences') == [sentence]:
             return ReferenceView.model_validate(owned(repo, owner, row['id']))
     return None
@@ -106,17 +119,16 @@ def prepare(repo: ReferenceRepository, owner: str, payload: PrepareReference) ->
     if grant is None:
         raise HTTPException(409, "A permitted file reference is not available for this segment.")
     settings = get_settings()
-    engine = engine_identity(settings)
-    data = {**data, "asr_sha256": settings.practice_asr_model_sha256}
-    identity = json.dumps([owner, grant.fingerprint, data, engine], sort_keys=True)
+    data = {**data, **reference_identity(settings)}
+    identity = json.dumps([owner, grant.fingerprint, data], sort_keys=True)
     identifier = str(uuid5(NAMESPACE_URL, identity))
     existing = repo.get(owner, identifier)
     if existing is None:
         expiry = min(grant.expires_at, datetime.now(timezone.utc) + timedelta(days=30))
         existing = repo.create({"id": identifier, "user_id": owner, "content_id": content, "segment_id": payload.segment_id,
             "source_id": grant.id, "source_fingerprint": grant.fingerprint, "input_mode": grant.mode,
-            "input_sha256": grant.sha256, "analysis_version": sha256(json.dumps(engine, sort_keys=True).encode()).hexdigest(),
-            "snapshot": {**data, "engine": engine}, "start_ms": data['start_ms'], "end_ms": data['end_ms'],
+            "input_sha256": grant.sha256, "analysis_version": reference_version(settings),
+            "snapshot": data, "start_ms": data['start_ms'], "end_ms": data['end_ms'],
             "state": "queued" if grant.mode == "file" else "awaiting_upload", "expires_at": expiry.isoformat()})
     if existing['state'] == 'deleted' or datetime.fromisoformat(existing['expires_at']) <= datetime.now(timezone.utc):
         raise HTTPException(410, "This reference was deleted or expired. A renewed source grant is required.")

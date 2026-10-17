@@ -8,7 +8,8 @@ type Entry = {
   resolveReference?: () => Promise<string | null>;
 };
 export type PracticeSaveState = {
-  pending: number; errors: { id: string; sentenceId: string; message: string }[]; savedVersion: number;
+  pending: number; pendingSentences: { contentId: string; sentenceId: string }[];
+  errors: { id: string; sentenceId: string; message: string }[]; savedVersion: number;
 };
 export const MAX_PENDING_TAKES = 5;
 
@@ -18,7 +19,7 @@ export class PracticeOutbox {
   private running = new Set<string>();
   private controller = new AbortController();
   private listeners = new Set<(state: PracticeSaveState) => void>();
-  state: PracticeSaveState = { pending: 0, errors: [], savedVersion: 0 };
+  state: PracticeSaveState = { pending: 0, pendingSentences: [], errors: [], savedVersion: 0 };
   constructor(private api: PracticeApi) {}
 
   subscribe(listener: (state: PracticeSaveState) => void) {
@@ -30,7 +31,7 @@ export class PracticeOutbox {
   enqueue(input: Omit<AttemptInput, "client_id" | "recording">, blob: Blob, retain: boolean, analysis?: { referenceId: string | null; resolveReference?: () => Promise<string | null> }, onSaved?: (attemptId: string) => void) {
     if (!this.canRecord()) throw new Error("Retry pending saves before recording another take.");
     const id = crypto.randomUUID();
-    const entry: Entry = { input: { ...input, client_id: id, recording: null }, blob: retain || analysis ? blob : null,
+    const entry: Entry = { input: { ...structuredClone(input), client_id: id, recording: null }, blob: retain || analysis ? blob : null,
       analyze: Boolean(analysis), referenceId: analysis?.referenceId ?? null, analysisInput: null,
       retain, status: "saving", error: null, onSaved, resolveReference: analysis?.resolveReference };
     this.entries.set(id, entry);
@@ -43,6 +44,7 @@ export class PracticeOutbox {
 
   private publish() {
     this.state = { ...this.state, pending: this.entries.size,
+      pendingSentences: [...this.entries.values()].map(({input}) => ({contentId: input.content_id, sentenceId: input.sentence_id})),
       errors: [...this.entries.values()].filter((entry) => entry.error).map((entry) => ({
         id: entry.input.client_id, sentenceId: entry.input.sentence_id, message: entry.error!
       })) };
@@ -66,17 +68,18 @@ export class PracticeOutbox {
         if (entry.retain) entry.input.recording = { ...metadata, consent_version: "recording-retention-v1" };
         if (entry.analyze) entry.analysisInput = { ...metadata, consent_version: "practice-analysis-v1", reference_id: entry.referenceId };
       }
-      const attempt = await this.api.create(entry.input, this.controller.signal);
-      if (entry.blob && attempt.recording_state === "pending") {
-        await this.api.upload(attempt.id, entry.blob, this.controller.signal);
-      }
+      let attempt;
       if (entry.analysisInput && entry.blob) {
         if (entry.resolveReference) {
           entry.analysisInput.reference_id = await entry.resolveReference();
           entry.resolveReference = undefined;
         }
-        const job = await this.api.prepareAnalysis(attempt.id, entry.analysisInput, this.controller.signal);
-        if (job.state === "awaiting_upload") await this.api.uploadAnalysis(attempt.id, entry.blob, this.controller.signal);
+        attempt = await this.api.submit(entry.input, entry.analysisInput, entry.blob, this.controller.signal);
+      } else {
+        attempt = await this.api.create(entry.input, this.controller.signal);
+        if (entry.blob && attempt.recording_state === "pending") {
+          await this.api.upload(attempt.id, entry.blob, this.controller.signal);
+        }
       }
       this.controller.signal.throwIfAborted();
       this.entries.delete(id);

@@ -1,9 +1,10 @@
-import type { VoiceProsody } from "../persistence/practice-api";
+import type { VoiceProsody, SignalProsody } from "../persistence/practice-api";
 export type CaptureInput = { content_id: string; segment_id: string; sentence_id: string; capture_id: string;
   start_ms: number; end_ms: number; sha256: string; size: number; consent_version: "reference-analysis-v1" };
 export type AlignmentInterval = { start_sec: number; end_sec: number; label: string | null };
 export type SentenceMeasurement = {
-  sentence_id: string; status: "completed" | "partial" | "failed";
+  sentence_id: string; status: "completed" | "partial" | "failed" | "coarse_ready";
+  coarse?: SignalProsody | null;
   prosody?: VoiceProsody | null;
   alignment: { status: "aligned" | "unavailable" | "failed"; reason: string | null;
     content_gate: "not_checked"; words: AlignmentInterval[]; phones: AlignmentInterval[] };
@@ -21,6 +22,10 @@ export type ServerReference = {
   source_kind?: "registered" | "browser_capture";
 };
 
+export class ReferenceApiError extends Error {
+  constructor(message: string, readonly status: number) { super(message); }
+}
+
 export function createReferenceApi(owner: string, getToken: () => Promise<string | null>) {
   async function request(path: string, signal: AbortSignal, init: RequestInit = {}) {
     signal.throwIfAborted();
@@ -35,7 +40,7 @@ export function createReferenceApi(owner: string, getToken: () => Promise<string
     });
     if (!response.ok) {
       const body = await response.json().catch(() => null);
-      throw new Error(typeof body?.detail === "string" ? body.detail : "Reference preparation is unavailable. Please retry.");
+      throw new ReferenceApiError(typeof body?.detail === "string" ? body.detail : "Reference preparation is unavailable. Please retry.", response.status);
     }
     signal.throwIfAborted();
     return response;

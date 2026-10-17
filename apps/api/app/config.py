@@ -78,7 +78,13 @@ class Settings(BaseSettings):
     acoustic_mfa_model_sha256: str | None = None
     acoustic_silero_path: str | None = None
     acoustic_lease_seconds: int = Field(default=120, ge=30, le=900)
-    acoustic_poll_seconds: float = Field(default=3, ge=0.5, le=60)
+    acoustic_poll_seconds: float = Field(default=0.5, ge=0.5, le=60)
+    acoustic_scheduler_path: str = ".cache/acoustic-scheduler"
+    acoustic_fast_cpus: str = ""
+    acoustic_fine_cpus: str = ""
+    acoustic_fine_nice: int = Field(default=10, ge=0, le=19)
+    acoustic_audio_cache_path: str = ".cache/analysis-audio"
+    acoustic_mfa_cache_path: str = ".cache/mfa-runtime"
 
     @property
     def authorized_parties(self) -> list[str]:

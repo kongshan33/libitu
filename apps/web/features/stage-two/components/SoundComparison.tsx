@@ -12,7 +12,9 @@ export function SoundComparison({view,concealed,onConcealedChange,filter,onFilte
 }) {
   const [revealed,setRevealed]=useState<number[]>([]);
   const marks=useMemo(()=>soundMarks(view),[view]);
-  const visible=filter==='all'?marks:marks.filter(m=>m.kind===filter);
+  // Keep the default text reading stable when acoustic results arrive. Dense
+  // measurements belong to their explicit filter, not every word in All.
+  const visible=marks.filter(m=>filter==='all'?m.kind!=='vowel_length':m.kind===filter);
   const count=view.reference.words.length;
   return <>
     <div className="sound-phenomenon-strip" role="group" aria-label="Sound phenomenon filters">
@@ -54,7 +56,7 @@ export function SoundComparison({view,concealed,onConcealedChange,filter,onFilte
                 title={`${linking.description} ${v?'Your voice: not evaluated.':''}`} aria-label={v?'Possible linking boundary; your voice not evaluated':'Possible linking boundary'}>
                 <span aria-hidden="true">⌢</span><small>{v?'LK ?':'LK'}</small>
               </span>:null}
-              {!covered&&(filter==='all'||filter==='linking')&&word.pause!==null&&word.pause>0?<span className="sound-boundary-pause"
+              {!covered&&filter==='linking'&&word.pause!==null&&word.pause>0?<span className="sound-boundary-pause"
                 title="Measured silence at this word boundary; not a linking verdict" aria-label={`After ${word.text}: measured pause ${(word.pause/1000).toFixed(2)} seconds`}>
                 <i aria-hidden="true"/>{(word.pause/1000).toFixed(2)} s
               </span>:null}
@@ -68,6 +70,6 @@ export function SoundComparison({view,concealed,onConcealedChange,filter,onFilte
     <div className="sound-phenomenon-legend" aria-label="Sound marker legend">
       {phenomena.map(p=><span key={p.id}><span className="sound-inline-badge" data-phenomenon={p.id}>{p.badge}</span>{p.label}</span>)}
     </div>
-    <p className="comparison-footnote">Colored marks are possible readings from the text. “?” means your voice has not been evaluated for that sound. Milliseconds show measured vowel duration; bars show measured pauses.</p>
+    <p className="comparison-footnote">Colored marks are possible readings from the text. “?” means your voice has not been evaluated for that sound. Choose Vowel len. for measured vowel durations, or Linking for measured pauses.</p>
   </>;
 }

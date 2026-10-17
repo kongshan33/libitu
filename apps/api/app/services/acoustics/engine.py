@@ -4,13 +4,13 @@ from pathlib import Path
 import json
 import os
 import re
-import shutil
 import subprocess
 import wave
 
 from app.config import Settings
 from app.schemas.reference import Alignment, Frame, Interval, Measurements, PIPELINE_VERSION
 from app.services.acoustics.audio import AudioFailure, RATE, file_hash
+from app.services.acoustics import mfa_runtime, cpu_policy
 
 SILERO_SHA256 = "2623a2953f6ff3d2c1e61740c6cdb7168133479b267dfef114a4a3cc5bdd788f"
 
@@ -27,6 +27,10 @@ def tokens(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+(?:'[a-z0-9]+)*", text.lower().replace("’", "'"))
 
 
+class UnknownAlignmentWord(ValueError):
+    """MFA emitted an unknown word/phone rather than a dictionary alignment."""
+
+
 def parse_alignment(data: dict, text: str, origin: float, duration: float) -> Alignment:
     tiers = data["tiers"]
     parsed = {}
@@ -40,7 +44,7 @@ def parse_alignment(data: dict, text: str, origin: float, duration: float) -> Al
         for start, end, label in matches[0]["entries"]:
             if not label or label in ("sil", "sp", "spn", "<eps>"):
                 if label == "spn":
-                    raise ValueError("Unrecognized word")
+                    raise UnknownAlignmentWord("Unrecognized word")
                 continue
             if not (0 <= start < end <= duration + 0.02) or start < last - 0.001:
                 raise ValueError("Invalid interval bounds")
@@ -58,30 +62,26 @@ def align(wav: Path, text: str, origin: float, directory: Path, settings: Settin
     if not model or not dictionary:
         return Alignment(status="unavailable", reason="mfa_not_configured")
     for path, digest in ((model, settings.acoustic_mfa_model_sha256), (dictionary, settings.acoustic_mfa_dictionary_sha256)):
-        if not digest or not Path(path).is_file() or file_hash(Path(path)) != digest:
+        if not mfa_runtime.verified(Path(path), digest):
             return Alignment(status="unavailable", reason="mfa_model_integrity")
     directory.mkdir(parents=True, exist_ok=True)
     transcript = directory / "sentence.lab"
     transcript.write_text(text, encoding="utf-8")
     output = directory / "alignment.json"
     binary = Path(settings.acoustic_mfa_binary).expanduser()
-    # Reuse the provisioned decoder used for normalization. Conda's optional
-    # ffmpeg build may pull in a different codec/runtime dependency tree.
-    decoder = shutil.which("ffmpeg")
-    decoder_bin = str(Path(decoder).resolve().parent) + os.pathsep if decoder else ""
     env = {**os.environ, "MFA_ROOT_DIR": str(directory / "runtime"),
-           "PATH": decoder_bin + str(binary.resolve().parent) + os.pathsep + os.environ.get("PATH", "")}
+           "PATH": mfa_runtime.search_path(binary)}
     try:
-        installed = subprocess.run([str(binary), "version"], capture_output=True, text=True, timeout=30, env=env)
-        if installed.returncode or "3.3.9" not in installed.stdout:
-            return Alignment(status="unavailable", reason="mfa_version_mismatch")
-        subprocess.run([str(binary), "align_one", str(wav), str(transcript), dictionary, model, str(output),
-                        "--output_format", "json", "--temporary_directory", str(directory / "work"),
-                        "--num_jobs", "1", "--no_use_mp", "--clean", "--quiet"],
-                       env=env, check=True, capture_output=True, timeout=180)
+        with mfa_runtime.lexicon_cache(settings, engine_identity(settings), directory):
+            cpu_policy.run([str(binary), "align_one", str(wav), str(transcript), dictionary, model, str(output),
+                            "--output_format", "json", "--temporary_directory", str(directory / "work"),
+                            "--num_jobs", "1", "--no_use_mp", "--no_clean", "--quiet"],
+                           env=env, check=True, capture_output=True, timeout=180)
         with wave.open(str(wav)) as audio:
             duration = audio.getnframes() / RATE
         return parse_alignment(json.loads(output.read_text()), text, origin, duration)
+    except UnknownAlignmentWord:
+        return Alignment(status="unavailable", reason="mfa_dictionary_word_unavailable")
     except FileNotFoundError:
         return Alignment(status="unavailable", reason="mfa_unavailable")
     except subprocess.TimeoutExpired:
@@ -90,13 +90,12 @@ def align(wav: Path, text: str, origin: float, directory: Path, settings: Settin
         return Alignment(status="failed", reason="mfa_alignment_failed")
 
 
-def extract(wav: Path, settings: Settings) -> tuple[list[Frame], list[Interval], object]:
+def extract(wav: Path, settings: Settings, *, include_pitch: bool = True) -> tuple[list[Frame], list[Interval], object]:
     import numpy as np
-    import parselmouth
     import onnxruntime as ort
 
     if any(version(name) != expected for name, expected in (
-        ("numpy", "2.2.6"), ("praat-parselmouth", "0.4.7"), ("onnxruntime", "1.22.1")
+        ("numpy", "2.2.6"), ("onnxruntime", "1.22.1")
     )):
         raise AudioFailure("acoustic_runtime_version_mismatch")
     model = Path(settings.acoustic_silero_path) if settings.acoustic_silero_path else (
@@ -107,14 +106,19 @@ def extract(wav: Path, settings: Settings) -> tuple[list[Frame], list[Interval],
         samples = np.frombuffer(audio.readframes(audio.getnframes()), dtype="<i2").astype(np.float32) / 32768
     if len(samples) < 640:
         raise AudioFailure("audio_too_short")
-    sound = parselmouth.Sound(samples.astype(np.float64), sampling_frequency=RATE)
-    pitch = sound.to_pitch_ac(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
+    pitch = None
+    if include_pitch:
+        import parselmouth
+        if version("praat-parselmouth") != "0.4.7":
+            raise AudioFailure("acoustic_runtime_version_mismatch")
+        sound = parselmouth.Sound(samples.astype(np.float64), sampling_frequency=RATE)
+        pitch = sound.to_pitch_ac(time_step=0.01, pitch_floor=75, pitch_ceiling=500)
     frames = []
     for start in range(0, len(samples), 160):
         t = start / RATE
         window = samples[max(0, start - 320):min(len(samples), start + 320)]
         rms = float(np.sqrt(np.mean(window * window)))
-        f0 = float(pitch.get_value_at_time(t))
+        f0 = float(pitch.get_value_at_time(t)) if pitch is not None else float("nan")
         frames.append(Frame(time_sec=t, f0_hz=f0 if np.isfinite(f0) and f0 > 0 else None,
                             energy_dbfs=max(-120, 20 * float(np.log10(max(rms, 1e-6))))))
     options = ort.SessionOptions()

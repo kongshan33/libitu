@@ -2,9 +2,35 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MAX_RECORDING_BYTES = 8 * 1024 * 1024
+SourceIndex = Annotated[int, Field(ge=0, strict=True)]
+
+
+class TextSupport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    version: Literal["text-support-v1"] = "text-support-v1"
+    mode: Literal["hidden", "keywords", "full"]
+    visible_source_indices_at_start: list[SourceIndex] = Field(max_length=1024)
+    revealed_source_indices: list[SourceIndex] = Field(default_factory=list, max_length=1024)
+
+    @model_validator(mode="after")
+    def unique_positions(self):
+        for indices in (self.visible_source_indices_at_start, self.revealed_source_indices):
+            if len(set(indices)) != len(indices):
+                raise ValueError("Text support positions must be unique")
+        return self
+
+
+class RecognitionFeedbackCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["recognition_error"]
+
+
+class RecognitionFeedback(BaseModel):
+    kind: Literal["recognition_error"]
+    created_at: datetime
 
 
 class RecordingRetention(BaseModel):
@@ -24,6 +50,7 @@ class AttemptCreate(BaseModel):
     playback_rate: float = Field(ge=0.25, le=2)
     text_visible: bool
     recording: RecordingRetention | None = None
+    text_support: TextSupport | None = None
 
 
 class PracticeAttempt(BaseModel):
@@ -41,11 +68,23 @@ class PracticeAttempt(BaseModel):
     created_at: datetime
     # Recording metadata is not an assessment and never establishes pronunciation quality.
     evidence_source: Literal["browser_recording"] = "browser_recording"
+    text_support: TextSupport | None = None
+    recognition_feedback: RecognitionFeedback | None = None
 
 
 class AttemptPage(BaseModel):
     items: list[PracticeAttempt]
     next_offset: int | None = None
+
+
+class WordMatchCounts(BaseModel):
+    matched_count: int = Field(ge=0)
+    source_count: int = Field(gt=0)
+
+
+class PracticeProgress(BaseModel):
+    practiced_sentence_ids: list[str]
+    best_word_matches: dict[str, WordMatchCounts] = Field(default_factory=dict)
 
 
 SentenceId = Annotated[str, Field(min_length=1, max_length=200)]

@@ -11,6 +11,8 @@ This roadmap orders implementation by dependency and product risk. Each phase mu
 
 Routing architecture update (2026-10-10): R3 directly enables `/practice/import`, `/practice/{contentId}`, `/segments` and `/shadow` with a shared content layout/media host. Main steps push; selection and explicit returns replace. The user removed compatibility requirements: root query learning links and old extension protocols are unsupported, entry links use new paths, continuation uses v2 only, and Web/extension 0.2.0 must update together. R4 entry work is included; R5 cleanup is implemented. See [architecture](ROUTING_AND_RESPONSIBILITY_ARCHITECTURE.md) and TASK.MD for checks and the outstanding real-toolbar capture qualification. No product phase, provider, database schema or consent boundary changes.
 
+Stage 2 practice refactor update (2026-10-12): execute [the accepted contract](STAGE_TWO_REFACTOR_CONTRACT.md) in six ordered steps: contract (complete), backend three-tier gate (implemented), persistence/feedback (implemented; both migrations applied to hosted Libitu), practice UI (implemented and locally verified at desktop/mobile), full navigation/history acceptance (implemented; hosted directory RPC verified), then final wider regression/documentation. Reuse existing original-video reference acquisition. This is the next Stage 2 workspace increment, not delivery of new Sound detectors or remote file acquisition. TASK.MD tracks implementation.
+
 ## Phase 0: maintain the engineering baseline
 
 Goal: keep every workspace installable and verifiable from the repository root.
@@ -199,3 +201,37 @@ The current browser-reference path uploads the captured sentence for private ser
 2026-09-30 layer guidance correction: restore the right-side Layer focus, Feedback and Tip cards for Sound, Rhythm and Melody. Sound guidance follows the selected phenomenon and uses the current sentence’s rule suggestions; conceal mode also hides word-specific sidebar text. Desktop places guidance beside the layer canvas; narrow screens place it below. The video remains above the workspace. Removing the experimental score sidebar did not authorize removing instructional guidance; no illustrative scores or detected-error claims are restored.
 
 2026-10-11: original-video records and direct Stage 1 navigation are implemented in My learning/history using existing owner-scoped content state; no new schema or assessment dependency. Verification is tracked in [profile implementation](PROFILE_IMPLEMENTATION.md).
+
+2026-10-14 implemented follow-up: Reference uses source-transcript MFA without secondary ASR, explicit evidence provenance and a separate reference cache policy version. Learner ASR/gates and reference acquisition stay unchanged; see STAGE_TWO_REFACTOR_CONTRACT.md for verification.
+
+
+## 2026-10-16 progressive acoustic results
+
+Implemented: publish coarse Rhythm/Melody after the unchanged >=85% reliable word gate and before MFA. Below 60% stops at word checking; 60–<85% remains matched-word Sound only. Fewer than four words still skip automatic navigation. Reference server signal is published before source-transcript MFA. Both sides use the same server F0/energy implementation and CWT/window aggregation; browser acoustics are not comparison inputs. Coarse omits duration; boundary-sensitive, low-coverage and edge measurements are uncertain. No stress classes or correctness scores. ASR/subtitle/MFA boundary provenance and algorithm/time-basis versions accompany results.
+
+Eligible new Takes store full 10ms frames in a private durable `acoustic_checkpoint` and display signal in `coarse_checkpoint`; `phase=coarse_ready` can appear while state remains `processing`. Reference `SentenceResult.status=coarse_ready` includes saved measurements and coarse signal. Final Sound/Rhythm/Melody replace preliminary panels; fine failures retain available previews. Keep the original final layer styling and give previews an explicit badge. All read paths retain ownership, sentence identity and Reference revocation/expiry checks. Full Take frames survive audio cleanup but are cleared by analysis or parent deletion. No reconstruction of historical missing audio.
+
+Hosted migration: `20261016101306_progressive_acoustic_checkpoints`. New Reference policy: `reference-source-transcript-v3-progressive`; learner snapshot flag: `server-prominence-v1`. Restart workers after updating dependencies; remote application deployment is separate from schema application. Independent worker lanes and local CPU scheduling are implemented in the follow-up below. ASR/extraction concurrency and target-cloud end-to-end benchmarks remain planned. [Local compute evidence and limitations](../benchmarks/progressive-acoustics-20261016/README.md).
+
+## 2026-10-16 independent acoustic workers
+
+Implemented: separate `stage_two_worker --lane fast|fine` processes, started together by `pnpm dev`. Fast handles learner ASR/word gates and server F0/energy/CWT for Takes and References; fine handles MFA and final comparisons. A service-only PostgreSQL lane claim and fenced handoff (`20261016111833_acoustic_worker_lanes`) preserve checkpoints, reset the downstream retry budget and invalidate the fast lease atomically. Each lane prioritizes eligible Takes over References. Fast startup preloads ASR without probing MFA; fine alone verifies MFA. Old combined entrypoints/claim RPCs reject use. Original audio acquisition, quality checks, recognition settings and 60%/85% thresholds are unchanged.
+
+Local macOS scheduling: fine runs at nice 10 with native library threads capped at one; a separate supervisor pauses/resumes the MFA process group when the fast lane holds a shared activity lock. Parent heartbeats continue, locks release on crashes, and the supervisor reaps MFA if its owning worker exits. Active MFA timeout excludes pauses with a bounded additional 900 seconds of wall time. Empty queue polling does not pause MFA. Both workers must share the scheduler directory/account. This prioritizes first results and may extend fine completion under load; it is not hard CPU affinity. Optional disjoint Linux CPU sets and systemd templates are provided but not validated on a cloud host. No production worker deployment is implied.
+
+Validation and timing: see [local lane comparison](../benchmarks/worker-lanes-20261016/README.md). The local benchmark separates controlled CPU/queue timing from real hosted-storage/local-worker polling; browser paint and target-cloud timings are not inferred from either. Existing previews remain visible through fine processing/failure; no frontend redesign or new matching classes.
+
+### 2026-10-17 Stage 2 delivery: submission/checkpoint consolidation
+
+Delivered a single analysis-enabled submission endpoint, transactional Take/job registration and atomic coarse checkpoint plus lane handoff. Preserve cloud durability before queueing and independent playback retention. Benchmark local browser submission through rendered preliminary results before considering Realtime, streaming uploads or asynchronous cloud durability. See [measurement record](../benchmarks/submission-20261017/README.md).
+
+### 2026-10-17 Stage 2 delivery: consolidated status reads
+
+Delivered one coherent status query after submission/checkpoint consolidation. Preserve all ownership, source and expiry checks and the existing polling interval. Compare the old serial read with the new snapshot using the same merged upload and workers; see [measurement record](../benchmarks/result-query-20261017/README.md).
+
+
+## 2026-10-17 optional Reference for learner analysis
+
+Reference preparation is optional. With server analysis enabled, a learner may record immediately without uploaded Reference audio; the Take freezes a null Reference identity and follows the existing word check, fast signal checkpoint, and fine learner alignment pipeline. It completes with learner measurements and no comparison score, without waiting for Reference. The unchanged below-60%, 60–<85% Sound-only, and >=85% all-layer gates still apply. Existing eligible References can be bound at recording start and use the paired flow. Active original-audio capture still blocks simultaneous microphone recording.
+
+The UI describes optional Reference comparison and promotes completed learner-only fine results beyond the preliminary badge. Learner-only CWT tables omit the empty Reference column and determine uncertainty from learner evidence; absence of a comparison alone does not invalidate that evidence. Reference acquisition, quality checks, server-analysis preference and independent history-retention switch are unchanged. A Reference prepared after a null-reference Take is not retroactively attached in this increment. Existing backend nullable Reference support and worker completion are reused; no schema migration is required.

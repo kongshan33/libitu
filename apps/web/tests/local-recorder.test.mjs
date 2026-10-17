@@ -125,6 +125,24 @@ function fixture(options = {}) {
   return f;
 }
 
+test("waveform access shares the active recorder stream and stops exposing it on cleanup", async () => {
+  const f = fixture();
+  assert.equal(f.controller.getActiveStream(), null);
+  const {stream, recorder} = await f.record();
+  assert.equal(f.requests.length, 1);
+  assert.equal(f.controller.getActiveStream(), stream);
+  f.controller.stop();
+  assert.equal(f.controller.getActiveStream(), null);
+  assert.equal(stream.track.stops, 1);
+  recorder.finish();
+  const next = await f.record();
+  assert.equal(f.controller.getActiveStream(), next.stream);
+  f.controller.cancel();
+  assert.equal(f.controller.getActiveStream(), null);
+  assert.equal(next.stream.track.stops, 1);
+  f.controller.dispose();
+});
+
 test("recording is explicit; requesting publishes synchronously and rapid starts share one request", async () => {
   const f = fixture();
   assert.equal(f.requests.length, 0);

@@ -1,6 +1,9 @@
 """Durable learner records and private objects; no in-memory success fallback."""
 
+from __future__ import annotations
+
 from functools import lru_cache
+from collections.abc import Iterator
 
 import httpx
 
@@ -43,6 +46,28 @@ class PracticeRepository:
         if sentence is not None:
             params["sentence_id"] = f"eq.{sentence}"
         return self.database._request("GET", "/shadow_attempts", params=params).json()
+
+    def practiced_sentences(self, owner: str, content: str) -> list[str]:
+        return self.database._request("POST", "/rpc/practice_directory_progress",
+            json={"p_owner": owner, "p_content": content}).json()
+
+    def reliable_word_checks(self, owner: str, content: str) -> Iterator[dict]:
+        """Read only counts, in keyset pages, including durable in-progress checks."""
+        after = None
+        while True:
+            params = {"user_id": f"eq.{owner}", "state": "neq.deleted",
+                      "word_check->>version": "eq.word-match-v1", "word_check->>status": "eq.reliable",
+                      "shadow_attempts.user_id": f"eq.{owner}", "shadow_attempts.content_id": f"eq.{content}",
+                      "shadow_attempts.deleted_at": "is.null",
+                      "select": "id,matched_count:word_check->matched_count,source_count:word_check->source_count,shadow_attempts!inner(sentence_id)",
+                      "order": "id.asc", "limit": "500"}
+            if after is not None:
+                params["id"] = f"gt.{after}"
+            rows = self.database._request("GET", "/practice_analyses", params=params).json()
+            if not rows:
+                return
+            yield from rows
+            after = rows[-1]["id"]
 
     def update(self, owner: str, attempt: str, changes: dict, *, pending_only: bool = False) -> dict | None:
         params = {"user_id": f"eq.{owner}", "id": f"eq.{attempt}"}

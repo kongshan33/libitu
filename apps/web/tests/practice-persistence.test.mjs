@@ -75,61 +75,111 @@ test("API refuses a token for another account before sending bytes", async () =>
   } finally { globalThis.fetch = original; }
 });
 
-test("analysis consent uploads temporary audio without granting recording retention", async () => {
+test("analysis submission keeps retention independent and acknowledges only after upload", async () => {
   let saved, analysis, bytes;
   const acknowledged = [];
   const queue = new PracticeOutbox({
-    create: async value => { saved = value; return { id: "take", recording_state: "none" }; },
-    upload: async () => assert.fail("analysis consent must not retain audio"),
-    prepareAnalysis: async (id, value) => { assert.equal(id, "take"); analysis = value; return { state: "awaiting_upload" }; },
-    uploadAnalysis: async (id, value) => { assert.equal(id, "take"); bytes = value; }
+    submit: async (attempt, value, audio) => { saved=attempt;analysis=value;bytes=audio;return {id:"take"}; },
+    create: async()=>assert.fail("Use one submission"),
+    upload: async()=>assert.fail("Do not retain without consent")
   });
   queue.enqueue(input, blob, false, { referenceId: "reference-a" }, id => {
-    assert.equal(bytes, blob, "the workspace must not select the take before its analysis upload is acknowledged");
-    acknowledged.push(id);
+    assert.equal(bytes, blob);acknowledged.push(id);
   });
   await until(() => queue.state.pending === 0);
-  assert.equal(saved.recording, null);
-  assert.equal(analysis.consent_version, "practice-analysis-v1");
-  assert.equal(analysis.reference_id, "reference-a");
-  assert.equal(analysis.sha256.length, 64);
-  assert.equal(bytes, blob);
-  assert.deepEqual(acknowledged, ["take"]);
-  queue.dispose();
+  assert.equal(saved.recording,null);
+  assert.equal(analysis.consent_version,"practice-analysis-v1");
+  assert.equal(analysis.reference_id,"reference-a");
+  assert.equal(analysis.sha256.length,64);
+  assert.deepEqual(acknowledged,["take"]);queue.dispose();
 });
 
-test("uncertain analysis upload retries the same identity and does not reupload a completed job", async () => {
-  const inputs = [];
-  const acknowledged = [];
-  let uploads = 0, registered = false;
-  const queue = new PracticeOutbox({
-    create: async () => ({ id: "take", recording_state: "none" }),
-    prepareAnalysis: async (_id, value) => { inputs.push(structuredClone(value)); return { state: registered ? "completed" : "awaiting_upload" }; },
-    uploadAnalysis: async () => { uploads++; registered = true; throw Error("response interrupted"); }
-  });
-  const choice = { referenceId: "reference-a" };
-  queue.enqueue(input, blob, false, choice, id => acknowledged.push(id));
-  choice.referenceId = "reference-b";
-  await until(() => queue.state.errors.length === 1);
-  assert.deepEqual(acknowledged, [], "failed saves cannot publish a completed take to the workspace");
-  queue.retry();
-  await until(() => queue.state.pending === 0);
-  assert.equal(uploads, 1);
-  assert.deepEqual(inputs[0], inputs[1]);
-  assert.equal(inputs[0].reference_id, "reference-a");
-  assert.deepEqual(acknowledged, ["take"], "retries notify the workspace once with the durable identity");
-  queue.dispose();
-});
-
-test('take waits for its captured reference upload and keeps its immutable binding across retry', async()=>{
-  let release,fail=true,resolves=0;const prepared=[],created=[];
-  const queue=new PracticeOutbox({create:async payload=>{created.push(payload.client_id);return {id:'take',recording_state:'none'};},
-    prepareAnalysis:async(_id,payload)=>{prepared.push(structuredClone(payload));if(fail)throw Error('offline');return {state:'awaiting_upload'};},
-    uploadAnalysis:async()=>{}});
-  queue.enqueue(input,blob,false,{referenceId:null,resolveReference:()=>{resolves++;return new Promise(r=>release=r);}});
-  await until(()=>Boolean(release));assert.equal(prepared.length,0);assert.equal(queue.state.pending,1);
-  release('frozen-reference');await until(()=>queue.state.errors.length===1);
+test("submission retry resends identical metadata and bytes with independent retention consent",async()=>{
+  const requests=[];let fail=true;
+  const queue=new PracticeOutbox({submit:async(attempt,analysis,audio)=>{
+    requests.push({attempt:structuredClone(attempt),analysis:structuredClone(analysis)});
+    assert.equal(audio,blob);
+    if(fail)throw Error("retention interrupted");
+    return {id:"take"};
+  }});
+  queue.enqueue(input,blob,true,{referenceId:"ref"});
+  await until(()=>queue.state.errors.length===1);
   fail=false;queue.retry();await until(()=>queue.state.pending===0);
-  assert.equal(resolves,1);assert.deepEqual(created,[created[0],created[0]]);
-  assert.deepEqual(prepared.map(p=>p.reference_id),['frozen-reference','frozen-reference']);queue.dispose();
+  assert.equal(requests.length,2);assert.deepEqual(requests[0],requests[1]);
+  assert.equal(requests[0].attempt.recording.sha256,requests[0].analysis.sha256);
+  assert.equal(requests[0].attempt.recording.consent_version,"recording-retention-v1");queue.dispose();
+});
+
+test("uncertain submission response preserves identity and only acknowledges successful retry",async()=>{
+  const requests=[],acknowledged=[];let fail=true;
+  const queue=new PracticeOutbox({submit:async(attempt,analysis,audio)=>{
+    requests.push(structuredClone({attempt,analysis}));assert.equal(audio,blob);
+    if(fail)throw Error("response interrupted");
+    return {id:"take"};
+  }});
+  const choice={referenceId:"reference-a"};
+  queue.enqueue(input,blob,false,choice,id=>acknowledged.push(id));choice.referenceId="reference-b";
+  await until(()=>queue.state.errors.length===1);assert.deepEqual(acknowledged,[]);
+  fail=false;queue.retry();await until(()=>queue.state.pending===0);
+  assert.deepEqual(requests[0],requests[1]);assert.equal(requests[0].analysis.reference_id,"reference-a");
+  assert.deepEqual(acknowledged,["take"]);queue.dispose();
+});
+
+test("take waits for its captured reference and keeps the binding across retry",async()=>{
+  let release,fail=true,resolves=0;const requests=[];
+  const queue=new PracticeOutbox({submit:async(attempt,analysis)=>{
+    requests.push(structuredClone({attempt,analysis}));
+    if(fail)throw Error("offline");return {id:"take"};
+  }});
+  queue.enqueue(input,blob,false,{referenceId:null,resolveReference:()=>{resolves++;return new Promise(r=>release=r);}});
+  await until(()=>Boolean(release));assert.equal(requests.length,0);
+  release("frozen-reference");await until(()=>queue.state.errors.length===1);
+  fail=false;queue.retry();await until(()=>queue.state.pending===0);
+  assert.equal(resolves,1);assert.deepEqual(requests[0],requests[1]);
+  assert.equal(requests[0].analysis.reference_id,"frozen-reference");queue.dispose();
+});
+
+test('text-support arrays are immutable across uncertain saves and settings changes', async () => {
+  const created = [];
+  let fail = true;
+  const queue = new PracticeOutbox({ create: async payload => {
+    created.push(structuredClone(payload));
+    if (fail) throw Error('offline');
+    return { id: 'take', recording_state: 'none' };
+  }});
+  const source = { ...input, text_support: { version: 'text-support-v1', mode: 'hidden',
+    visible_source_indices_at_start: [0], revealed_source_indices: [0, 2] } };
+  queue.enqueue(source, blob, false);
+  source.text_support.mode = 'full';
+  source.text_support.visible_source_indices_at_start.push(1);
+  source.text_support.revealed_source_indices.splice(0);
+  await until(() => queue.state.errors.length === 1);
+  fail = false; queue.retry();
+  await until(() => queue.state.pending === 0);
+  assert.deepEqual(created[0], created[1]);
+  assert.deepEqual(created[1].text_support, { version: 'text-support-v1', mode: 'hidden',
+    visible_source_indices_at_start: [0], revealed_source_indices: [0, 2] });
+  queue.dispose();
+});
+
+test('recognition feedback sends only the marker to the owner-bound take endpoint', async () => {
+  const original = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init });
+    return new Response(JSON.stringify({ kind: 'recognition_error', created_at: '2026-10-12T00:00:00Z' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  try {
+    const token = `header.${btoa(JSON.stringify({ sub: 'owner' }))}.signature`;
+    const api = createPracticeApi('owner', async () => token);
+    const result = await api.markRecognitionError('take/id', new AbortController().signal);
+    assert.equal(result.kind, 'recognition_error');
+    assert.equal(calls[0].init.method, 'PUT');
+    assert.ok(calls[0].url.endsWith('/take%2Fid/recognition-feedback'));
+    assert.deepEqual(JSON.parse(calls[0].init.body), { kind: 'recognition_error' });
+    const other = createPracticeApi('other', async () => token);
+    await assert.rejects(other.markRecognitionError('take', new AbortController().signal), /Account changed/);
+    assert.equal(calls.length, 1);
+  } finally { globalThis.fetch = original; }
 });

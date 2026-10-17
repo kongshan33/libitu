@@ -1,0 +1,19 @@
+{
+  "purpose": "Actual MFA export for field-level explanation, not a user/video recording or a performance benchmark",
+  "source": "Existing synthetic speech fixture from the 2026-10-15 latency probe",
+  "text": "This is the second sentence. We practice speaking clearly.",
+  "duration_sec": 3.74625,
+  "sample_rate_hz": 16000,
+  "mfa_version": "3.3.9",
+  "model": "english_us_arpa",
+  "time_basis": "seconds relative to the beginning of this WAV",
+  "alignment_status": "aligned",
+  "quality_issues": [],
+  "word_count": 9,
+  "phone_count": 41,
+  "files": {
+    "raw-mfa.json": "Unmodified MFA JSON export",
+    "parsed-alignment.json": "Libitu normalized alignment only",
+    "reference-result.json": "Libitu Reference result, including separate VAD/F0/energy extraction"
+  }
+}

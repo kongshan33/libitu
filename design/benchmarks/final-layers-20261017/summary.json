@@ -1,0 +1,161 @@
+{
+  "trials": [
+    {
+      "attempt": "4d55cb6f-6f15-55d6-8155-dfbd4687889f",
+      "word_sec": 13.32480000001192,
+      "final_sec": 43.21069999998808,
+      "upload_ack_sec": 3.76801611328125,
+      "after_upload_ack_sec": 39.44268388670683,
+      "mfa_observed_sec": 25.392518043518066,
+      "mfa_start_sec": 15.72685194015503,
+      "mfa_end_sec": 41.119369983673096,
+      "coarse_first_observed_sec": 14.604,
+      "phase_observations": [
+        {
+          "seconds": 4.068,
+          "state": "processing",
+          "phase": "queued_word_check",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 5.347,
+          "state": "processing",
+          "phase": "checking_words",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 13.304,
+          "state": "processing",
+          "phase": "word_check_complete",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 14.604,
+          "state": "processing",
+          "phase": "coarse_ready",
+          "coarse_ready": true
+        },
+        {
+          "seconds": 15.907,
+          "state": "processing",
+          "phase": "analyzing_all",
+          "coarse_ready": true
+        },
+        {
+          "seconds": 43.1,
+          "state": "completed",
+          "phase": "finished",
+          "coarse_ready": true
+        }
+      ]
+    },
+    {
+      "attempt": "8fb6974b-20c3-5cbb-b2f4-ea33184ba6a7",
+      "word_sec": 13.062399999976158,
+      "final_sec": 36.67619999998808,
+      "upload_ack_sec": 2.34357421875,
+      "after_upload_ack_sec": 34.33262578123808,
+      "mfa_observed_sec": 20.111982107162476,
+      "mfa_start_sec": 14.303563833236694,
+      "mfa_end_sec": 34.41554594039917,
+      "coarse_first_observed_sec": 14.312,
+      "phase_observations": [
+        {
+          "seconds": 2.646,
+          "state": "queued",
+          "phase": "queued_word_check",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 3.915,
+          "state": "processing",
+          "phase": "checking_words",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 13.038,
+          "state": "processing",
+          "phase": "word_check_complete",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 14.312,
+          "state": "processing",
+          "phase": "analyzing_all",
+          "coarse_ready": true
+        },
+        {
+          "seconds": 36.618,
+          "state": "completed",
+          "phase": "finished",
+          "coarse_ready": true
+        }
+      ]
+    },
+    {
+      "attempt": "4c253edf-8c41-5a6c-ad01-a844be0942dc",
+      "word_sec": 13.077199999988078,
+      "final_sec": 47.71710000002384,
+      "upload_ack_sec": 2.48958203125,
+      "after_upload_ack_sec": 45.22751796877384,
+      "mfa_observed_sec": 29.61203098297119,
+      "mfa_start_sec": 15.457911014556885,
+      "mfa_end_sec": 45.069941997528076,
+      "coarse_first_observed_sec": 14.321,
+      "phase_observations": [
+        {
+          "seconds": 2.755,
+          "state": "queued",
+          "phase": "queued_word_check",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 4.029,
+          "state": "processing",
+          "phase": "queued_word_check",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 5.287,
+          "state": "processing",
+          "phase": "checking_words",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 13.04,
+          "state": "processing",
+          "phase": "word_check_complete",
+          "coarse_ready": false
+        },
+        {
+          "seconds": 14.321,
+          "state": "queued",
+          "phase": "coarse_ready",
+          "coarse_ready": true
+        },
+        {
+          "seconds": 15.591,
+          "state": "processing",
+          "phase": "analyzing_all",
+          "coarse_ready": true
+        },
+        {
+          "seconds": 47.654,
+          "state": "completed",
+          "phase": "finished",
+          "coarse_ready": true
+        }
+      ]
+    }
+  ],
+  "medians": {
+    "word_sec": 13.077199999988078,
+    "final_sec": 43.21069999998808,
+    "upload_ack_sec": 2.48958203125,
+    "after_upload_ack_sec": 39.44268388670683,
+    "mfa_observed_sec": 25.392518043518066,
+    "coarse_first_observed_sec": 14.321
+  },
+  "cleanup": "rows and audio removed",
+  "scope": "Chromium harness with production Outbox/API/poll hook and final layer components; real local API, hosted DB/storage and independent workers; fixture auth/source; no Reference"
+}

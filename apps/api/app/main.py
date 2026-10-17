@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from app.config import get_settings
 
-from app.routers import blueprints, content, corpus, health, jobs, practice, practice_analysis, profile, references, speaking
+from app.routers import blueprints, content, corpus, health, jobs, practice, practice_analysis, practice_submission, profile, references, speaking
 
 app = FastAPI(
     title="Libitu API",
@@ -25,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(practice_submission.router)
 app.include_router(practice.router)
 app.include_router(practice_analysis.router)
 app.include_router(profile.router)

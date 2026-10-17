@@ -1,0 +1,3068 @@
+[
+  {
+    "mode": "final",
+    "start_epoch_ms": 1792232935115,
+    "word_visible_sec": 13.32480000001192,
+    "coarse_visible_sec": null,
+    "final_visible_sec": 43.21069999998808,
+    "observations": [
+      {
+        "epoch_ms": 1792232939183,
+        "state": "processing",
+        "phase": "queued_word_check",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232940462,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232941760,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232943183,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232944488,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232945787,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232947066,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232948419,
+        "state": "processing",
+        "phase": "word_check_complete",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "pending",
+            "reason": null
+          },
+          "melody": {
+            "state": "pending",
+            "reason": null
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232949719,
+        "state": "processing",
+        "phase": "coarse_ready",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232951022,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232952318,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232953594,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232954884,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232956152,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232957434,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232958728,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232960045,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232961338,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232962622,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232963921,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232965222,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232966580,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232967893,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232969181,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232970479,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232971764,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232973064,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232974346,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232975633,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232976913,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232978215,
+        "state": "completed",
+        "phase": "finished",
+        "coarse_ready": true,
+        "has_result": true,
+        "layers": {
+          "sound": {
+            "state": "partial",
+            "reason": "learner_only"
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "learner_only"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "learner_only"
+          }
+        }
+      }
+    ],
+    "reference_visible": "false",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "4d55cb6f-6f15-55d6-8155-dfbd4687889f",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792232935342.3892,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3536.433,
+        "responseEnd": 3540.627
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792232938885.019,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 299.14,
+        "responseEnd": 301.045
+      },
+      {
+        "startTime": 1792232940188.638,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 274.736,
+        "responseEnd": 276.536
+      },
+      {
+        "startTime": 1792232941469.668,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 292.18,
+        "responseEnd": 297.03
+      },
+      {
+        "startTime": 1792232942767.7742,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 416.421,
+        "responseEnd": 419.927
+      },
+      {
+        "startTime": 1792232944209.3179,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 280.332,
+        "responseEnd": 303.576
+      },
+      {
+        "startTime": 1792232945493.886,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 294.42,
+        "responseEnd": 296.236
+      },
+      {
+        "startTime": 1792232946793.4758,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 273.579,
+        "responseEnd": 276.16
+      },
+      {
+        "startTime": 1792232948071.1418,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 348.77,
+        "responseEnd": 351.252
+      },
+      {
+        "startTime": 1792232949426.495,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 293.356,
+        "responseEnd": 296.888
+      },
+      {
+        "startTime": 1792232950724.252,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 299.237,
+        "responseEnd": 301.026
+      },
+      {
+        "startTime": 1792232952027.61,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 292.057,
+        "responseEnd": 293.783
+      },
+      {
+        "startTime": 1792232953324.689,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 271.66,
+        "responseEnd": 274.052
+      },
+      {
+        "startTime": 1792232954599.6443,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 285.795,
+        "responseEnd": 287.41
+      },
+      {
+        "startTime": 1792232955889.98,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 263.773,
+        "responseEnd": 265.331
+      },
+      {
+        "startTime": 1792232957158.298,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 277.399,
+        "responseEnd": 279.62
+      },
+      {
+        "startTime": 1792232958440.1619,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 288.954,
+        "responseEnd": 290.779
+      },
+      {
+        "startTime": 1792232959733.2517,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 312.851,
+        "responseEnd": 314.842
+      },
+      {
+        "startTime": 1792232961050.7551,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 288.262,
+        "responseEnd": 289.817
+      },
+      {
+        "startTime": 1792232962342.3171,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 281.081,
+        "responseEnd": 282.637
+      },
+      {
+        "startTime": 1792232963629.088,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 293.737,
+        "responseEnd": 295.877
+      },
+      {
+        "startTime": 1792232964931.2607,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 291.658,
+        "responseEnd": 297.482
+      },
+      {
+        "startTime": 1792232966230.198,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 351.961,
+        "responseEnd": 357.163
+      },
+      {
+        "startTime": 1792232967608.5662,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 286.153,
+        "responseEnd": 310.589
+      },
+      {
+        "startTime": 1792232968900.0142,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 282.551,
+        "responseEnd": 285.201
+      },
+      {
+        "startTime": 1792232970189.568,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 291.203,
+        "responseEnd": 293.446
+      },
+      {
+        "startTime": 1792232971486.002,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 279.503,
+        "responseEnd": 282.464
+      },
+      {
+        "startTime": 1792232972774.593,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 290.765,
+        "responseEnd": 297.885
+      },
+      {
+        "startTime": 1792232974069.8198,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 277.585,
+        "responseEnd": 280.137
+      },
+      {
+        "startTime": 1792232975351.1838,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 282.989,
+        "responseEnd": 284.648
+      },
+      {
+        "startTime": 1792232976638.124,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 276.452,
+        "responseEnd": 278.394
+      },
+      {
+        "startTime": 1792232977919.8557,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 296.439,
+        "responseEnd": 299.356
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "final",
+    "start_epoch_ms": 1792232980510,
+    "word_visible_sec": 13.062399999976158,
+    "coarse_visible_sec": null,
+    "final_visible_sec": 36.67619999998808,
+    "observations": [
+      {
+        "epoch_ms": 1792232983156,
+        "state": "queued",
+        "phase": "queued_word_check",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232984425,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232985700,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232986964,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232988266,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232989587,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232990854,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232992264,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232993548,
+        "state": "processing",
+        "phase": "word_check_complete",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "pending",
+            "reason": null
+          },
+          "melody": {
+            "state": "pending",
+            "reason": null
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232994822,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232996120,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232997395,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792232998715,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233000000,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233001329,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233002618,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233003892,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233005163,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233006457,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233007777,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233009093,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233010606,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233011888,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233013234,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233014535,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233015818,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233017128,
+        "state": "completed",
+        "phase": "finished",
+        "coarse_ready": true,
+        "has_result": true,
+        "layers": {
+          "sound": {
+            "state": "partial",
+            "reason": "learner_only"
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "learner_only"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "learner_only"
+          }
+        }
+      }
+    ],
+    "reference_visible": "false",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "8fb6974b-20c3-5cbb-b2f4-ea33184ba6a7",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792232980533.0042,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2310.344,
+        "responseEnd": 2320.57
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792232982850.467,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 306.701,
+        "responseEnd": 310.494
+      },
+      {
+        "startTime": 1792232984161.649,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 265.928,
+        "responseEnd": 267.806
+      },
+      {
+        "startTime": 1792232985432.3088,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 268.887,
+        "responseEnd": 271.145
+      },
+      {
+        "startTime": 1792232986706.0771,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 259.435,
+        "responseEnd": 261.663
+      },
+      {
+        "startTime": 1792232987976.3071,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 291.58,
+        "responseEnd": 300.427
+      },
+      {
+        "startTime": 1792232989276.194,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 312.547,
+        "responseEnd": 318.478
+      },
+      {
+        "startTime": 1792232990592.7378,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 262.686,
+        "responseEnd": 265.277
+      },
+      {
+        "startTime": 1792232991867.185,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 397.92,
+        "responseEnd": 407.709
+      },
+      {
+        "startTime": 1792232993268.801,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 281.527,
+        "responseEnd": 283.34
+      },
+      {
+        "startTime": 1792232994554.404,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 269.413,
+        "responseEnd": 271.049
+      },
+      {
+        "startTime": 1792232995827.2551,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 294.102,
+        "responseEnd": 295.852
+      },
+      {
+        "startTime": 1792232997125.3381,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 271.953,
+        "responseEnd": 274.234
+      },
+      {
+        "startTime": 1792232998401.44,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 315.095,
+        "responseEnd": 316.772
+      },
+      {
+        "startTime": 1792232999721.2898,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 279.864,
+        "responseEnd": 282.204
+      },
+      {
+        "startTime": 1792233001005.549,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 325.051,
+        "responseEnd": 326.857
+      },
+      {
+        "startTime": 1792233002343.243,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 276.775,
+        "responseEnd": 286.751
+      },
+      {
+        "startTime": 1792233003623.6292,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 271.341,
+        "responseEnd": 273.328
+      },
+      {
+        "startTime": 1792233004898.645,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 265.773,
+        "responseEnd": 267.221
+      },
+      {
+        "startTime": 1792233006168.327,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 290.357,
+        "responseEnd": 291.992
+      },
+      {
+        "startTime": 1792233007462.752,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 316.412,
+        "responseEnd": 318.475
+      },
+      {
+        "startTime": 1792233008782.769,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 311.766,
+        "responseEnd": 313.206
+      },
+      {
+        "startTime": 1792233010223.157,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 383.941,
+        "responseEnd": 510.45
+      },
+      {
+        "startTime": 1792233011610.638,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 279.25,
+        "responseEnd": 280.845
+      },
+      {
+        "startTime": 1792233012894.792,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 340.536,
+        "responseEnd": 343.42
+      },
+      {
+        "startTime": 1792233014240.18,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 296.82,
+        "responseEnd": 298.936
+      },
+      {
+        "startTime": 1792233015541.166,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 278.02,
+        "responseEnd": 279.386
+      },
+      {
+        "startTime": 1792233016823.58,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 306.641,
+        "responseEnd": 308.319
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "final",
+    "start_epoch_ms": 1792233019228,
+    "word_visible_sec": 13.077199999988078,
+    "coarse_visible_sec": null,
+    "final_visible_sec": 47.71710000002384,
+    "observations": [
+      {
+        "epoch_ms": 1792233021983,
+        "state": "queued",
+        "phase": "queued_word_check",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233023257,
+        "state": "processing",
+        "phase": "queued_word_check",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233024515,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233025797,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233027096,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233028388,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233029719,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233030995,
+        "state": "processing",
+        "phase": "checking_words",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "rhythm": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          },
+          "melody": {
+            "state": "locked",
+            "reason": "word_check_pending"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233032268,
+        "state": "processing",
+        "phase": "word_check_complete",
+        "coarse_ready": false,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "pending",
+            "reason": null
+          },
+          "melody": {
+            "state": "pending",
+            "reason": null
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233033549,
+        "state": "queued",
+        "phase": "coarse_ready",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233034819,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233036164,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233037770,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233039084,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233040387,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233041665,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233042972,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233044248,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233045540,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233046839,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233048254,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233049524,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233050832,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233052140,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233053433,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233054741,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233056143,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233057428,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233058982,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233060267,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233061598,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233062956,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233064241,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233065538,
+        "state": "processing",
+        "phase": "analyzing_all",
+        "coarse_ready": true,
+        "has_result": false,
+        "layers": {
+          "sound": {
+            "state": "pending",
+            "reason": null
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "preliminary"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "preliminary"
+          }
+        }
+      },
+      {
+        "epoch_ms": 1792233066882,
+        "state": "completed",
+        "phase": "finished",
+        "coarse_ready": true,
+        "has_result": true,
+        "layers": {
+          "sound": {
+            "state": "partial",
+            "reason": "learner_only"
+          },
+          "rhythm": {
+            "state": "partial",
+            "reason": "learner_only"
+          },
+          "melody": {
+            "state": "partial",
+            "reason": "learner_only"
+          }
+        }
+      }
+    ],
+    "reference_visible": "false",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "4c253edf-8c41-5a6c-ad01-a844be0942dc",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792233019255.95,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2451.494,
+        "responseEnd": 2461.632
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792233021713.8748,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 270.45,
+        "responseEnd": 273.594
+      },
+      {
+        "startTime": 1792233022989.991,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 268.509,
+        "responseEnd": 272.005
+      },
+      {
+        "startTime": 1792233024261.88,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 254.087,
+        "responseEnd": 255.625
+      },
+      {
+        "startTime": 1792233025519.961,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 278.198,
+        "responseEnd": 279.786
+      },
+      {
+        "startTime": 1792233026801.905,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 295.48,
+        "responseEnd": 297.574
+      },
+      {
+        "startTime": 1792233028101.113,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 289.85,
+        "responseEnd": 291.773
+      },
+      {
+        "startTime": 1792233029402.657,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 317.735,
+        "responseEnd": 325.488
+      },
+      {
+        "startTime": 1792233030724.5059,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 271.632,
+        "responseEnd": 273.629
+      },
+      {
+        "startTime": 1792233031999.657,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 271.256,
+        "responseEnd": 273.034
+      },
+      {
+        "startTime": 1792233033278.566,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 272.655,
+        "responseEnd": 276.996
+      },
+      {
+        "startTime": 1792233034556.8188,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 263.836,
+        "responseEnd": 265.784
+      },
+      {
+        "startTime": 1792233035824.456,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 341.406,
+        "responseEnd": 342.836
+      },
+      {
+        "startTime": 1792233037176.81,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 597.089,
+        "responseEnd": 604.259
+      },
+      {
+        "startTime": 1792233038779.577,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 307.404,
+        "responseEnd": 309.543
+      },
+      {
+        "startTime": 1792233040098.202,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 290.169,
+        "responseEnd": 298.267
+      },
+      {
+        "startTime": 1792233041393.385,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 273.218,
+        "responseEnd": 275.192
+      },
+      {
+        "startTime": 1792233042676.2322,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 297.539,
+        "responseEnd": 302.923
+      },
+      {
+        "startTime": 1792233043977.015,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 273.074,
+        "responseEnd": 274.371
+      },
+      {
+        "startTime": 1792233045254.971,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 290.181,
+        "responseEnd": 292.461
+      },
+      {
+        "startTime": 1792233046549.904,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 290.475,
+        "responseEnd": 292.648
+      },
+      {
+        "startTime": 1792233047854.0571,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 405.443,
+        "responseEnd": 417.43
+      },
+      {
+        "startTime": 1792233049264.665,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 260.752,
+        "responseEnd": 262.463
+      },
+      {
+        "startTime": 1792233050539.011,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 294.482,
+        "responseEnd": 305.507
+      },
+      {
+        "startTime": 1792233051838.233,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 303.068,
+        "responseEnd": 305.442
+      },
+      {
+        "startTime": 1792233053145.375,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 290.219,
+        "responseEnd": 292.621
+      },
+      {
+        "startTime": 1792233054440.726,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 303.82,
+        "responseEnd": 305.879
+      },
+      {
+        "startTime": 1792233055749.439,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 395.521,
+        "responseEnd": 397.029
+      },
+      {
+        "startTime": 1792233057148.829,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 292.189,
+        "responseEnd": 293.751
+      },
+      {
+        "startTime": 1792233058446.7402,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 538.361,
+        "responseEnd": 540.06
+      },
+      {
+        "startTime": 1792233059989.846,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 278.138,
+        "responseEnd": 280.268
+      },
+      {
+        "startTime": 1792233061273.476,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 326.893,
+        "responseEnd": 330.878
+      },
+      {
+        "startTime": 1792233062607.331,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 352.087,
+        "responseEnd": 357.246
+      },
+      {
+        "startTime": 1792233063966.0298,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 278.091,
+        "responseEnd": 281.626
+      },
+      {
+        "startTime": 1792233065247.917,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 291.87,
+        "responseEnd": 293.295
+      },
+      {
+        "startTime": 1792233066544.953,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 339.259,
+        "responseEnd": 342.047
+      }
+    ],
+    "final_state": "completed"
+  }
+]

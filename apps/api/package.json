@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "pnpm run \"/^dev:.*/\"",
+    "dev": "pnpm run --workspace-concurrency=Infinity \"/^dev:.*/\"",
     "dev:server": "uv run --extra acoustics uvicorn app.main:app --reload",
     "dev:worker": "uv run --extra acoustics python -m app.workers.blueprint_worker",
     "dev:feedback-worker": "uv run --extra acoustics python -m app.workers.speaking_feedback_worker",
@@ -16,10 +16,10 @@
     "build": "python3 -m compileall app tests",
     "lint": "python3 -m compileall app tests",
     "test": ".venv/bin/pytest tests",
-    "worker:acoustics": "uv run --extra acoustics python -m app.workers.acoustic_worker",
     "reference:source": "uv run python -m scripts.reference_source",
-    "worker:practice": "uv run --extra acoustics python -m app.workers.practice_analysis_worker",
-    "dev:practice-worker": "uv run --extra acoustics python -m app.workers.practice_analysis_worker",
-    "dev:reference-worker": "uv run --extra acoustics python -m app.workers.acoustic_worker"
+    "dev:acoustic-fast": "uv run --extra acoustics python -m app.workers.stage_two_worker --lane fast",
+    "worker:acoustic-fast": "uv run --extra acoustics python -m app.workers.stage_two_worker --lane fast",
+    "dev:acoustic-fine": "uv run --extra acoustics python -m app.workers.stage_two_worker --lane fine",
+    "worker:acoustic-fine": "uv run --extra acoustics python -m app.workers.stage_two_worker --lane fine"
   }
 }

@@ -8,8 +8,8 @@ from starlette.concurrency import run_in_threadpool
 
 from app.auth import CurrentUserDep
 from app.integrations.practice_repository import PracticeRepository, get_practice_repository
-from app.schemas.practice import AttemptCreate, AttemptPage, MAX_RECORDING_BYTES, PracticeAttempt
-from app.services.practice_service import create_attempt, delete_recording, owned, upload_recording
+from app.schemas.practice import AttemptCreate, AttemptPage, MAX_RECORDING_BYTES, PracticeAttempt, PracticeProgress
+from app.services.practice_service import create_attempt, delete_recording, directory_progress, owned, upload_recording
 
 router = APIRouter(prefix="/api/practice/attempts", tags=["practice"])
 
@@ -40,6 +40,11 @@ def history(user: CurrentUserDep, repo: RepositoryDep, content_id: UUID,
     rows = repo.list(user.id, str(content_id), sentence_id, offset, limit + 1)
     return AttemptPage(items=[PracticeAttempt.model_validate(row) for row in rows[:limit]],
                        next_offset=offset + limit if len(rows) > limit else None)
+
+
+@router.get("/progress")
+def progress(user: CurrentUserDep, repo: RepositoryDep, content_id: UUID) -> PracticeProgress:
+    return directory_progress(repo, user.id, str(content_id))
 
 
 @router.put("/{attempt_id}/recording")

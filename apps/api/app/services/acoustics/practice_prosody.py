@@ -4,11 +4,14 @@ from pathlib import Path
 from statistics import median
 import subprocess
 import wave
+from array import array
+import sys
 
-from app.schemas.practice_analysis import AlignedPhone, ContentCheck, VoiceProsody, WordProsody
+from app.schemas.practice_analysis import AlignedPhone, ContentCheck, VoiceProsody, WordProsody, WordCheck, AnalysisScope
 from app.services.acoustics import engine
 from app.services.acoustics.audio import AudioFailure, RATE
 from app.services.acoustics.transcribe import transcribe
+from app.services.acoustics.word_check import check_words, checked_tokens, content_check
 
 
 def normalize_take(source: Path, target: Path) -> float:
@@ -78,3 +81,52 @@ def analyze_voice(audio: Path, text: str, directory: Path, settings) -> VoicePro
     aligned = engine.align(audio, text, 0, directory, settings)
     return VoiceProsody(content=content, alignment_status=aligned.status, quality_issues=measurements.quality_issues,
         words=word_measurements(aligned, measurements) if aligned.status == "aligned" else [])
+
+
+def check_learner_words(audio: Path, text: str, settings) -> WordCheck:
+    # Basic PCM validity/energy checks do not load VAD, F0 or MFA runtimes.
+    with wave.open(str(audio)) as wav:
+        pcm = array("h", wav.readframes(wav.getnframes()))
+    if sys.byteorder != "little":
+        pcm.byteswap()
+    values = [sample / 32768 for sample in pcm]
+    energy = sum(value*value for value in values) / max(1, len(values))
+    reason = ("insufficient_audio_quality" if not values or energy < 10**(-50/10)
+              or sum(abs(value) >= .999 for value in values) / len(values) > .01 else None)
+    if reason:
+        check = check_words(text, {"text": "", "reliable": False})
+        check.reason = reason
+        return check
+    return check_words(text, transcribe(audio, settings))
+
+
+def analyze_checked_voice(audio: Path, check: WordCheck, scope: AnalysisScope, directory: Path, settings, *, measurements=None) -> VoiceProsody:
+    content = content_check(check)
+    if scope == "none":
+        return VoiceProsody(content=content, alignment_status="not_run")
+    reuse_measurements = measurements is not None
+    if measurements is None:
+        frames, speech, samples = engine.extract(audio, settings, include_pitch=scope == "all_layers")
+        measurements = engine.sentence_measurements(frames, speech, samples, 0, len(samples) / RATE)
+    if scope == "sound_only":
+        measurements.quality_issues = [issue for issue in measurements.quality_issues if issue != "insufficient_pitch"]
+    if any(issue in measurements.quality_issues for issue in ("insufficient_speech", "low_energy", "clipping")):
+        return VoiceProsody(content=content, alignment_status="unavailable", quality_issues=measurements.quality_issues)
+    # Never force missing/substituted source words into the learner audio.
+    alignment_text = " ".join(token.normalized for token in check.recognized_tokens)
+    aligned = engine.align(audio, alignment_text, 0, directory, settings)
+    words = word_measurements(aligned, measurements) if aligned.status == "aligned" else []
+    if words and ([token.normalized for word in words for token in checked_tokens(word.text)]
+                  != [token.normalized for token in check.recognized_tokens]
+                  or len(words) != len(check.recognized_tokens)):
+        return VoiceProsody(content=content, alignment_status="unavailable", quality_issues=["alignment_token_mapping_unavailable"])
+    mapping = {op.recognized_index: op.source_index for op in check.operations if op.kind == "matched"}
+    for index, word in enumerate(words):
+        word.recognized_index, word.source_index = index, mapping.get(index)
+        if scope == "sound_only":
+            word.pitch_st, word.pitch_curve_st = None, []
+    voice = VoiceProsody(content=content, alignment_status=aligned.status, quality_issues=measurements.quality_issues, words=words)
+    if reuse_measurements and scope == "all_layers" and aligned.status == "aligned":
+        from app.services.acoustics.signal_prosody import analyze_signal, mfa_boundaries
+        voice.rhythm_signal = analyze_signal(measurements, mfa_boundaries(aligned, mapping=mapping), "mfa", alignment=aligned)
+    return voice

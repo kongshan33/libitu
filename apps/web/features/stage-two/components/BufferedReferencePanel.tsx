@@ -2,14 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 
-import { AudioLines, Power, X } from "lucide-react";
+import { AudioLines, LoaderCircle, Power, X } from "lucide-react";
 import type { useBufferedReference } from "../reference/use-buffered-reference";
 
-export function BufferedReferencePanel({ capture, playable, children, compact = false }: {
+export function BufferedReferencePanel({ capture, playable, children, compact = false, presentation }: {
   capture: ReturnType<typeof useBufferedReference>;
   playable: boolean;
   children?: React.ReactNode;
   compact?: boolean;
+  presentation?: { phase: "idle" | "preparing" | "analyzing" | "ready" | "review"; title: string; description: string };
 }) {
   const { state } = capture;
   const enabled = state.phase === "enabled";
@@ -25,8 +26,32 @@ export function BufferedReferencePanel({ capture, playable, children, compact = 
       : enabled ? "Reference connected"
         : state.phase === "checking" ? "Checking extension"
           : state.phase === "preparing" ? "Preparing audio setup"
-          : state.phase === "armed" ? "Finish setup in Chrome"
+          : state.phase === "armed" ? "Click Libitu in Chrome’s toolbar"
             : "Reference audio off";
+    if (presentation) {
+      const phase = ["ready", "review", "analyzing"].includes(presentation.phase) ? presentation.phase : setup ? "setup" : !enabled && presentation.phase === "idle" ? "off" : presentation.phase;
+      const pending = (phase === "setup" && state.phase !== "armed") || phase === "preparing" || phase === "analyzing";
+      const controls = <>
+        {enabled ? <Button variant="ghost" size="sm" aria-label="Turn off audio preparation" onClick={capture.disable}><Power size={12} aria-hidden="true" />Turn off</Button>
+          : setup ? <Button variant="ghost" size="sm" aria-label="Cancel audio setup" onClick={capture.disable}><X size={12} aria-hidden="true" />Cancel</Button>
+            : <Button variant="primary" size="sm" disabled={!playable} onClick={capture.enable}>Enable reference audio</Button>}
+        {children}
+      </>;
+      return <section className="stage-two-reference buffered-reference shadow-reference-module" data-phase={phase} aria-label="Reference preparation">
+        <div className="shadow-reference-heading">
+          {phase === "ready" ? <span className="shadow-reference-dot" aria-hidden="true" /> : null}
+          <strong>{phase === "setup" ? connection : phase === "off" ? "Reference audio is off" : presentation.title}</strong>
+          {pending ? <LoaderCircle className="shadow-reference-spinner" size={14} aria-hidden="true" /> : null}
+          {phase === "ready" ? <details className="shadow-reference-manage"><summary>Manage</summary><div>{controls}</div></details> : null}
+        </div>
+        {phase !== "ready" ? <>
+          <p role="status">{phase === "setup" || phase === "off" ? status : presentation.description}</p>
+          {phase === "setup" && state.phase === "armed" ? <ol className="shadow-reference-steps"><li>Click <strong>Libitu</strong> in your browser toolbar.</li><li>Allow tab audio for this session.</li></ol> : null}
+          <div className="shadow-reference-actions">{controls}</div>
+        </> : <span className="sr-only" role="status">{presentation.description}</span>}
+        {state.error ? <p role="alert" className="stage-two-recording-error">{state.error}</p> : null}
+      </section>;
+    }
     return <section className="stage-two-reference buffered-reference stage-two-reference-compact" aria-label="Reference preparation">
       <div className="stage-two-reference-connection">
         <span className={`stage-two-reference-dot ${enabled ? "is-connected" : ""}`} aria-hidden="true" />

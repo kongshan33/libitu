@@ -21,6 +21,7 @@ def processing(monkeypatch):
     voice = VoiceProsody(content=ContentCheck(status='matched', transcript='We practice.'), alignment_status='aligned',
         words=[WordProsody(text='we', start_sec=0, end_sec=.3, duration_ms=300)])
     monkeypatch.setattr(worker, 'analyze_voice', lambda *args: voice)
+    monkeypatch.setattr(worker, 'analyze_reference', lambda *args: voice.model_copy(update={'content': ContentCheck(status='source_transcript')}))
     return repo, row, settings, writes, voice
 
 

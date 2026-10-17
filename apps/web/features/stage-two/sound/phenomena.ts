@@ -25,7 +25,7 @@ export function soundMarks(view:ComparisonView):SoundMark[] {
   return marks;
 }
 export function emptyPhenomenon(kind:Phenomenon|'all') {
-  return kind==='all'?'No sound suggestions or vowel measurements are available for this sentence yet.':
+  return kind==='all'?'No sound suggestions are available for this sentence. Choose Vowel len. to check available vowel measurements.':
     kind==='vowel_length'?'Vowel duration measurements are not available yet.':
       ruleKinds.has(kind)?'No suggestions of this type were found for this sentence.':
         'Automatic identification of this phenomenon is not available yet.';

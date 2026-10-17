@@ -1,0 +1,4115 @@
+{
+  "scope": "Chromium benchmark harness using production Outbox/API/poll hook/ProgressiveComparison; real local API, hosted DB/storage and independent workers; fixture auth and blueprint; prepared Reference",
+  "poll_sleep_seconds": 1,
+  "polling": "production hook waits 1s after each response; browser records DOM publication plus two animation frames",
+  "reference": {
+    "create_and_upload_sec": 5.8378472029580735,
+    "ready_sec": 34.278261659957934
+  },
+  "takes": [],
+  "browser": [
+    {
+      "mode": "serial_read",
+      "start_epoch_ms": 1792230335418,
+      "word_visible_sec": 15.00269999998808,
+      "coarse_visible_sec": 15.00269999998808,
+      "reference_visible": "true",
+      "word_check": "10/10 \u00b7 full_85_plus",
+      "attempt": "3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "requests": [
+        {
+          "path": "/api/practice/attempts/submit",
+          "method": "POST",
+          "startTime": 1792230335483.7769,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 3585.64,
+          "responseEnd": 3588.263
+        }
+      ],
+      "polls": [
+        {
+          "startTime": 1792230339084.093,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 922.43,
+          "responseEnd": 932.308
+        },
+        {
+          "startTime": 1792230341020.584,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 833.993,
+          "responseEnd": 845.623
+        },
+        {
+          "startTime": 1792230342858.8308,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 979.875,
+          "responseEnd": 981.815
+        },
+        {
+          "startTime": 1792230344843.042,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 796.955,
+          "responseEnd": 798.78
+        },
+        {
+          "startTime": 1792230346644.467,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 808.663,
+          "responseEnd": 810.567
+        },
+        {
+          "startTime": 1792230348459.425,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 1931.466,
+          "responseEnd": 1934.629
+        }
+      ],
+      "final_state": "completed"
+    },
+    {
+      "mode": "snapshot_read",
+      "start_epoch_ms": 1792230376302,
+      "word_visible_sec": 12.21769999998808,
+      "coarse_visible_sec": 12.21769999998808,
+      "reference_visible": "true",
+      "word_check": "10/10 \u00b7 full_85_plus",
+      "attempt": "a6a13ac6-437a-5d8f-95d1-afa78c27b8c7",
+      "requests": [
+        {
+          "path": "/api/practice/attempts/submit",
+          "method": "POST",
+          "startTime": 1792230376327.4758,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2639.413,
+          "responseEnd": 2647.838
+        }
+      ],
+      "polls": [
+        {
+          "startTime": 1792230378971.5947,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 347.125,
+          "responseEnd": 349.003
+        },
+        {
+          "startTime": 1792230380324.454,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 316.607,
+          "responseEnd": 319.273
+        },
+        {
+          "startTime": 1792230381648.3418,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 412.375,
+          "responseEnd": 417.144
+        },
+        {
+          "startTime": 1792230383064.449,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 277.975,
+          "responseEnd": 279.567
+        },
+        {
+          "startTime": 1792230384348.468,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 268.198,
+          "responseEnd": 271.551
+        },
+        {
+          "startTime": 1792230385620.5571,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 263.161,
+          "responseEnd": 264.949
+        },
+        {
+          "startTime": 1792230386888.71,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 321.11,
+          "responseEnd": 324.359
+        },
+        {
+          "startTime": 1792230388213.847,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 282.898,
+          "responseEnd": 284.508
+        }
+      ],
+      "final_state": "completed"
+    },
+    {
+      "mode": "serial_read",
+      "start_epoch_ms": 1792230417619,
+      "word_visible_sec": 13.284599999964238,
+      "coarse_visible_sec": 13.284599999964238,
+      "reference_visible": "true",
+      "word_check": "10/10 \u00b7 full_85_plus",
+      "attempt": "69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "requests": [
+        {
+          "path": "/api/practice/attempts/submit",
+          "method": "POST",
+          "startTime": 1792230417666.259,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2761.718,
+          "responseEnd": 2765.374
+        }
+      ],
+      "polls": [
+        {
+          "startTime": 1792230420432.878,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 1421.223,
+          "responseEnd": 1423.257
+        },
+        {
+          "startTime": 1792230422857.538,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 817.661,
+          "responseEnd": 819.32
+        },
+        {
+          "startTime": 1792230424680.017,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 1031.116,
+          "responseEnd": 1033.083
+        },
+        {
+          "startTime": 1792230426716.127,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 1051.335,
+          "responseEnd": 1053.134
+        },
+        {
+          "startTime": 1792230428771.578,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2109.435,
+          "responseEnd": 2111.222
+        }
+      ],
+      "final_state": "completed"
+    },
+    {
+      "mode": "snapshot_read",
+      "start_epoch_ms": 1792230459048,
+      "word_visible_sec": 10.653800000011922,
+      "coarse_visible_sec": 11.936800000011921,
+      "reference_visible": "true",
+      "word_check": "10/10 \u00b7 full_85_plus",
+      "attempt": "237af2d6-a1fd-5dca-95ca-177259933d5c",
+      "requests": [
+        {
+          "path": "/api/practice/attempts/submit",
+          "method": "POST",
+          "startTime": 1792230459079.4558,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2622.977,
+          "responseEnd": 2627.017
+        }
+      ],
+      "polls": [
+        {
+          "startTime": 1792230461707.0818,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 256.263,
+          "responseEnd": 257.801
+        },
+        {
+          "startTime": 1792230462970.253,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 274.201,
+          "responseEnd": 279.164
+        },
+        {
+          "startTime": 1792230464248.23,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 360.054,
+          "responseEnd": 361.942
+        },
+        {
+          "startTime": 1792230465615.031,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 262.798,
+          "responseEnd": 267.38
+        },
+        {
+          "startTime": 1792230466882.753,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 257.153,
+          "responseEnd": 259.298
+        },
+        {
+          "startTime": 1792230468143.0981,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 257.958,
+          "responseEnd": 259.412
+        },
+        {
+          "startTime": 1792230469405.864,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 266.114,
+          "responseEnd": 268.607
+        },
+        {
+          "startTime": 1792230470676.6191,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 288.983,
+          "responseEnd": 291.101
+        }
+      ],
+      "final_state": "completed"
+    },
+    {
+      "mode": "serial_read",
+      "start_epoch_ms": 1792230496911,
+      "word_visible_sec": 10.672299999952317,
+      "coarse_visible_sec": 14.088599999964238,
+      "reference_visible": "true",
+      "word_check": "10/10 \u00b7 full_85_plus",
+      "attempt": "78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "requests": [
+        {
+          "path": "/api/practice/attempts/submit",
+          "method": "POST",
+          "startTime": 1792230496932.679,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2699.814,
+          "responseEnd": 2705.853
+        }
+      ],
+      "polls": [
+        {
+          "startTime": 1792230499641.887,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 783.989,
+          "responseEnd": 788.771
+        },
+        {
+          "startTime": 1792230501429.7559,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 817.46,
+          "responseEnd": 819.027
+        },
+        {
+          "startTime": 1792230503252.115,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 757.866,
+          "responseEnd": 760.045
+        },
+        {
+          "startTime": 1792230505015.903,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 770.094,
+          "responseEnd": 773.167
+        },
+        {
+          "startTime": 1792230506790.76,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 766.184,
+          "responseEnd": 767.974
+        },
+        {
+          "startTime": 1792230508564.043,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2407.956,
+          "responseEnd": 2412.668
+        }
+      ],
+      "final_state": "completed"
+    },
+    {
+      "mode": "snapshot_read",
+      "start_epoch_ms": 1792230534133,
+      "word_visible_sec": 10.700100000023841,
+      "coarse_visible_sec": 12.017,
+      "reference_visible": "true",
+      "word_check": "10/10 \u00b7 full_85_plus",
+      "attempt": "091c5e0a-42c3-539b-81e5-569dea8680d9",
+      "requests": [
+        {
+          "path": "/api/practice/attempts/submit",
+          "method": "POST",
+          "startTime": 1792230534166.46,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 2669.17,
+          "responseEnd": 2673.645
+        }
+      ],
+      "polls": [
+        {
+          "startTime": 1792230536839.5947,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 294.575,
+          "responseEnd": 295.928
+        },
+        {
+          "startTime": 1792230538138.692,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 269.019,
+          "responseEnd": 271.509
+        },
+        {
+          "startTime": 1792230539411.092,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 286.694,
+          "responseEnd": 288.385
+        },
+        {
+          "startTime": 1792230540701.883,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 261.706,
+          "responseEnd": 263.724
+        },
+        {
+          "startTime": 1792230541968.585,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 287.354,
+          "responseEnd": 289.865
+        },
+        {
+          "startTime": 1792230543260.059,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 271.351,
+          "responseEnd": 273.627
+        },
+        {
+          "startTime": 1792230544534.923,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 268.779,
+          "responseEnd": 270.719
+        },
+        {
+          "startTime": 1792230545807.7058,
+          "domainLookupStart": -1,
+          "domainLookupEnd": -1,
+          "connectStart": -1,
+          "secureConnectionStart": -1,
+          "connectEnd": -1,
+          "requestStart": -1,
+          "responseStart": 292.473,
+          "responseEnd": 294.602
+        }
+      ],
+      "final_state": "completed"
+    }
+  ],
+  "fixture_cleanup": "rows and audio removed",
+  "api_database_calls": [
+    {
+      "method": "POST",
+      "path": "/contents",
+      "epoch": 1792230288.942796,
+      "seconds": 1.4412042300100438
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230290.605613,
+      "seconds": 0.310705401992891
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230290.917234,
+      "seconds": 0.352635151008144
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230291.269912,
+      "seconds": 0.27027257601730525
+    },
+    {
+      "method": "POST",
+      "path": "/profiles",
+      "epoch": 1792230291.54035,
+      "seconds": 0.30281771201407537
+    },
+    {
+      "method": "POST",
+      "path": "/acoustic_references",
+      "epoch": 1792230291.843185,
+      "seconds": 0.2862447430379689
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230292.129505,
+      "seconds": 0.273569111013785
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230292.4031549,
+      "seconds": 0.26643913600128144
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230292.689044,
+      "seconds": 0.29006249096710235
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230292.979179,
+      "seconds": 0.27320558397332206
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230293.253067,
+      "seconds": 0.24694844597252086
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230293.500129,
+      "seconds": 0.2913166119833477
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_acoustic_reference",
+      "epoch": 1792230295.940937,
+      "seconds": 0.2945588729926385
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230296.243961,
+      "seconds": 0.26380994002101943
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230296.507879,
+      "seconds": 0.273306904011406
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230297.785681,
+      "seconds": 0.3173076279927045
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230298.104,
+      "seconds": 0.26568285998655483
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230299.383679,
+      "seconds": 0.3307938100188039
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230299.715939,
+      "seconds": 0.2596077890484594
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230300.986699,
+      "seconds": 0.3240362699725665
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230301.3125582,
+      "seconds": 0.2579874990042299
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230302.578478,
+      "seconds": 0.31615555397002026
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230302.896328,
+      "seconds": 0.24609449895797297
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230304.161044,
+      "seconds": 0.3133659539744258
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230304.475831,
+      "seconds": 0.25675254297675565
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230305.7439492,
+      "seconds": 0.31381211400730535
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230306.058508,
+      "seconds": 0.25655837799422443
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230307.3264499,
+      "seconds": 0.31811563100200146
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230307.6453109,
+      "seconds": 0.26572636899072677
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230308.92874,
+      "seconds": 0.3169271189835854
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230309.246794,
+      "seconds": 0.2935003050370142
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230310.552654,
+      "seconds": 0.2950859860284254
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230310.848778,
+      "seconds": 0.3293062869925052
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230312.195159,
+      "seconds": 0.33155947597697377
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230312.527454,
+      "seconds": 0.279961256950628
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230313.8188102,
+      "seconds": 0.50082401803229
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230314.320622,
+      "seconds": 0.25952604599297047
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230315.5880141,
+      "seconds": 0.31893915799446404
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230315.907735,
+      "seconds": 0.25993755797389895
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230317.1765518,
+      "seconds": 0.2978942859917879
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230317.475199,
+      "seconds": 0.2406274859677069
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230318.727711,
+      "seconds": 0.9157957769930363
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230319.644387,
+      "seconds": 0.2508054690551944
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230320.911186,
+      "seconds": 0.33198720595100895
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230321.244152,
+      "seconds": 0.253822842030786
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230322.512223,
+      "seconds": 0.3131730269524269
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230322.826265,
+      "seconds": 0.26595502300187945
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230324.1033769,
+      "seconds": 0.3215347650111653
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230324.426038,
+      "seconds": 0.24640308000380173
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_submission_context",
+      "epoch": 1792230335.552433,
+      "seconds": 0.7889165959786624
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230336.341544,
+      "seconds": 0.25683986803051084
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230336.6016378,
+      "seconds": 0.29544608999276534
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230336.898705,
+      "seconds": 0.25758643401786685
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/register_practice_submission",
+      "epoch": 1792230337.156527,
+      "seconds": 0.2693529279786162
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/finalize_practice_submission",
+      "epoch": 1792230338.8043368,
+      "seconds": 0.257193372992333
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230339.181211,
+      "seconds": 0.2465791439753957
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230339.4278872,
+      "seconds": 0.26251491700531915
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230339.690463,
+      "seconds": 0.31271798902889714
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230341.025583,
+      "seconds": 0.26973100402392447
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230341.295367,
+      "seconds": 0.29191135498695076
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230341.587337,
+      "seconds": 0.26426721300231293
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230342.863572,
+      "seconds": 0.2598368210019544
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230343.123472,
+      "seconds": 0.4392437770147808
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230343.562772,
+      "seconds": 0.27353205595863983
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230344.8473752,
+      "seconds": 0.2609330670093186
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230345.10836,
+      "seconds": 0.25198893301421776
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230345.360422,
+      "seconds": 0.27508284797659144
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230346.648696,
+      "seconds": 0.28433225402841344
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230346.9331021,
+      "seconds": 0.2672416089917533
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230347.200421,
+      "seconds": 0.24438214901601896
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230348.4645078,
+      "seconds": 0.2563203049940057
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230348.72088,
+      "seconds": 0.26392431795829907
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230348.985022,
+      "seconds": 0.25728766596876085
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230349.242357,
+      "seconds": 0.3063729819841683
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230349.551689,
+      "seconds": 0.2540055150166154
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230349.806187,
+      "seconds": 0.3016127909650095
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230350.1092339,
+      "seconds": 0.2671449620393105
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230351.401309,
+      "seconds": 0.2671560010057874
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230351.668515,
+      "seconds": 0.2684803340234794
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230351.937312,
+      "seconds": 0.2816805909969844
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230352.219557,
+      "seconds": 0.38696606300072744
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230352.60769,
+      "seconds": 0.2601850970531814
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230353.883698,
+      "seconds": 0.25583109201397747
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230354.139592,
+      "seconds": 0.41298202599864453
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230354.552789,
+      "seconds": 0.2475086939521134
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230354.800768,
+      "seconds": 0.29677059000823647
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230355.0986292,
+      "seconds": 0.25183158298023045
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230356.368842,
+      "seconds": 0.2665880100103095
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230356.635527,
+      "seconds": 0.2703103310195729
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230356.9062028,
+      "seconds": 0.25392279401421547
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230357.1604218,
+      "seconds": 0.3015248469891958
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230357.46288,
+      "seconds": 0.24938970000948757
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230358.726808,
+      "seconds": 0.28259896399686113
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230359.009464,
+      "seconds": 0.2619863399886526
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230359.271762,
+      "seconds": 0.2539524519816041
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230359.52619,
+      "seconds": 0.311306171992328
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230359.8384588,
+      "seconds": 0.24696132104145363
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230361.10059,
+      "seconds": 0.8428876670077443
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230361.943627,
+      "seconds": 1.2900626370101236
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230363.2339141,
+      "seconds": 1.3540827269898728
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230364.588344,
+      "seconds": 1.3614089509937912
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230365.950829,
+      "seconds": 1.1727833300246857
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230368.1407459,
+      "seconds": 0.2491442250320688
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230368.389945,
+      "seconds": 0.2681898119626567
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230368.658349,
+      "seconds": 0.2698384199757129
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230368.928478,
+      "seconds": 0.3239931110292673
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230369.2534,
+      "seconds": 0.2446491090231575
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230370.5116549,
+      "seconds": 0.2526745810173452
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230370.764398,
+      "seconds": 0.26380585599690676
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230371.028575,
+      "seconds": 0.26454801100771874
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230371.293406,
+      "seconds": 0.3425123409833759
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230371.6373708,
+      "seconds": 0.2660462020430714
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230372.9181561,
+      "seconds": 0.27753394504543394
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230373.195759,
+      "seconds": 0.3022777439909987
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230373.4991848,
+      "seconds": 0.2789764199987985
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230373.778229,
+      "seconds": 0.30130014300812036
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230374.080461,
+      "seconds": 0.23998115095309913
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230374.3209999,
+      "seconds": 0.3144930709968321
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230374.636478,
+      "seconds": 0.24638936202973127
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_submission_context",
+      "epoch": 1792230376.3375208,
+      "seconds": 0.24077138304710388
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230376.578437,
+      "seconds": 0.239545212010853
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230376.81816,
+      "seconds": 0.29900584096321836
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230377.118104,
+      "seconds": 0.23917273298138753
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/register_practice_submission",
+      "epoch": 1792230377.3574688,
+      "seconds": 0.2562684909789823
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/finalize_practice_submission",
+      "epoch": 1792230378.718425,
+      "seconds": 0.24525079200975597
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230378.979517,
+      "seconds": 0.29232931399019435
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230380.3284822,
+      "seconds": 0.3090045340359211
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230381.65459,
+      "seconds": 0.4037933750078082
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230383.069212,
+      "seconds": 0.27099852496758103
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230384.356498,
+      "seconds": 0.25020613201195374
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230385.6261818,
+      "seconds": 0.25435473903780803
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230386.8933508,
+      "seconds": 0.3130351019790396
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230388.218719,
+      "seconds": 0.2739621850196272
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230389.5184069,
+      "seconds": 0.32834381598513573
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230390.8600152,
+      "seconds": 0.29283230600412935
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230392.165151,
+      "seconds": 0.27986116003012285
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230393.46643,
+      "seconds": 0.3301068799919449
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230394.809848,
+      "seconds": 0.2734820020268671
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230396.094916,
+      "seconds": 0.2668304920080118
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230397.380043,
+      "seconds": 0.2852886160253547
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230398.730571,
+      "seconds": 0.3458256439771503
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230400.108526,
+      "seconds": 0.29690466495230794
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230401.420314,
+      "seconds": 0.26830157497897744
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230402.70307,
+      "seconds": 0.2647798910038546
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230403.982634,
+      "seconds": 0.28687183698639274
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230405.295858,
+      "seconds": 0.2816475100116804
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230406.588675,
+      "seconds": 0.29016796103678644
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230407.89693,
+      "seconds": 0.2893949520075694
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230409.203315,
+      "seconds": 0.4151923260069452
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230410.641463,
+      "seconds": 0.2896487070247531
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230411.943073,
+      "seconds": 0.2751828780164942
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230413.230011,
+      "seconds": 0.2800875279936008
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230414.58993,
+      "seconds": 0.3067443610052578
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230415.911995,
+      "seconds": 0.2960703889839351
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_submission_context",
+      "epoch": 1792230417.677212,
+      "seconds": 0.30649125401396304
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230417.9838872,
+      "seconds": 0.24726519401883706
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230418.231318,
+      "seconds": 0.3167332879966125
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230418.54934,
+      "seconds": 0.2605980859952979
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/register_practice_submission",
+      "epoch": 1792230418.810132,
+      "seconds": 0.255131279991474
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/finalize_practice_submission",
+      "epoch": 1792230420.184033,
+      "seconds": 0.242140599002596
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230420.437303,
+      "seconds": 0.2607202989747748
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230420.6980731,
+      "seconds": 0.31807531300000846
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230421.016234,
+      "seconds": 0.26453269098419696
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230421.280833,
+      "seconds": 0.3200337780290283
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230421.602556,
+      "seconds": 0.24830370000563562
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230422.860859,
+      "seconds": 0.2570623930078
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230423.1180239,
+      "seconds": 0.2786874790326692
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230423.396789,
+      "seconds": 0.27607020700816065
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230424.6834219,
+      "seconds": 0.4528723449911922
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230425.136361,
+      "seconds": 0.26256228401325643
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230425.3989918,
+      "seconds": 0.3096164289745502
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230426.720809,
+      "seconds": 0.4936423530452885
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230427.214525,
+      "seconds": 0.3005838069948368
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230427.5151958,
+      "seconds": 0.24997479404555634
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230428.775071,
+      "seconds": 0.2543609020067379
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230429.0295,
+      "seconds": 0.2683480990235694
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230429.2981892,
+      "seconds": 0.2675641360110603
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230429.565891,
+      "seconds": 0.3013478600187227
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230429.8683,
+      "seconds": 0.24662585998885334
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230430.115509,
+      "seconds": 0.43149879499105737
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230430.549689,
+      "seconds": 0.3242324269958772
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230431.8893251,
+      "seconds": 0.27176317595876753
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230432.161174,
+      "seconds": 0.2575319060124457
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230432.419093,
+      "seconds": 0.2592562749632634
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230432.6788669,
+      "seconds": 0.30428883800050244
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230432.984546,
+      "seconds": 0.2587977339862846
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230434.255021,
+      "seconds": 0.30516200099373236
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230434.560234,
+      "seconds": 0.2855793120106682
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230434.846145,
+      "seconds": 0.257299801975023
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230435.103737,
+      "seconds": 0.32624616601970047
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230435.4373178,
+      "seconds": 0.2524239220074378
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230436.703239,
+      "seconds": 0.2667277879663743
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230436.970021,
+      "seconds": 0.28520468797069043
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230437.2554429,
+      "seconds": 0.24771630199393257
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230437.5034611,
+      "seconds": 0.3116006709751673
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230437.816266,
+      "seconds": 0.25184693199116737
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230439.0832388,
+      "seconds": 0.2542879339889623
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230439.337606,
+      "seconds": 0.27036264102207497
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230439.608445,
+      "seconds": 0.29754489299375564
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230439.907326,
+      "seconds": 0.3122114560101181
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230440.2211578,
+      "seconds": 0.24210142402444035
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230441.480482,
+      "seconds": 0.25121727399528027
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230441.731745,
+      "seconds": 0.28323062299750745
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230442.0151832,
+      "seconds": 0.26424033899093047
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230442.280402,
+      "seconds": 0.2976766389911063
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230442.579201,
+      "seconds": 0.30644210800528526
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230443.898229,
+      "seconds": 0.28926586802117527
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230444.18754,
+      "seconds": 0.27876301301876083
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230444.466519,
+      "seconds": 0.2585823189583607
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230444.7253928,
+      "seconds": 0.30245328502496704
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230445.0288682,
+      "seconds": 0.25407832802738994
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230446.296034,
+      "seconds": 0.24732866504928097
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230446.5434098,
+      "seconds": 0.26437597296899185
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230446.8081129,
+      "seconds": 0.2767303420114331
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230447.085174,
+      "seconds": 0.35540400695754215
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230447.441629,
+      "seconds": 0.2599914830061607
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230448.726167,
+      "seconds": 0.26191486400784925
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230448.988149,
+      "seconds": 0.28870544402161613
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230449.277185,
+      "seconds": 0.25898190902080387
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230449.536531,
+      "seconds": 0.3114351410185918
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230449.855061,
+      "seconds": 0.2533309669815935
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230451.121839,
+      "seconds": 0.2384939980111085
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230451.36038,
+      "seconds": 0.24802788899978623
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230451.6086211,
+      "seconds": 0.26229858095757663
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230451.8713229,
+      "seconds": 0.320838587009348
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230452.1935968,
+      "seconds": 0.23434789397288114
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230453.443765,
+      "seconds": 0.28798936697421595
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230453.731897,
+      "seconds": 0.2560507360030897
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230453.988217,
+      "seconds": 0.257642971992027
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230454.246424,
+      "seconds": 0.3564315029652789
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230454.603847,
+      "seconds": 0.2543953419663012
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230455.872712,
+      "seconds": 0.2553815389983356
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230456.128157,
+      "seconds": 0.2821548029896803
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230456.411028,
+      "seconds": 0.2571460119797848
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230456.6682749,
+      "seconds": 0.3148001370136626
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230456.98445,
+      "seconds": 0.2467551279696636
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230457.2316391,
+      "seconds": 0.3173065620358102
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230457.550127,
+      "seconds": 0.2554159170249477
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_submission_context",
+      "epoch": 1792230459.0878808,
+      "seconds": 0.26031594700179994
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230459.348338,
+      "seconds": 0.24960122199263424
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230459.59811,
+      "seconds": 0.30459785799030215
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230459.903875,
+      "seconds": 0.2587637469987385
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/register_practice_submission",
+      "epoch": 1792230460.162876,
+      "seconds": 0.25047571398317814
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/finalize_practice_submission",
+      "epoch": 1792230461.4378839,
+      "seconds": 0.2625419049873017
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230461.710704,
+      "seconds": 0.2500074499985203
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230462.976192,
+      "seconds": 0.26583054795628414
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230464.2544682,
+      "seconds": 0.35099870996782556
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230465.6201758,
+      "seconds": 0.25503596605267376
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230466.886938,
+      "seconds": 0.2500357519602403
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230468.1483579,
+      "seconds": 0.2503344499855302
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230469.410858,
+      "seconds": 0.2555805860320106
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230470.680248,
+      "seconds": 0.28086564800469205
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230471.975028,
+      "seconds": 0.27556247799657285
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230473.2652988,
+      "seconds": 0.2801852489938028
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230474.561137,
+      "seconds": 0.294887722004205
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230475.871779,
+      "seconds": 0.25839897798141465
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230477.174198,
+      "seconds": 0.28720896400045604
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230478.473784,
+      "seconds": 0.27716563700232655
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230479.763841,
+      "seconds": 0.26723272498929873
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230481.044883,
+      "seconds": 0.3266281600226648
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230482.389279,
+      "seconds": 0.2887977909995243
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230483.697439,
+      "seconds": 0.27317221998237073
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230484.982721,
+      "seconds": 0.2733947579981759
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230486.2704692,
+      "seconds": 0.2781163210165687
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230487.560384,
+      "seconds": 0.28466014901641756
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230488.8569002,
+      "seconds": 0.28274436900392175
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230490.1556659,
+      "seconds": 0.274566693988163
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230491.4452322,
+      "seconds": 0.2783155600191094
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230492.7363698,
+      "seconds": 0.28204752603778616
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230494.0303628,
+      "seconds": 0.2897590459906496
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230495.332715,
+      "seconds": 0.31718719901982695
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_submission_context",
+      "epoch": 1792230496.9455318,
+      "seconds": 0.24089042900595814
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230497.1865559,
+      "seconds": 0.2532709739753045
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230497.4404092,
+      "seconds": 0.3024878260330297
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230497.74382,
+      "seconds": 0.24771924800006673
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/register_practice_submission",
+      "epoch": 1792230497.991727,
+      "seconds": 0.25225709402002394
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/finalize_practice_submission",
+      "epoch": 1792230499.347371,
+      "seconds": 0.28306644898839295
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230499.645762,
+      "seconds": 0.2717845489969477
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230499.9176,
+      "seconds": 0.2633209499763325
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230500.1809778,
+      "seconds": 0.24223856796743348
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230501.433002,
+      "seconds": 0.25743522797711194
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230501.690503,
+      "seconds": 0.2899360629962757
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230501.980499,
+      "seconds": 0.26464047603076324
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230503.257222,
+      "seconds": 0.26540377497440204
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230503.522698,
+      "seconds": 0.237641470041126
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230503.760392,
+      "seconds": 0.24649429798591882
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230505.019789,
+      "seconds": 0.2504119200166315
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230505.2702641,
+      "seconds": 0.24792020494351164
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230505.518261,
+      "seconds": 0.25576697499491274
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230506.793738,
+      "seconds": 0.24678233900340274
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230507.040606,
+      "seconds": 0.25565136200748384
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230507.296366,
+      "seconds": 0.25638333801180124
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230508.568162,
+      "seconds": 0.2624609540216625
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230508.830667,
+      "seconds": 0.5247075019869953
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230509.3556008,
+      "seconds": 0.240967930003535
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230509.596861,
+      "seconds": 1.110401455021929
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230510.708711,
+      "seconds": 0.25696333701489493
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230511.979646,
+      "seconds": 0.25084328203229234
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230512.230538,
+      "seconds": 0.29316011897753924
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230512.524132,
+      "seconds": 0.25734196801204234
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230512.781782,
+      "seconds": 0.31526108499383554
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230513.098154,
+      "seconds": 0.2601986000081524
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230514.372185,
+      "seconds": 0.25437873002374545
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230514.626616,
+      "seconds": 0.25594133301638067
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230514.883064,
+      "seconds": 0.2454004330211319
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230515.128766,
+      "seconds": 0.3091845739982091
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230515.438901,
+      "seconds": 0.24637170002097264
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230516.7002418,
+      "seconds": 0.25010952999582514
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230516.9504158,
+      "seconds": 0.2630015210015699
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230517.213643,
+      "seconds": 0.24507898202864453
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230517.459203,
+      "seconds": 0.32292014895938337
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230517.7835782,
+      "seconds": 0.24781140201957896
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230519.045027,
+      "seconds": 0.3178300309809856
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230519.362918,
+      "seconds": 0.25663736602291465
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230519.619835,
+      "seconds": 0.2567737289937213
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230519.8770602,
+      "seconds": 0.3326113999937661
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230520.210604,
+      "seconds": 0.24524045595899224
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230521.469151,
+      "seconds": 0.2583474509883672
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230521.727564,
+      "seconds": 0.2626002549659461
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230521.991043,
+      "seconds": 0.25491399999009445
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230522.246277,
+      "seconds": 0.3166713350219652
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230522.563894,
+      "seconds": 0.23221278400160372
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230523.807671,
+      "seconds": 0.2405522229964845
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230524.048272,
+      "seconds": 0.2579146079951897
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230524.306401,
+      "seconds": 0.2661928219604306
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230524.572897,
+      "seconds": 0.29690870200283825
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230524.870809,
+      "seconds": 0.2469133999547921
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230526.129691,
+      "seconds": 0.2979958280338906
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230526.427733,
+      "seconds": 0.2700521239894442
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230526.698088,
+      "seconds": 0.37006429297616705
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230527.068514,
+      "seconds": 0.31761195295257494
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230527.3870552,
+      "seconds": 0.24287603399716318
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230528.6465752,
+      "seconds": 0.264435057004448
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230528.911072,
+      "seconds": 0.27710186201147735
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230529.188422,
+      "seconds": 0.24794038198888302
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230529.4368682,
+      "seconds": 0.29532456799643114
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230529.7332559,
+      "seconds": 0.2697163400007412
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230531.047914,
+      "seconds": 0.25303161499323323
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230531.301013,
+      "seconds": 0.2746713130036369
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230531.5764108,
+      "seconds": 0.24425031302962452
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230531.8207092,
+      "seconds": 0.3045767580042593
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230532.1265512,
+      "seconds": 0.2474533530184999
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230532.374389,
+      "seconds": 0.3044939750107005
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230532.68073,
+      "seconds": 0.2470629659947008
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_submission_context",
+      "epoch": 1792230534.177372,
+      "seconds": 0.2758003000053577
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230534.453294,
+      "seconds": 0.24872299400158226
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230534.70228,
+      "seconds": 0.3181310649961233
+    },
+    {
+      "method": "GET",
+      "path": "/contents",
+      "epoch": 1792230535.021586,
+      "seconds": 0.24656701303320006
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/register_practice_submission",
+      "epoch": 1792230535.268521,
+      "seconds": 0.25385428295703605
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/finalize_practice_submission",
+      "epoch": 1792230536.579901,
+      "seconds": 0.2538364219944924
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230536.843573,
+      "seconds": 0.2876563770114444
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230538.145796,
+      "seconds": 0.25965059897862375
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230539.415273,
+      "seconds": 0.27511879795929417
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230540.7055418,
+      "seconds": 0.25567242898978293
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230541.976479,
+      "seconds": 0.27663177700014785
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230543.2650728,
+      "seconds": 0.26386030501453206
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230544.538906,
+      "seconds": 0.26016330998390913
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230545.811618,
+      "seconds": 0.2845141179859638
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230547.11006,
+      "seconds": 0.27036906604189426
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230548.394916,
+      "seconds": 0.2760761969839223
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230549.6848829,
+      "seconds": 0.26373433700064197
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230550.96103,
+      "seconds": 0.44046536297537386
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230552.413991,
+      "seconds": 0.32022263400722295
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230553.7462778,
+      "seconds": 0.27004857000429183
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230555.030553,
+      "seconds": 0.27276163594797254
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230556.322619,
+      "seconds": 0.28990491502918303
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230557.6283798,
+      "seconds": 0.2781577170244418
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230558.918773,
+      "seconds": 0.33302641700720415
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230560.35304,
+      "seconds": 0.307181483018212
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230561.676932,
+      "seconds": 0.2946588529739529
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230562.984639,
+      "seconds": 0.2765184150193818
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230564.2765388,
+      "seconds": 0.2853257989627309
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230565.5813901,
+      "seconds": 0.2773108769906685
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230566.8898492,
+      "seconds": 0.29232522600796074
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230568.1939359,
+      "seconds": 0.2574910969706252
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230569.466156,
+      "seconds": 0.2771064600092359
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/practice_analysis_read_snapshot",
+      "epoch": 1792230570.762298,
+      "seconds": 0.298568714002613
+    },
+    {
+      "method": "GET",
+      "path": "/shadow_attempts",
+      "epoch": 1792230572.2393448,
+      "seconds": 0.49752963799983263
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230572.736919,
+      "seconds": 0.28379528399091214
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_practice_analysis",
+      "epoch": 1792230573.0218508,
+      "seconds": 0.3492772669997066
+    },
+    {
+      "method": "DELETE",
+      "path": "/practice_analyses",
+      "epoch": 1792230574.365181,
+      "seconds": 0.26649094198364764
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230574.631687,
+      "seconds": 0.2963199350051582
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_practice_analysis",
+      "epoch": 1792230574.9288151,
+      "seconds": 0.3547435399959795
+    },
+    {
+      "method": "DELETE",
+      "path": "/practice_analyses",
+      "epoch": 1792230575.589899,
+      "seconds": 0.2500295320060104
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230575.839941,
+      "seconds": 0.27478184300707653
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_practice_analysis",
+      "epoch": 1792230576.115663,
+      "seconds": 0.3716004200396128
+    },
+    {
+      "method": "DELETE",
+      "path": "/practice_analyses",
+      "epoch": 1792230576.74656,
+      "seconds": 0.24976003199117258
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230576.996337,
+      "seconds": 0.2911087360116653
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_practice_analysis",
+      "epoch": 1792230577.2885199,
+      "seconds": 0.37534574401797727
+    },
+    {
+      "method": "DELETE",
+      "path": "/practice_analyses",
+      "epoch": 1792230577.9360309,
+      "seconds": 0.24560930201550946
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230578.181655,
+      "seconds": 0.2963503340142779
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_practice_analysis",
+      "epoch": 1792230578.47893,
+      "seconds": 0.3321477170102298
+    },
+    {
+      "method": "DELETE",
+      "path": "/practice_analyses",
+      "epoch": 1792230579.095392,
+      "seconds": 0.25468711997382343
+    },
+    {
+      "method": "GET",
+      "path": "/practice_analyses",
+      "epoch": 1792230579.350091,
+      "seconds": 0.3047667169594206
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_practice_analysis",
+      "epoch": 1792230579.656487,
+      "seconds": 0.3766223569982685
+    },
+    {
+      "method": "DELETE",
+      "path": "/practice_analyses",
+      "epoch": 1792230580.327629,
+      "seconds": 0.26507141202455387
+    },
+    {
+      "method": "DELETE",
+      "path": "/shadow_attempts",
+      "epoch": 1792230580.5927129,
+      "seconds": 0.24124307598685846
+    },
+    {
+      "method": "GET",
+      "path": "/acoustic_references",
+      "epoch": 1792230580.834041,
+      "seconds": 0.29829988098936155
+    },
+    {
+      "method": "POST",
+      "path": "/rpc/control_acoustic_reference",
+      "epoch": 1792230581.1342342,
+      "seconds": 0.26226817205315456
+    },
+    {
+      "method": "DELETE",
+      "path": "/acoustic_references",
+      "epoch": 1792230582.2586088,
+      "seconds": 0.27383913699304685
+    },
+    {
+      "method": "DELETE",
+      "path": "/contents",
+      "epoch": 1792230582.532463,
+      "seconds": 0.27847202599514276
+    },
+    {
+      "method": "DELETE",
+      "path": "/profiles",
+      "epoch": 1792230582.8109481,
+      "seconds": 0.25164482794934884
+    }
+  ],
+  "http_requests": [
+    {
+      "method": "POST",
+      "path": "/api/practice/attempts/submit",
+      "epoch": 1792230335.501898,
+      "seconds": 3.560908385028597,
+      "database_calls": 6,
+      "database_seconds": 2.1253352889907546
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230339.0899358,
+      "seconds": 0.9142538100131787,
+      "database_calls": 3,
+      "database_seconds": 0.821812050009612
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230341.024287,
+      "seconds": 0.8281479970319197,
+      "database_calls": 3,
+      "database_seconds": 0.8259095720131882
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230342.862536,
+      "seconds": 0.9743472350528464,
+      "database_calls": 3,
+      "database_seconds": 0.972612653975375
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230344.846385,
+      "seconds": 0.7909515220089816,
+      "database_calls": 3,
+      "database_seconds": 0.7880048480001278
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230346.647671,
+      "seconds": 0.7987362769781612,
+      "database_calls": 3,
+      "database_seconds": 0.7959560120361857
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230348.463682,
+      "seconds": 1.9182528349920176,
+      "database_calls": 7,
+      "database_seconds": 1.9066685389261693
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230351.400373,
+      "seconds": 1.4704580929828808,
+      "database_calls": 5,
+      "database_seconds": 1.46446808608016
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230353.882678,
+      "seconds": 1.470577199012041,
+      "database_calls": 5,
+      "database_seconds": 1.4649239849532023
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230356.3676858,
+      "seconds": 1.3470972659997642,
+      "database_calls": 5,
+      "database_seconds": 1.3417356820427813
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230358.7261848,
+      "seconds": 1.3622320329886861,
+      "database_calls": 5,
+      "database_seconds": 1.3568052490008995
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230361.0998578,
+      "seconds": 6.026402237999719,
+      "database_calls": 5,
+      "database_seconds": 6.021225312026218
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230368.138932,
+      "seconds": 1.3618539299932308,
+      "database_calls": 5,
+      "database_seconds": 1.3558146770228632
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230370.5110002,
+      "seconds": 1.3968430049717426,
+      "database_calls": 5,
+      "database_seconds": 1.389586991048418
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+      "epoch": 1792230372.9174452,
+      "seconds": 1.9775423160172068,
+      "database_calls": 7,
+      "database_seconds": 1.960951836023014
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/attempts/submit",
+      "epoch": 1792230376.332737,
+      "seconds": 2.6319039670052007,
+      "database_calls": 6,
+      "database_seconds": 1.520014451991301
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230378.9770691,
+      "seconds": 0.32582573097897694,
+      "database_calls": 1,
+      "database_seconds": 0.29232931399019435
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230380.326846,
+      "seconds": 0.3125783859868534,
+      "database_calls": 1,
+      "database_seconds": 0.3090045340359211
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230381.652438,
+      "seconds": 0.4072780329734087,
+      "database_calls": 1,
+      "database_seconds": 0.4037933750078082
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230383.067822,
+      "seconds": 0.27348248299676925,
+      "database_calls": 1,
+      "database_seconds": 0.27099852496758103
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230384.354439,
+      "seconds": 0.26135310396784917,
+      "database_calls": 1,
+      "database_seconds": 0.25020613201195374
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230385.624286,
+      "seconds": 0.25801303004845977,
+      "database_calls": 1,
+      "database_seconds": 0.25435473903780803
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230386.8918421,
+      "seconds": 0.3163801530026831,
+      "database_calls": 1,
+      "database_seconds": 0.3130351019790396
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230388.216775,
+      "seconds": 0.2780615009833127,
+      "database_calls": 1,
+      "database_seconds": 0.2739621850196272
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230389.507474,
+      "seconds": 0.34208921098615974,
+      "database_calls": 1,
+      "database_seconds": 0.32834381598513573
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230390.858424,
+      "seconds": 0.2965982709429227,
+      "database_calls": 1,
+      "database_seconds": 0.29283230600412935
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230392.163291,
+      "seconds": 0.28402680496219546,
+      "database_calls": 1,
+      "database_seconds": 0.27986116003012285
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230393.464017,
+      "seconds": 0.3357638900051825,
+      "database_calls": 1,
+      "database_seconds": 0.3301068799919449
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230394.808361,
+      "seconds": 0.27690036699641496,
+      "database_calls": 1,
+      "database_seconds": 0.2734820020268671
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230396.093732,
+      "seconds": 0.2729164420161396,
+      "database_calls": 1,
+      "database_seconds": 0.2668304920080118
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230397.377409,
+      "seconds": 0.29111087904311717,
+      "database_calls": 1,
+      "database_seconds": 0.2852886160253547
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230398.72561,
+      "seconds": 0.3532265889807604,
+      "database_calls": 1,
+      "database_seconds": 0.3458256439771503
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230400.0922198,
+      "seconds": 0.3152624809881672,
+      "database_calls": 1,
+      "database_seconds": 0.29690466495230794
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230401.41777,
+      "seconds": 0.273697018972598,
+      "database_calls": 1,
+      "database_seconds": 0.26830157497897744
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230402.700917,
+      "seconds": 0.2695905630243942,
+      "database_calls": 1,
+      "database_seconds": 0.2647798910038546
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230403.981123,
+      "seconds": 0.29063373402459547,
+      "database_calls": 1,
+      "database_seconds": 0.28687183698639274
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230405.2940001,
+      "seconds": 0.28553940198617056,
+      "database_calls": 1,
+      "database_seconds": 0.2816475100116804
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230406.587462,
+      "seconds": 0.29335508396616206,
+      "database_calls": 1,
+      "database_seconds": 0.29016796103678644
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230407.8947241,
+      "seconds": 0.29441812698496506,
+      "database_calls": 1,
+      "database_seconds": 0.2893949520075694
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230409.201337,
+      "seconds": 0.4196333959698677,
+      "database_calls": 1,
+      "database_seconds": 0.4151923260069452
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230410.639339,
+      "seconds": 0.2941020369762555,
+      "database_calls": 1,
+      "database_seconds": 0.2896487070247531
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230411.941445,
+      "seconds": 0.27910895203240216,
+      "database_calls": 1,
+      "database_seconds": 0.2751828780164942
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230413.2286541,
+      "seconds": 0.2834193920134567,
+      "database_calls": 1,
+      "database_seconds": 0.2800875279936008
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230414.588594,
+      "seconds": 0.3113550219568424,
+      "database_calls": 1,
+      "database_seconds": 0.3067443610052578
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/a6a13ac6-437a-5d8f-95d1-afa78c27b8c7/analysis",
+      "epoch": 1792230415.910496,
+      "seconds": 0.3031911419820972,
+      "database_calls": 1,
+      "database_seconds": 0.2960703889839351
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/attempts/submit",
+      "epoch": 1792230417.6725912,
+      "seconds": 2.754323174012825,
+      "database_calls": 6,
+      "database_seconds": 1.6283597010187805
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230420.436059,
+      "seconds": 1.4158039309550077,
+      "database_calls": 5,
+      "database_seconds": 1.4116657809936441
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230422.859949,
+      "seconds": 0.8136844389955513,
+      "database_calls": 3,
+      "database_seconds": 0.8118200790486299
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230424.682763,
+      "seconds": 1.0267342620063573,
+      "database_calls": 3,
+      "database_seconds": 1.0250510579789989
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230426.719427,
+      "seconds": 1.046567342011258,
+      "database_calls": 3,
+      "database_seconds": 1.0442009540856816
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230428.77439,
+      "seconds": 2.1042269169702195,
+      "database_calls": 7,
+      "database_seconds": 2.093978079035878
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230431.8886778,
+      "seconds": 1.3571754589793272,
+      "database_calls": 5,
+      "database_seconds": 1.3516379289212637
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230434.25438,
+      "seconds": 1.4379608210292645,
+      "database_calls": 5,
+      "database_seconds": 1.4267112030065618
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230436.702328,
+      "seconds": 1.3701060840394348,
+      "database_calls": 5,
+      "database_seconds": 1.363096380897332
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230439.0824692,
+      "seconds": 1.384256188001018,
+      "database_calls": 5,
+      "database_seconds": 1.3765083480393514
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230441.479844,
+      "seconds": 1.4091159369563684,
+      "database_calls": 5,
+      "database_seconds": 1.4028069829801098
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230443.8973389,
+      "seconds": 1.3884783739922568,
+      "database_calls": 5,
+      "database_seconds": 1.3831428130506538
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230446.2950919,
+      "seconds": 1.4113127590389922,
+      "database_calls": 5,
+      "database_seconds": 1.4038304699934088
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230448.725421,
+      "seconds": 1.3868687239591964,
+      "database_calls": 5,
+      "database_seconds": 1.3743683250504546
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230451.120947,
+      "seconds": 1.3114910760195926,
+      "database_calls": 5,
+      "database_seconds": 1.3040069489507005
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230453.442983,
+      "seconds": 1.4179317509988323,
+      "database_calls": 5,
+      "database_seconds": 1.4125099199009128
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/69436ba7-211b-51ff-95b8-e75af6ca716e",
+      "epoch": 1792230455.872031,
+      "seconds": 1.9450735219870694,
+      "database_calls": 7,
+      "database_seconds": 1.9289600980118848
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/attempts/submit",
+      "epoch": 1792230459.084702,
+      "seconds": 2.6166175800026394,
+      "database_calls": 6,
+      "database_seconds": 1.5862963929539546
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230461.709298,
+      "seconds": 0.2525016420404427,
+      "database_calls": 1,
+      "database_seconds": 0.2500074499985203
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230462.97343,
+      "seconds": 0.2699315620120615,
+      "database_calls": 1,
+      "database_seconds": 0.26583054795628414
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230464.25162,
+      "seconds": 0.3561597660300322,
+      "database_calls": 1,
+      "database_seconds": 0.35099870996782556
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230465.618436,
+      "seconds": 0.2583948459941894,
+      "database_calls": 1,
+      "database_seconds": 0.25503596605267376
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230466.885464,
+      "seconds": 0.25299210200319067,
+      "database_calls": 1,
+      "database_seconds": 0.2500357519602403
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230468.145406,
+      "seconds": 0.2545439639943652,
+      "database_calls": 1,
+      "database_seconds": 0.2503344499855302
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230469.408826,
+      "seconds": 0.261124799028039,
+      "database_calls": 1,
+      "database_seconds": 0.2555805860320106
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230470.678922,
+      "seconds": 0.2840641690418124,
+      "database_calls": 1,
+      "database_seconds": 0.28086564800469205
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230471.973739,
+      "seconds": 0.27989547804463655,
+      "database_calls": 1,
+      "database_seconds": 0.27556247799657285
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230473.263653,
+      "seconds": 0.2841450220439583,
+      "database_calls": 1,
+      "database_seconds": 0.2801852489938028
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230474.556349,
+      "seconds": 0.3035899189999327,
+      "database_calls": 1,
+      "database_seconds": 0.294887722004205
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230475.870344,
+      "seconds": 0.26182418200187385,
+      "database_calls": 1,
+      "database_seconds": 0.25839897798141465
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230477.141221,
+      "seconds": 0.3227806559880264,
+      "database_calls": 1,
+      "database_seconds": 0.28720896400045604
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230478.472455,
+      "seconds": 0.2817351979902014,
+      "database_calls": 1,
+      "database_seconds": 0.27716563700232655
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230479.762572,
+      "seconds": 0.27092873700894415,
+      "database_calls": 1,
+      "database_seconds": 0.26723272498929873
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230481.0427678,
+      "seconds": 0.33432047499809414,
+      "database_calls": 1,
+      "database_seconds": 0.3266281600226648
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230482.3876228,
+      "seconds": 0.29448251600842923,
+      "database_calls": 1,
+      "database_seconds": 0.2887977909995243
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230483.6949492,
+      "seconds": 0.2777629229822196,
+      "database_calls": 1,
+      "database_seconds": 0.27317221998237073
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230484.9809642,
+      "seconds": 0.2772277750191279,
+      "database_calls": 1,
+      "database_seconds": 0.2733947579981759
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230486.2684412,
+      "seconds": 0.2829968510195613,
+      "database_calls": 1,
+      "database_seconds": 0.2781163210165687
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230487.558979,
+      "seconds": 0.2880237629869953,
+      "database_calls": 1,
+      "database_seconds": 0.28466014901641756
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230488.855662,
+      "seconds": 0.28746426198631525,
+      "database_calls": 1,
+      "database_seconds": 0.28274436900392175
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230490.154347,
+      "seconds": 0.2780414769658819,
+      "database_calls": 1,
+      "database_seconds": 0.274566693988163
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230491.44381,
+      "seconds": 0.28210453200154006,
+      "database_calls": 1,
+      "database_seconds": 0.2783155600191094
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230492.734493,
+      "seconds": 0.28684190701460466,
+      "database_calls": 1,
+      "database_seconds": 0.28204752603778616
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230494.028845,
+      "seconds": 0.29476698103826493,
+      "database_calls": 1,
+      "database_seconds": 0.2897590459906496
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/237af2d6-a1fd-5dca-95ca-177259933d5c/analysis",
+      "epoch": 1792230495.3309581,
+      "seconds": 0.3253434060025029,
+      "database_calls": 1,
+      "database_seconds": 0.31718719901982695
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/attempts/submit",
+      "epoch": 1792230496.939568,
+      "seconds": 2.6916338930022903,
+      "database_calls": 6,
+      "database_seconds": 1.579692020022776
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230499.644809,
+      "seconds": 0.7792925119865686,
+      "database_calls": 3,
+      "database_seconds": 0.7773440669407137
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230501.4320488,
+      "seconds": 0.81379745103186,
+      "database_calls": 3,
+      "database_seconds": 0.8120117670041509
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230503.256143,
+      "seconds": 0.75149071397027,
+      "database_calls": 3,
+      "database_seconds": 0.7495395430014469
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230505.0188968,
+      "seconds": 0.7605644279974513,
+      "database_calls": 3,
+      "database_seconds": 0.7540990999550559
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230506.792931,
+      "seconds": 0.7612200569710694,
+      "database_calls": 3,
+      "database_seconds": 0.7588170390226878
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230508.566926,
+      "seconds": 2.4025601370376535,
+      "database_calls": 5,
+      "database_seconds": 2.3955011780490167
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230511.978642,
+      "seconds": 1.38290569500532,
+      "database_calls": 5,
+      "database_seconds": 1.3768050540238619
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230514.3713331,
+      "seconds": 1.316569903981872,
+      "database_calls": 5,
+      "database_seconds": 1.3112767700804397
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230516.6989388,
+      "seconds": 1.335410136030987,
+      "database_calls": 5,
+      "database_seconds": 1.328921584005002
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230519.0440378,
+      "seconds": 1.4144646010245197,
+      "database_calls": 5,
+      "database_seconds": 1.40909298195038
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230521.46846,
+      "seconds": 1.330068162002135,
+      "database_calls": 5,
+      "database_seconds": 1.3247458249679767
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230523.807025,
+      "seconds": 1.3131917960126884,
+      "database_calls": 5,
+      "database_seconds": 1.3084817549097352
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230526.129062,
+      "seconds": 1.5066329669789411,
+      "database_calls": 5,
+      "database_seconds": 1.49860023194924
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230528.645792,
+      "seconds": 1.360584212001413,
+      "database_calls": 5,
+      "database_seconds": 1.3545182090019807
+    },
+    {
+      "method": "GET",
+      "path": "/benchmark/serial/78a05ff6-d925-52cf-b807-ad8a900033b0",
+      "epoch": 1792230531.045187,
+      "seconds": 1.8919660670217127,
+      "database_calls": 7,
+      "database_seconds": 1.8755402930546552
+    },
+    {
+      "method": "POST",
+      "path": "/api/practice/attempts/submit",
+      "epoch": 1792230534.174496,
+      "seconds": 2.6600299550336786,
+      "database_calls": 6,
+      "database_seconds": 1.5969120769877918
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230536.842088,
+      "seconds": 0.29080015199724585,
+      "database_calls": 1,
+      "database_seconds": 0.2876563770114444
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230538.1436381,
+      "seconds": 0.26312970399158075,
+      "database_calls": 1,
+      "database_seconds": 0.25965059897862375
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230539.413379,
+      "seconds": 0.28241006401367486,
+      "database_calls": 1,
+      "database_seconds": 0.27511879795929417
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230540.704298,
+      "seconds": 0.25809543195646256,
+      "database_calls": 1,
+      "database_seconds": 0.25567242898978293
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230541.9743721,
+      "seconds": 0.2798998079961166,
+      "database_calls": 1,
+      "database_seconds": 0.27663177700014785
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230543.2628129,
+      "seconds": 0.26746385800652206,
+      "database_calls": 1,
+      "database_seconds": 0.26386030501453206
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230544.537426,
+      "seconds": 0.2641903250478208,
+      "database_calls": 1,
+      "database_seconds": 0.26016330998390913
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230545.8101351,
+      "seconds": 0.28817228600382805,
+      "database_calls": 1,
+      "database_seconds": 0.2845141179859638
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230547.108099,
+      "seconds": 0.27455978404032066,
+      "database_calls": 1,
+      "database_seconds": 0.27036906604189426
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230548.393496,
+      "seconds": 0.27952790894778445,
+      "database_calls": 1,
+      "database_seconds": 0.2760761969839223
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230549.6825442,
+      "seconds": 0.2694873610162176,
+      "database_calls": 1,
+      "database_seconds": 0.26373433700064197
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230550.9597208,
+      "seconds": 0.44377217697910964,
+      "database_calls": 1,
+      "database_seconds": 0.44046536297537386
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230552.4122849,
+      "seconds": 0.32459840696537867,
+      "database_calls": 1,
+      "database_seconds": 0.32022263400722295
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230553.744968,
+      "seconds": 0.2741841850220226,
+      "database_calls": 1,
+      "database_seconds": 0.27004857000429183
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230555.028651,
+      "seconds": 0.2782558329636231,
+      "database_calls": 1,
+      "database_seconds": 0.27276163594797254
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230556.3205912,
+      "seconds": 0.29471061599906534,
+      "database_calls": 1,
+      "database_seconds": 0.28990491502918303
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230557.626657,
+      "seconds": 0.2818561779567972,
+      "database_calls": 1,
+      "database_seconds": 0.2781577170244418
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230558.917417,
+      "seconds": 0.33674287499161437,
+      "database_calls": 1,
+      "database_seconds": 0.33302641700720415
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230560.350729,
+      "seconds": 0.31153974699554965,
+      "database_calls": 1,
+      "database_seconds": 0.307181483018212
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230561.675282,
+      "seconds": 0.29901578201679513,
+      "database_calls": 1,
+      "database_seconds": 0.2946588529739529
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230562.983018,
+      "seconds": 0.28015408501960337,
+      "database_calls": 1,
+      "database_seconds": 0.2765184150193818
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230564.272279,
+      "seconds": 0.29253662598785013,
+      "database_calls": 1,
+      "database_seconds": 0.2853257989627309
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230565.579166,
+      "seconds": 0.2817424140521325,
+      "database_calls": 1,
+      "database_seconds": 0.2773108769906685
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230566.887946,
+      "seconds": 0.2965098189888522,
+      "database_calls": 1,
+      "database_seconds": 0.29232522600796074
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230568.192731,
+      "seconds": 0.2608299489947967,
+      "database_calls": 1,
+      "database_seconds": 0.2574910969706252
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230569.46401,
+      "seconds": 0.2811871190206148,
+      "database_calls": 1,
+      "database_seconds": 0.2771064600092359
+    },
+    {
+      "method": "GET",
+      "path": "/api/practice/attempts/091c5e0a-42c3-539b-81e5-569dea8680d9/analysis",
+      "epoch": 1792230570.7587159,
+      "seconds": 0.3085728570003994,
+      "database_calls": 1,
+      "database_seconds": 0.298568714002613
+    }
+  ],
+  "comparison": "serial versus snapshot status reads; both merged submission"
+}

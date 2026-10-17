@@ -9,6 +9,44 @@ meta:
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
+## Accepted Stage 2 refactor contract
+
+### 2026-10-16: Publish coarse server signals before MFA
+
+- **Status**: approved and implemented locally; hosted checkpoint migration applied, remote application deployment separate.
+- **Decision**: introduce durable complete learner frames and `coarse_ready` on >=85% new Takes. Coarse uses only shared server F0/energy; no browser features or duration channel. User ASR word timestamps and saved Reference subtitle timestamps carry `boundary_source`; missing/unreliable word intervals yield only sentence curves. Identical aggregation and explicit sensitivity diagnostics apply on both sides.
+- **Evidence**: [local computation report](design/benchmarks/progressive-acoustics-20261016/README.md). Continuous relative prominence remains uncalibrated; no strong/weak classification, stress detector or correctness score. Lengthening remains uncertain until duration evidence exists.
+- **Persistence**: full raw frames survive analysis-audio cleanup and support retries, but analysis/parent deletion removes them. Reference caches use a new policy version and immutable input/engine identity. Old missing energy is not reconstructed. Owner/lease fences and service-only SQL grants remain.
+- **Delivery**: publish before MFA in existing workers, then upgrade to original final layer rendering with additional experimental Rhythm prominence. Keep beam 5 and exact gates. Dedicated worker lanes, CPU isolation, ASR/extraction concurrency and target-instance timing remain follow-ups; this increment does not promise cloud end-to-end latency.
+- **Supersedes**: the earlier offline-only restriction for the newly approved integration. The offline benchmark remains historical evidence and its standalone code remains separate.
+
+### 2026-10-16: Evaluate CWT prominence offline before product integration
+
+- **Status**: accepted for offline experimentation only.
+- **Decision**: reuse MFA boundaries and complete 10ms F0/energy, implement an independent PyWavelets baseline without importing the full Wavelet Prosody Toolkit, and output continuous relative prominence plus uncertainty. No strong/weak classification or correctness probability before human annotation and calibration.
+- **Evidence**: [experiment](design/benchmarks/rhythm-cwt-20261016/README.md) measures low incremental computation but exposes edge and duration-weight sensitivity. The latest requested Take's audio was already cleaned, so no user-pair effect claim is possible.
+- **Consequence**: full curves and exact Reference caches are local experiment artifacts. Leave production workers, persistence, acquisition and 60/85 gates unchanged. A future approved integration must persist eligible new-Take full frames before audio cleanup, reuse Reference evidence/cache identity, and preserve deletion/expiry. Historical word summaries cannot reconstruct missing energy curves.
+
+### 2026-10-12: Gate learner analysis in three tiers and preserve reference acquisition
+
+- **Status**: accepted target; contract, backend gate and persistence implemented; database migrations applied to hosted Libitu; new practice UI and directory/navigation/history implemented and verified locally; final wider regression and application deployment pending.
+- **Decision**: <60% ends after word matching; 60–<85% permits matched-word Sound only; >=85% requests all three layers. Use exact counts rather than rounded percentages. Recognition-error feedback preserves ASR and never changes the tier. Listen and Record are independent; the directory follows the 2026-10-13 text/best-match revision; fewer than four words skip automatic navigation. Keep existing reference acquisition and privacy choices.
+- **Contract**: [algorithms, state, API and metadata](design/docs/STAGE_TWO_REFACTOR_CONTRACT.md). Preserve existing reference verification; do not apply learner thresholds to it. Partial recognition must map measured words explicitly rather than force missing expected words into learner audio. Existing detectors remain the capability boundary. Step 4 removes pre-gate local learner acoustic inference from the new practice flow; source reference previews/acquisition remain unchanged. Text-for-next-take settings never hide or rewrite a displayed result. Historical replay selects its exact take and does not inherit the latest local clip.
+- **Progress/history**: derive practiced from surviving owned records plus content-scoped pending outbox takes. A service-only, invoker scalar JSON aggregate avoids Data API row limits without adding a second progress store. Keep manual selection per sentence and account; paginated refresh loads through the selected older take. Audio-only deletion retains progress and result selection. Full deletion reconciles to the latest surviving take, clearing the local saved clip when that exact record is deleted; the last deletion returns to concealed practice.
+- **Delivery**: contract → backend gate → persistence/feedback → practice UI → navigation/history → regression. Step 2 includes the minimal queue/checkpoint migration required for durable stages; recognition feedback and text-support storage are implemented in step 3, with both migrations applied and verified online. Include visible_source_indices_at_start to distinguish pre-recording visibility from later peeks; snapshots are immutable and outbox retries deep-copy nested metadata. Legacy payload fingerprints remain unchanged. New jobs use practice-gated-v3; existing v2 jobs/results and reference verification remain unchanged.
+
+### 2026-10-12: Match the approved Stage 2 prototype’s control presentation
+
+- **Status**: implemented locally; original acquisition, assessment gates and consent remain unchanged.
+- **Decision**: use a 206 px expanded/56 px collapsed sentence rail, compact integrated video/reference status card, purple Record/red Stop controls and upward settings with segmented speed/text choices. Remove the three user-specified redundant sentences. Keep the existing real status/retry/error evidence instead of prototype demo timing or invented readiness.
+- **Waveform**: show live amplitude from the recorder’s already authorized stream. The monitor never requests another microphone, routes audio to speakers, uploads data or starts acoustic inference. Disconnect its nodes, cancel its animation frame and close its AudioContext on stop/cancel/navigation/unmount. Silence remains flat; it is not an assessment.
+
+### 2026-10-13: Show sentence text and durable best word match; restore shared controls
+
+- **Decision**: supersede the previous no-text/no-score directory and purple Record styling. Show sentence text and upper-right practiced/unpracticed, highest reliable word-match percentage and exact >=85% pass status. Collapse during microphone request, recording and encoding; restore the manual preference afterwards. These are word-match markers, not pronunciation grades.
+- **Data**: extend the existing progress response from existing durable checks, reading bounded keyset pages under owner/content filters. Ignore unreliable/legacy/deleted evidence; deleting playback audio preserves progress while deleting a winning analysis/take recomputes the maximum. Recognition feedback never changes it. No migration or new analysis request is necessary.
+- **Reference and controls**: completed server references remain Ready despite local preview work/setup. Keep errors/deletion visible. Center the wrapping control group and waveform separately; use shared black Record/red Stop media pills without page-specific paint overrides. Original acquisition and media ownership remain unchanged.
+
 ## Proposed architecture
 
 ### 2026-10-09: Separate content navigation from learning runtime ownership
@@ -20,6 +58,13 @@ This log records decisions that constrain product behavior or architecture. Add 
 - **Relationship**: the accepted root-link compatibility, anonymous Reader, authenticated Shadow and cross-page save decisions remain in force. This proposal does not mark new routes or APIs as implemented or supersede current product behavior.
 
 ## Accepted decisions
+
+Stage 2 direct component restoration (2026-10-13): at the user’s explicit request, copy SoundComparison.tsx, LayerComparison.tsx (including Rhythm and PitchOverlay), and LayerFocus.tsx verbatim from /Users/river/Documents/Libitu. Their internal presentation now matches that workspace byte for byte; existing shared CSS already matches. Own Sound conceal/reveal state in StageTwoShadowing via the original controlled props, scoped to the selected sentence/take. Keep prototype status badges, recording-state visibility, word gates and source/reference acquisition outside these restored components. Word differences remain in the separate word-check result; unavailable acoustic measurements remain blank in the data adapter, while the original Sound practice-target cues are retained.
+
+Stage 2 analysis state clarification (2026-10-13): verified the fetched origin/main at d84bd9d. Keep its internal Sound/Rhythm/Melody layout, diagrams and explanation panel; prototype styling applies only to compact layer status badges. Hide layers before recording, during microphone/encoding work and until the selected take has a durable word check (or completed legacy evidence). Then retain the exact 60/85 gates, show locks, pending ellipses, insufficient/interrupted dashes or colored evidence badges. Sound has no aggregate score: use a completion mark, with an asterisk for matched-only scope; Rhythm/Melody display real experimental similarity scores when present, otherwise a completion mark for available measurements. Existing unpaired learner evidence remains viewable. Deleted/no-analysis takes hide layers; retry/error controls remain available. Source/reference acquisition is unchanged.
+
+Stage 2 analysis appearance restoration (2026-10-13): restore the main-worktree presentation of the three analysis layers: 52 px tabs and the original Sound Shadow mode/Hide text/Reveal all toolbar; status badges follow the prototype as clarified below. Remove refactor-only mobile workspace and unmatched-word box overrides. Keep the 60/85% gates, disabled tabs, exact take/reference mapping and truthful unmatched-word notes. Sound review visibility stays local to the selected take; it does not alter recording support snapshots or the word-check result. Rhythm/Pitch drawing and LayerFocus were not restyled by this refactor.
+
 
 ### 2026-10-12: Reference snapshots use the displayed server sentence view
 
@@ -655,3 +700,93 @@ The user explicitly requested responsive outer margins and targeted button/spaci
 - **Status**: accepted and implemented.
 - **Decision**: render a lightweight route fallback and decorative skeletons only for empty loading regions; existing status messages own progress and errors.
 - **Consequence**: no artificial completion percentages, minimum delay, extra requests, player remounts or extension preflight changes. Disable animation for reduced motion. Pre-response navigation latency remains outside this UI change.
+
+### 2026-10-14: Prepare reference before new analyzed takes
+
+- **Status**: accepted and implemented.
+- **Decision**: server-analyzed recording requires uploaded reference audio for the selected source and sentence; reference analysis may still be queued or processing. Guide preparation next to Record and retain explicit microphone activation. Local-only recording with server analysis off remains supported.
+- **Reason**: avoid saving new analyzed takes without a reference while allowing reference and learner word checking to overlap.
+- **Consequence**: freeze reference identity at recording start; reject unavailable/expired/mismatched references in both button and keyboard entry. Existing acquisition/consent/storage behavior stays intact. The user withdrew historical one-time binding/resume, requested direct cleanup of old unbound takes, and requested no new deletion button. The withdrawn migration was never applied.
+
+
+### 2026-10-14: Separate reference upload and analysis feedback
+
+- **Status**: accepted and implemented for status presentation.
+- **Decision**: uploaded audio with incomplete analysis must state that audio is present, explain the selected sentence's content/alignment failure and offer an analysis retry without new-upload copy. Keep queued/processing, Ready, deleted/expired and unuploaded states distinct.
+- **Boundary**: no acquisition, recording gate, server content check, migration or deployment change. Tolerant reference matching and partial word comparisons remain proposed pending implementation authorization.
+
+
+### 2026-10-14: Reduce duplicate audio transport and MFA setup
+
+- **Status**: user-authorized and implemented.
+- **Decision**: receive learner bytes once when both analysis and recording retention are selected, validate both immutable registrations before writing, queue analysis first, then retain the same bytes. Keep separate private objects and consent/deletion lifecycles. A retention retry may finish after analysis input cleanup without restarting analysis.
+- **Local handoff**: API and worker share a configured private directory when colocated. Scope entries by purpose, account, task and audio digest; verify bytes on read. Local files expire after 30 minutes, are bounded to 256 MiB and participate in deletion/cleanup. Cloud persistence still precedes durable job acknowledgment; another host or cache miss downloads the durable input. This is a cache, not a second queue.
+- **MFA**: cache compiled lexicons by pinned engine/model/dictionary identity; allow concurrent readers and exclusively lock initialization/repair. Keep input audio, acoustic model extraction and result files task-local. Reuse hash/version checks until file metadata changes. Do not alter acoustic outputs, source acquisition, learner ASR or 60/85 thresholds. Full persistent MFA/ASR model servers remain separate future work.
+
+### 2026-10-14: Distinguish reference lookup from upload
+
+- **Status**: implemented status correction.
+- **Decision**: read-only recovery on sentence entry displays “Checking reference…”, including when captured audio is queued behind that lookup. Only actual encoding/upload work displays “Uploading reference audio…”. Do not offer missing-reference preparation in the recording guide until lookup settles. Keep acquisition, queued-upload protection and recording gates unchanged.
+
+### 2026-10-14: Align reference audio directly to source transcripts
+
+- **Status**: accepted by the user and implemented.
+- **Decision**: remove secondary ASR from browser and registered-file reference analysis, including uncached file fallback. Use the immutable source transcript for MFA; keep audio quality, identity, interval ordering/bounds, word duration (25–3000 ms) and phone coverage checks. Do not equate forced alignment with independently recognized content or observed pronunciation realization.
+- **Evidence**: use `source_transcript` separately from legacy ASR `matched`; empty recognized transcript and explicit provenance reason. Learner ASR and exact 60/85 word gates remain unchanged.
+- **Caching**: use a reference-only policy version (`reference-source-transcript-v2`) plus measurement engine/model identity. New reference cache keys no longer depend on learner ASR. Latest-capture restoration excludes outdated reference policies/engines. Read historical verified results as such; do not rewrite existing takes/results or silently bind another reference.
+- **Boundary**: no capture/acquisition, consent/retention or schema change. Reference processing still depends on MFA and acoustic quality, not a promise that all captions are correct. This supersedes the proposed Reference 60/85 tolerance scheme and the earlier reference exact-ASR prerequisite.
+
+
+2026-10-15 Reference retry repair: preparing the same browser capture after deletion/expiry now allocates a new deterministic generation; active generations remain idempotent and historical rows/take bindings are never revived. HTTP 410 during upload/status/retry clears stale readiness and stops polling, allowing explicit preparation again. MFA version probes use isolated temporary runtime directories, cache only exact successful version checks and distinguish process startup failures from version mismatches. The UI distinguishes alignment-service outages, timeouts and alignment failures from caption timing/coverage failures. Reference still uses source-transcript MFA with quality checks; acquisition and learner ASR/60–85 gates are unchanged.
+
+
+2026-10-15: check MFA version at process startup before either acoustic worker accepts queue work, not in engine.align. Fail startup clearly without consuming or failing individual jobs. Keep model integrity and audio/alignment quality checks, learner ASR/60–85 rules and cache identity unchanged. The runtime is provisioned for the worker lifetime; replacing it requires worker restart. This supersedes lazy per-alignment version probing.
+
+
+2026-10-15: user requested one default-on Server analysis setting for Reference and new recordings, replacing the two independent opt-in preferences. Keep recording retention separate/default off. Use a new versioned per-account browser preference; old absent keys cannot distinguish never configured from off, so legacy keys do not determine the new default. Off controls future work, not deletion/cancellation of already submitted tasks or access to historical results. Capture, microphone and playback permissions remain unchanged.
+
+
+2026-10-15 Sound presentation: restore the supplied screenshot’s text-first default appearance. All shows candidate phonology marks/linking arcs without per-word acoustic measurement clutter, even after analysis completes. Vowel len. explicitly shows retained vowel durations; Linking shows measured boundary pauses. Keep the existing wrapping typography, IPA reveal, Reference/Your voice rows, guidance sidebar, tab state badges, Rhythm/Melody and server analysis/gates unchanged. This is a presentation adjustment, not a rollback of analysis or a fabricated pending state.
+
+
+2026-10-15: learner acoustic analysis now runs independently of pending Reference analysis after the unchanged 60/85 word gate. Save the learner checkpoint before waiting; resume final comparison without downloading, decoding, ASR or MFA again. Queue claiming permits missing learner checkpoints even after ASR succeeds, including lease recovery. The hosted `parallel_learner_acoustics` migration updates the claim predicate only; owner, expiry, lease and service-role boundaries remain intact.
+
+Learner workers preload one isolated resident `small.en` process before claiming jobs. Reuse the existing CPU/int8/two-thread model, English/beam-5/temperature-0 settings and reliability thresholds. Requests are serialized per worker, timeout at 180 seconds, and kill/reap the child on failure; the next request rebuilds it. Reference still uses source-transcript MFA; acquisition and audio/alignment quality rules are unchanged. Extra workers each retain their own model memory; parallelism requires both workers and sufficient CPU/RAM, and cold MFA lexicon initialization may still serialize.
+
+## 2026-10-16 independent acoustic workers
+
+Implemented: separate `stage_two_worker --lane fast|fine` processes, started together by `pnpm dev`. Fast handles learner ASR/word gates and server F0/energy/CWT for Takes and References; fine handles MFA and final comparisons. A service-only PostgreSQL lane claim and fenced handoff (`20261016111833_acoustic_worker_lanes`) preserve checkpoints, reset the downstream retry budget and invalidate the fast lease atomically. Each lane prioritizes eligible Takes over References. Fast startup preloads ASR without probing MFA; fine alone verifies MFA. Old combined entrypoints/claim RPCs reject use. Original audio acquisition, quality checks, recognition settings and 60%/85% thresholds are unchanged.
+
+Local macOS scheduling: fine runs at nice 10 with native library threads capped at one; a separate supervisor pauses/resumes the MFA process group when the fast lane holds a shared activity lock. Parent heartbeats continue, locks release on crashes, and the supervisor reaps MFA if its owning worker exits. Active MFA timeout excludes pauses with a bounded additional 900 seconds of wall time. Empty queue polling does not pause MFA. Both workers must share the scheduler directory/account. This prioritizes first results and may extend fine completion under load; it is not hard CPU affinity. Optional disjoint Linux CPU sets and systemd templates are provided but not validated on a cloud host. No production worker deployment is implied.
+
+Validation and timing: see [local lane comparison](design/benchmarks/worker-lanes-20261016/README.md). The local benchmark separates controlled CPU/queue timing from real hosted-storage/local-worker polling; browser paint and target-cloud timings are not inferred from either. Existing previews remain visible through fine processing/failure; no frontend redesign or new matching classes.
+
+## 2026-10-17: consolidate submission and coarse publication
+
+Use one multipart request for analysis-enabled Takes, retaining the original UUID/idempotency hash and frozen source snapshot. Keep the old endpoints for compatibility and record-only saves. A service-only transaction registers the profile, Take and analysis together. Upload to durable object storage before a second fenced transaction queues work; the TTL/evictable local cache is not a durable queue authority. Return a Take acknowledgment rather than rebuilding an AnalysisView during submission.
+
+Keep word-check publication separate so learners can see the first result immediately. Combine subsequent raw features, coarse signal and fine-lane handoff in one transaction; a failed handoff rolls back its checkpoint. Retention consent remains the independent `attempt.recording` field, and a retention-only retry must not reset or restore cleaned analysis inputs. No threshold/model/acquisition changes accompany this optimization.
+
+## 2026-10-17: one statement snapshot for analysis polling
+
+Replace serial Take/analysis/Reference reads with a stable security-invoker RPC, callable only by service_role. Scope by the authenticated owner and omit deleted parents; join the Reference owner and source visibility in the same statement. Keep live operator file-grant validation in Python because those grants are local configuration. Do not cache authorization or reuse a snapshot across polls.
+
+Return a bounded projection of current-sentence Reference coarse evidence rather than all segment frames. Reuse the existing result/layer formatter and response schema. This changes read latency, not recording, matching tiers, audio acquisition, worker computation or retention consent. A deletion/source change committed before the next query is observed by that query; the HTTP response already in flight is not claimed to be retractable.
+
+
+## 2026-10-17 optional Reference for learner analysis
+
+Reference preparation is optional. With server analysis enabled, a learner may record immediately without uploaded Reference audio; the Take freezes a null Reference identity and follows the existing word check, fast signal checkpoint, and fine learner alignment pipeline. It completes with learner measurements and no comparison score, without waiting for Reference. The unchanged below-60%, 60–<85% Sound-only, and >=85% all-layer gates still apply. Existing eligible References can be bound at recording start and use the paired flow. Active original-audio capture still blocks simultaneous microphone recording.
+
+The UI describes optional Reference comparison and promotes completed learner-only fine results beyond the preliminary badge. Learner-only CWT tables omit the empty Reference column and determine uncertainty from learner evidence; absence of a comparison alone does not invalidate that evidence. Reference acquisition, quality checks, server-analysis preference and independent history-retention switch are unchanged. A Reference prepared after a null-reference Take is not retroactively attached in this increment. Existing backend nullable Reference support and worker completion are reused; no schema migration is required.
+
+2026-10-17 UI cleanup: remove the duplicate optional-Reference card above sentence practice. Reference preparation, status and retry remain in the existing upper Reference panel; sentence practice leads directly with the sentence and recording controls. Learner-only analysis and consent/retention settings are unchanged.
+
+2026-10-17 presentation change: hide preliminary Rhythm/Melody curves and Preview badges in sentence practice. Word feedback remains immediate; eligible layers show a brief pending state until fine evidence is available. Failed/cancelled fine work shows unavailable rather than coarse fallback. Completed learner measurements remain viewable without a valid Reference. Fine layer presentation, background checkpoints, 60/85 gates, original acquisition and retention are unchanged. Earlier first-curve benchmarks describe the previous preview UI, not the current time to visible final layers.
+
+
+### 2026-10-17 Reference loading presentation cleanup
+
+Remove the duplicate yellow preparation progress bar and amber preparation/analysis backgrounds in Shadow; keep the video playback progress indicator. Restore existing sentence References silently without a visible Checking state or analysis spinner. While availability is unresolved, show neutral Reference copy (or the existing extension-off/setup controls), then show the actual resolved status. Directory practice progress reports learner Takes and best word matches, not Reference availability; retain the cached background lookup and upload deduplication. Audio acquisition, recording availability and analysis gates are unchanged.
+
+2026-10-17 Enable setup follow-up: show the setup spinner only during the extension handshake. Once armed and waiting for a toolbar click, stop the spinner, show “Click Libitu in Chrome’s toolbar”, and retain the setup instructions and Cancel action. The extension protocol, authorization and audio acquisition remain unchanged.

@@ -1,0 +1,193 @@
+{
+  "scope": "local real inference, simulated arrival behind MFA; excludes upload, database and browser",
+  "model": "small.en CPU int8, 2 threads, beam5; unchanged gates",
+  "runs": [
+    {
+      "round": 1,
+      "mode": "serial",
+      "queue_wait_sec": 19.80410893599037,
+      "asr_sec": 7.620747514010873,
+      "extract_sec": 0.37817724799970165,
+      "cwt_sec": 0.09555499101406895,
+      "arrival_to_coarse_sec": 27.898588689015014,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 20.206791901000543,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": []
+      }
+    },
+    {
+      "round": 1,
+      "mode": "parallel",
+      "queue_wait_sec": 4.269997589290142e-06,
+      "asr_sec": 5.520006940001622,
+      "extract_sec": 0.3863453340018168,
+      "cwt_sec": 0.04290653098723851,
+      "arrival_to_coarse_sec": 5.9492630749882665,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 20.5777650840173,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": []
+      }
+    },
+    {
+      "round": 1,
+      "mode": "yield",
+      "queue_wait_sec": 1.284800237044692e-05,
+      "asr_sec": 5.029750850022538,
+      "extract_sec": 0.3140766430005897,
+      "cwt_sec": 0.025910910975653678,
+      "arrival_to_coarse_sec": 5.369751252001151,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 30.618722650018753,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": [
+          {
+            "active_sec": 24.903,
+            "paused_sec": 5.351
+          }
+        ]
+      }
+    },
+    {
+      "round": 2,
+      "mode": "parallel",
+      "queue_wait_sec": 1.0279996786266565e-05,
+      "asr_sec": 12.695936194999376,
+      "extract_sec": 0.5077310529886745,
+      "cwt_sec": 0.05084979301318526,
+      "arrival_to_coarse_sec": 13.254527320998022,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 25.983988596999552,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": []
+      }
+    },
+    {
+      "round": 2,
+      "mode": "yield",
+      "queue_wait_sec": 8.068018360063434e-06,
+      "asr_sec": 4.721059014991624,
+      "extract_sec": 0.30854144200566225,
+      "cwt_sec": 0.03274642300675623,
+      "arrival_to_coarse_sec": 5.062354948022403,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 22.286239902023226,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": [
+          {
+            "active_sec": 16.869,
+            "paused_sec": 5.052
+          }
+        ]
+      }
+    },
+    {
+      "round": 2,
+      "mode": "serial",
+      "queue_wait_sec": 17.397341364005115,
+      "asr_sec": 4.996735980996164,
+      "extract_sec": 0.30866508098552004,
+      "cwt_sec": 0.02626547499676235,
+      "arrival_to_coarse_sec": 22.72900790098356,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 17.785986700007925,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": []
+      }
+    },
+    {
+      "round": 3,
+      "mode": "yield",
+      "queue_wait_sec": 3.3240066841244698e-06,
+      "asr_sec": 4.065731190989027,
+      "extract_sec": 0.30238530001952313,
+      "cwt_sec": 0.02604108100058511,
+      "arrival_to_coarse_sec": 4.394160896015819,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 17.61171816199203,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": [
+          {
+            "active_sec": 12.917,
+            "paused_sec": 4.348
+          }
+        ]
+      }
+    },
+    {
+      "round": 3,
+      "mode": "serial",
+      "queue_wait_sec": 13.306826070998795,
+      "asr_sec": 7.8215997719962616,
+      "extract_sec": 0.3549048140121158,
+      "cwt_sec": 0.03935168799944222,
+      "arrival_to_coarse_sec": 21.522682345006615,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 13.748481090995483,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": []
+      }
+    },
+    {
+      "round": 3,
+      "mode": "parallel",
+      "queue_wait_sec": 3.1539821065962315e-06,
+      "asr_sec": 8.799339476012392,
+      "extract_sec": 0.4201141849916894,
+      "cwt_sec": 0.062396163993980736,
+      "arrival_to_coarse_sec": 9.281852978980169,
+      "tier": "full_85_plus",
+      "matched": 10,
+      "source": 10,
+      "coarse_words": 10,
+      "fine": {
+        "wall_sec": 23.776191115990514,
+        "status": "aligned",
+        "reason": null,
+        "scheduler": []
+      }
+    }
+  ],
+  "resident_startup_sec": 4.471421330003068
+}

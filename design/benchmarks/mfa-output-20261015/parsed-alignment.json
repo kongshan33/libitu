@@ -1,0 +1,260 @@
+{
+  "status": "aligned",
+  "reason": null,
+  "phone_set": "model_dictionary_labels",
+  "words": [
+    {
+      "start_sec": 0.0,
+      "end_sec": 0.23,
+      "label": "this"
+    },
+    {
+      "start_sec": 0.23,
+      "end_sec": 0.37,
+      "label": "is"
+    },
+    {
+      "start_sec": 0.37,
+      "end_sec": 0.51,
+      "label": "the"
+    },
+    {
+      "start_sec": 0.51,
+      "end_sec": 0.98,
+      "label": "second"
+    },
+    {
+      "start_sec": 0.98,
+      "end_sec": 1.71,
+      "label": "sentence"
+    },
+    {
+      "start_sec": 1.94,
+      "end_sec": 2.08,
+      "label": "we"
+    },
+    {
+      "start_sec": 2.08,
+      "end_sec": 2.63,
+      "label": "practice"
+    },
+    {
+      "start_sec": 2.63,
+      "end_sec": 3.11,
+      "label": "speaking"
+    },
+    {
+      "start_sec": 3.11,
+      "end_sec": 3.72,
+      "label": "clearly"
+    }
+  ],
+  "phones": [
+    {
+      "start_sec": 0.0,
+      "end_sec": 0.03,
+      "label": "DH"
+    },
+    {
+      "start_sec": 0.03,
+      "end_sec": 0.14,
+      "label": "IH1"
+    },
+    {
+      "start_sec": 0.14,
+      "end_sec": 0.23,
+      "label": "S"
+    },
+    {
+      "start_sec": 0.23,
+      "end_sec": 0.3,
+      "label": "IH1"
+    },
+    {
+      "start_sec": 0.3,
+      "end_sec": 0.37,
+      "label": "Z"
+    },
+    {
+      "start_sec": 0.37,
+      "end_sec": 0.44,
+      "label": "DH"
+    },
+    {
+      "start_sec": 0.44,
+      "end_sec": 0.51,
+      "label": "AH0"
+    },
+    {
+      "start_sec": 0.51,
+      "end_sec": 0.63,
+      "label": "S"
+    },
+    {
+      "start_sec": 0.63,
+      "end_sec": 0.74,
+      "label": "EH1"
+    },
+    {
+      "start_sec": 0.74,
+      "end_sec": 0.82,
+      "label": "K"
+    },
+    {
+      "start_sec": 0.82,
+      "end_sec": 0.88,
+      "label": "AH0"
+    },
+    {
+      "start_sec": 0.88,
+      "end_sec": 0.92,
+      "label": "N"
+    },
+    {
+      "start_sec": 0.92,
+      "end_sec": 0.98,
+      "label": "D"
+    },
+    {
+      "start_sec": 0.98,
+      "end_sec": 1.09,
+      "label": "S"
+    },
+    {
+      "start_sec": 1.09,
+      "end_sec": 1.2,
+      "label": "EH1"
+    },
+    {
+      "start_sec": 1.2,
+      "end_sec": 1.25,
+      "label": "N"
+    },
+    {
+      "start_sec": 1.25,
+      "end_sec": 1.3,
+      "label": "T"
+    },
+    {
+      "start_sec": 1.3,
+      "end_sec": 1.33,
+      "label": "AH0"
+    },
+    {
+      "start_sec": 1.33,
+      "end_sec": 1.53,
+      "label": "N"
+    },
+    {
+      "start_sec": 1.53,
+      "end_sec": 1.71,
+      "label": "S"
+    },
+    {
+      "start_sec": 1.94,
+      "end_sec": 2.0,
+      "label": "W"
+    },
+    {
+      "start_sec": 2.0,
+      "end_sec": 2.08,
+      "label": "IY1"
+    },
+    {
+      "start_sec": 2.08,
+      "end_sec": 2.19,
+      "label": "P"
+    },
+    {
+      "start_sec": 2.19,
+      "end_sec": 2.23,
+      "label": "R"
+    },
+    {
+      "start_sec": 2.23,
+      "end_sec": 2.37,
+      "label": "AE1"
+    },
+    {
+      "start_sec": 2.37,
+      "end_sec": 2.43,
+      "label": "K"
+    },
+    {
+      "start_sec": 2.43,
+      "end_sec": 2.49,
+      "label": "T"
+    },
+    {
+      "start_sec": 2.49,
+      "end_sec": 2.56,
+      "label": "AH0"
+    },
+    {
+      "start_sec": 2.56,
+      "end_sec": 2.63,
+      "label": "S"
+    },
+    {
+      "start_sec": 2.63,
+      "end_sec": 2.7,
+      "label": "S"
+    },
+    {
+      "start_sec": 2.7,
+      "end_sec": 2.77,
+      "label": "P"
+    },
+    {
+      "start_sec": 2.77,
+      "end_sec": 2.88,
+      "label": "IY1"
+    },
+    {
+      "start_sec": 2.88,
+      "end_sec": 2.98,
+      "label": "K"
+    },
+    {
+      "start_sec": 2.98,
+      "end_sec": 3.03,
+      "label": "IH0"
+    },
+    {
+      "start_sec": 3.03,
+      "end_sec": 3.11,
+      "label": "NG"
+    },
+    {
+      "start_sec": 3.11,
+      "end_sec": 3.22,
+      "label": "K"
+    },
+    {
+      "start_sec": 3.22,
+      "end_sec": 3.26,
+      "label": "L"
+    },
+    {
+      "start_sec": 3.26,
+      "end_sec": 3.36,
+      "label": "IH1"
+    },
+    {
+      "start_sec": 3.36,
+      "end_sec": 3.47,
+      "label": "R"
+    },
+    {
+      "start_sec": 3.47,
+      "end_sec": 3.54,
+      "label": "L"
+    },
+    {
+      "start_sec": 3.54,
+      "end_sec": 3.72,
+      "label": "IY0"
+    }
+  ],
+  "content_gate": "not_checked"
+}

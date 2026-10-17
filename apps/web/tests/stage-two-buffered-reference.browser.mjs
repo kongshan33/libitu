@@ -87,7 +87,8 @@ try {
       // Record-only practice metadata is now expected; reference/learner media must
       // still stay local in this fixture (recording retention is disabled below).
       if (url.pathname.startsWith("/api/") && !["GET", "OPTIONS"].includes(request.method())
-        && !(url.pathname === "/api/practice/attempts" && request.method() === "POST")) mutations.push(request.url());
+        && !(url.pathname === "/api/practice/attempts" && request.method() === "POST")
+        && !url.pathname.startsWith("/api/profile/videos/")) mutations.push(request.url());
       if (url.pathname.includes("/acoustic-assets/")) assets.push(request.url());
     });
     await page.route("**/*", async (route) => {
@@ -95,6 +96,7 @@ try {
       const headers = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type" };
       if (url.pathname.startsWith("/api/")) {
         if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers });
+        if (url.pathname.startsWith("/api/profile/videos/")) return route.fulfill({ json: {}, headers });
         assert.equal(request.method(), "GET", "buffered preparation never uploads media or starts server analysis");
         if (url.pathname === `/api/content/${blueprint.content_id}`) return route.fulfill({ json: contentContextFixture(blueprint, job), headers });
         if (url.pathname === `/api/jobs/${job.id}`) return route.fulfill({ json: job, headers });
@@ -238,7 +240,7 @@ try {
       await page.locator(".stage-two-shadow").waitFor();
       await waitPlayer();
       const shadowReference = page.getByRole("region", { name: "Reference preparation", exact: true });
-      await shadowReference.getByText("Reference connected", { exact: true }).waitFor();
+      await shadowReference.getByText("Reference audio ready", { exact: true }).waitFor();
       assert.equal(await page.getByText("Practice audio enabled", { exact: true }).count(), 0,
         "Stage 2 consumes the shared buffered panel instead of the legacy capture panel");
       await reference.getByText("Reference ready for this sentence.", { exact: true }).waitFor();
@@ -268,6 +270,11 @@ try {
       await page.waitForFunction(() => window.__activePlayer.state === 1 && window.__activePlayer.rate === 1);
       await page.waitForFunction((generation) => window.__bufferRequests.some((item) => item.action === "observe"
         && item.telemetry.state === 1 && item.telemetry.generation > generation), readerGeneration);
+      const preparingPanel = page.locator('.shadow-reference-module[data-phase="preparing"]');
+      await preparingPanel.waitFor();
+      assert.equal(await page.getByRole("progressbar", { name: "Reference preparation progress" }).count(), 0);
+      assert.equal(await page.locator(".stage-two-shadow-progress").count(), 1, "keep the video progress bar");
+      assert.equal(await preparingPanel.evaluate(element => getComputedStyle(element).backgroundColor), "rgba(0, 0, 0, 0)");
       await reference.getByRole("button", { name: "Cancel preparation", exact: true }).click();
       await assertPaused("cancelling explicit preparation pauses the player");
       assert.equal(await activeSession(), session, "cancel leaves the source session available");

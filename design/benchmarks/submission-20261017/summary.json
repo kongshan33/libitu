@@ -1,0 +1,68 @@
+{
+  "legacy": {
+    "submit_sec": {
+      "median": 7.188008056640625,
+      "min": 6.90272705078125,
+      "max": 8.0127119140625
+    },
+    "word_visible_sec": {
+      "median": 18.550199999988077,
+      "min": 15.0445,
+      "max": 18.67339999997616
+    },
+    "coarse_visible_sec": {
+      "median": 18.550199999988077,
+      "min": 17.679,
+      "max": 18.6735
+    }
+  },
+  "merged": {
+    "submit_sec": {
+      "median": 3.02993994140625,
+      "min": 2.874697021484375,
+      "max": 3.482330078125
+    },
+    "word_visible_sec": {
+      "median": 11.9175,
+      "min": 11.023,
+      "max": 16.168
+    },
+    "coarse_visible_sec": {
+      "median": 14.550400000035763,
+      "min": 13.707100000023841,
+      "max": 16.168099999964237
+    }
+  },
+  "stages": {
+    "signal_extraction": {
+      "median": 0.325,
+      "min": 0.291,
+      "max": 0.447
+    },
+    "asr_word_check": {
+      "median": 6.5915,
+      "min": 5.889,
+      "max": 7.342
+    },
+    "publish_handoff:coarse_ready": {
+      "median": 0.498,
+      "min": 0.48,
+      "max": 0.935
+    },
+    "checkpoint:word_check_complete": {
+      "median": 0.938,
+      "min": 0.817,
+      "max": 1.122
+    },
+    "cwt": {
+      "median": 0.042499999999999996,
+      "min": 0.03,
+      "max": 0.059
+    },
+    "checkpoint:checking_words": {
+      "median": 0.278,
+      "min": 0.25,
+      "max": 0.332
+    }
+  }
+}

@@ -4,20 +4,17 @@ from hashlib import sha256
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event, Thread
-from uuid import uuid4
-import argparse
 import logging
 
 import httpx
 
-from app.config import Settings, get_settings
-from app.integrations.reference_repository import ReferenceRepository, get_reference_repository
-from app.schemas.reference import Alignment, SentenceResult
-from app.services.acoustics import engine, sources
+from app.config import Settings
+from app.integrations.reference_repository import ReferenceRepository
+from app.schemas.reference import Alignment, SentenceResult, Measurements
+from app.services.acoustics.signal_prosody import analyze_signal, subtitle_boundaries
+from app.services.acoustics import engine, sources, audio_cache
 from app.services.acoustics.audio import AudioFailure, crop, file_hash, normalize
-from app.services.acoustics.practice_prosody import check_content, word_measurements
-from app.services.acoustics.transcribe import transcribe
-from app.schemas.practice_analysis import VoiceProsody
+from app.services.acoustics.reference_prosody import align_reference, reference_identity, reference_version
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +23,7 @@ class LeaseLost(Exception):
     pass
 
 
-def process(repo: ReferenceRepository, row: dict, token: str, settings: Settings) -> None:
+def process(repo: ReferenceRepository, row: dict, token: str, settings: Settings, lane="combined") -> None:
     stopped, lost = Event(), Event()
 
     def write(action: str, data: dict | None = None):
@@ -52,9 +49,8 @@ def process(repo: ReferenceRepository, row: dict, token: str, settings: Settings
         browser = sources.is_browser_capture(row)
         if (grant is None and not browser) or not repo.source_available(row['user_id'], row['content_id']):
             raise AudioFailure('source_unavailable')
-        if row['snapshot']['engine'] != engine.engine_identity(settings):
-            raise AudioFailure('worker_version_mismatch')
-        if browser and row['snapshot'].get('asr_sha256') != settings.practice_asr_model_sha256:
+        if row['analysis_version'] != reference_version(settings) or any(
+                row['snapshot'].get(key) != value for key, value in reference_identity(settings).items()):
             raise AudioFailure('worker_version_mismatch')
         with TemporaryDirectory(prefix='libitu-acoustic-') as temporary:
             work = Path(temporary)
@@ -75,44 +71,51 @@ def process(repo: ReferenceRepository, row: dict, token: str, settings: Settings
                 data = normalized.read_bytes()
                 repo.upload(row, data)
                 write('audio', {'sha256': sha256(data).hexdigest()})
-            frames, speech, samples = engine.extract(normalized, settings)
-            # Retry reuses completed sentence results for this immutable engine/input identity.
-            completed = {r['sentence_id']: r for r in row['results'] if r['status'] == 'completed'}
+            # Persist all signal features before starting any sentence's MFA. Retry
+            # reuses these frames, including energy, for the immutable input/engine.
+            cached = {r['sentence_id']: r for r in row['results']}
+            sentences = row['snapshot']['sentences']
+            missing = any(not cached.get(s['id'], {}).get('measurements') for s in sentences)
+            if missing and lane == 'fine':
+                raise AudioFailure('fast_checkpoint_missing')
+            if missing:
+                frames, speech, samples = engine.extract(normalized, settings)
             results = []
-            for index, sentence in enumerate(row['snapshot']['sentences']):
-                write('heartbeat', {'seconds': settings.acoustic_lease_seconds})
-                if not sources.row_available(row):
-                    raise AudioFailure('source_unavailable')
-                if sentence['id'] in completed:
-                    results.append(completed[sentence['id']])
-                    write('results', {'results': results})
+            for sentence in sentences:
+                prior = cached.get(sentence['id'])
+                if prior and prior.get('measurements'):
+                    results.append(prior)
                     continue
                 start = (sentence['start_ms'] - row['start_ms']) / 1000
                 end = (sentence['end_ms'] - row['start_ms']) / 1000
+                measurements = engine.sentence_measurements(frames, speech, samples, start, end)
+                coarse = analyze_signal(measurements, subtitle_boundaries(sentence), 'subtitle_word', origin=start)
+                results.append(SentenceResult(sentence_id=sentence['id'], status='coarse_ready',
+                    alignment=Alignment(status='unavailable', reason='alignment_pending'),
+                    measurements=measurements, coarse=coarse).model_dump(mode='json'))
+            if lane == 'fast':
+                write('publish_handoff', {'results': results})
+                return
+            write('results', {'results': results})
+            for index, sentence in enumerate(sentences):
+                write('heartbeat', {'seconds': settings.acoustic_lease_seconds})
+                if results[index]['status'] == 'completed':
+                    continue
+                start = (sentence['start_ms'] - row['start_ms']) / 1000
+                end = (sentence['end_ms'] - row['start_ms']) / 1000
+                measurements = Measurements.model_validate(results[index]['measurements'])
+                coarse = results[index].get('coarse')
                 try:
-                    prosody = None
-                    measurements = engine.sentence_measurements(frames, speech, samples, start, end)
-                    if any(issue in measurements.quality_issues for issue in ('insufficient_speech', 'low_energy', 'clipping')):
-                        alignment = Alignment(status='unavailable', reason='insufficient_audio_quality')
-                    else:
-                        wav = work / f'sentence-{index}.wav'
-                        origin = crop(normalized, wav, start, end)
-                        content = check_content(sentence['text'], transcribe(wav, settings)) if settings.practice_asr_model_path else None
-                        alignment = engine.align(wav, sentence['text'], origin, work / f'align-{index}', settings) if content is None or content.status == 'matched' \
-                            else Alignment(status='unavailable', reason='reference_content_unverified')
-                        if content:
-                            words = word_measurements(alignment, measurements) if alignment.status == 'aligned' else []
-                            for word in words:
-                                word.start_sec = max(0, word.start_sec - origin)
-                                word.end_sec = max(0, word.end_sec - origin)
-                            prosody = VoiceProsody(content=content, alignment_status=alignment.status,
-                                quality_issues=measurements.quality_issues, words=words)
+                    wav = work / f'sentence-{index}.wav'
+                    origin = crop(normalized, wav, start, end)
+                    alignment, prosody = align_reference(wav, sentence['text'], origin, measurements,
+                        work / f'align-{index}', settings)
                     result = SentenceResult(sentence_id=sentence['id'], status='completed' if alignment.status == 'aligned' else 'partial',
-                                            alignment=alignment, measurements=measurements, prosody=prosody)
+                        alignment=alignment, measurements=measurements, prosody=prosody, coarse=coarse)
                 except AudioFailure as error:
-                    result = SentenceResult(sentence_id=sentence['id'], status='failed',
-                                            alignment=Alignment(status='failed', reason=error.code), error_code=error.code)
-                results.append(result.model_dump(mode='json'))
+                    result = SentenceResult(sentence_id=sentence['id'], status='failed', measurements=measurements, coarse=coarse,
+                        alignment=Alignment(status='failed', reason=error.code), error_code=error.code)
+                results[index] = result.model_dump(mode='json')
                 write('results', {'results': results})
             state = 'completed' if all(r['status'] == 'completed' for r in results) else 'partially_completed'
             write('finish', {'state': state})
@@ -142,6 +145,7 @@ def process(repo: ReferenceRepository, row: dict, token: str, settings: Settings
 
 
 def reconcile(repo: ReferenceRepository) -> None:
+    audio_cache.prune()
     now = datetime.now(timezone.utc)
     for row in repo.cleanup_candidates(now.isoformat(), (now - timedelta(days=1)).isoformat()):
         repo.control(row['user_id'], row['id'], 'delete')
@@ -150,27 +154,7 @@ def reconcile(repo: ReferenceRepository) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--once', action='store_true')
-    args = parser.parse_args()
-    logging.basicConfig(level=logging.INFO)
-    settings = get_settings()
-    repo = get_reference_repository()
-    if repo is None:
-        raise SystemExit('Configure server Supabase storage before starting the acoustic worker.')
-    stop = Event()
-    while True:
-        try:
-            reconcile(repo)
-            token = str(uuid4())
-            row = repo.claim(token, settings.acoustic_lease_seconds)
-            if row:
-                process(repo, row, token, settings)
-        except httpx.HTTPError:
-            log.warning('Reference storage unavailable; retrying after the polling interval.')
-        if args.once:
-            return
-        stop.wait(settings.acoustic_poll_seconds)
+    raise SystemExit("Use app.workers.stage_two_worker --lane fast and --lane fine in separate processes.")
 
 
 if __name__ == '__main__':

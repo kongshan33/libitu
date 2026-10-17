@@ -4,8 +4,10 @@ import type { SentenceUnit } from "@libitu/types/stage-two";
 import type { ReferenceApi, ServerReference } from "./api";
 
 export function useServerReference(api: ReferenceApi | undefined, content: string, segment: string,
-  selected: SentenceUnit | null, next: SentenceUnit | null, scope: "sentence" | "segment", rate: number, loop: boolean) {
-  const [available, setAvailable] = useState(false);
+  selected: SentenceUnit | null, next: SentenceUnit | null, scope: "sentence" | "segment", rate: number, loop: boolean, analysisEnabled: boolean) {
+  const [capability, setCapability] = useState<{ api: ReferenceApi; content: string; segment: string; available: boolean; prepared: boolean } | null>(null);
+  const checking = Boolean(api && (capability?.api !== api || capability.content !== content || capability.segment !== segment));
+  const available = Boolean(api && !checking && capability?.available && (analysisEnabled || capability.prepared));
   const [reference, setReference] = useState<ServerReference | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
@@ -16,6 +18,7 @@ export function useServerReference(api: ReferenceApi | undefined, content: strin
   const operation = useRef<AbortController | null>(null);
   const statusRequest = useRef<AbortController | null>(null);
   const urls = useRef(new Map<string, string>());
+  const known = useRef<{ api: ReferenceApi; content: string; segment: string; id: string } | null>(null);
   const selectedId = scope === "sentence" ? selected?.id ?? null : null;
   const audioUrl = audioSource?.key === `${reference?.id}:${selectedId ?? "segment"}` ? audioSource.url : null;
   const pause = useCallback(() => { audioRef.current?.pause(); setPlaying(false); }, []);
@@ -37,10 +40,16 @@ export function useServerReference(api: ReferenceApi | undefined, content: strin
     void (async () => {
       try {
         setError(null);
-        const capability = await api.capability(content, segment, controller.signal);
-        setAvailable(capability.available);
-        if (!capability.available) return;
-        const row = await api.prepare(content, segment, controller.signal);
+        const source = await api.capability(content, segment, controller.signal);
+        const previous = known.current;
+        const existing = previous?.api === api && previous.content === content && previous.segment === segment ? previous.id : null;
+        setCapability({ api, content, segment, available: source.available, prepared: Boolean(existing) });
+        if (!source.available) return;
+        if (!analysisEnabled && !existing) { setReference(null); return; }
+        const row = analysisEnabled ? await api.prepare(content, segment, controller.signal)
+          : await api.status(existing!, controller.signal);
+        known.current = { api, content, segment, id: row.id };
+        setCapability({ api, content, segment, available: true, prepared: true });
         setReference(row);
         if (row.state === "queued" || row.state === "processing") {
           try { await api.watch(row.id, controller.signal, setReference); }
@@ -52,7 +61,7 @@ export function useServerReference(api: ReferenceApi | undefined, content: strin
       }
     })();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [api, content, segment, revision]);
+  }, [api, content, segment, revision, analysisEnabled]);
 
   useEffect(() => {
     const cache = urls.current;
@@ -115,6 +124,7 @@ export function useServerReference(api: ReferenceApi | undefined, content: strin
 
   async function act(action: "retry" | "cancel" | "delete" | File) {
     if (!api || !reference) return;
+    if (!analysisEnabled && (action === "retry" || typeof action !== "string")) return;
     operation.current?.abort();
     statusRequest.current?.abort();
     const controller = new AbortController(); operation.current = controller;
@@ -142,7 +152,7 @@ export function useServerReference(api: ReferenceApi | undefined, content: strin
     try { await audioRef.current.play(); setPlaying(true); }
     catch { setError("Reference playback could not start. Press Play again."); }
   }
-  return { available, reference, error, retryConnection: () => setRevision(value => value + 1),
+  return { available, checking, reference, error, retryConnection: () => setRevision(value => value + 1),
     audioRef, audioUrl, playing, setPlaying, play, pause, act, busy,
     result: reference?.results.find(result => result.sentence_id === selected?.id) ?? null };
 }

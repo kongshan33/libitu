@@ -1,0 +1,42 @@
+{
+  "scope": "local API TestClient + hosted Supabase + independent local workers; auth/source fixture; excludes browser paint",
+  "reference": {
+    "create_and_upload_sec": 5.052024856995558,
+    "upload_to_coarse_observed_sec": 6.847341638000216,
+    "upload_to_final_observed_sec": 38.76410680997651,
+    "state": "completed"
+  },
+  "takes": [
+    {
+      "index": 1,
+      "create_and_upload_sec": 6.307608392991824,
+      "events": {
+        "word_check_sec": 9.484290627005976,
+        "coarse_sec": 9.484290627005976,
+        "coarse_comparison_sec": 9.484290627005976,
+        "final_sec": 55.95885116700083
+      },
+      "tier": "full_85_plus",
+      "state": "completed",
+      "error_code": null,
+      "comparison": "available"
+    },
+    {
+      "index": 2,
+      "create_and_upload_sec": 6.527696577977622,
+      "events": {
+        "word_check_sec": 9.540479681018041,
+        "coarse_sec": 9.540479681018041,
+        "coarse_comparison_sec": 9.540479681018041,
+        "final_sec": 60.97701719100587
+      },
+      "tier": "full_85_plus",
+      "state": "completed",
+      "error_code": null,
+      "comparison": "available"
+    }
+  ],
+  "fixture_cleanup": "rows and audio removed",
+  "poll_sleep_seconds": 1,
+  "polling": "sequential Reference/Take requests; observations include HTTP and fixture creation"
+}

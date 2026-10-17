@@ -27,6 +27,7 @@ class MemoryRepository:
     def __init__(self):
         self.rows = {}
         self.audio = {}
+        self.analyses = {}
         self.available = True
         self.fail_upload = False
         self.fail_remove = False
@@ -47,6 +48,19 @@ class MemoryRepository:
         rows = [deepcopy(row) for row in self.rows.values() if row["user_id"] == owner
                 and row["content_id"] == content and (sentence is None or row["sentence_id"] == sentence) and not row["deleted_at"]]
         return sorted(rows, key=lambda row: (row["created_at"], row["id"]), reverse=True)[offset:offset + limit]
+
+    def practiced_sentences(self, owner, content):
+        return sorted({row["sentence_id"] for row in self.rows.values() if row["user_id"] == owner
+                       and row["content_id"] == content and not row["deleted_at"]})
+
+    def reliable_word_checks(self, owner, content):
+        for row in self.rows.values():
+            analysis = self.analyses.get(row["id"], {})
+            check = analysis.get("word_check", {})
+            if (row["user_id"] == owner and row["content_id"] == content and not row["deleted_at"]
+                    and analysis.get("state") != "deleted" and check.get("status") == "reliable"
+                    and check.get("version") == "word-match-v1"):
+                yield {**check, "shadow_attempts": {"sentence_id": row["sentence_id"]}}
 
     def update(self, owner, attempt, changes, *, pending_only=False):
         row = self.get(owner, attempt)
@@ -227,6 +241,45 @@ def test_history_pagination(setup):
     assert len(last["items"]) == 1 and last["next_offset"] is None
 
 
+def test_content_progress_surviving_records_audio_deletion_and_owner_isolation(setup):
+    client, repo = setup
+    first = create(client)
+    second = create(client, payload(False))
+    # Seed a distant sentence: directory restoration must not depend on the current history page.
+    other = {**repo.rows[second["id"]], "id": str(uuid4()), "sentence_id": "distant-sentence"}
+    repo.rows[other["id"]] = other
+    path = "/api/practice/attempts/progress"
+    params = {"content_id": CONTENT}
+    assert client.get(path, params=params).json() == {"practiced_sentence_ids": ["distant-sentence", SENTENCE], "best_word_matches": {}}
+    assert client.delete(f"/api/practice/attempts/{first['id']}/recording").status_code == 204
+    assert client.get(path, params=params).json()["practiced_sentence_ids"] == ["distant-sentence", SENTENCE]
+    assert client.delete(f"/api/practice/attempts/{first['id']}").status_code == 204
+    assert SENTENCE in client.get(path, params=params).json()["practiced_sentence_ids"]
+    assert client.delete(f"/api/practice/attempts/{second['id']}").status_code == 204
+    assert client.get(path, params=params).json() == {"practiced_sentence_ids": ["distant-sentence"], "best_word_matches": {}}
+    assert client.get(path, params={"content_id": str(uuid4())}).json() == {"practiced_sentence_ids": [], "best_word_matches": {}}
+    app.dependency_overrides[require_user] = lambda: AuthenticatedUser(id="user-b")
+    assert client.get(path, params=params).json() == {"practiced_sentence_ids": [], "best_word_matches": {}}
+    app.dependency_overrides.pop(require_user)
+    assert client.get(path, params=params).status_code == 401
+    assert client.get(path, params={"content_id": "invalid"}).status_code in (401, 422)
+
+
+def test_progress_repository_calls_scalar_rpc_with_server_owned_identity():
+    def respond(request):
+        assert request.method == "POST" and request.url.path.endswith("/rpc/practice_directory_progress")
+        assert json.loads(request.content) == {"p_owner": "user-a", "p_content": CONTENT}
+        return httpx.Response(200, json=[f"sentence-{i}" for i in range(1100)])
+    database = SupabaseRepository("https://test.invalid", "test")
+    database._client.close()
+    database._client = httpx.Client(base_url="https://test.invalid/rest/v1", transport=httpx.MockTransport(respond))
+    repo = PracticeRepository(database, "https://test.invalid", "test")
+    try:
+        assert len(repo.practiced_sentences("user-a", CONTENT)) == 1100
+    finally:
+        database._client.close(); repo.storage.close()
+
+
 def test_real_repository_filters_owner_and_uses_conditional_finalize():
     calls = []
     def respond(request):
@@ -247,3 +300,115 @@ def test_real_repository_filters_owner_and_uses_conditional_finalize():
         assert len(calls) == 3
     finally:
         database._client.close(); repo.storage.close()
+
+
+def support(mode='hidden', visible=None, revealed=None):
+    return {'version': 'text-support-v1', 'mode': mode,
+            'visible_source_indices_at_start': visible or [], 'revealed_source_indices': revealed or []}
+
+
+@pytest.mark.parametrize('metadata,claimed_visible,expected_visible', [
+    (support('hidden', [], [1]), True, False),  # A word revealed during recording was not visible at start.
+    (support('hidden', [0], [0, 1]), False, True),
+    (support('keywords', [1], []), False, True),
+    (support('full', [0, 1], []), False, True),
+])
+def test_text_support_round_trip_and_start_visibility_are_server_derived(setup, metadata, claimed_visible, expected_visible):
+    client, repo = setup
+    data = {**payload(False), 'text_support': metadata, 'text_visible': claimed_visible}
+    first = create(client, data)
+    assert first['text_support'] == metadata and first['text_visible'] == expected_visible
+    assert create(client, data)['id'] == first['id']
+    history = client.get('/api/practice/attempts', params={'content_id': CONTENT}).json()
+    assert history['items'][0]['text_support'] == metadata
+    assert client.post('/api/practice/attempts', json={**data, 'text_support': support('full', [0, 1])}).status_code == (201 if metadata == support('full', [0, 1]) else 409)
+    client.delete(f"/api/practice/attempts/{first['id']}/recording")
+    assert repo.rows[first['id']]['text_support'] == metadata
+    client.delete(f"/api/practice/attempts/{first['id']}")
+    assert repo.rows[first['id']]['text_support'] is None
+
+
+@pytest.mark.parametrize('metadata', [
+    support('hidden', [0], []), support('full', [0]), support('hidden', [], [2]),
+    support('hidden', [], [-1]), support('hidden', [], [0, 0]),
+    support('hidden', [True], [0]), {**support(), 'version': 'unknown'},
+    {**support(), 'score': 100}, {**support(), 'visible_source_indices_at_start': [0, 0]},
+])
+def test_text_support_rejects_bad_versions_duplicate_indices_and_wrong_sentence_positions(setup, metadata):
+    client, repo = setup
+    assert client.post('/api/practice/attempts', json={**payload(False), 'text_support': metadata}).status_code == 422
+    assert not repo.rows
+
+
+def test_legacy_request_fingerprint_and_null_metadata_survive_upgrade(setup):
+    from app.schemas.practice import AttemptCreate
+    client, repo = setup
+    data = payload(False)
+    # Recreate the old schema's ordered wire serialization independently.
+    legacy = AttemptCreate.model_validate(data).model_dump(mode='json', exclude={'text_support'})
+    legacy_digest = sha256(json.dumps(legacy, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+    first = create(client, data)
+    assert repo.rows[first['id']]['request_hash'] == legacy_digest
+    repo.rows[first['id']].pop('text_support')  # Old rows never had this metadata.
+    again = create(client, {**data, 'text_support': None})
+    assert again['text_support'] is None and again['text_visible'] is True
+    assert client.get('/api/practice/attempts', params={'content_id': CONTENT}).json()['items'][0]['text_support'] is None
+
+
+def test_text_support_checks_normalized_contraction_positions(setup, monkeypatch):
+    client, _ = setup
+    sentence = TranscriptLine(id=SENTENCE, segmentation_version='sentence-v2', time='0:00', parts=["don’t go."],
+                              source_token_start=0, source_token_end=2, start_ms=0, end_ms=3000)
+    monkeypatch.setattr(practice_service, 'find_blueprint_sentence', lambda *args: sentence)
+    assert create(client, {**payload(False), 'text_support': support('full', [0, 1])})['text_support']['mode'] == 'full'
+    assert client.post('/api/practice/attempts', json={**payload(False), 'text_support': support('full', [0, 1, 2])}).status_code == 422
+
+
+def test_progress_best_reliable_match_survives_audio_but_not_take_or_analysis_deletion(setup):
+    client, repo = setup
+    first = create(client)
+    second = create(client, payload(False))
+    uncertain = create(client, payload(False))
+    for take, matched, total, status in [(first, 17, 20, "reliable"), (second, 20, 25, "reliable"), (uncertain, 20, 20, "uncertain")]:
+        repo.analyses[take["id"]] = {"state": "processing", "word_check": {"version": "word-match-v1", "status": status,
+            "matched_count": matched, "source_count": total}}
+    path = "/api/practice/attempts/progress"
+    def best():
+        return client.get(path, params={"content_id": CONTENT}).json()["best_word_matches"]
+    assert best() == {SENTENCE: {"matched_count": 17, "source_count": 20}}
+    assert client.delete(f"/api/practice/attempts/{first['id']}/recording").status_code == 204
+    assert best()[SENTENCE]["matched_count"] == 17
+    repo.analyses[first["id"]]["state"] = "deleted"
+    assert best() == {SENTENCE: {"matched_count": 20, "source_count": 25}}
+    assert client.delete(f"/api/practice/attempts/{second['id']}").status_code == 204
+    assert best() == {}
+    assert client.get(path, params={"content_id": CONTENT}).json()["practiced_sentence_ids"] == [SENTENCE]
+
+
+def test_word_progress_repository_pages_beyond_data_api_cap_and_filters_owner():
+    calls = []
+    def respond(request):
+        params = request.url.params
+        calls.append(dict(params))
+        assert request.url.path.endswith("/practice_analyses")
+        assert params["user_id"] == params["shadow_attempts.user_id"] == "eq.user-a"
+        assert params["shadow_attempts.content_id"] == f"eq.{CONTENT}"
+        assert params["shadow_attempts.deleted_at"] == "is.null"
+        assert params["state"] == "neq.deleted"
+        assert params["word_check->>status"] == "eq.reliable"
+        assert params["word_check->>version"] == "eq.word-match-v1"
+        assert "!inner(sentence_id)" in params["select"]
+        after = int(params.get("id", "gt.0")[3:])
+        # Simulate a server cap smaller than the requested limit.
+        return httpx.Response(200, json=[{"id": str(i), "matched_count": 17, "source_count": 20,
+            "shadow_attempts": {"sentence_id": f"s-{i}"}} for i in range(after + 1, min(after + 201, 1102))])
+    database = SupabaseRepository("https://test.invalid", "test")
+    database._client.close()
+    database._client = httpx.Client(base_url="https://test.invalid/rest/v1", transport=httpx.MockTransport(respond))
+    repo = PracticeRepository(database, "https://test.invalid", "test")
+    try:
+        assert len(list(repo.reliable_word_checks("user-a", CONTENT))) == 1101
+        assert len(calls) == 7
+    finally:
+        database._client.close()
+        repo.storage.close()

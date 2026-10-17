@@ -2,6 +2,10 @@
 
 Implemented 2026-09-19 for the local web/API setup with the connected Supabase project.
 
+## Practice refactor persistence — 2026-10-12
+
+The [refactor contract](STAGE_TWO_REFACTOR_CONTRACT.md) implements optional versioned text-support snapshots, start-visible/final-revealed source positions, and take-owned recognition-error feedback. Both stage-checkpoint and support/feedback migrations are applied to hosted Libitu. Old records retain their text_visible boolean and old request fingerprints; no mode/count is inferred. New snapshots validate against the server-owned sentence, remain immutable through retries, survive audio-only deletion and clear on whole-record deletion. Feedback is idempotent, requires a reliable differing word check and never alters its tier or schedules analysis. It survives analysis-only deletion but clears with the take. API/history/client transport support is implemented; step 4 now collects recording-time snapshots and exposes the recognition-error button in the new local UI. Original reference acquisition and retention consent remain unchanged. Hosted rollback smoke, local route/queue/outbox tests and root checks pass; application deployment and browser UI acceptance remain separate.
+
 ## Learner flow
 
 Stage 1 and segment selection remain available anonymously. Clicking **Start shadowing** preserves the selected content, job, segment, first sentence, learner settings and URL fragment, then opens sign-in if needed. Login and registration use that same return URL. Direct Stage 2 links and refresh show the same sign-in gate; the recording workspace does not mount until Clerk has loaded a signed-in identity. Canceling login leaves a retry action and a route back to Stage 1. Microphone access still requires an explicit Record click after login. Account changes remount the practice workspace.
@@ -44,3 +48,27 @@ Uploads are immutable at an attempt/hash path. Deletion first marks a tombstone,
 - `apps/web/tests/stage-two-persistence.browser.mjs` exercises desktop/mobile with a test-only Clerk resource emitter, mocked API/player and Chromium's synthetic microphone. It verifies login return parameters, the anonymous gate, optional audio saving, retry across sentences, history after reload, playback coordination and deletion. Hosted login completion remains a separate real-account verification.
 
 The migration is `supabase/migrations/20260919100220_shadow_practice_persistence.sql`, aligned with the applied hosted migration version. The live storage smoke passed against the configured project; synthetic records, objects and profile were removed. Permitted file-reference processing and asynchronous descriptive learner analysis are now implemented separately; validated pronunciation assessment remains planned.
+
+
+## Refactor step 5: directory and take recovery — 2026-10-12
+
+`GET /api/practice/attempts/progress?content_id=…` returns only practiced_sentence_ids, with the owner taken from the verified Clerk identity. `20261012134654_practice_directory_progress.sql` is applied to hosted Libitu: a stable, security-invoker function with empty search_path, callable by service_role only, aggregates distinct surviving sentence IDs into one JSON scalar. It avoids Data API row limits; no second progress store, text, score, ASR or media read is introduced. The UI merges it with content-scoped pending outbox metadata and offers retry without erasing a known snapshot on load failure. Pending takes remain page-lifetime only.
+
+History refresh retains loaded depth and fetches through a selected older take, deduplicating page overlaps. The first entry defaults to the newest take; per-sentence/account selection survives navigation and late save acknowledgements. Loading retained audio selects that exact take without autoplay. Audio-only deletion preserves the record/result/marker; full deletion removes the take and reconciles to the latest surviving record. Deleting the exact saved local clip also clears its replay URL, so a deleted final record cannot remain practiced from obsolete local bytes. With no surviving or pending take, the prompt returns to the chosen concealed support mode. History/analysis and progress responses are scoped to their account/source and old requests are aborted.
+
+Verification: owner-isolated API/repository and pagination/outbox tests, local and hosted rollback-only SQL smoke with 1,100 sentences, and the desktop/mobile history/navigation browser fixture. Browser media/auth/API are synthetic fixtures. Original reference acquisition and its worker/capture contracts are unchanged; application deployment and final wider regression remain separate.
+
+## Consolidated submission (2026-10-17)
+
+`POST /api/practice/attempts/submit` accepts exactly two multipart parts: JSON `metadata` with `attempt: AttemptCreate` and `analysis: AnalysisCreate`, plus `audio`. Auth, 8 MiB audio limit, bounded metadata/body parsing, hash/size/container checks and matching retention metadata apply before registration. Service-only RPCs preserve immutable identity and reject deletion/ownership conflicts. Cloud upload precedes queueing; optional history storage follows and can retry independently. The 202 response is `PracticeAttempt`; normal analysis polling obtains the masked result view. Legacy endpoints remain compatible. Fast feature/coarse writes and lane handoff are one atomic fenced RPC; word checks are still published separately.
+
+## Analysis status snapshot (2026-10-17)
+
+`GET /api/practice/attempts/{id}/analysis` performs one `practice_analysis_read_snapshot(owner,id)` RPC. Missing/other-owner/deleted Take is 404; a surviving Take without analysis remains JSON null. The SQL statement scopes parent/analysis/Reference owners, source visibility and Reference expiry together. It projects only AnalysisView inputs and the current sentence's Reference coarse evidence. Python still checks live operator grants and exact sentence text/start/end before projecting the unchanged view. No raw frame or intermediate alignment checkpoint is exposed, and no authorization cache is introduced. All mutation acknowledgments use the same formatter.
+
+
+## 2026-10-17 optional Reference for learner analysis
+
+Reference preparation is optional. With server analysis enabled, a learner may record immediately without uploaded Reference audio; the Take freezes a null Reference identity and follows the existing word check, fast signal checkpoint, and fine learner alignment pipeline. It completes with learner measurements and no comparison score, without waiting for Reference. The unchanged below-60%, 60–<85% Sound-only, and >=85% all-layer gates still apply. Existing eligible References can be bound at recording start and use the paired flow. Active original-audio capture still blocks simultaneous microphone recording.
+
+The UI describes optional Reference comparison and promotes completed learner-only fine results beyond the preliminary badge. Learner-only CWT tables omit the empty Reference column and determine uncertainty from learner evidence; absence of a comparison alone does not invalidate that evidence. Reference acquisition, quality checks, server-analysis preference and independent history-retention switch are unchanged. A Reference prepared after a null-reference Take is not retroactively attached in this increment. Existing backend nullable Reference support and worker completion are reused; no schema migration is required.

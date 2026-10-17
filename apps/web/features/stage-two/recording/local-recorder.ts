@@ -106,6 +106,11 @@ export class LocalSentenceRecorder {
     return this.state;
   }
 
+  /** Read-only access for a local waveform; this does not acquire or own tracks. */
+  getActiveStream(): MediaStream | null {
+    return this.state.phase === "recording" ? this.attempt?.stream ?? null : null;
+  }
+
   setSentence(sentenceId: string | null) {
     if (sentenceId === this.state.sentenceId) return;
     this.abandonAttempt();

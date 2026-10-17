@@ -169,6 +169,21 @@ try {
           if (reference.state === "processing") { reference.state = "completed"; reference.audio_ready = true; }
           return route.fulfill({ json: reference, headers });
         }
+        if(url.pathname === "/api/practice/attempts/submit"){
+          const form=await new Response(request.postDataBuffer(),{headers:{"content-type":request.headers()["content-type"]}}).formData();
+          const {attempt:input,analysis:metadata}=JSON.parse(form.get("metadata"));
+          assert.equal(input.recording,null);assert.equal(metadata.consent_version,"practice-analysis-v1");
+          assert.ok(form.get("audio").size);
+          const s=blueprint.transcript.find(item=>item.id===input.sentence_id);
+          const id=attemptSequence++===0?"learner-take":`learner-take-${attemptSequence}`;
+          const attempt={...input,id,sentence_text:s.parts[0],start_ms:s.start_ms,end_ms:s.end_ms,reference_version:"fixture",recording_state:"none",created_at:new Date().toISOString(),evidence_source:"browser_recording"};
+          attempts.push(attempt);
+          const current=analysisFixture(attempt);current.state="processing";analyses.set(id,current);
+          if(id==="learner-take")learnerJob=current;
+          analysisUploads++;
+          if(saveGate){const gate=saveGate;saveGate=null;gate.reached();await gate.release;}
+          return route.fulfill({status:202,json:attempt,headers});
+        }
         if (url.pathname === "/api/practice/attempts") {
           if (request.method() === "POST") {
             const input = request.postDataJSON();
@@ -249,7 +264,7 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
     await page.screenshot({ path: join(artifacts, `file-reference-${viewport.width}.png`), fullPage: true });
     await page.locator(".stage-two-audio-settings > summary").click();
-    await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).check();
+    await page.getByRole("checkbox", { name: "Server analysis", exact: true }).check();
     await page.getByRole("button", { name: "Record sentence", exact: true }).click();
     await page.getByText("Recording your voice", { exact: true }).waitFor();
     await page.waitForTimeout(3000);
@@ -340,14 +355,14 @@ try {
     await melody.screenshot({path:join(artifacts,`learner-melody-${viewport.width}.png`)});
     await page.reload({waitUntil:'domcontentloaded',timeout:60000});
     await page.getByText("Analysis saved. Compare your recording in Sound, Rhythm and Melody.", { exact: true }).waitFor();
-    assert.equal(await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).isChecked(), true);
+    assert.equal(await page.getByRole("checkbox", { name: "Server analysis", exact: true }).isChecked(), true);
 
     // A choice about future uploads must not hide previously saved analysis.
     await page.locator(".stage-two-audio-settings > summary").click();
-    await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).uncheck();
+    await page.getByRole("checkbox", { name: "Server analysis", exact: true }).uncheck();
     await page.reload({waitUntil:'domcontentloaded',timeout:60000});
     await page.getByText("Analysis saved. Compare your recording in Sound, Rhythm and Melody.", { exact: true }).waitFor();
-    assert.equal(await page.getByRole("checkbox", { name: "Analyze new recordings on the server", exact: true }).isChecked(), false);
+    assert.equal(await page.getByRole("checkbox", { name: "Server analysis", exact: true }).isChecked(), false);
     for (const layer of ["Sound", "Rhythm", "Melody"]) {
       await page.getByRole("tab", { name: layer, exact: true }).click();
       const restored = page.getByRole("region", { name: `Saved ${layer.toLowerCase()} word comparison`, exact: true });
@@ -447,10 +462,12 @@ try {
     await soundComparison.waitFor();
     const learnerSound = soundComparison.locator(".paired-learner");
     assert.equal(await learnerSound.locator(".sound-word-card").count(), 5);
+    await soundComparison.getByRole('button',{name:'Vowel len.',exact:true}).click();
     await learnerSound.locator('.sound-inline-badge[data-evidence="measured"]').first().waitFor();
     assert.ok(await learnerSound.getByText("VL 140 ms", { exact: true }).count() > 0, "learner vowel timing does not require reference evidence");
-    assert.ok(await learnerSound.locator('.sound-boundary-pause').count()>0);
     assert.equal(await soundComparison.locator('.paired-reference .sound-inline-badge[data-evidence="measured"]').count(),0);
+    await soundComparison.getByRole('button',{name:'Linking',exact:true}).click();
+    assert.ok(await learnerSound.locator('.sound-boundary-pause').count()>0);
     await soundComparison.screenshot({ path: join(artifacts, `learner-only-sound-${viewport.width}.png`) });
     await page.getByRole("tab", { name: "Rhythm", exact: true }).click();
     await comparison.waitFor();

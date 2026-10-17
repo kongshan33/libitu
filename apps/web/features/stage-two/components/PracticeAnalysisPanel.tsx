@@ -37,15 +37,15 @@ export function PracticeAnalysisPanel({ api, attemptId, data, error, loading, re
     <strong>Your recording · selected saved take</strong>
     <>{loading && !data ? <ContentSkeleton label="Loading analysis…" rows={1} /> : <p role="status">{error ? "Analysis could not load." : !data ? "Server analysis was not requested for this take."
       : data.state === "queued" ? data.error_code === 'reference_pending' ? 'Waiting for reference analysis. Comparison will continue automatically.' : "Queued for analysis. You can keep practicing."
-        : data.state === "processing" ? "Checking spoken words and aligning your recording…"
-          : data.state === "completed" ? "Analysis saved. Compare your recording in Sound, Rhythm and Melody."
+          : data.state === "processing" ? data.phase==='checking_words'?'Checking spoken words…':data.analysis_scope==='sound_only'?'Analyzing Sound on matched words…':'Analyzing your recording…'
+          : data.state === "completed" ? data.analysis_scope==='none'?'Word check saved. This take did not enter acoustic analysis.':data.analysis_scope==='sound_only'?'Sound analysis saved for matched words. Rhythm and Melody remain locked.':"Analysis saved. Available evidence appears in the three layers."
             : data.state === "needs_review" ? "Comparison withheld: the words or alignment need review. This is not a pronunciation grade."
               : data.state === "failed" ? analysisFailure(data.error_code)
                 : data.state === "awaiting_upload" ? "Waiting for the recording upload. Keep this page open."
                   : data.state === "deleted" ? "Analysis deleted." : "Analysis cancelled."}</p>}</>
     {content ? <p>Content check: {content.status === "matched" ? "recognized words match the practice text" : content.status === "mismatch" ? "recognized words differ from the practice text; recognition can be mistaken" : "not enough reliable evidence"}.</p> : null}
-    {content?.transcript ? <p>Recognized: “{content.transcript}”</p> : null}
-    {data?.result?.comparison === "unavailable" && content?.status === "matched" ? <p>This take has no verified paired reference. Your available measurements are shown below.</p> : null}
+    {content?.transcript&&!data?.word_check ? <p>Recognized: “{content.transcript}”</p> : null}
+    {data?.result?.comparison === "unavailable" && content?.status === "matched" ? <p>Your recording was analyzed independently. Reference comparison is unavailable for this take.</p> : null}
     {error || failure ? <p role="alert">{error ?? failure} <Button variant="secondary" size="inherit" type="button" loading={loading} loadingLabel="Loading…" onClick={reload}>Reload analysis</Button></p> : null}
     {data?.retryable ? <Button variant="secondary" size="inherit" disabled={busy} loading={busyAction === "retry"} loadingLabel="Requesting…" onClick={() => void act("retry")}>Retry analysis</Button> : null}
     {data && ["queued", "processing", "awaiting_upload"].includes(data.state) ? <Button variant="secondary" size="inherit" disabled={busy} loading={busyAction === "cancel"} loadingLabel="Cancelling…" onClick={() => void act("cancel")}>Cancel analysis</Button> : null}

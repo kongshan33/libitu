@@ -1,9 +1,11 @@
 """Durable PostgreSQL queue; atomic leases need no second message-queue write."""
 from functools import lru_cache
+from hashlib import sha256
 
 from app.integrations.practice_repository import PracticeRepository
 from app.integrations.supabase_repository import get_supabase_repository
 from app.config import get_settings
+from app.services.acoustics import audio_cache
 
 BUCKET = "reference-audio"
 
@@ -34,11 +36,17 @@ class ReferenceRepository(PracticeRepository):
             "p_id": reference, "p_owner": owner, "p_action": action, "p_hash": digest}).json()
         return rows[0] if rows else None
 
-    def claim(self, token: str, seconds: int) -> dict | None:
-        rows = self.database._request("POST", "/rpc/claim_acoustic_reference", json={"p_token": token, "p_seconds": seconds}).json()
+    def claim(self, token: str, seconds: int, lane: str = "fast") -> dict | None:
+        rows = self.database._request("POST", "/rpc/claim_acoustic_reference_lane", json={"p_token": token, "p_seconds": seconds, "p_lane": lane}).json()
         return rows[0] if rows else None
 
     def fenced(self, reference: str, token: str, action: str, data: dict | None = None) -> bool:
+        if action == "publish_handoff":
+            return self.database._request("POST", "/rpc/publish_acoustic_handoff", json={
+                "p_kind": "reference", "p_id": reference, "p_token": token, "p_data": data or {}}).json() is True
+        if action == "handoff_fine":
+            return self.database._request("POST", "/rpc/handoff_acoustic_job", json={
+                "p_kind": "reference", "p_id": reference, "p_token": token}).json() is True
         return self.database._request("POST", "/rpc/update_acoustic_reference", json={
             "p_id": reference, "p_token": token, "p_action": action, "p_data": data or {}}).json() is True
 
@@ -51,16 +59,26 @@ class ReferenceRepository(PracticeRepository):
                                      headers={"Content-Type": "audio/wav", "x-upsert": "false"})
         if response.status_code in (400, 409) and response.json().get("error") in ("Duplicate", "ResourceAlreadyExists"):
             # An uncertain prior upload is safe only if bytes are identical.
-            if self.read_audio(row) == data:
+            existing = self.storage.get(f"object/{BUCKET}/{self.object_key(row)}")
+            existing.raise_for_status()
+            if existing.content == data:
+                audio_cache.put(BUCKET, row, data)
                 return
         response.raise_for_status()
+        audio_cache.put(BUCKET, row, data)
 
     def read_audio(self, row: dict) -> bytes:
+        local = audio_cache.get(BUCKET, row, row.get('audio_sha256') or '')
+        if local is not None:
+            return local
         response = self.storage.get(f"object/{BUCKET}/{self.object_key(row)}")
         response.raise_for_status()
+        if sha256(response.content).hexdigest() == row.get('audio_sha256'):
+            audio_cache.put(BUCKET, row, response.content)
         return response.content
 
     def remove_audio(self, row: dict) -> None:
+        audio_cache.remove(BUCKET, row, row.get('audio_sha256') or '')
         response = self.storage.request("DELETE", f"object/{BUCKET}", json={"prefixes": [self.object_key(row)]})
         response.raise_for_status()
 

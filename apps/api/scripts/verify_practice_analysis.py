@@ -50,6 +50,8 @@ def main():
     repo, references, settings = get_practice_analysis_repository(), get_reference_repository(), get_settings()
     if not repo or not references:
         raise SystemExit('Configure Supabase and acoustic models first.')
+    from app.services.acoustics import mfa_runtime
+    mfa_runtime.check_startup(settings)
     identifier = str(uuid4())
     owner, reference_id, analysis_ids = 'analysis-smoke-' + identifier, None, []
     with TemporaryDirectory(prefix='libitu-analysis-smoke-') as directory:
@@ -95,7 +97,7 @@ def main():
                 process_reference(references,references.get(owner,reference_id),token,settings)
                 prepared = client.get('/api/references/'+reference_id).json()
                 assert prepared['state']=='completed', prepared
-                assert prepared['results'][0]['prosody']['content']['status']=='matched', prepared
+                assert prepared['results'][0]['prosody']['content']['status']=='source_transcript', prepared
                 assert prepared['results'][0]['prosody']['words'], prepared
                 if args.browser_capture:
                     recovered=client.get('/api/references/captures/latest',params={'content_id':identifier,'segment_id':'segment','sentence_id':sentence.id})

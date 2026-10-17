@@ -3,12 +3,14 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from starlette.concurrency import run_in_threadpool
 from app.auth import CurrentUserDep
 from app.integrations.practice_analysis_repository import PracticeAnalysisRepository, get_practice_analysis_repository
 from app.schemas.practice_analysis import AnalysisCreate, AnalysisView
+from app.schemas.practice import RecognitionFeedback, RecognitionFeedbackCreate
 from app.services import practice_analysis_service as service
+from app.integrations.practice_repository import PracticeRepository, get_practice_repository
 
 router = APIRouter(prefix="/api/practice/attempts", tags=["practice-analysis"])
 
@@ -36,8 +38,16 @@ def status(attempt_id: UUID, user: CurrentUserDep, repo: Repo) -> AnalysisView |
     return service.read(repo, user.id, str(attempt_id))
 
 
+@router.put("/{attempt_id}/recognition-feedback")
+def recognition_feedback(attempt_id: UUID, payload: RecognitionFeedbackCreate,
+                         user: CurrentUserDep, repo: Repo) -> RecognitionFeedback:
+    return service.mark_recognition_error(repo, user.id, str(attempt_id))
+
+
 @router.put("/{attempt_id}/analysis/audio")
-async def upload(attempt_id: UUID, request: Request, user: CurrentUserDep, repo: Repo) -> AnalysisView:
+async def upload(attempt_id: UUID, request: Request, user: CurrentUserDep, repo: Repo,
+                 recordings: Annotated[PracticeRepository | None, Depends(get_practice_repository)],
+                 retain_recording: Annotated[bool, Query()] = False) -> AnalysisView:
     await run_in_threadpool(service.owned, repo, user.id, str(attempt_id))
     data = bytearray()
     async for chunk in request.stream():
@@ -45,6 +55,8 @@ async def upload(attempt_id: UUID, request: Request, user: CurrentUserDep, repo:
             raise HTTPException(413, "Recording must be no larger than 8 MiB")
         data.extend(chunk)
     mime = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if retain_recording:
+        return await run_in_threadpool(service.upload_with_recording, repo, recordings, user.id, str(attempt_id), bytes(data), mime)
     return await run_in_threadpool(service.upload, repo, user.id, str(attempt_id), bytes(data), mime)
 
 

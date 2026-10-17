@@ -1,0 +1,615 @@
+[
+  {
+    "mode": "serial_read",
+    "start_epoch_ms": 1792230335418,
+    "word_visible_sec": 15.00269999998808,
+    "coarse_visible_sec": 15.00269999998808,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "3e159b1b-f9bf-59f1-bdd0-27534deed4bf",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792230335483.7769,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 3585.64,
+        "responseEnd": 3588.263
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792230339084.093,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 922.43,
+        "responseEnd": 932.308
+      },
+      {
+        "startTime": 1792230341020.584,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 833.993,
+        "responseEnd": 845.623
+      },
+      {
+        "startTime": 1792230342858.8308,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 979.875,
+        "responseEnd": 981.815
+      },
+      {
+        "startTime": 1792230344843.042,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 796.955,
+        "responseEnd": 798.78
+      },
+      {
+        "startTime": 1792230346644.467,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 808.663,
+        "responseEnd": 810.567
+      },
+      {
+        "startTime": 1792230348459.425,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1931.466,
+        "responseEnd": 1934.629
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "snapshot_read",
+    "start_epoch_ms": 1792230376302,
+    "word_visible_sec": 12.21769999998808,
+    "coarse_visible_sec": 12.21769999998808,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "a6a13ac6-437a-5d8f-95d1-afa78c27b8c7",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792230376327.4758,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2639.413,
+        "responseEnd": 2647.838
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792230378971.5947,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 347.125,
+        "responseEnd": 349.003
+      },
+      {
+        "startTime": 1792230380324.454,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 316.607,
+        "responseEnd": 319.273
+      },
+      {
+        "startTime": 1792230381648.3418,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 412.375,
+        "responseEnd": 417.144
+      },
+      {
+        "startTime": 1792230383064.449,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 277.975,
+        "responseEnd": 279.567
+      },
+      {
+        "startTime": 1792230384348.468,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 268.198,
+        "responseEnd": 271.551
+      },
+      {
+        "startTime": 1792230385620.5571,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 263.161,
+        "responseEnd": 264.949
+      },
+      {
+        "startTime": 1792230386888.71,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 321.11,
+        "responseEnd": 324.359
+      },
+      {
+        "startTime": 1792230388213.847,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 282.898,
+        "responseEnd": 284.508
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "serial_read",
+    "start_epoch_ms": 1792230417619,
+    "word_visible_sec": 13.284599999964238,
+    "coarse_visible_sec": 13.284599999964238,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "69436ba7-211b-51ff-95b8-e75af6ca716e",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792230417666.259,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2761.718,
+        "responseEnd": 2765.374
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792230420432.878,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1421.223,
+        "responseEnd": 1423.257
+      },
+      {
+        "startTime": 1792230422857.538,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 817.661,
+        "responseEnd": 819.32
+      },
+      {
+        "startTime": 1792230424680.017,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1031.116,
+        "responseEnd": 1033.083
+      },
+      {
+        "startTime": 1792230426716.127,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 1051.335,
+        "responseEnd": 1053.134
+      },
+      {
+        "startTime": 1792230428771.578,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2109.435,
+        "responseEnd": 2111.222
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "snapshot_read",
+    "start_epoch_ms": 1792230459048,
+    "word_visible_sec": 10.653800000011922,
+    "coarse_visible_sec": 11.936800000011921,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "237af2d6-a1fd-5dca-95ca-177259933d5c",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792230459079.4558,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2622.977,
+        "responseEnd": 2627.017
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792230461707.0818,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 256.263,
+        "responseEnd": 257.801
+      },
+      {
+        "startTime": 1792230462970.253,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 274.201,
+        "responseEnd": 279.164
+      },
+      {
+        "startTime": 1792230464248.23,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 360.054,
+        "responseEnd": 361.942
+      },
+      {
+        "startTime": 1792230465615.031,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 262.798,
+        "responseEnd": 267.38
+      },
+      {
+        "startTime": 1792230466882.753,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 257.153,
+        "responseEnd": 259.298
+      },
+      {
+        "startTime": 1792230468143.0981,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 257.958,
+        "responseEnd": 259.412
+      },
+      {
+        "startTime": 1792230469405.864,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 266.114,
+        "responseEnd": 268.607
+      },
+      {
+        "startTime": 1792230470676.6191,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 288.983,
+        "responseEnd": 291.101
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "serial_read",
+    "start_epoch_ms": 1792230496911,
+    "word_visible_sec": 10.672299999952317,
+    "coarse_visible_sec": 14.088599999964238,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "78a05ff6-d925-52cf-b807-ad8a900033b0",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792230496932.679,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2699.814,
+        "responseEnd": 2705.853
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792230499641.887,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 783.989,
+        "responseEnd": 788.771
+      },
+      {
+        "startTime": 1792230501429.7559,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 817.46,
+        "responseEnd": 819.027
+      },
+      {
+        "startTime": 1792230503252.115,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 757.866,
+        "responseEnd": 760.045
+      },
+      {
+        "startTime": 1792230505015.903,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 770.094,
+        "responseEnd": 773.167
+      },
+      {
+        "startTime": 1792230506790.76,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 766.184,
+        "responseEnd": 767.974
+      },
+      {
+        "startTime": 1792230508564.043,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2407.956,
+        "responseEnd": 2412.668
+      }
+    ],
+    "final_state": "completed"
+  },
+  {
+    "mode": "snapshot_read",
+    "start_epoch_ms": 1792230534133,
+    "word_visible_sec": 10.700100000023841,
+    "coarse_visible_sec": 12.017,
+    "reference_visible": "true",
+    "word_check": "10/10 · full_85_plus",
+    "attempt": "091c5e0a-42c3-539b-81e5-569dea8680d9",
+    "requests": [
+      {
+        "path": "/api/practice/attempts/submit",
+        "method": "POST",
+        "startTime": 1792230534166.46,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 2669.17,
+        "responseEnd": 2673.645
+      }
+    ],
+    "polls": [
+      {
+        "startTime": 1792230536839.5947,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 294.575,
+        "responseEnd": 295.928
+      },
+      {
+        "startTime": 1792230538138.692,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 269.019,
+        "responseEnd": 271.509
+      },
+      {
+        "startTime": 1792230539411.092,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 286.694,
+        "responseEnd": 288.385
+      },
+      {
+        "startTime": 1792230540701.883,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 261.706,
+        "responseEnd": 263.724
+      },
+      {
+        "startTime": 1792230541968.585,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 287.354,
+        "responseEnd": 289.865
+      },
+      {
+        "startTime": 1792230543260.059,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 271.351,
+        "responseEnd": 273.627
+      },
+      {
+        "startTime": 1792230544534.923,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 268.779,
+        "responseEnd": 270.719
+      },
+      {
+        "startTime": 1792230545807.7058,
+        "domainLookupStart": -1,
+        "domainLookupEnd": -1,
+        "connectStart": -1,
+        "secureConnectionStart": -1,
+        "connectEnd": -1,
+        "requestStart": -1,
+        "responseStart": 292.473,
+        "responseEnd": 294.602
+      }
+    ],
+    "final_state": "completed"
+  }
+]

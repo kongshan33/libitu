@@ -74,7 +74,7 @@ class MemoryRepository:
         row = self.rows[identifier]
         if row['state'] != 'processing' or token != row.get('lease_token'): return False
         if action == 'audio': row.update(audio_ready=True, audio_sha256=data['sha256'])
-        if action == 'results': row['results'] = data['results']
+        if action in ('results','publish_handoff'): row['results'] = data['results']
         if action == 'finish': row.update(state=data['state'], error_code=data.get('error_code'))
         return True
 
@@ -326,6 +326,7 @@ def test_capture_snapshot_uses_the_same_caption_view_as_the_blueprint_route(capt
     row = prepared.json()
     assert repo.rows[row['id']]['snapshot']['sentences'] == [{
         'id': sentence['id'], 'text': 'Hello hello.', 'start_ms': sentence['start_ms'], 'end_ms': sentence['end_ms'],
+        'word_timings': sentence.get('word_timings') or [],
     }]
     assert client.get('/api/references/captures/latest', params=query).json()['id'] == row['id']
     assert client.post('/api/references/captures', json={**payload, 'start_ms': payload['start_ms'] + 1}).status_code == 409
@@ -345,23 +346,30 @@ def test_browser_capture_rejects_wrong_timing_hash_and_duration(captured):
     assert client.put('/api/references/'+row['id']+'/audio', content=short).status_code == 422
 
 
-def test_browser_capture_content_gate_runs_before_forced_alignment(captured, monkeypatch):
+def test_browser_reference_aligns_source_without_asr_configuration(captured, monkeypatch):
     import numpy as np
-    from app.workers import acoustic_worker
-    from app.schemas.reference import Measurements
-    client, repo, _, data, settings = captured
+    from app.schemas.reference import Measurements, Interval
+    client, repo, _, data, _ = captured
+    settings = Settings(_env_file=None)
+    monkeypatch.setattr(service, 'get_settings', lambda: settings)
+    monkeypatch.setattr('app.services.acoustics.transcribe.transcribe', lambda *args: pytest.fail('Reference must not run ASR'))
     row = client.post('/api/references/captures', json=capture_payload(data)).json()
     client.put('/api/references/'+row['id']+'/audio', content=data)
     row = repo.rows[row['id']]; row.update(state='processing', lease_token='token')
+    assert 'asr_sha256' not in row['snapshot']
     monkeypatch.setattr(engine, 'extract', lambda *args: ([], [], np.zeros(16000)))
     monkeypatch.setattr(engine, 'sentence_measurements', lambda *args: Measurements(duration_sec=1, rms_dbfs=-20, f0_valid_fraction=.8, clipping_fraction=0, frames=[], speech=[], pauses=[], quality_issues=[]))
-    monkeypatch.setattr(acoustic_worker, 'transcribe', lambda *args: {'text':'Completely different words','reliable':True})
-    monkeypatch.setattr(engine, 'align', lambda *args: pytest.fail('Mismatched reference must not be forced into expected text'))
+    def align(wav, text, origin, *args):
+        assert text == 'Hello hello.'
+        intervals=[Interval(start_sec=0, end_sec=.4, label='hello'), Interval(start_sec=.5, end_sec=.9, label='hello')]
+        return Alignment(status='aligned', words=intervals, phones=[w.model_copy(update={'label':'AH0'}) for w in intervals])
+    monkeypatch.setattr(engine, 'align', align)
     process(repo, deepcopy(row), 'token', settings)
     result = repo.rows[row['id']]
-    assert result['state'] == 'partially_completed'
-    assert result['results'][0]['prosody']['content']['status'] == 'mismatch'
-    assert result['results'][0]['prosody']['words'] == []
+    assert result['state'] == 'completed'
+    assert result['results'][0]['prosody']['content']['status'] == 'source_transcript'
+    assert result['results'][0]['prosody']['content']['transcript'] == ''
+    assert len(result['results'][0]['prosody']['words']) == 2
 
 
 def test_cached_reference_word_times_are_relative_to_sentence_not_segment(setup, monkeypatch):
@@ -376,12 +384,105 @@ def test_cached_reference_word_times_are_relative_to_sentence_not_segment(setup,
     monkeypatch.setattr(engine,'extract',lambda *args:([],[],np.zeros(16000)))
     monkeypatch.setattr(engine,'sentence_measurements',lambda *args:Measurements(duration_sec=.8,rms_dbfs=-20,
         f0_valid_fraction=.8,clipping_fraction=0,frames=[],speech=[],pauses=[],quality_issues=[]))
-    monkeypatch.setattr(acoustic_worker,'transcribe',lambda *args:{'text':'Hello hello.','reliable':True})
     monkeypatch.setattr(engine,'align',lambda wav,text,origin,*args:Alignment(status='aligned',
-        words=[Interval(start_sec=origin,end_sec=origin+.3,label='hello'),Interval(start_sec=origin+.4,end_sec=origin+.7,label='hello')],phones=[]))
+        words=[Interval(start_sec=origin,end_sec=origin+.3,label='hello'),Interval(start_sec=origin+.4,end_sec=origin+.7,label='hello')],phones=[Interval(start_sec=origin,end_sec=origin+.3,label='AH0'),Interval(start_sec=origin+.4,end_sec=origin+.7,label='AH0')]))
     process(repo,deepcopy(row),'token',settings)
     result=repo.rows[row['id']]
     assert result['state']=='completed'
     words=result['results'][0]['prosody']['words']
     assert words[0]['start_sec']==0 and words[1]['start_sec']==pytest.approx(.4)
     assert result['results'][0]['alignment']['words'][0]['start_sec']==.2
+
+
+def test_reference_cache_version_is_independent_of_learner_asr(captured, monkeypatch):
+    client, repo, _, data, settings = captured
+    payload = capture_payload(data)
+    old = client.post('/api/references/captures', json=payload).json()
+    query = {'content_id': CONTENT, 'segment_id': 'segment', 'sentence_id': payload['sentence_id']}
+    changed = settings.model_copy(update={'practice_asr_model_path': None, 'practice_asr_model_sha256': None})
+    monkeypatch.setattr(service, 'get_settings', lambda: changed)
+    assert client.post('/api/references/captures', json=payload).json()['id'] == old['id']
+    assert client.get('/api/references/captures/latest', params=query).json()['id'] == old['id']
+    repo.rows[old['id']]['snapshot'].pop('reference_pipeline')
+    assert client.get('/api/references/captures/latest', params=query).json() is None
+    repo.rows[old['id']]['snapshot']['reference_pipeline'] = 'reference-source-transcript-v2'
+    changed = changed.model_copy(update={'acoustic_mfa_model_sha256': 'b'*64})
+    monkeypatch.setattr(service, 'get_settings', lambda: changed)
+    assert client.get('/api/references/captures/latest', params=query).json() is None
+    new = client.post('/api/references/captures', json=payload).json()
+    assert new['id'] != old['id'] and new['analysis_version'] != old['analysis_version']
+    assert repo.rows[old['id']]['state'] == 'awaiting_upload'  # no historical rewrite
+
+
+@pytest.mark.parametrize('terminal', ['deleted', 'expired'])
+def test_reprepare_same_capture_uses_new_generation_without_reviving_old(captured, terminal):
+    client, repo, _, data, _ = captured
+    payload = capture_payload(data)
+    first = client.post('/api/references/captures', json=payload).json()
+    old_path = '/api/references/' + first['id']
+    if terminal == 'deleted':
+        assert client.delete(old_path).status_code == 204
+    else:
+        repo.rows[first['id']]['expires_at'] = (datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()
+    old = deepcopy(repo.rows[first['id']])
+    response = client.post('/api/references/captures', json=payload)
+    assert response.status_code == 202, response.text
+    second = response.json()
+    assert second['id'] != first['id'] and second['state'] == 'awaiting_upload'
+    assert client.post('/api/references/captures', json=payload).json()['id'] == second['id']
+    assert client.put('/api/references/'+second['id']+'/audio', content=data).json()['state'] == 'queued'
+    assert repo.rows[first['id']] == old
+    assert client.get(old_path).status_code == 410
+    assert client.delete('/api/references/'+second['id']).status_code == 204
+    third = client.post('/api/references/captures', json=payload).json()
+    assert third['id'] not in (first['id'], second['id'])
+    assert client.post('/api/references/captures', json=payload).json()['id'] == third['id']
+
+
+def test_reference_publishes_all_coarse_features_before_mfa_and_reuses_on_retry(setup,monkeypatch):
+    from test_signal_prosody import evidence
+    from app.workers import acoustic_worker
+    client,repo,_,_,_=setup
+    result=prepare(client);row=repo.rows[result['id']];row.update(state='processing',lease_token='token')
+    measured=evidence();measured.duration_sec=1
+    measured.frames=measured.frames[:100];measured.speech[0].end_sec=.9
+    monkeypatch.setattr(engine,'extract',lambda *args:([],[],[0]*16000))
+    monkeypatch.setattr(engine,'sentence_measurements',lambda *args:measured)
+    def align(*args):
+        stored=repo.rows[row['id']]['results'][0]
+        assert stored['status']=='coarse_ready' and stored['coarse']['prominence']
+        assert len(stored['measurements']['frames'])==100
+        raise AudioFailure('mfa_timeout')
+    monkeypatch.setattr(acoustic_worker,'align_reference',align)
+    process(repo,deepcopy(row),'token',Settings(_env_file=None))
+    stored=repo.rows[row['id']]
+    assert stored['results'][0]['coarse']['prominence'] and stored['state']=='partially_completed'
+    monkeypatch.setattr(engine,'extract',lambda *args:pytest.fail('Retry must reuse full Reference features'))
+    # On retry the previous failure retains measurements, not a new coarse state.
+    monkeypatch.setattr(acoustic_worker,'align_reference',lambda *args:(_ for _ in ()).throw(AudioFailure('mfa_timeout')))
+    stored.update(state='processing',lease_token='next')
+    process(repo,deepcopy(stored),'next',Settings(_env_file=None))
+    assert stored['state']=='partially_completed' and len(stored['results'][0]['measurements']['frames'])==100
+
+
+def test_reference_fast_handoff_and_fine_frame_reuse(setup,monkeypatch):
+    from test_signal_prosody import evidence
+    from app.workers import acoustic_worker
+    client,repo,_,_,_=setup
+    result=prepare(client);row=repo.rows[result['id']];row.update(state='processing',lease_token='token')
+    measured=evidence();measured.duration_sec=1;measured.frames=measured.frames[:100];measured.speech[0].end_sec=.9
+    calls=[]
+    fenced=repo.fenced
+    def write(identifier,token,action,data=None):
+        calls.append(action)
+        return fenced(identifier,token,action,data)
+    repo.fenced=write
+    monkeypatch.setattr(engine,'extract',lambda *_:([],[],[0]*16000))
+    monkeypatch.setattr(engine,'sentence_measurements',lambda *_:measured)
+    monkeypatch.setattr(acoustic_worker,'align_reference',lambda *_:pytest.fail('Fast Reference cannot run MFA'))
+    process(repo,deepcopy(row),'token',Settings(_env_file=None),lane='fast')
+    assert calls[-1]=='publish_handoff' and row['results'][0]['status']=='coarse_ready'
+    monkeypatch.setattr(engine,'extract',lambda *_:pytest.fail('Fine must reuse Reference measurements'))
+    monkeypatch.setattr(acoustic_worker,'align_reference',lambda *_:(_ for _ in ()).throw(AudioFailure('mfa_timeout')))
+    process(repo,deepcopy(row),'token',Settings(_env_file=None),lane='fine')
+    assert row['state']=='partially_completed' and row['results'][0]['coarse']['prominence']

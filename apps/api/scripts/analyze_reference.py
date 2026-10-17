@@ -6,7 +6,7 @@ import json
 
 from app.config import get_settings
 from app.schemas.reference import SentenceSnapshot, SentenceResult
-from app.services.acoustics import engine
+from app.services.acoustics import engine, mfa_runtime
 from app.services.acoustics.audio import crop, file_hash, normalize
 
 
@@ -22,6 +22,7 @@ def main():
         raise SystemExit('Expected nonempty unique sentence identities')
     start, end = min(s.start_ms for s in sentences), max(s.end_ms for s in sentences)
     settings = get_settings()
+    mfa_runtime.check_startup(settings)
     results = []
     with TemporaryDirectory(prefix='libitu-offline-acoustic-') as directory:
         work = Path(directory); wav = work / 'reference.wav'
