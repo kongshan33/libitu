@@ -45,12 +45,10 @@ try {
     assert.equal(new URL(page.url()).pathname, `/practice/${fixtureContentId}/segments`);
     assert.equal(await frame.evaluate(node => node.isConnected), true);
     await page.locator(".stage-one-segment-card").first().click();
-    const shadowPrefetch = page.waitForRequest(request => new URL(request.url()).pathname.endsWith("/shadow") && request.headers().rsc === "1");
+    assert.equal(await page.locator(".stage-two-shadow").count(), 0, "prefetch from picker does not mount practice");
     await page.getByRole("button", { name: /Begin Stage 2/ }).click();
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).waitFor();
-    await shadowPrefetch;
-    assert.ok(prefetches.some(url => url.pathname.endsWith("/shadow") && url.searchParams.get("sentenceId") === "sentence-v2-loadout"), "preparation warms the exact Shadow route");
-    assert.equal(await page.locator(".stage-two-shadow").count(), 0, "warming Shadow does not mount the recorder");
+    await page.locator(".stage-two-shadow").waitFor();
+    assert.ok(prefetches.some(url => url.pathname.endsWith("/shadow") && url.searchParams.get("sentenceId") === "sentence-v2-loadout"), "picker warms the exact Shadow route");
     assert.equal(await page.evaluate(() => window.__loadoutMicrophoneTracks.length), 0);
     const mission = page.getByRole("link", { name: "Stage 3 - Mission", exact: true });
     const missionHref = await mission.getAttribute("href");

@@ -13,7 +13,7 @@ export function useWorkspaceRoute(blueprint: StageOneBlueprint | null) {
   const warm = useRoutePrefetch();
   const [isNavigating, startNavigation] = useTransition();
   const location = parseLearningLocation(new URL(href, "https://libitu.invalid"));
-  const stageOneView: WorkspaceView = location.kind === "shadow" ? "shadow" : location.kind === "segments" ? location.step === "prepare" ? "preparing" : "picker" : "reader";
+  const stageOneView: WorkspaceView = location.kind === "shadow" ? "shadow" : location.kind === "segments" ? location.step === "prepare" ? "shadow" : "picker" : "reader";
   const selectedSegmentId = "segmentId" in location ? location.segmentId ?? null : null;
   const navigate = useCallback((view: WorkspaceView, segmentId?: string, sentenceId?: string, replace = false) => {
     const target = workspaceHref(new URL(window.location.href), view, segmentId, sentenceId);
@@ -26,9 +26,17 @@ export function useWorkspaceRoute(blueprint: StageOneBlueprint | null) {
   useEffect(() => {
     if (!blueprint) return;
     if (stageOneView === "reader" && blueprint.segments.some(segment => typeof segment.startMs === "number" && typeof segment.endMs === "number" && segment.endMs > segment.startMs)) prefetch("picker");
-    else if (stageOneView === "picker" && selectedSegmentId) prefetch("preparing", selectedSegmentId);
+    else if (stageOneView === "picker" && selectedSegmentId) prefetch("shadow", selectedSegmentId);
     if (stageOneView !== "reader") prefetch("reader");
   }, [blueprint, stageOneView, selectedSegmentId, prefetch]);
+  // Old preparation links remain usable, without adding another history entry.
+  const legacyPreparation = location.kind === "segments" && location.step === "prepare";
+  useEffect(() => {
+    if (!legacyPreparation || !blueprint || !selectedSegmentId) return;
+    if (blueprint.segments.some(segment => segment.id === selectedSegmentId && typeof segment.startMs === "number" && typeof segment.endMs === "number" && segment.endMs > segment.startMs)) {
+      navigate("shadow", selectedSegmentId, undefined, true);
+    }
+  }, [legacyPreparation, blueprint, selectedSegmentId, navigate]);
   const setSelectedSegmentId = useCallback((segmentId: string | null) => {
     navigate(stageOneView, segmentId ?? undefined, undefined, true);
   }, [navigate, stageOneView]);

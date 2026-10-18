@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import type { ContentJobSummary, StageOneBlueprint } from "@libitu/types/stage-one";
 import { parseLearningLocation } from "../navigation/learning-location";
 import { useCurrentLocation } from "../navigation/use-current-location";
@@ -62,6 +62,13 @@ export function useContentController() {
     const controller = new AbortController();
     activeRequest.current = controller;
     const live = () => !controller.signal.aborted;
+    let previewFrame: number | undefined;
+    let pendingPreview: StageOneAnalysisPreview | null = null;
+    const cancelPreview = () => {
+      if (previewFrame !== undefined) window.cancelAnimationFrame(previewFrame);
+      previewFrame = undefined;
+      pendingPreview = null;
+    };
     async function load() {
       await Promise.resolve(); // Strict Mode's discarded setup must not activate processing.
       if (!live()) return;
@@ -77,19 +84,36 @@ export function useContentController() {
           },
           onJob: job => { if (live()) observed.current = job; },
           onProgress: message => { if (live()) setErrorMessage(message); },
-          onPreview: preview => { if (live()) setAnalysisPreview(preview); }
+          onPreview: preview => {
+            if (!live()) return;
+            pendingPreview = preview;
+            if (previewFrame !== undefined) return;
+            previewFrame = window.requestAnimationFrame(() => {
+              previewFrame = undefined;
+              const next = pendingPreview;
+              pendingPreview = null;
+              if (live() && next) startTransition(() => setAnalysisPreview(next));
+            });
+          }
         });
         if (!live()) return;
-        setBlueprint(result); setAnalysisPreview(null); setStatus("ready"); setErrorMessage(null);
+        cancelPreview();
+        startTransition(() => {
+          setBlueprint(result); setAnalysisPreview(null); setStatus("ready"); setErrorMessage(null);
+        });
       } catch (error) {
         if (!live()) return;
+        // Keep the most recent valid content visible alongside the failure/retry state.
+        const lastPreview = pendingPreview;
+        cancelPreview();
+        if (lastPreview) setAnalysisPreview(lastPreview);
         if (error instanceof StageOneApiError && error.status === 409) pendingRetry.current = undefined;
         setStatus(error instanceof StageOneApiError ? error.kind : "failed");
         setErrorMessage(error instanceof Error ? error.message : "Unable to load this content.");
       }
     }
     void load();
-    return () => { controller.abort(); };
+    return () => { controller.abort(); cancelPreview(); };
   }, [activation]);
 
   const retryLoad = useCallback(() => {

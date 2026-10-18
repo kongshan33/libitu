@@ -11,7 +11,7 @@ import { useWorkspaceRoute } from "./RouteBridge";
 import { LearningLocationTracker } from "../profile/LearningLocationTracker";
 import { MediaHost } from "./MediaHost";
 
-export type WorkspaceView = "reader" | "picker" | "preparing" | "shadow";
+export type WorkspaceView = "reader" | "picker" | "shadow";
 function useWorkspace() {
   const content = useContentController();
   const { setBlueprint } = content;

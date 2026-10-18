@@ -137,13 +137,12 @@ try {
     await page.getByRole("button", { name: "Back to Stage 1", exact: true }).click();
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
     await page.locator(".stage-one-picker-begin").click();
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
-    await page.getByRole("button", { name: "Detailed", exact: true }).click();
     await page.getByRole("heading", { name: "Sign in to start Shadow" }).waitFor();
     assert.equal(await page.evaluate(() => window.__authCalls.length), 2);
     assert.equal(new URL(page.url()).searchParams.get("sentenceId"), blueprint.transcript[0].id);
     assert.equal(await page.evaluate(() => window.__micCalls), 0);
     await page.evaluate(() => window.__setUser("test-user-a"));
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
     await page.locator(".stage-two-recording").waitFor();
     assert.equal(await page.locator(".practice-save-banner").count(), 0, "no saving notice on entry");
     const record = page.getByRole("button", { name: "Record sentence", exact: true });

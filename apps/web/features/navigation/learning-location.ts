@@ -93,14 +93,13 @@ export function learningHref(source: LearningSource, selection?: { segmentId: st
   return path + (params.size ? `?${params}` : "") + (/^#[A-Za-z0-9._:-]{1,250}$/.test(hash) ? hash : "");
 }
 
-export function workspaceHref(url: URL, view: "reader" | "picker" | "preparing" | "shadow", segmentId?: string, sentenceId?: string): string {
+export function workspaceHref(url: URL, view: "reader" | "picker" | "shadow", segmentId?: string, sentenceId?: string): string {
   const match = /^\/practice\/([^/]+)/.exec(url.pathname);
   if (!match || !CONTENT_ID.test(match[1])) return "/";
   const params = new URLSearchParams();
   const level = url.searchParams.get("learnerLevel");
   if (level && LEVELS.has(level)) params.set("learnerLevel", level);
   if (view !== "reader" && segmentId) params.set("segmentId", segmentId);
-  if (view === "preparing") params.set("step", "prepare");
   if (view === "shadow" && sentenceId) params.set("sentenceId", sentenceId);
   return `/practice/${match[1]}${view === "reader" ? "" : view === "shadow" ? "/shadow" : "/segments"}${params.size ? `?${params}` : ""}${url.hash}`;
 }

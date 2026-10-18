@@ -42,7 +42,7 @@ try {
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
     await page.locator(".stage-one-segment-card").first().click();
     await page.getByRole("button", { name: /Begin Stage 2/ }).click();
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
     await page.locator(".stage-two-shadow").waitFor();
     assert.equal(await page.evaluate(() => window.__loadoutPlayers.length), initialPlayers);
     assert.equal(await frame.evaluate(node => node.isConnected), true);
@@ -50,7 +50,7 @@ try {
     await page.getByRole("button", { name: "Record sentence", exact: true }).click();
     await page.waitForFunction(() => window.__loadoutMicrophoneTracks.some(track => track.readyState === "live"));
     await page.goBack();
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).waitFor();
+    await page.locator(".stage-one-segment-card").first().waitFor();
     await page.waitForFunction(() => window.__loadoutMicrophoneTracks.every(track => track.readyState === "ended"));
     await page.goForward();
     await page.locator(".stage-two-shadow").waitFor();
@@ -72,7 +72,7 @@ try {
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
     await page.locator(".stage-one-segment-card").first().click();
     await page.getByRole("button", { name: /Begin Stage 2/ }).click();
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
+    await page.getByRole("button", { name: "Detailed", exact: true }).click();
     let releaseSave;
     state.practiceGate = new Promise(resolve => releaseSave = resolve);
     await page.getByRole("button", { name: "Record sentence", exact: true }).click();

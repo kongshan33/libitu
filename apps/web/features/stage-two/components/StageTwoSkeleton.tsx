@@ -1,7 +1,7 @@
 import { BrandLogo } from "@/components/BrandLogo";
 import styles from "./StageTwoSkeleton.module.css";
 
-type View = "shadow" | "segments" | "preparing";
+type View = "shadow" | "segments";
 
 /** Show only the main regions; loading should not imitate every control or sentence. */
 export function StageTwoSkeleton({ view = "shadow", label = "Loading practice…" }: { view?: View; label?: string }) {
@@ -12,9 +12,6 @@ export function StageTwoSkeleton({ view = "shadow", label = "Loading practice…
       {view === "segments" ? <div className={styles.picker}>
         <div className={styles.timeline} />
         <div className={styles.cards}><div className={styles.card} /><div className={styles.card} /><div className={styles.card} /></div>
-      </div> : view === "preparing" ? <div className={styles.preparation}>
-        <span className={styles.caption} />
-        <div className="stage-two-buffer-preparation"><div className={styles.video} /><div className={styles.card} /></div>
       </div> : <div className="stage-two-practice-layout">
         <aside className="stage-two-sentences" data-skeleton-region="sentences"><div className={styles.sidebar} /></aside>
         <div className="stage-two-practice-main">

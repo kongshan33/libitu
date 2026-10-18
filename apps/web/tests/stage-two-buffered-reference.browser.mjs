@@ -205,39 +205,20 @@ try {
       await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
       await page.locator(".stage-one-segment-card").first().click();
       await page.getByRole("button", { name: /Begin Stage 2/ }).click();
-      const preparation = page.getByRole("region", { name: "Preparing Stage 2", exact: true });
-      await preparation.waitFor();
+      await page.getByRole("button", { name: "Detailed", exact: true }).click();
+      await page.locator(".stage-two-shadow").waitFor();
       await waitPlayer();
-      await preparation.getByText("2 of 3 sentence audio ranges available on this device. 0 references analyzed.", { exact: true }).waitFor();
-      assert.equal(await page.getByRole("button", { name: "Start shadowing", exact: true }).isEnabled(), true,
-        "partial raw coverage and pending analysis cannot block practice");
-      await assertPaused("preparation view does not silently replay the segment");
+      await assertPaused("entering practice never silently replays the segment");
       assert.equal(await activeSession(), session, "the source-owned session survives the picker");
+      assert.equal(await page.getByRole("region", { name: "Preparing Stage 2", exact: true }).count(), 0);
       await page.waitForFunction(() => window.__heldExtracts.length > 0);
-      const heldCount = await page.evaluate(() => window.__heldExtracts.length);
       await page.evaluate(() => window.__completeExtract(window.__heldExtracts.at(-1), "stale-session"));
       await page.waitForTimeout(150);
-      assert.equal(await preparation.getByText(/0 references analyzed/).count(), 1, "a foreign session cannot publish a reference");
-      assert.equal(await page.evaluate(() => window.__heldExtracts.length), heldCount);
-      await preparation.evaluate((element) => { element.scrollTop = 0; });
-      const preparationLayout = await preparation.evaluate((element) => {
-        const heading = element.querySelector("h1").getBoundingClientRect();
-        const frame = element.querySelector(".youtube-player-shell").getBoundingClientRect();
-        const topbar = document.querySelector(".topbar").getBoundingClientRect();
-        return { headingTop: heading.top, topbarEnd: topbar.bottom, width: frame.width, height: frame.height };
-      });
-      assert.ok(preparationLayout.headingTop >= preparationLayout.topbarEnd - 1, "the preparation heading is not clipped behind the header");
-      assert.ok(preparationLayout.width > 200 && Math.abs(preparationLayout.height / preparationLayout.width - 9 / 16) < 0.01,
-        "the preparation player remains a bounded 16:9 frame on desktop and mobile");
-      await page.screenshot({ path: `/tmp/libitu-buffered-preparation-${viewport.width}.png`, fullPage: true });
+      assert.equal(await page.getByText("Reference audio ready", { exact: true }).count(), 0, "a foreign session cannot publish a reference");
       await page.evaluate(() => {
         window.__holdExtracts = false;
         for (const request of window.__heldExtracts) window.__completeExtract(request);
       });
-      await preparation.getByText(/2 references analyzed/).waitFor({ timeout: 100_000 });
-      assert.ok(assets.some((url) => url.endsWith("silero_vad_v5.onnx")), "references use actual local Silero model assets");
-      await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
-    await page.getByRole("button", { name: "Detailed", exact: true }).click();
       await page.locator(".stage-two-shadow").waitFor();
       await waitPlayer();
       const shadowReference = page.getByRole("region", { name: "Reference preparation", exact: true });

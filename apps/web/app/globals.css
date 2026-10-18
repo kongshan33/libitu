@@ -4027,8 +4027,16 @@ svg {
   background: var(--color-background-secondary, #f1f0ee);
 }
 @keyframes reader-skeleton-pulse { 50% { opacity: .45; } }
+/* Each arriving batch reveals downward; only opacity/translation animate, never layout. */
+[data-reader-entering="true"] {
+  animation: reader-content-reveal 320ms ease-out var(--reader-reveal-delay, 0ms) backwards;
+}
+@keyframes reader-content-reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .reader-skeleton-line { animation: none; }
+  .reader-skeleton-line, [data-reader-entering="true"] { animation: none; }
 }
 
 /* Compact audio preferences; processing feedback stays visible above. */
@@ -4052,3 +4060,8 @@ svg {
 /* A single content-scoped iframe follows view slots without being reparented. */
 .workspace-media-host { position: fixed; z-index: 2; visibility: hidden; background: #111; border-radius: var(--radius-lg); overflow: hidden; }
 .workspace-media-slot { min-width: 0; }
+.workspace-media-scroll-space { display: none; }
+.workspace-media-host[data-scroll-relay="true"] { overflow-y: auto; scrollbar-width: none; overflow-anchor: none; }
+.workspace-media-host[data-scroll-relay="true"]::-webkit-scrollbar { display: none; }
+.workspace-media-host[data-scroll-relay="true"] > .youtube-player-shell { position: sticky; top: 0; }
+.workspace-media-host[data-scroll-relay="true"] > .workspace-media-scroll-space { display: block; height: 200000px; pointer-events: none; }

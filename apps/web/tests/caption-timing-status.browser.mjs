@@ -158,7 +158,6 @@ try {
         await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).click();
         await page.locator(".stage-one-segment-card").first().click();
         await page.getByRole("button", { name: /Begin Stage 2/ }).click();
-        await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
         await page.locator(".stage-two-shadow").waitFor();
         await page.waitForFunction(() => window.__activePlayer?.ready && !window.__activePlayer.destroyed);
         const directory = page.locator(".stage-two-sentences ol button");

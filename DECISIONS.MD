@@ -9,6 +9,18 @@ meta:
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
+## Persistent reader video scrolling — 2026-10-18
+
+Keep the shared iframe in its stable media host. Cross-origin wheel events do not bubble through the slot's React tree, so use native scroll chaining on the host and relay its displacement into the reader's scroll container. Do not overlay the video, disable pointer events, or reparent/reload it to restore scrolling. Enable the relay only when Stage 1 has an independently scrollable center panel; document-scrolling layouts use native behavior.
+
+## Stage 1 progressive reveal — 2026-10-18
+
+Use real data arrival as the reveal boundary, with 320 ms opacity/translation entrances and 40 ms row offsets capped at 240 ms. Animate at most twelve new items per region per commit; remaining items are available immediately. Do not delay network processing, type out text, animate layout dimensions or replay unchanged identities. Coalesce same-frame preview snapshots and schedule their React updates as transitions, while preserving failure/retry state and cancelling pending preview frames on completion or cleanup. Reduced motion disables entrances and skeleton pulses.
+
+## Direct Stage 2 entry — 2026-10-17
+
+Remove the mandatory Ready to practice screen. Confirming a segment enters Shadow directly (Quick by default); unauthenticated learners retain the existing sign-in gate and return target. The picker prefetches the selected segment’s Shadow route/code. Existing `/segments?segmentId=…&step=prepare` links replace into Shadow without a preparation history entry. Content-owned media, reference capture/cache, and account-owned save queues keep their existing ownership. Reference preparation remains available in Detailed; this does not auto-enable capture, playback, microphone or upload consent.
+
 ## Stage 2 Quick and Review — 2026-10-17
 
 Follow-up: place the mode switch inside Detailed’s existing header so it does not consume a row of the outer reader grid. Keep the original practice area and layer styles. Review gives the sibling word-result and analysis components distinct take-scoped keys, preventing duplicate-key reconciliation errors.

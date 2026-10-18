@@ -352,7 +352,6 @@ try {
     assert.equal(await page.evaluate(() => window.__players.every((player) => player.destroyed)), true);
     await page.locator(".stage-one-segment-card").first().click();
     await page.getByRole("button", { name: /Begin Stage 2/ }).click();
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).click();
     await page.getByRole("button", { name: "Detailed", exact: true }).click();
     await detail.waitFor();
     assert.equal(await layer("Sound").getAttribute("aria-selected"), "true", "a new practice starts on the Sound layer");

@@ -9,6 +9,18 @@ meta:
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
 
+## Stage 1 video scroll and loading cleanup — 2026-10-18
+
+The persistent media host now relays native iframe scroll chaining into Stage 1's independently scrolling center panel. The iframe remains mounted and unobscured; narrow layouts retain ordinary document scrolling. Empty extracted-corpus regions show skeletons without redundant loading copy; failure and Saved empty states remain explicit.
+
+## Stage 1 progressive reveal — 2026-10-18
+
+Stage 1 now reveals newly committed summary, logic, transcript and corpus content with a short downward stagger. Stable identities prevent existing rows from replaying during streaming/finalization. Same-frame previews coalesce into a non-urgent React update; completion and cancellation discard queued previews. Empty regions retain independent skeletons. Animations use opacity/translation only, cap batch work and delay, and respect reduced motion; data availability is not gated by animation.
+
+## Direct Stage 2 entry — 2026-10-17
+
+Remove the mandatory Ready to practice screen. Confirming a segment enters Shadow directly (Quick by default); unauthenticated learners retain the existing sign-in gate and return target. The picker prefetches the selected segment’s Shadow route/code. Existing `/segments?segmentId=…&step=prepare` links replace into Shadow without a preparation history entry. Content-owned media, reference capture/cache, and account-owned save queues keep their existing ownership. Reference preparation remains available in Detailed; this does not auto-enable capture, playback, microphone or upload consent.
+
 ## Stage 2 Quick and Review — 2026-10-17
 
 Desktop setup follow-up: Quick settings scroll within the workspace, with Start kept in a separate footer so it remains accessible in short windows. Review also scrolls within its available height; Detailed layout is unchanged.

@@ -37,7 +37,25 @@ try {
     await page.locator(".stage-two-shadow").waitFor();
     assert.equal(new URL(page.url()).searchParams.get("sentenceId"), "sentence-v2-loadout");
     await page.goto(`${reader}/segments?segmentId=loadout-segment&step=prepare`);
-    await page.getByRole("button", { name: "Start shadowing", exact: true }).waitFor();
+    await page.waitForURL(url => url.pathname.endsWith('/shadow') && !url.searchParams.has('step'));
+    await page.locator('.stage-two-shadow').waitFor();
+    assert.equal(await page.getByRole('heading', {name:'Ready to practice'}).count(), 0);
+    await page.goto(`${reader}/segments?segmentId=loadout-segment`);
+    const frame = await page.locator('.youtube-player iframe').elementHandle();
+    await page.getByRole('button', {name:/Begin Stage 2/}).click();
+    await page.waitForURL(url => url.pathname.endsWith('/shadow'));
+    await page.locator('.stage-two-shadow').waitFor();
+    assert.equal(new URL(page.url()).searchParams.get('sentenceId'), 'sentence-v2-loadout');
+    if (frame) assert.equal(await frame.evaluate(node => node.isConnected), true);
+    assert.equal(await page.evaluate(() => window.__loadoutMicrophoneTracks.length), 0);
+    await page.goBack();
+    await page.locator('.stage-one-segment-card').first().waitFor();
+    assert.equal(new URL(page.url()).pathname, `/practice/${fixtureContentId}/segments`);
+    await page.evaluate(() => window.__setLoadoutUser(null));
+    await page.getByRole('button', {name:/Begin Stage 2/}).click();
+    await page.getByRole('heading', {name:'Sign in to start Shadow'}).waitFor();
+    assert.equal(new URL(page.url()).pathname, `/practice/${fixtureContentId}/shadow`);
+
     await page.goto(`${origin}/practice/import?sourceUrl=${encodeURIComponent(shadowBlueprint.source_url)}`);
     await page.waitForURL(reader);
     await page.getByRole("button", { name: "Choose a segment to shadow", exact: true }).waitFor();

@@ -15,10 +15,11 @@ import { AuthControls } from "@/features/auth/components/AuthControls";
 import dynamic from "next/dynamic";
 import { StageTwoSkeleton } from "../../stage-two/components/StageTwoSkeleton";
 import { ReaderSkeleton } from "./ReaderSkeleton";
+import { useReaderReveal } from "./use-reader-reveal";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
-import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Target, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Trash2, X } from "lucide-react";
 import type {
   CorpusFilter,
   CorpusItem,
@@ -47,11 +48,7 @@ import { CaptionTimedText } from "../../playback/CaptionTimedText";
 import { CaptionWordClock } from "../../playback/caption-word-clock";
 import { CaptionTimingRecoveryNotice } from "../../playback/CaptionTimingRecoveryNotice";
 import { buildSentenceUnits } from "../../stage-two/sentences";
-import { useBufferedReference } from "../../stage-two/reference/use-buffered-reference";
 import { BufferedReferencePanel } from "../../stage-two/components/BufferedReferencePanel";
-import { useReferenceAnalysis } from "../../stage-two/analysis/use-reference-analysis";
-import { useBufferedAnalysis } from "../../stage-two/analysis/use-buffered-analysis";
-import { buildReferenceKey, type ReferenceAnalysisCache } from "../../stage-two/analysis/reference-analysis-cache";
 import { LoadoutLink } from "../../navigation/LoadoutLink";
 
 const loadShadow = () => import("../../stage-two/components/StageTwoShadowing");
@@ -465,10 +462,13 @@ export function StageOneReader() {
   const displaySourceUrl = blueprint?.sourceUrl ?? source?.sourceUrl;
   const displayTitle = blueprint?.title ?? sourceTitle;
   const displaySummary = blueprint?.summary ?? analysisPreview?.summary;
+  const revealRevision = useMemo(() => ({ analysisPreview, blueprint, activeTab, savedRecords, stageOneView }),
+    [analysisPreview, blueprint, activeTab, savedRecords, stageOneView]);
+  const readerRevealRef = useReaderReveal(sourceKey, revealRevision);
   const selectedSegment = playableSegments.find((segment) => segment.id === selectedSegmentId) ?? null;
 
   useEffect(() => {
-    if (stageOneView !== "preparing" || !selectedSegment || !blueprint) return;
+    if (stageOneView !== "picker" || !selectedSegment || !blueprint) return;
     const first = buildSentenceUnits(blueprint.contentId, selectedSegment, blueprint.transcript)[0];
     prefetch("shadow", selectedSegment.id, first?.id);
     // Load code only; recorder/audio effects still start when Shadow mounts.
@@ -488,11 +488,6 @@ export function StageOneReader() {
     navigate("reader", undefined, undefined, true);
   }, [handlePlaybackChange, stageOneView, suspendReference, navigate]);
 
-  const beginStageTwoPreparation = useCallback((segment: StageOneSegment) => {
-    suspendReference();
-    navigate("preparing", segment.id);
-  }, [suspendReference, navigate]);
-
   const launchStageTwo = useCallback((segment: StageOneSegment) => {
     suspendReference();
     const firstSentence = blueprint ? buildSentenceUnits(blueprint.contentId, segment, blueprint.transcript)[0] : null;
@@ -506,7 +501,7 @@ export function StageOneReader() {
   return (
     <>
     <main className="stage-page">
-      <section className="reader-shell" aria-label="Libitu stage 1 ingest reader" aria-busy={isNavigating}>
+      <section ref={readerRevealRef} className="reader-shell" aria-label="Libitu stage 1 ingest reader" aria-busy={isNavigating}>
         <header className="topbar">
           <BrandLogo className="logo" />
           <div className="topbar-title">{blueprint?.title ?? sourceTitle}</div>
@@ -519,7 +514,7 @@ export function StageOneReader() {
               Stage 1 - Ingest
             </Button>
             <Button variant="secondary" size="inherit" shape="pill"
-              className={`stage-pill ${stageOneView === "preparing" || stageOneView === "shadow" ? "active" : ""}`}
+              className={`stage-pill ${stageOneView === "shadow" ? "active" : ""}`}
               type="button"
               disabled={!isReady}
             >
@@ -533,7 +528,7 @@ export function StageOneReader() {
 
         {stageOneView !== "reader" && status !== "failed" && status !== "unsupported"
           && (status === "loading" || (stageOneView !== "picker" && !selectedSegment) || (stageOneView === "shadow" && !authLoaded)) ? (
-          <StageTwoSkeleton view={stageOneView === "picker" ? "segments" : stageOneView === "preparing" ? "preparing" : "shadow"} />
+          <StageTwoSkeleton view={stageOneView === "picker" ? "segments" : "shadow"} />
         ) : stageOneView === "picker" && status !== "failed" && status !== "unsupported" ? (
           <StageOneSegmentPicker
             segments={playableSegments}
@@ -542,19 +537,7 @@ export function StageOneReader() {
             title={displayTitle}
             onBack={closeSegmentPicker}
             onSelect={setSelectedSegmentId}
-            onBegin={beginStageTwoPreparation}
-          />
-        ) : stageOneView === "preparing" && selectedSegment ? (
-          <StageTwoPreparation
-            contentId={blueprint!.contentId}
-            segment={selectedSegment}
-            logicNodes={logicNodes}
-            transcript={transcript}
-            sourceUrl={displaySourceUrl ?? ""}
-            capture={bufferedReference}
-            captureGeneration={captureGeneration.current}
-            cache={sharedReferenceCache}
-            onStart={launchStageTwo}
+            onBegin={launchStageTwo}
           />
         ) : stageOneView === "shadow" && selectedSegment && (!authLoaded || !userId) ? (
           <section className="shadow-sign-in" aria-label="Sign in to Shadow">
@@ -590,7 +573,7 @@ export function StageOneReader() {
             <div className="section-label">Logic flow</div>
             {status === "loading" && logicNodes.length === 0 ? <ReaderSkeleton /> : null}
             {logicNodes.map((node) => (
-              <div className="logic-step" key={node.id}>
+              <div className="logic-step" key={node.id} data-reader-reveal={`logic:${node.id}`}>
                 <button
                   className={`logic-node ${activeNode === node.id ? "active" : ""}`}
                   type="button"
@@ -634,7 +617,7 @@ export function StageOneReader() {
           {displaySourceUrl && blueprint?.contentId ? <BufferedReferencePanel capture={bufferedReference} playable /> : null}
           <div className="video-summary" aria-live="polite">
             <h1>{displayTitle}</h1>
-            <p className={displaySummary ? undefined : "summary-pending"}>
+            <p className={displaySummary ? undefined : "summary-pending"} data-reader-reveal={displaySummary ? "summary:content" : undefined}>
               {displaySummary ?? "Preparing the video summary..."}
             </p>
           </div>
@@ -696,6 +679,7 @@ export function StageOneReader() {
                   <div
                     className={`transcript-line ${highlightActive && transcriptIdentity(line, lineIndex) === activeTranscriptIdentity ? "active-line" : ""}`}
                     data-index={lineIndex}
+                    data-reader-reveal={`transcript:${transcriptIdentity(line, lineIndex)}`}
                     id={transcriptElementId(transcriptIdentity(line, lineIndex))}
                     key={line.segmentationVersion && line.id ? line.id : `${line.time}-${lineIndex}`}
                     onClick={() => selectTranscriptLine(line, lineIndex)}
@@ -768,16 +752,14 @@ export function StageOneReader() {
               {status === "loading" && visibleCorpus.length === 0 && activeTab !== "saved" ? <ReaderSkeleton /> : null}
               {visibleCorpus.length === 0 && activeTab === "saved" && corpus.ready ? (
                 <p className="empty-state">No saved expressions for this video.</p>
-              ) : visibleCorpus.length === 0 && !isReady ? (
-                <p className="empty-state">
-                  {status === "loading" ? "Expressions will appear here as they are validated." : "No corpus was produced."}
-                </p>
+              ) : visibleCorpus.length === 0 && !isReady && status !== "loading" ? (
+                <p className="empty-state">No corpus was produced.</p>
               ) : null}
               {visibleCorpus.map(({ key, item, record }) => {
                 const saved = Boolean(record);
                 const saveLabel = saved ? "Remove from corpus" : "Save to corpus";
                 return (
-                  <article id={`corpus-card-${encodeURIComponent(key)}`} className={`corpus-card ${saved ? "saved" : ""} ${corpusTarget?.key === key ? "corpus-target" : ""}`} key={key}>
+                  <article id={`corpus-card-${encodeURIComponent(key)}`} data-reader-reveal={`corpus:${key}`} className={`corpus-card ${saved ? "saved" : ""} ${corpusTarget?.key === key ? "corpus-target" : ""}`} key={key}>
                     <button
                       className="corpus-detail-trigger"
                       type="button"
@@ -1012,106 +994,6 @@ function StageOneSegmentPicker({
     </section>
   );
 }
-
-function StageTwoPreparation({
-  contentId,
-  segment,
-  logicNodes,
-  transcript,
-  sourceUrl,
-  capture,
-  captureGeneration,
-  cache,
-  onStart
-}: {
-  contentId: string;
-  segment: StageOneSegment;
-  logicNodes: StageOneBlueprint["logicNodes"];
-  transcript: StageOneBlueprint["transcript"];
-  sourceUrl: string;
-  capture: ReturnType<typeof useBufferedReference>;
-  captureGeneration: number;
-  cache: ReferenceAnalysisCache;
-  onStart?: (segment: StageOneSegment) => void;
-}) {
-  const logic = segmentLogicFor(segment, logicNodes, Math.max((segment.sequence ?? 1) - 1, 0));
-  const sentences = useMemo(() => buildSentenceUnits(contentId, segment, transcript), [contentId, segment, transcript]);
-  const player = useRef<YouTubePlayerHandle>(null);
-  const [playing, setPlaying] = useState(false);
-  const suspend = capture.suspend;
-  const observed = useReferenceAnalysis(null, cache);
-  const preparation = useBufferedAnalysis(contentId, sourceUrl, sentences, capture, cache);
-  const keyOf = (sentence: typeof sentences[number]) => buildReferenceKey(contentId, sourceUrl, sentence.id, sentence.startMs, sentence.endMs);
-  const covered = sentences.filter((sentence) => capture.covers({ start: sentence.startMs / 1000, end: sentence.endMs / 1000 }));
-  const analyzed = sentences.filter((sentence) => observed.isReady(keyOf(sentence)));
-  const missing = sentences.find((sentence) => !capture.covers({ start: sentence.startMs / 1000, end: sentence.endMs / 1000 })
-    && !observed.isReady(keyOf(sentence)));
-  useEffect(() => {
-    const handle = player.current;
-    return () => { handle?.pause(); suspend(); };
-  }, [suspend]);
-  function prepareMissing() {
-    if (playing) { player.current?.pause(); capture.suspend(); return; }
-    const start = Math.max(0, (missing?.startMs ?? segment.startMs ?? 0) / 1000 - 0.5);
-    const end = (segment.endMs ?? 0) / 1000 + 0.3;
-    player.current?.setPlaybackRate(1);
-    player.current?.playRange(start, end, { loop: false });
-  }
-  const steps = ["Practice segment selected", sentences.length
-    ? `${sentences.length} sentences ready for practice`
-    : "Sentence text unavailable · segment playback available"];
-
-  return (
-    <section className="stage-two-preparation" aria-label="Preparing Stage 2" aria-live="polite">
-      <div className="stage-two-preparation-heading">
-        <h1>Ready to practice</h1>
-        <p>Listen one sentence at a time, then repeat aloud.</p>
-      </div>
-      <div className="stage-two-preparation-segment">
-        <span className="stage-two-preparation-icon" aria-hidden="true"><Target /></span>
-        <span>
-          <strong>{segment.title}</strong>
-          <small>
-            {formatSegmentClock(segment.startMs ?? 0)} – {formatSegmentClock(segment.endMs ?? 0)} · {formatSegmentDuration(segment)} · {logic.node?.title ?? "Logic flow"}
-          </small>
-        </span>
-      </div>
-      <div className="stage-two-preparation-steps" role="list" aria-label="Stage 2 preparation steps">
-        {steps.map((step) => {
-          return (
-            <div className="stage-two-preparation-step done" key={step} role="listitem">
-              <span className="stage-two-preparation-step-icon" aria-hidden="true" />
-              {step}
-            </div>
-          );
-        })}
-      </div>
-      <div className="stage-two-buffer-preparation">
-        {sourceUrl ? <WorkspacePlayer ref={player} sourceUrl={sourceUrl} title="Prepare selected practice audio"
-          onPlaybackChange={setPlaying} onTimeChange={() => {}}
-          onTelemetry={(sample) => capture.sample(sample.blockedByPausedSeek ? { ...sample, state: 2 } : sample, captureGeneration)} /> : null}
-        <BufferedReferencePanel capture={capture} playable={Boolean(sourceUrl)}>
-          <p role="status">{covered.length} of {sentences.length} sentence audio ranges available on this device. {analyzed.length} references analyzed.</p>
-          <p className="stage-two-recording-note">Already heard sentences can be prepared from the buffer. Listen at 1× to fill missing ranges. The first three available references are analyzed here; the next ones are prepared as you practice.</p>
-          {capture.state.phase === "enabled" && (missing || playing) ? <Button variant="secondary" size="inherit" type="button" onClick={prepareMissing}>
-            {playing ? "Pause preparation" : "Listen to prepare missing audio"}
-          </Button> : null}
-          {preparation.error ? <p role="alert">{preparation.error} <Button variant="secondary" size="inherit" type="button" onClick={preparation.retry}>Retry preparation</Button></p> : null}
-        </BufferedReferencePanel>
-      </div>
-      <DirectionButton variant="primary"
-        className="stage-two-preparation-start visible"
-        type="button"
-        onClick={() => { player.current?.pause(); capture.suspend(); onStart?.(segment); }}
-      >
-        <ArrowRight aria-hidden="true" />
-        Start shadowing
-      </DirectionButton>
-      <p>Listening and recording remain available while reference analysis is preparing. Sound detection is not evaluated.</p>
-    </section>
-  );
-}
-
 
 function StageOneSegmentCard({
   segment,

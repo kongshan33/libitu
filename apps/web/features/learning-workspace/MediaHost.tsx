@@ -44,6 +44,18 @@ export function MediaHost({ sourceUrl, title, children }: { sourceUrl?: string; 
     // Follow layout/scroll without moving the iframe or changing its parent/container.
     const ancestors: HTMLElement[] = [];
     for (let el = slot.element.parentElement; el; el = el.parentElement) ancestors.push(el);
+    // Cross-origin iframe wheel events cannot bubble into the slot. A native
+    // scroll surface receives browser scroll chaining without covering player controls.
+    const reader = slot.element.closest<HTMLElement>(".center-panel");
+    const scrollOrigin = 100000;
+    let scrollTarget: HTMLElement | null = null;
+    function relayScroll() {
+      if (!node || !scrollTarget) return;
+      const delta = node.scrollTop - scrollOrigin;
+      if (!delta) return;
+      node.scrollTop = scrollOrigin;
+      scrollTarget.scrollTop += delta;
+    }
     function position() {
       if (!node || !slot) return;
       const rect = slot.element.getBoundingClientRect();
@@ -57,13 +69,28 @@ export function MediaHost({ sourceUrl, title, children }: { sourceUrl?: string; 
       Object.assign(node.style, { left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`,
         visibility: bottom > top && right > left ? "visible" : "hidden",
         clipPath: `inset(${Math.max(0, top - rect.top)}px ${Math.max(0, rect.right - right)}px ${Math.max(0, rect.bottom - bottom)}px ${Math.max(0, left - rect.left)}px)` });
+      const nextTarget = reader && /auto|scroll/.test(getComputedStyle(reader).overflowY)
+        && reader.scrollHeight > reader.clientHeight ? reader : null;
+      if (nextTarget !== scrollTarget) {
+        scrollTarget = nextTarget;
+        node.dataset.scrollRelay = String(Boolean(scrollTarget));
+        node.scrollTop = scrollTarget ? scrollOrigin : 0;
+      }
     }
     position();
+    node.addEventListener("scroll", relayScroll);
     const resize = new ResizeObserver(position);
     resize.observe(slot.element);
     for (const el of ancestors) resize.observe(el);
+    // Streaming rows can create overflow without resizing the fixed-height panel.
+    const content = reader ? new MutationObserver(position) : null;
+    if (reader) content?.observe(reader, { childList: true, subtree: true });
     window.addEventListener("scroll", position, true); window.addEventListener("resize", position);
-    return () => { resize.disconnect(); window.removeEventListener("scroll", position, true); window.removeEventListener("resize", position); };
+    return () => {
+      resize.disconnect(); content?.disconnect(); node.removeEventListener("scroll", relayScroll);
+      node.dataset.scrollRelay = "false"; node.scrollTop = 0;
+      window.removeEventListener("scroll", position, true); window.removeEventListener("resize", position);
+    };
   }, [slot, sourceUrl]);
 
   useEffect(() => {
@@ -82,6 +109,7 @@ export function MediaHost({ sourceUrl, title, children }: { sourceUrl?: string; 
         onPlaybackRateChange={value => active.current?.props.current.onPlaybackRateChange?.(value)}
         onReady={value => { rates.current = value; active.current?.props.current.onReady?.(value); }}
         onTelemetry={sample => active.current?.props.current.onTelemetry?.(sample)} /> : null}
+      <div className="workspace-media-scroll-space" aria-hidden="true" />
     </div>
   </Context.Provider>;
 }

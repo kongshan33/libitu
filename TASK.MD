@@ -9,6 +9,25 @@ meta:
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
+## Stage 1 video scroll and loading cleanup — 2026-10-18
+
+- [x] Connect native wheel scrolling over the persistent video to the reader's center panel without blocking player controls.
+- [x] Remove redundant extracted-expression loading copy while preserving skeletons and error/empty states.
+- [x] Synthetic cross-origin iframe checks pass at desktop/mobile widths and with reduced motion: wheel up/down, player clicks, stable iframe and skeleton-only corpus loading. Root lint/build/test pass. Browser checks use synthetic cross-origin player content, not a live YouTube playback qualification.
+
+## Stage 1 progressive reveal — 2026-10-18
+
+- [x] Reveal new content by batch without remounting existing rows or the player.
+- [x] Coalesce same-frame previews and cancel queued work on completion, retry or exit.
+- [x] Bound animation work for long transcripts; preserve independent skeletons and reduced-motion support.
+- [x] Desktop/mobile synthetic-stream browser checks pass, including finalization identity, playback seeking and reduced motion. Root lint/build/test pass (1495 tests). These checks do not establish a real-device frame-rate guarantee.
+
+## Direct Stage 2 entry — 2026-10-17
+
+Verification: root lint/build/test pass (1,495 tests). Fixture browser checks at 1440/390 px cover direct segment entry, first-sentence selection, old preparation-link replacement, Back to picker, preserved player DOM, no microphone request on entry, sign-in, refresh and invalid-link isolation. Real extension capture/provider behavior was not requalified.
+
+Remove the mandatory Ready to practice screen. Confirming a segment enters Shadow directly (Quick by default); unauthenticated learners retain the existing sign-in gate and return target. The picker prefetches the selected segment’s Shadow route/code. Existing `/segments?segmentId=…&step=prepare` links replace into Shadow without a preparation history entry. Content-owned media, reference capture/cache, and account-owned save queues keep their existing ownership. Reference preparation remains available in Detailed; this does not auto-enable capture, playback, microphone or upload consent.
+
 ## Stage 2 Quick and Review — 2026-10-17
 
 - [x] Unify Quick and Detailed primary actions on the shared purple button variant, removing Quick paint overrides and Detailed black recording buttons.
