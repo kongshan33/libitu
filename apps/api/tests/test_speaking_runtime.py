@@ -465,6 +465,7 @@ def test_takeover_hydrates_only_audio_that_was_durably_acknowledged(mission, ack
         assert connection.state["document"]["playback_pending"] == [response_id]
         if acknowledged:
             await connection.client_event({"type": "playback", "item_id": item_id, "played_ms": 2000})
+            await asyncio.gather(*list(connection.exposure_tasks))
             assert connection.state["document"]["playback_pending"] == []
         replacement = ticket_for(mission, takeover=True)
         state_ops.consume_ticket(connection.session_id, str(replacement.runtime_id), replacement.ticket)
@@ -477,8 +478,65 @@ def test_takeover_hydrates_only_audio_that_was_durably_acknowledged(mission, ack
         hydrated = [event for event in fresh.provider.sent if event["type"] == "conversation.item.create"]
         assert len(hydrated) == int(acknowledged)
         if not acknowledged:
-            with pytest.raises(HTTPException) as error:
-                await connection.client_event({"type": "playback", "item_id": item_id, "played_ms": 2000})
-            assert error.value.status_code == 409
+            await connection.client_event({"type": "playback", "item_id": item_id, "played_ms": 2000})
+            await asyncio.gather(*list(connection.exposure_tasks))
             assert state_ops.read_state(connection.owner, connection.session_id)["document"]["messages"][0]["status"] == "interrupted"
     asyncio.run(run())
+
+
+def test_audio_budget_accepts_delayed_real_time_batches_but_rejects_sustained_excess(mission):
+    connection, _ = active_connection(mission)
+    start = connection.started
+    # Four seconds of valid 24k mono PCM released together after a scheduling stall.
+    for batch in range(10):
+        for _ in range(40):
+            connection.consume_audio_budget(4800, start + batch * 4)
+    # A clock tick does not reset a full one-second allowance on every burst.
+    with pytest.raises(runtime.ProviderFailure) as error:
+        for _ in range(100):
+            connection.consume_audio_budget(4800, start + 36)
+    assert error.value.code == "audio_rate"
+
+
+def test_audio_budget_never_accumulates_unlimited_credit(mission):
+    connection, _ = active_connection(mission)
+    connection.consume_audio_budget(240000, connection.started + 3600)
+    with pytest.raises(runtime.ProviderFailure):
+        connection.consume_audio_budget(4800, connection.started + 3600)
+
+
+def test_run_waits_for_browser_mode_before_requesting_audio_opening(mission, monkeypatch):
+    async def run():
+        connection, socket = active_connection(mission)
+        provider = FakeProvider()
+
+        @asynccontextmanager
+        async def transport(_settings):
+            yield provider
+
+        monkeypatch.setattr(runtime, "open_realtime", transport)
+        task = asyncio.create_task(connection.run())
+        try:
+            await asyncio.wait_for(socket.ready.wait(), 2)
+            await asyncio.sleep(0)
+            assert not any(event["type"] == "response.create" for event in provider.sent)
+            socket.input.put_nowait({"type": "microphone", "enabled": True})
+            async with asyncio.timeout(2):
+                while not any(event["type"] == "response.create" for event in provider.sent):
+                    await asyncio.sleep(0.001)
+            requests = [event for event in provider.sent if event["type"] == "response.create"]
+            assert len(requests) == 1
+            assert requests[0]["response"]["output_modalities"] == ["audio"]
+            assert not any(event["type"] == "response.cancel" for event in provider.sent)
+        finally:
+            socket.input.put_nowait(None)
+            await asyncio.wait_for(task, 2)
+    asyncio.run(run())
+
+
+def test_audio_budget_rejects_continuous_double_speed_even_with_initial_credit(mission):
+    connection, _ = active_connection(mission)
+    with pytest.raises(runtime.ProviderFailure) as error:
+        for frame in range(400):
+            connection.consume_audio_budget(4800, connection.started + frame * 0.05)
+    assert error.value.code == "audio_rate"

@@ -1,7 +1,7 @@
 import { installLoadoutFixture, loadoutOwner } from "./loadout-fixture.mjs";
 export const speakingSessionId = "06026b50-b7d7-4f00-bf8f-3aab74528b11";
 export function speakingWorkspace(owner = loadoutOwner) {
-  return { version: 1, runtime: null, messages: [], evidence: [], learning: [], policy: null, analysis_status: "idle", hint: null,
+  return { version: 1, runtime: null, messages: [], evidence: [], learning: [], policy: null, analysis_status: "idle", hint: null, help: null,
     session: { id: speakingSessionId, user_id: owner, client_id: "f8a8cb18-8748-4a91-9696-36689457b6c8", scenario_type: "workplace", goal: "Align the migration plan", difficulty: "standard", feedback_level: "balanced", status: "draft", created_at: "2026-10-01T10:00:00Z", turn_count: 0,
       logic_template: { id: "persuasive_pitch", title: "Persuasive pitch", description: "Practice a proposal.", steps: ["Context", "Tension", "Proposal", "Defend"] }, items: [
         { id: "item-1", corpus_item_id: null, ordinal: 0, kind: "chunk", text: "To be fair", meaning: "Acknowledge another perspective", tags: [], slots: {}, source_title: "Workplace conversation" },
@@ -9,7 +9,7 @@ export function speakingWorkspace(owner = loadoutOwner) {
         { id: "item-3", corpus_item_id: null, ordinal: 2, kind: "structure", text: "What matters most is [priority].", meaning: "State the priority", tags: [], slots: { priority: "the most important outcome" }, source_title: null }
       ] } };
 }
-export async function installSpeakingFixture(page, { origin, denyMicrophone = false } = {}) {
+export async function installSpeakingFixture(page, { origin, denyMicrophone = false, deferHints = false } = {}) {
   const auth = await installLoadoutFixture(page, { origin, initialOwner: loadoutOwner, records: [] });
   await page.addInitScript(({ deny }) => {
     window.__speakingTracks = []; window.__denySpeakingMic = deny;
@@ -48,7 +48,11 @@ export async function installSpeakingFixture(page, { origin, denyMicrophone = fa
       if (event.type === "ping") socket.send(JSON.stringify({ type: "pong" }));
       if (event.type === "microphone") socket.send(JSON.stringify({ type: "state", state: "listening" }));
       if (event.type === "interrupt") { socket.send(JSON.stringify({ type: "audio.clear", item_id: "audio-item" })); socket.send(JSON.stringify({ type: "state", state: "listening" })); }
-      if (event.type === "hint") { state.workspace.hint = "Try ‘on the same page’ to check shared expectations."; state.workspace.version++; socket.send(JSON.stringify({ type: "snapshot", workspace: state.workspace })); }
+      if (event.type === "hint" && !deferHints) {
+        const item = state.workspace.session.items.find(value => value.id === event.target_item_id) ?? state.workspace.session.items[1];
+        state.workspace.help = { id: event.request_id, version: 2, target_item_id: item.id, level: event.level, status: "ready", direction: "Check shared expectations.", expression: item.text, meaning: item.meaning, pattern: "We need to be on the same page about [topic].", example: event.level === "example" ? "We need to be on the same page about the timeline." : null, substitution: null, source: "requested", source_message_id: null, error: null };
+        state.workspace.hint = null; state.workspace.version++; socket.send(JSON.stringify({ type: "snapshot", workspace: state.workspace }));
+      }
       if (event.type === "text.submit") {
         if (!state.workspace.messages.some(message => message.client_turn_id === event.client_turn_id)) {
           const ordinal = state.workspace.messages.length;

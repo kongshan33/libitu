@@ -200,6 +200,9 @@ class InlineRuntimeStore:
                 return False
             del store.speaking_sessions[session_id]
             self._documents.pop(session_id, None)
+            from app.integrations.speaking_diagnostics_repository import purge_inline_diagnostics
+
+            purge_inline_diagnostics(session_id)
             return True
 
 

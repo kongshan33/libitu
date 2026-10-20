@@ -1,0 +1,12 @@
+{
+  "purpose": "Controlled text submission isolates ASR/VAD from real automatic teaching; Gemini replies with real audio. No policy/provider result injection.",
+  "inputs": [
+    "We need a database for a small analytics product and our engineering team is only three people.",
+    "Our budget is limited and we cannot spend much time maintaining servers.",
+    "I want to make a short comparison of the two choices: lower monthly bills on one side, less maintenance work and fewer outages on the other.",
+    "I'm still deciding which downside our team could accept."
+  ],
+  "optional_fifth": "One trade-off is that a managed database costs more but gives our small team more time to build features.",
+  "stop_condition": "After four replies, if no cross-turn policy binding, stop without changing inputs. If bound, wait for effect assessment and submit optional fifth once to verify exact quote anchoring. Then snapshot and stop.",
+  "limits": "Fifth sentence is prewritten synthetic learner input, not learning or causal effectiveness evidence. Usage/Example already covered by run-04."
+}

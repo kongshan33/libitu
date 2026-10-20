@@ -1,0 +1,21 @@
+{
+  "session_id": "9e095d07-dc0f-4a77-aa90-6cc96f9f1b31",
+  "api_requests": [
+    {
+      "at": "2026-10-18T11:38:37.239Z",
+      "kind": "http",
+      "method": "GET",
+      "path": "/api/speaking/sessions/9e095d07-dc0f-4a77-aa90-6cc96f9f1b31/workspace",
+      "status": 200
+    },
+    {
+      "at": "2026-10-18T11:38:55.310Z",
+      "kind": "http",
+      "method": "POST",
+      "path": "/api/speaking/sessions/9e095d07-dc0f-4a77-aa90-6cc96f9f1b31/realtime",
+      "status": 200
+    }
+  ],
+  "page_errors": [],
+  "ended_at": "2026-10-18T11:45:22.100Z"
+}

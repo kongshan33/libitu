@@ -89,7 +89,7 @@ def public_workspace(owner: str, session_id: str, state: dict | None = None) -> 
         runtime["state"] = "disconnected"
     return SpeakingWorkspace.model_validate({
         "session": session, "version": state["version"], "runtime": runtime,
-        **{key: document[key] for key in ("messages", "evidence", "learning", "policy", "analysis_status", "hint")
+        **{key: document[key] for key in ("messages", "evidence", "learning", "policy", "analysis_status", "hint", "help")
            if key in document},
     })
 
@@ -98,6 +98,10 @@ def expire_policy(document: dict) -> None:
     policy = document.get("policy")
     if policy and policy.get("status") == "pending":
         policy["status"] = "expired"
+    help_card = document.get("help")
+    if help_card and help_card.get("status") == "loading":
+        help_card.update(status="unavailable", version=help_card["version"] + 1,
+                         error="This help request ended with the connection. Please retry.")
 
 
 def interrupt_unheard(document: dict) -> None:

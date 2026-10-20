@@ -53,7 +53,9 @@ def gemini_configuration(settings: Settings, session: SpeakingSession) -> dict:
             "maxOutputTokens": settings.speaking_max_output_tokens,
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": settings.gemini_live_voice}}},
         },
-        "systemInstruction": {"parts": [{"text": role_instructions(session)}]},
+        # DeepSeek owns selected wording. Priming the voice partner with the
+        # answer itself encourages it to demonstrate rather than elicit it.
+        "systemInstruction": {"parts": [{"text": role_instructions(session, include_language_targets=False)}]},
         # Defaults are verbatim; do not bias ASR with equipped language, which
         # would manufacture apparent transfer evidence from recognition errors.
         "inputAudioTranscription": {},
@@ -63,7 +65,9 @@ def gemini_configuration(settings: Settings, session: SpeakingSession) -> dict:
                 "disabled": False,
                 "startOfSpeechSensitivity": "START_SENSITIVITY_LOW",
                 "endOfSpeechSensitivity": "END_SENSITIVITY_LOW",
-                "prefixPaddingMs": 100,
+                # Require a longer speech onset before automatic barge-in so
+                # brief background sounds are less likely to interrupt a reply.
+                "prefixPaddingMs": 300,
                 "silenceDurationMs": 1200,
             },
             "activityHandling": "START_OF_ACTIVITY_INTERRUPTS",

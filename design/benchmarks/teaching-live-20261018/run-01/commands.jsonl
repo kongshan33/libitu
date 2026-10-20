@@ -1,0 +1,12 @@
+{"id": "connect", "action": "connect"}
+{"id": "turn-1", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-01/inputs/turn-1.wav"}
+{"id": "turn-2", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-01/inputs/turn-2.wav"}
+{"id": "turn-3", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-01/inputs/turn-3.wav"}
+{"id": "controlled-comparison", "action": "submit", "text": "I want to make a short comparison of the two choices: lower monthly bills on one side, less maintenance work and fewer outages on the other."}
+{"id": "cross-turn-reply", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-01/inputs/turn-4.wav"}
+{"id": "usage", "action": "hint"}
+{"id": "example", "action": "example"}
+{"id": "after-example", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-01/inputs/after-example.wav"}
+{"id": "finish-playback", "action": "wait_audio"}
+{"id": "final", "action": "snapshot"}
+{"id": "stop", "action": "stop"}

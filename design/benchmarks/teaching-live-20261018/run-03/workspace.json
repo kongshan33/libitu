@@ -1,0 +1,99 @@
+{
+  "session": {
+    "id": "f1b240c2-d7c3-4f12-a933-90d6dd9c624b",
+    "user_id": "libitu-teaching-live-c044dc998cc94cfd9ebbe56fb0f0c233",
+    "client_id": "79d52b09-29f2-4759-b0a1-36eb118a714f",
+    "scenario_type": "workplace",
+    "goal": "Choose a database for a small analytics product with a colleague, balancing reliability, cost and maintenance effort",
+    "difficulty": "standard",
+    "feedback_level": "balanced",
+    "logic_template": null,
+    "status": "active",
+    "created_at": "2026-10-18T14:43:00.743024Z",
+    "turn_count": 1,
+    "items": [
+      {
+        "id": "17928c90-75e0-401e-bac7-003a42f46006",
+        "corpus_item_id": "36ec8d8a-afe9-4476-955b-d11b9ff00ec2",
+        "ordinal": 0,
+        "kind": "chunk",
+        "text": "One trade-off is",
+        "meaning": "Introduce a compromise between two choices",
+        "tags": [],
+        "slots": {},
+        "source_title": "Synthetic live teaching verification"
+      }
+    ]
+  },
+  "version": 15,
+  "runtime": {
+    "id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+    "generation": 1,
+    "state": "disconnected",
+    "expires_at": "2026-10-18T14:44:27.131043Z"
+  },
+  "messages": [
+    {
+      "id": "50ed829c-ba49-4d3f-bba0-9a5e3905ad7e",
+      "ordinal": 0,
+      "role": "assistant",
+      "text": "Hey, thanks for meeting. I wanted to go over the database options for our new analytics product. What are your initial thoughts?",
+      "input_source": "voice",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T14:43:54.641497+00:00"
+    },
+    {
+      "id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+      "ordinal": 1,
+      "role": "user",
+      "text": "We need a database for a small analytics product and our engineering team is only three people.",
+      "input_source": "voice",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "gemini_input_21bf97e684f343b39331e3479d98e080",
+      "response_id": null,
+      "client_turn_id": null,
+      "created_at": "2026-10-18T14:43:58.020440+00:00"
+    },
+    {
+      "id": "836289d0-6517-48e0-8584-2bbf73750453",
+      "ordinal": 2,
+      "role": "assistant",
+      "text": "With a small team, maintenance effort will be a big factor. Which features are most important to you?",
+      "input_source": "voice",
+      "status": "interrupted",
+      "revision": 1,
+      "provider_item_id": "gemini_output_2a179e3463a0483393ec3daad74dcc34",
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T14:44:22.088702+00:00"
+    }
+  ],
+  "evidence": [],
+  "learning": [
+    {
+      "session_item_id": "17928c90-75e0-401e-bac7-003a42f46006",
+      "observed_uses": 0,
+      "independent_uses": 0,
+      "prompted_uses": 0,
+      "last_message_id": null
+    }
+  ],
+  "policy": {
+    "id": "24240c90-29d1-524f-9288-398d042137ff",
+    "source_message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+    "source_revision": 1,
+    "learning_version": 1,
+    "target_item_id": null,
+    "action": "continue_naturally",
+    "status": "expired",
+    "response_id": null
+  },
+  "analysis_status": "ready",
+  "hint": null,
+  "help": null
+}

@@ -1,0 +1,12 @@
+{
+  "result": "cross_turn_strategy_and_quote_anchor_verified_later_reply_incomplete",
+  "input_mode": "Five controlled typed user turns with real Gemini audio; preregistered first four and optional fifth submitted once after cross-turn binding/assessment.",
+  "strategy": "Source turn3 bound to reply4 while eligible; target-not-spoken constraint passed; real DeepSeek outcome reflected with exact response quote; automatic direction acknowledged by real browser.",
+  "quote": "Fifth prewritten input finalized; real DeepSeek omitted numeric offsets; server_derived [0,16) exact UTF-16 range accepted, reconciled and present in final evidence. server_repaired path was not triggered live.",
+  "fifth_input_limit": "Prewritten synthetic learner input is not evidence of causal elicitation or human learning. Direction was shown; evidence retains assistance=direction, prompted=false.",
+  "later_failure": "The fifth submission interrupted the silence follow-up after turn4. No first audio for a reply to turn5 was observed and that reply did not complete. At 15:04:01 UTC persistence runtime_503 then connection_replaced closed the socket, after fifth analysis completed at 15:03:58.925 and reconciled at 15:03:59.515. No repeat submission or paid rerun.",
+  "bootstrap": "Initial preparation was sequenced after API config became ready.",
+  "source_hashes_unchanged_after_run": true,
+  "cleanup": "Normal API SIGINT exported all artifacts and verified synthetic session/corpus deletion.",
+  "separate_voice_evidence": "run-04/README.md records three finalized voice turns with audio ahead of analysis and four unavailable ASR fragments; run-05 uses typed inputs only."
+}

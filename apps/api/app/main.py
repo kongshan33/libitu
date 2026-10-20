@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -5,10 +7,19 @@ from app.config import get_settings
 
 from app.routers import blueprints, content, corpus, health, jobs, practice, practice_analysis, practice_submission, profile, references, speaking
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    yield
+    from app.services.speaking_coaching_runtime import drain_diagnostics
+    await drain_diagnostics()
+
+
 app = FastAPI(
     title="Libitu API",
     version="0.1.0",
     summary="Backend API for Libitu's input, corpus, and speaking practice loops.",
+    lifespan=lifespan,
 )
 
 # Word metadata is repetitive JSON. Starlette excludes text/event-stream, so

@@ -9,6 +9,35 @@ meta:
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
 
+## Mission teaching control and private diagnostics — 2026-10-18
+
+Keep Gemini's voice response independent of DeepSeek. Analyze finalized learner revisions from the first turn, but reserve the first two substantive utterances for observation; explicit wording help is exempt. Automatic teaching requires a contextual opportunity and uses one pending candidate, a 45-second/source-plus-two-user-turn lifetime, a two-substantive-turn cooldown and at most two bound automatic attempts per target. Wake dispatch when either analysis or the provider turn completes. Preserve immutable sent attempts independently of replaceable candidates; sent/bound does not mean reflected or delivered.
+
+The first real-provider probe exposed target-answer priming and model offset errors. Withhold selected wording from Gemini's setup and implicit controls; send only the communicative task the learner should perform and a contextual question. Keep the target in private immutable assessment metadata. Deterministically detected target disclosure fails compliance before advisory model assessment, without buffering or delaying voice. Opening/silence controls do not supersede a pending teaching Attempt. For new Stage 4 evidence, let the server derive UTF-16 offsets from a unique exact quote; accept supplied ranges to disambiguate repetitions and repair incorrect ranges only when the quote is unique. Record anchor provenance and retain strict validation of stored evidence and Stage 5 inputs.
+
+A follow-up live probe stopped on `audio_rate` before strategy execution. PCM/ping/playback/display receipts must not wait for the provider/state operation lock used during database writes. Keep single-reader order for microphone/text controls, existing provider-send serialization and unchanged input rate limits; move completed-playback writes into the tracked background exposure drain. At shutdown, reconcile locally received complete ACKs so delayed storage cannot falsely mark fully heard replies interrupted. Preserve failure/unknown-write diagnostics instead of claiming durable receipt before storage succeeds.
+
+Offer shared direction, usage and explicitly requested example help. Only a completed response assessed as reflecting the policy can produce an automatic direction card. Record actual visible levels and acknowledged expression delivery; target/example exposure remains assisted within the current Mission. Overlapping presentation is uncertain, never retroactive proof of independent or prompted performance. Explicit help has its own request path and must remain available outside automatic teaching budgets.
+
+Store detailed provider content and execution diagnostics in an owner-authorized journal separate from public workspace snapshots and CAS state. Use bounded background writes with idempotent event IDs, gap records and bounded draining; do not promise exactly-once delivery. Reads retain 30 days from insertion, appends prune expired events for that session, and session deletion cascades. The global purge RPC is present but unscheduled, so 30-day physical deletion of inactive-session diagnostics is not guaranteed. The hosted migration is applied; application rollout and live quality/timing qualification remain separate. See [the implementation contract](design/docs/STAGE_FOUR_TEACHING_CONTROL.md).
+
+## Mission startup, silence and audio bursts — 2026-10-18
+
+The user chose voice-only automatic conversation advancement: after AI playback, wait 15 seconds and offer a brief follow-up, with at most two until the learner responds. Implement server-owned controls guarded by speech/transcription, generation, playback and runtime ownership; never synthesize user evidence. Idle detection and triggering use a roughly two-second heartbeat, so the observed delay may be a few seconds longer; connection-local timers/counters reset on reconnect. Start an empty conversation only after initial microphone mode is acknowledged; pending permission cannot block typed input. Replace the fixed one-second audio count with five seconds of bounded PCM burst credit and a 60 KB/s refill for nominal 48 KB/s audio. Keep existing frame, idle and connection limits.
+
+## Mission speech-onset tuning — 2026-10-18
+
+Use the provider's documented onset-confirmation duration (`prefixPaddingMs = 300`) to make brief-noise barge-in less sensitive. Keep low start/end sensitivity, the 1200 ms silence window and automatic interruption. Accept potentially slower deliberate barge-in and missed very short utterances; do not claim measured acoustic improvement without real-microphone evaluation. Existing connections must reconnect to receive the new setup.
+
+## Chat empty-message visibility — 2026-10-18
+
+Filter blank saved messages and live fragments only at the Chat presentation boundary. Keep runtime placeholders for turn identity and later transcription; render nonblank messages regardless of finalization status.
+
+## Mission loading consistency — 2026-10-18
+
+Extend the prior route-loading cleanup to Speaking: keep the current Loadout UI while the destination route resolves, then use the same Mission shell for auth and workspace loading. Do not add delays or hide loading errors.
+
+
 ## Persistent reader video scrolling — 2026-10-18
 
 Keep the shared iframe in its stable media host. Cross-origin wheel events do not bubble through the slot's React tree, so use native scroll chaining on the host and relay its displacement into the reader's scroll container. Do not overlay the video, disable pointer events, or reparent/reload it to restore scrolling. Enable the relay only when Stage 1 has an independently scrollable center panel; document-scrolling layouts use native behavior.

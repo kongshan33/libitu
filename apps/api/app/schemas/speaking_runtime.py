@@ -54,6 +54,7 @@ class SpeakingEvidence(BaseModel):
     match_type: Literal["exact", "variant", "structure"]
     appropriateness: Literal["appropriate", "uncertain", "inappropriate"]
     prompted: bool
+    assistance: Literal["independent", "direction", "usage", "example", "overlap", "unknown"] | None = None
     reason: str
 
 
@@ -76,6 +77,23 @@ class TeachingPolicyView(BaseModel):
     response_id: str | None = None
 
 
+class SpeakingHelpCard(BaseModel):
+    id: UUID
+    version: int = Field(ge=1)
+    target_item_id: str | None = None
+    level: Literal["direction", "usage", "example"]
+    status: Literal["loading", "ready", "unavailable"]
+    direction: str
+    expression: str | None = None
+    meaning: str | None = None
+    pattern: str | None = None
+    example: str | None = None
+    substitution: str | None = None
+    source: Literal["automatic", "requested"]
+    source_message_id: str | None = None
+    error: str | None = None
+
+
 class SpeakingWorkspace(BaseModel):
     session: SpeakingSession
     version: int
@@ -86,3 +104,4 @@ class SpeakingWorkspace(BaseModel):
     policy: TeachingPolicyView | None = None
     analysis_status: Literal["idle", "pending", "ready", "unavailable"] = "idle"
     hint: str | None = None
+    help: SpeakingHelpCard | None = None

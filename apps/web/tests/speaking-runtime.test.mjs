@@ -5,16 +5,17 @@ import vm from "node:vm";
 import { ConversationController } from "../features/speaking/controller.ts";
 import { ConversationApiError, runtimeSocketUrl } from "../features/speaking/api.ts";
 import { decodePcm, encodePcm } from "../features/speaking/audio.ts";
-import { validEvidence, observedItemIds } from "../features/speaking/evidence.ts";
+import { validEvidence, observedItemIds, assistanceLabel } from "../features/speaking/evidence.ts";
+import { observeVisible } from "../features/speaking/visibility.ts";
 
 const workspace = (version = 0) => ({ version, session: { id: "mission", user_id: "owner", status: "draft", items: [], turn_count: 0 }, messages: [], evidence: [], learning: [], policy: null, hint: null, runtime: null, analysis_status: "idle" });
-function setup(overrides = {}) {
+function setup(overrides = {}, audioOverrides = {}) {
   let saved = workspace(); const sockets = []; const audio = []; const updates = []; let serial = 0;
   const api = { read: async () => structuredClone(saved), connect: async () => ({ ticket: "private-ticket", websocket_path: "/socket", runtime_id: "runtime" }), end: async () => ({ ...saved, version: 10, session: { ...saved.session, status: "completed" } }), delete: async () => {}, ...overrides };
   const controller = new ConversationController("owner", "mission", api, state => updates.push(state), {
     uuid: () => `uuid-${++serial}`, socketUrl: () => "ws://fixture.invalid/socket",
     socket: () => { const socket = { readyState: 1, bufferedAmount: 0, sent: [], send(data) { this.sent.push(JSON.parse(data)); }, close() { this.closed = true; this.onclose?.(); }, message(value) { this.onmessage?.({ data: JSON.stringify(value) }); } }; sockets.push(socket); return socket; },
-    audio: (frame, boundary, lost) => { const value = { enabled: false, disposed: false, prepare: async () => {}, async enableMicrophone() { this.enabled = true; }, disableMicrophone() { this.enabled = false; }, clear() { this.cleared = true; boundary("audio-item", 125); }, append() {}, report() { boundary("audio-item", 250); }, dispose() { this.clear(); this.enabled = false; this.disposed = true; }, frame, lost }; audio.push(value); return value; }
+    audio: (frame, boundary, lost) => { const value = { enabled: false, disposed: false, prepare: async () => {}, async enableMicrophone() { this.enabled = true; }, disableMicrophone() { this.enabled = false; }, clear() { this.cleared = true; boundary("audio-item", 125); }, append() {}, report() { boundary("audio-item", 250); }, dispose() { this.clear(); this.enabled = false; this.disposed = true; }, frame, lost, ...audioOverrides }; audio.push(value); return value; }
   });
   async function connect(voice = false, snapshot = workspace()) { const promise = controller.start(voice); await new Promise(resolve => setImmediate(resolve)); const socket = sockets.at(-1); socket.onopen(); socket.message({ type: "ready", workspace: snapshot }); assert.equal(await promise, true); return socket; }
   return { controller, sockets, audio, updates, api, connect, setSaved: value => { saved = value; } };
@@ -136,4 +137,166 @@ test("unavailable voice placeholder cannot clear a transient live transcript", a
   socket.message({ type: "transcript.delta", item_id: "voice", role: "user", delta: "A live phrase" });
   socket.message({ type: "snapshot", workspace: { ...workspace(1), messages: [{ id: "m", provider_item_id: "voice", status: "unavailable", text: "" }] } }); assert.equal(fixture.controller.state.partials.voice.text, "A live phrase");
   socket.message({ type: "snapshot", workspace: { ...workspace(2), messages: [{ id: "m", provider_item_id: "voice", status: "final", text: "A live phrase" }] } }); assert.equal(fixture.controller.state.partials.voice, undefined);
+});
+
+for (const granted of [true, false]) {
+  test(`voice startup announces mode only after microphone permission ${granted ? "succeeds" : "fails"}`, async t => {
+    let allow, deny;
+    const fixture = setup({}, { enableMicrophone: () => new Promise((resolve, reject) => { allow = resolve; deny = reject; }) });
+    t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+    const socket = await fixture.connect(true);
+    assert.equal(fixture.controller.state.microphoneBusy, true);
+    assert.deepEqual(socket.sent.filter(event => event.type === "microphone"), []);
+    if (granted) allow(); else deny(new Error("Permission denied"));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(socket.sent.filter(event => event.type === "microphone"), [{ type: "microphone", enabled: granted }]);
+    assert.equal(fixture.controller.state.microphone, granted);
+    assert.equal(fixture.controller.state.microphoneBusy, false);
+  });
+}
+
+test("text remains usable while voice permission is pending", async t => {
+  let allow;
+  const fixture = setup({}, { enableMicrophone: () => new Promise(resolve => { allow = resolve; }) });
+  t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const socket = await fixture.connect(true);
+  assert.equal(await fixture.controller.submit("Let us start here."), true);
+  assert.equal(socket.sent.some(event => event.type === "text.submit"), true);
+  assert.equal(socket.sent.some(event => event.type === "microphone"), false);
+  fixture.controller.pause(); allow(); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(socket.sent.some(event => event.type === "microphone"), false);
+});
+
+const help = (id, version = 1, changes = {}) => ({ id, version, target_item_id: "language", level: "usage", status: "ready", direction: "Explain your preference.", expression: "To be fair", meaning: "Consider another point of view", pattern: null, example: null, substitution: null, source: "requested", source_message_id: null, error: null, ...changes });
+
+test("hint requests do not stop microphone, playback, or typed turns and reject stale results", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const socket = await fixture.connect(true, { ...workspace(), session: { ...workspace().session, items: [{ id: "language", text: "To be fair" }] } });
+  const played = []; fixture.audio[0].append = (item, audio) => played.push([item, audio]);
+  socket.message({ type: "audio.delta", item_id: "audio", response_id: "reply", audio: "before" });
+  fixture.controller.hint("usage", "language");
+  const first = socket.sent.find(event => event.type === "hint");
+  assert.equal(first.level, "usage"); assert.equal(first.target_item_id, "language");
+  fixture.controller.hint("example", "language");
+  const second = socket.sent.filter(event => event.type === "hint").at(-1);
+  assert.notEqual(first.request_id, second.request_id);
+  socket.message({ type: "audio.delta", item_id: "audio", response_id: "reply", audio: "during-help" });
+  assert.equal(fixture.controller.state.workspace.help.status, "loading");
+  assert.deepEqual(played.at(-1), ["audio", "during-help"]);
+  socket.message({ type: "snapshot", workspace: { ...workspace(1), help: help(first.request_id) } });
+  assert.equal(fixture.controller.state.workspace.help.id, second.request_id);
+  socket.message({ type: "snapshot", workspace: { ...workspace(2), help: help(second.request_id, 2, { level: "example", example: "To be fair, Friday is realistic." }) } });
+  socket.message({ type: "snapshot", workspace: { ...workspace(3), help: help(second.request_id, 1, { status: "loading" }) } });
+  assert.equal(fixture.controller.state.workspace.help.version, 2);
+  socket.message({ type: "snapshot", workspace: { ...workspace(4), help: help(first.request_id, 2) } });
+  assert.equal(fixture.controller.state.workspace.help.id, second.request_id);
+  assert.equal(fixture.controller.state.workspace.version, 4);
+  socket.message({ type: "audio.delta", item_id: "audio", response_id: "reply", audio: "after" });
+  assert.equal(await fixture.controller.submit("Friday works."), true);
+  assert.deepEqual(played, [["audio", "before"], ["audio", "during-help"], ["audio", "after"]]);
+  assert.equal(fixture.controller.state.microphone, true);
+  assert.equal(fixture.controller.state.busy, false);
+  assert.equal(fixture.audio[0].cleared, undefined);
+  assert.equal(socket.sent.some(event => event.type === "interrupt"), false);
+});
+
+test("shown acknowledgements use exact card versions and actual exposed levels", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const socket = await fixture.connect(false, { ...workspace(), help: help("hint", 1, { status: "loading", level: "example" }) });
+  fixture.controller.hintShown("hint", 0, "usage");
+  fixture.controller.hintShown("hint", 1, "example");
+  assert.equal(socket.sent.some(event => event.type === "hint.shown"), false);
+  fixture.controller.hintShown("hint", 1, "usage"); fixture.controller.hintShown("hint", 1, "usage");
+  assert.equal(socket.sent.filter(event => event.type === "hint.shown").length, 1);
+  socket.message({ type: "snapshot", workspace: { ...workspace(1), help: help("hint", 2, { level: "example", example: "To be fair, Friday is realistic." }) } });
+  fixture.controller.hintShown("hint", 1, "example"); fixture.controller.hintShown("hint", 2, "example");
+  assert.equal(socket.sent.filter(event => event.type === "hint.shown").length, 2);
+  socket.message({ type: "snapshot", workspace: { ...workspace(2), help: help("auto", 1, { level: "direction", source: "automatic" }) } });
+  socket.message({ type: "user.activity", speaking: true });
+  fixture.controller.hintShown("auto", 1, "direction");
+  assert.equal(socket.sent.filter(event => event.type === "hint.shown").length, 2);
+  socket.message({ type: "user.activity", speaking: false });
+  // A new opportunity is required after speech; the old automatic card stays retired.
+  socket.message({ type: "snapshot", workspace: { ...workspace(3), help: help("auto-new", 1, { level: "direction", source: "automatic" }) } });
+  fixture.controller.hintShown("auto-new", 1, "usage"); fixture.controller.hintShown("auto-new", 1, "direction");
+  assert.deepEqual(socket.sent.filter(event => event.type === "hint.shown").at(-1), { type: "hint.shown", hint_id: "auto-new", version: 1, level: "direction" });
+});
+
+test("an automatic card cannot reappear between speech end and its finalized transcript", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const card = help("old-auto", 1, { source: "automatic", level: "direction" });
+  const socket = await fixture.connect(false, { ...workspace(), help: card });
+  socket.message({ type: "user.activity", speaking: true });
+  assert.equal(fixture.controller.state.workspace.help, null);
+  socket.message({ type: "user.activity", speaking: false });
+  socket.message({ type: "snapshot", workspace: { ...workspace(1), help: card } });
+  assert.equal(fixture.controller.state.workspace.help, null);
+  socket.message({ type: "snapshot", workspace: { ...workspace(2), help: help("new-auto", 1, { source: "automatic", level: "direction" }) } });
+  assert.equal(fixture.controller.state.workspace.help.id, "new-auto");
+  socket.message({ type: "transcript.delta", role: "user", item_id: "voice", delta: "Let me explain" });
+  assert.equal(fixture.controller.state.workspace.help, null);
+});
+
+test("assistance labels preserve uncertain overlap and distinguish examples from independent use", () => {
+  assert.equal(assistanceLabel({ assistance: "overlap", prompted: false }), "Assistance uncertain");
+  assert.equal(assistanceLabel({ assistance: "unknown", prompted: false }), "Assistance uncertain");
+  assert.equal(assistanceLabel({ assistance: "example", prompted: true }), "With an example");
+  assert.equal(assistanceLabel({ assistance: "usage", prompted: true }), "With a hint");
+  assert.equal(assistanceLabel({ assistance: "direction", prompted: false }), "With a direction cue");
+  assert.equal(assistanceLabel({ assistance: "independent", prompted: false }), "Independent");
+  assert.equal(assistanceLabel({ prompted: true }), "Prompted");
+});
+
+test("AI text visibility is version fenced and can be acknowledged idempotently after reconnect", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), messages: [{ id: "reply", role: "assistant", status: "final", revision: 2, text: "What would make Friday realistic?" }] };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.messageShown("reply", 1); fixture.controller.messageShown("reply", 2); fixture.controller.messageShown("reply", 2);
+  assert.deepEqual(socket.sent.filter(event => event.type === "message.shown"), [{ type: "message.shown", message_id: "reply", revision: 2 }]);
+  fixture.controller.pause(); fixture.controller.messageShown("reply", 2);
+  const reconnected = await fixture.connect(false, snapshot); fixture.controller.messageShown("reply", 2);
+  assert.equal(reconnected.sent.filter(event => event.type === "message.shown").length, 1);
+});
+
+test("a recovered loading card can retry after the old generation disappeared", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), session: { ...workspace().session, items: [{ id: "language", text: "To be fair" }] }, help: help("abandoned-request", 1, { status: "loading" }) };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.hint();
+  const request = socket.sent.find(event => event.type === "hint");
+  assert.ok(request);
+  assert.notEqual(request.request_id, "abandoned-request");
+  assert.equal(request.target_item_id, "language");
+  fixture.controller.hint();
+  assert.equal(socket.sent.filter(event => event.type === "hint").length, 1);
+});
+
+function visibilityFixture() {
+  const document = new EventTarget(); const view = new EventTarget(); let intersectionCallback; let covered = false; let hidden = false; let frameId = 0;
+  const frames = new Map();
+  Object.assign(view, {
+    IntersectionObserver: class { constructor(callback) { intersectionCallback = callback; } observe(target) { this.target = target; } disconnect() { this.closed = true; } },
+    requestAnimationFrame: callback => { const id = ++frameId; frames.set(id, callback); return id; }, cancelAnimationFrame: id => frames.delete(id),
+    getComputedStyle: () => ({ opacity: "1", visibility: "visible", display: hidden ? "none" : "block" })
+  });
+  const element = { ownerDocument: document, isConnected: true, parentElement: null, hidden: false, getAttribute: () => null, getBoundingClientRect: () => ({ left: 10, top: 10, width: 200, height: 80 }), contains: value => value === element };
+  Object.assign(document, { defaultView: view, visibilityState: "visible", elementFromPoint: () => covered ? {} : element });
+  return { document, view, element, intersect: (ratio = 1) => intersectionCallback([{ target: element, isIntersecting: ratio > 0, intersectionRatio: ratio }]), painted: () => { for (let step = 0; step < 2; step++) { const current = [...frames.values()]; frames.clear(); current.forEach(callback => callback()); } }, cover: value => { covered = value; }, hide: value => { hidden = value; } };
+}
+
+test("visibility acknowledgement waits for paint, visible tab, viewport, and no covering overlay", () => {
+  const fixture = visibilityFixture(); let shown = 0;
+  const stop = observeVisible(fixture.element, () => shown++);
+  fixture.intersect(0.3); fixture.painted(); assert.equal(shown, 0);
+  fixture.document.visibilityState = "hidden"; fixture.intersect(); fixture.painted(); assert.equal(shown, 0);
+  fixture.document.visibilityState = "visible"; fixture.cover(true); fixture.document.dispatchEvent(new Event("visibilitychange")); fixture.painted(); assert.equal(shown, 0);
+  fixture.cover(false); fixture.hide(true); fixture.view.dispatchEvent(new Event("resize")); fixture.painted(); assert.equal(shown, 0);
+  fixture.hide(false); fixture.view.dispatchEvent(new Event("pointerup")); assert.equal(shown, 0); fixture.painted(); assert.equal(shown, 1);
+  fixture.view.dispatchEvent(new Event("resize")); fixture.painted(); assert.equal(shown, 1); stop();
+});
+
+test("unmounting or replacing a hint before paint cannot record exposure", () => {
+  const fixture = visibilityFixture(); let shown = 0;
+  const stop = observeVisible(fixture.element, () => shown++);
+  fixture.intersect(); stop(); fixture.painted(); assert.equal(shown, 0);
 });

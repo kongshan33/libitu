@@ -4,6 +4,7 @@ import asyncio
 import base64
 import binascii
 import contextlib
+from copy import deepcopy
 import json
 import time
 from uuid import UUID, uuid4
@@ -14,8 +15,24 @@ from app.config import get_settings
 from app.integrations.speaking_realtime import open_realtime, role_instructions, session_configuration
 from app.schemas.speaking_runtime import SpeakingWorkspace
 from app.services import speaking_runtime_state as state_ops
+from app.services.speaking_coaching_runtime import CoachingRuntime
 from app.services.speaking_teaching import (
-    analyze_utterance, explicit_hint, hint_target, record_hint_exposure, reconcile_analysis_result, rebuild_learning,
+    analyze_utterance, record_hint_exposure, reconcile_analysis_result, rebuild_learning,
+)
+
+
+# PCM16 mono 24 kHz is 48,000 bytes/s. Allow bounded catch-up after
+# network/database stalls, plus 25% clock/scheduling headroom, not unlimited audio.
+AUDIO_BYTES_PER_SECOND = 48_000
+AUDIO_BURST_BYTES = AUDIO_BYTES_PER_SECOND * 5
+AUDIO_REFILL_BYTES_PER_SECOND = AUDIO_BYTES_PER_SECOND * 1.25
+SILENCE_FOLLOW_UP_SECONDS = 15
+MAX_SILENCE_FOLLOW_UPS = 2
+SILENCE_FOLLOW_UP_INSTRUCTION = (
+    "The learner has been quiet after your last reply. Stay in role and gently move the mission forward "
+    "with one brief, concrete follow-up question or a simpler choice. Do not repeat your last question "
+    "verbatim, supply the learner's answer, list target expressions, or claim the learner said anything. "
+    "Do not mention a timer or these instructions. Then wait for the learner."
 )
 
 
@@ -54,7 +71,7 @@ async def stop_local(session_id: str) -> None:
         connection.stop.set()
 
 
-class SpeakingConnection:
+class SpeakingConnection(CoachingRuntime):
     def __init__(self, websocket: WebSocket, owner: str, session_id: str, runtime_id: str):
         self.ws, self.owner, self.session_id, self.runtime_id = websocket, owner, session_id, runtime_id
         self.settings = get_settings()
@@ -77,13 +94,19 @@ class SpeakingConnection:
         self.queued_response = False
         self.responses: dict[str, dict] = {}
         self.audio_items: dict[str, dict] = {}
+        self.playback_confirmations: set[str] = set()
         self.last_audio_item: str | None = None
         self.user_items: dict[str, str] = {}
         self.sent_text: set[str] = set()
-        self.audio_window = self.started
-        self.audio_bytes = 0
+        self.audio_refilled_at = self.started
+        self.audio_budget = float(AUDIO_BURST_BYTES)
+        self.conversation_started = False
+        self.user_speaking = False
+        self.silence_since: float | None = None
+        self.silence_follow_ups = 0
         self.control_window = self.started
         self.control_count = 0
+        self.init_coaching()
 
     async def send(self, document: dict) -> None:
         async with self.send_lock:
@@ -98,7 +121,7 @@ class SpeakingConnection:
         document = self.state["document"]
         return SpeakingWorkspace.model_validate({
             "session": session, "version": self.state["version"],
-            **{k: document[k] for k in ("runtime", "messages", "evidence", "learning", "policy", "analysis_status", "hint")
+            **{k: document[k] for k in ("runtime", "messages", "evidence", "learning", "policy", "analysis_status", "hint", "help")
                if k in document},
         }).model_dump(mode="json")
 
@@ -134,9 +157,8 @@ class SpeakingConnection:
                 await self.send({"type": "state", "state": "listening"})
                 tasks = [asyncio.create_task(self.provider_loop()), asyncio.create_task(self.client_loop()),
                          asyncio.create_task(self.heartbeat()), asyncio.create_task(self.stop.wait())]
-                # Opening is generated once per mission, never duplicated on reconnect.
-                if not self.state["document"].get("messages"):
-                    await self.request_response(opening=True)
+                # The first microphone control acknowledges browser readiness.
+                # Requesting an opening before it arrives can discard/cancel audio.
                 done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                 for task in done:
                     task.result()
@@ -168,6 +190,7 @@ class SpeakingConnection:
             _connections.pop(self.runtime_id, None)
             with contextlib.suppress(Exception):
                 await self.persist_interrupted()
+            await self.close_coaching()
             with contextlib.suppress(Exception):
                 await asyncio.to_thread(state_ops.disconnect_runtime, self.owner, self.session_id, self.runtime_id)
             with contextlib.suppress(Exception):
@@ -214,13 +237,54 @@ class SpeakingConnection:
                 await self.commit(lambda d, _: d["runtime"].update(expires_at=state_ops.future(self.settings.speaking_lease_seconds)), False)
                 last_renew = current
 
-    async def request_response(self, opening: bool = False) -> None:
+            async with self.operation_lock:
+                await self.advance_silence(time.monotonic())
+
+    def response_busy(self) -> bool:
+        return bool(self.active_response or self.response_requested or self.queued_response)
+
+    def note_user_text(self, text: str) -> None:
+        if text.strip():
+            self.last_activity = time.monotonic()
+            self.silence_since = None
+            self.silence_follow_ups = 0
+
+    async def advance_silence(self, current: float) -> None:
+        playback_pending = any(not item.get("truncated") and
+                               item["played_ms"] < item["generated_ms"] - 1
+                               for item in self.audio_items.values())
+        if (not self.conversation_started or not self.microphone or self.user_speaking
+                or self.response_busy() or playback_pending or self.stop.is_set()):
+            self.silence_since = None
+            return
+        if self.silence_follow_ups >= MAX_SILENCE_FOLLOW_UPS:
+            return
+        if self.silence_since is None:
+            self.silence_since = current
+            return
+        if current - self.silence_since < SILENCE_FOLLOW_UP_SECONDS:
+            return
+        # Called under operation_lock; request_response fences ownership before
+        # any provider request. Controls never fabricate a saved learner turn.
+        await self.request_response(follow_up=True)
+        self.silence_follow_ups += 1
+        self.silence_since = None
+
+    def consume_audio_budget(self, size: int, current: float) -> None:
+        elapsed = max(0.0, current - self.audio_refilled_at)
+        self.audio_budget = min(AUDIO_BURST_BYTES, self.audio_budget + elapsed * AUDIO_REFILL_BYTES_PER_SECOND)
+        self.audio_refilled_at = current
+        if size > self.audio_budget:
+            raise ProviderFailure("audio_rate", "Audio input exceeded the supported streaming rate. Reconnect to continue.", False)
+        self.audio_budget -= size
+
+    async def request_response(self, opening: bool = False, follow_up: bool = False) -> None:
         await self.fence()
         if self.active_response or self.response_requested:
             self.queued_response = True
             return
         request_id = str(uuid4())
-        policy = self.state["document"].get("policy")
+        policy = await self.eligible_policy()
         instruction = role_instructions(self.session)
         policy_id = None
         if policy and policy.get("status") == "pending":
@@ -233,13 +297,20 @@ class SpeakingConnection:
                                 "changes topic, or asks a direct question that needs an answer. Keep the role-play natural.")
         if opening:
             instruction += "\nBegin now with one brief in-role opening. Do not list training objectives."
-        self.pending_request = {"request_id": request_id, "policy_id": policy_id, "audio": self.microphone}
+        elif follow_up:
+            instruction += "\n" + SILENCE_FOLLOW_UP_INSTRUCTION
+        self.silence_since = None
+        attempt = self.new_attempt(policy) if policy_id else None
+        self.pending_request = {"request_id": request_id, "policy_id": policy_id, "audio": self.microphone,
+                                "policy_attempt": attempt}
         self.response_requested = True
         await self.upstream({"type": "response.create", "response": {
             "instructions": instruction, "output_modalities": ["audio"] if self.microphone else ["text"],
             "max_output_tokens": self.settings.speaking_max_output_tokens,
             "metadata": {"request_id": request_id},
         }})
+        if attempt:
+            self.diagnostic("policy.sent", {"attempt": attempt})
         await self.send({"type": "state", "state": "thinking"})
 
     async def interrupt(self) -> None:
@@ -274,12 +345,20 @@ class SpeakingConnection:
                 if message.get("provider_item_id") == item_id and message["role"] == "assistant":
                     message["status"] = "interrupted"
         await self.commit(mark)
+        self.playback_logged(item_id)
 
     async def persist_interrupted(self) -> None:
         def revoke_unheard(document, _):
             pending = {item["response_id"] for item in self.audio_items.values()
-                       if item["played_ms"] < item["generated_ms"]}
-            pending.update(document.get("playback_pending", []))
+                       if item["played_ms"] < item["generated_ms"] - 1 or item.get("truncated")}
+            acknowledged = {item["response_id"] for item in self.audio_items.values()
+                            if item["played_ms"] >= item["generated_ms"] - 1
+                            and not item.get("truncated")
+                            and self.responses.get(item["response_id"], {}).get("persisted")}
+            # Receipt precedes its background CAS. Shutdown persists this known
+            # completion itself instead of treating a still-pending write as
+            # unheard audio; unknown responses retain the conservative behavior.
+            pending.update(set(document.get("playback_pending", [])) - (acknowledged - pending))
             for message in document["messages"]:
                 if message.get("response_id") in pending:
                     message["status"] = "interrupted"
@@ -308,6 +387,43 @@ class SpeakingConnection:
                 document.setdefault("playback_pending", []).append(response["id"])
         await self.commit(save)
         response["persisted"] = True
+        self.response_saved(response, status)
+        if response.get("item_id"):
+            # A playback ACK can arrive while this final transcript is saving.
+            # Reconcile it after the save even if the browser sends no more ACKs.
+            self.confirm_playback(response["item_id"])
+            self.playback_logged(response["item_id"])
+
+    def confirm_playback(self, item_id: str) -> None:
+        """Persist a completed playback ACK without blocking subsequent PCM."""
+        item = self.audio_items.get(item_id)
+        if (not item or item["played_ms"] < item["generated_ms"] - 1
+                or item["response_id"] in self.playback_confirmations
+                or item["response_id"] not in self.state["document"].get("playback_pending", [])):
+            return
+        response_id = item["response_id"]
+        self.playback_confirmations.add(response_id)
+
+        async def persist():
+            try:
+                def delivered(document, _):
+                    # Provider output can grow between receipt and the CAS retry.
+                    if item["played_ms"] >= item["generated_ms"] - 1:
+                        document["playback_pending"] = [value for value in document.get("playback_pending", [])
+                                                        if value != response_id]
+                await self.commit(delivered, False)
+            except asyncio.CancelledError:
+                self.diagnostic("response.playback_commit_unknown", {
+                    "response_id": response_id, "reason": "shutdown_timeout"})
+                raise
+            except Exception:
+                self.diagnostic("response.playback_uncommitted", {
+                    "response_id": response_id, "reason": "connection_fenced_or_storage"})
+            finally:
+                self.playback_confirmations.discard(response_id)
+
+        # The existing bounded exposure drain covers already-received playback.
+        self.background(persist(), exposure=True)
 
     async def provider_loop(self) -> None:
         async for raw in self.provider:
@@ -324,12 +440,22 @@ class SpeakingConnection:
                 return
             raise provider_failure(event)
         if kind == "input_audio_buffer.speech_started":
+            self.user_speaking = True
+            self.user_activity_at = state_ops.iso_now()
+            await self.send({"type": "user.activity", "speaking": True})
+            self.silence_since = None
             self.last_activity = time.monotonic()
             await self.interrupt()
             await self.send({"type": "state", "state": "listening"})
+        elif kind == "input_audio_buffer.speech_stopped":
+            self.user_speaking = False
+            await self.send({"type": "user.activity", "speaking": False})
+            self.silence_since = None
         elif kind == "input_audio_buffer.committed":
+            self.user_speaking = False
             item_id = event["item_id"]
-            message = new_message("user", "", "voice", provider_item_id=item_id, status="unavailable")
+            message = new_message("user", "", "voice", provider_item_id=item_id, status="unavailable",
+                                  started_at=self.user_activity_at or state_ops.iso_now())
             def append(document, _):
                 existing = next((m for m in document["messages"] if m.get("provider_item_id") == item_id), None)
                 if existing:
@@ -343,6 +469,7 @@ class SpeakingConnection:
             self.user_items[item_id] = message["id"]
             await self.request_response()
         elif kind == "conversation.item.input_audio_transcription.delta":
+            self.note_user_text(event.get("delta", ""))
             await self.send({"type": "transcript.delta", "role": "user", "item_id": event["item_id"], "delta": event.get("delta", "")[:4000]})
         elif kind == "conversation.item.input_audio_transcription.completed":
             await self.final_user_transcript(event["item_id"], event.get("transcript", ""))
@@ -358,12 +485,11 @@ class SpeakingConnection:
             self.pending_request = None
             self.active_response = response["id"]
             self.responses[response["id"]] = {**pending, "id": response["id"], "text": "", "item_id": None, "persisted": False}
-            if pending.get("policy_id"):
+            if pending.get("policy_attempt"):
                 def apply(document, _):
-                    policy = document.get("policy")
-                    if policy and policy["id"] == pending["policy_id"] and policy["status"] == "pending":
-                        policy.update(status="applied", response_id=response["id"])
+                    self.bind_attempt(document, self.responses[response["id"]], pending["policy_attempt"])
                 await self.commit(apply)
+                self.response_bound(self.responses[response["id"]])
             if pending.get("interrupted"):
                 await self.upstream({"type": "response.cancel", "response_id": response["id"]})
         elif kind in ("response.output_item.added", "response.output_item.done"):
@@ -387,6 +513,7 @@ class SpeakingConnection:
                 item["generated_ms"] += len(base64.b64decode(event["delta"])) / 48
                 self.last_audio_item = item_id
                 await self.send({"type": "audio.delta", "item_id": item_id, "response_id": response["id"], "audio": event["delta"]})
+                self.audio_forwarded(response)
                 await self.send({"type": "state", "state": "speaking"})
         elif kind == "response.done":
             response_event = event["response"]
@@ -411,6 +538,7 @@ class SpeakingConnection:
 
     async def final_user_transcript(self, item_id: str, text: str) -> None:
         text = text.strip()
+        self.note_user_text(text)
         selected = None
         def save(document, _):
             nonlocal selected
@@ -426,7 +554,9 @@ class SpeakingConnection:
                 policy = document.get("policy")
                 if policy and policy.get("status") == "pending" and policy.get("source_message_id") == message["id"]:
                     policy["status"] = "expired"
-            message.update(text=text, status="final")
+            message.update(text=text, status="final", finalized_at=state_ops.iso_now())
+            if (document.get("help") or {}).get("source") == "automatic":
+                document["help"] = None
             document["analysis_status"] = "pending"
             selected = dict(message)
         await self.commit(save)
@@ -434,34 +564,85 @@ class SpeakingConnection:
             self.schedule_analysis(selected)
 
     def schedule_analysis(self, message: dict) -> None:
-        task = asyncio.create_task(self.analyze(message))
+        key = (message["id"], message["revision"])
+        if key in self.analysis_keys:
+            return
+        self.analysis_keys.add(key)
+        history = deepcopy([m for m in self.state["document"].get("messages", [])
+                            if m.get("ordinal", 0) <= message.get("ordinal", 0)])
+        queued_message = {**deepcopy(message), "analysis_enqueued_at": time.monotonic(),
+                          "context_version_at_queue": self.state["version"]}
+        self.analysis_queue[key] = (queued_message, history)
+        self.diagnostic("analysis.scheduled", {"message_id": message["id"], "revision": message["revision"],
+            "source_text": message["text"], "context_version": self.state["version"],
+            "context": [{k: m.get(k) for k in ("id", "revision", "role", "text")} for m in history[-7:]]})
+        if self.analysis_worker and not self.analysis_worker.done():
+            return
+        async def drain():
+            try:
+                while self.analysis_queue:
+                    # Latest context gets the next slot; older evidence still receives analysis.
+                    next_key = max(self.analysis_queue, key=lambda k: (self.analysis_queue[k][0].get("ordinal", 0), k[1]))
+                    selected, frozen = self.analysis_queue.pop(next_key)
+                    await self.analyze(selected, frozen)
+            finally:
+                for pending, _ in self.analysis_queue.values():
+                    self.diagnostic("analysis.cancelled", {"message_id": pending["id"], "revision": pending["revision"],
+                                                            "reason": "connection_closed_before_start"})
+                self.analysis_queue.clear()
+        task = asyncio.create_task(drain())
+        self.analysis_worker = task
         self.analysis_tasks.add(task)
         task.add_done_callback(self.analysis_tasks.discard)
 
-    async def analyze(self, message: dict) -> None:
+    async def analyze(self, message: dict, history: list[dict] | None = None) -> None:
+        run_id = str(uuid4())
+        queued = message.get("analysis_enqueued_at", time.monotonic())
+        context = deepcopy(history if history is not None else [m for m in self.state["document"].get("messages", [])
+                           if m.get("ordinal", 0) <= message.get("ordinal", 0)])
+        identity = {"run_id": run_id, "message_id": message["id"], "revision": message["revision"]}
+        self.diagnostic("analysis.queued", {**identity, "context": [{"id": m["id"], "revision": m["revision"]}
+                                                                    for m in context]})
         try:
             # Serialized analyzer work avoids losing episode evidence while the
             # independent realtime path continues without waiting for analysis.
             async with self.analysis_lock:
                 await self.fence()
-                previous = {**self.state["document"], "version": self.state["version"]}
-                result = await analyze_utterance(self.session, message, previous.get("messages", []), previous)
+                previous = deepcopy({**self.state["document"], "version": self.state["version"]})
+                for exposure in list(self.pending_exposures.values()):
+                    previous["controller"] = record_hint_exposure(self.session, previous, exposure)
+                self.diagnostic("analysis.started", {**identity, "queue_ms": round((time.monotonic() - queued) * 1000),
+                                                       "context_version": previous["version"]})
+                result = await analyze_utterance(self.session, message, context, previous)
+                self.diagnostic("analysis.completed", {**identity, "trace": result.get("analysis_trace"),
+                                                         "status": result.get("analysis_status"),
+                                                         "policy": result.get("policy")})
+                outcome = {}
                 def apply(document, state):
                     current = next((m for m in document["messages"] if m["id"] == message["id"]), None)
                     if not current or current["revision"] != message["revision"]:
+                        outcome["reason"] = "source_revised"
                         return
                     patch = reconcile_analysis_result(self.session, document, result, previous)
-                    policy = patch.get("policy")
-                    latest_user = next((m for m in reversed(document["messages"]) if m["role"] == "user"), None)
-                    if policy and policy.get("status") == "pending" and latest_user and latest_user["id"] != message["id"]:
-                        policy["status"] = "expired"
                     document.update(patch)
+                    outcome.update(policy=deepcopy(patch.get("policy")), reason="committed")
                 await self.commit(apply)
+                self.diagnostic("analysis.reconciled", {**identity, **outcome})
+                # Wakes a safe-boundary check even if turnComplete preceded the model result.
+                self.schedule_coaching()
+                if result.get("analysis_trace", {}).get("needs_help"):
+                    latest = next((m for m in reversed(self.state["document"].get("messages", []))
+                                   if m["role"] == "user"), None)
+                    if latest and latest["id"] == message["id"] and latest["revision"] == message["revision"]:
+                        self.request_help({"level": result["analysis_trace"].get("help_level") or "usage"})
         except asyncio.CancelledError:
+            self.diagnostic("analysis.cancelled", identity)
             raise
         except (HTTPException, RuntimeStopped):
+            self.diagnostic("analysis.discarded", {**identity, "reason": "connection_fenced"})
             return
         except Exception:
+            self.diagnostic("analysis.failed", {**identity, "reason": "internal_error"})
             with contextlib.suppress(Exception):
                 await self.commit(lambda d, _: d.update(analysis_status="unavailable"))
 
@@ -474,8 +655,16 @@ class SpeakingConnection:
                 event = json.loads(raw)
                 if not isinstance(event, dict):
                     raise ValueError
-                async with self.operation_lock:
+                # PCM and presentation receipts only touch client-owned or
+                # monotonic local state. Waiting for provider transcript storage
+                # here turns real-time PCM into an artificial catch-up burst.
+                if event.get("type") in {"audio.append", "ping", "playback", "message.shown", "hint.shown"}:
                     await self.client_event(event)
+                else:
+                    # One reader preserves FIFO with microphone/text controls;
+                    # resampler resets cannot overtake preceding PCM frames.
+                    async with self.operation_lock:
+                        await self.client_event(event)
             except (ValueError, TypeError, KeyError, binascii.Error):
                 await self.send({"type": "error", "code": "invalid_input", "message": "That input could not be accepted.", "retryable": False})
 
@@ -495,11 +684,14 @@ class SpeakingConnection:
             decoded = base64.b64decode(audio, validate=True)
             if not decoded or len(decoded) > 32768 or len(decoded) % 2:
                 raise ValueError
-            if current - self.audio_window > 1:
-                self.audio_window, self.audio_bytes = current, 0
-            self.audio_bytes += len(decoded)
-            if self.audio_bytes > 144000:
-                raise ProviderFailure("audio_rate", "Audio arrived too quickly. Reconnect to continue.", False)
+            try:
+                self.consume_audio_budget(len(decoded), current)
+            except ProviderFailure:
+                self.diagnostic("input.audio_rate_exceeded", {
+                    "frame_bytes": len(decoded), "remaining_budget_bytes": round(self.audio_budget),
+                    "burst_limit_bytes": AUDIO_BURST_BYTES,
+                    "refill_bytes_per_second": AUDIO_REFILL_BYTES_PER_SECOND})
+                raise
             await self.upstream({"type": "input_audio_buffer.append", "audio": audio})
             return
         if kind == "playback":
@@ -507,12 +699,14 @@ class SpeakingConnection:
             played = event.get("played_ms")
             if item and isinstance(played, (int, float)) and not isinstance(played, bool) and 0 <= played <= 120000:
                 item["played_ms"] = max(item["played_ms"], min(played, item["generated_ms"]))
-                if (item["played_ms"] >= item["generated_ms"] - 1 and
-                        item["response_id"] in self.state["document"].get("playback_pending", [])):
-                    def delivered(document, _):
-                        document["playback_pending"] = [value for value in document.get("playback_pending", [])
-                                                         if value != item["response_id"]]
-                    await self.commit(delivered, False)
+                self.confirm_playback(event["item_id"])
+                self.playback_logged(event["item_id"])
+            return
+        if kind == "message.shown":
+            self.message_shown(event)
+            return
+        if kind == "hint.shown":
+            await self.hint_shown(event)  # Capture receipt now; persistence runs outside the audio lock.
             return
         if current - self.control_window > 10:
             self.control_window, self.control_count = current, 0
@@ -524,25 +718,25 @@ class SpeakingConnection:
             if not isinstance(event.get("enabled"), bool):
                 raise ValueError
             enabled = event["enabled"]
+            self.silence_since = None
             if enabled != self.microphone:
                 await self.interrupt()
                 await self.upstream({"type": "input_audio_buffer.clear"})
                 self.microphone = enabled
+                self.user_speaking = False
+                await self.send({"type": "user.activity", "speaking": False})
             await self.send({"type": "state", "state": "listening"})
+            if not self.conversation_started:
+                self.conversation_started = True
+                if not any(message["text"].strip() for message in self.state["document"].get("messages", [])):
+                    await self.request_response(opening=True)
         elif kind == "interrupt":
+            self.silence_since = None
             await self.interrupt()
         elif kind == "text.submit":
             await self.submit_text(event)
         elif kind == "hint":
-            def hint(document, _):
-                target = hint_target(self.session, document)
-                document["hint"] = explicit_hint(self.session, document)
-                latest = next((m for m in reversed(document["messages"]) if m["role"] == "user"), None)
-                document["hint_exposure"] = {"id": str(uuid4()), "target_item_id": target,
-                                             "source_message_id": latest["id"] if latest else None,
-                                             "source_revision": latest["revision"] if latest else 0}
-                document["controller"] = record_hint_exposure(self.session, document, document["hint_exposure"])
-            await self.commit(hint)
+            self.request_help(event)
         else:
             raise ValueError
 
@@ -559,11 +753,14 @@ class SpeakingConnection:
             else:
                 await self.send({"type": "snapshot", "workspace": self.workspace()})
             return
-        self.last_activity = time.monotonic()
+        self.conversation_started = True
+        self.user_speaking = False
+        self.note_user_text(text)
         await self.interrupt()
         await self.upstream({"type": "input_audio_buffer.clear"})
         item_id = "item_" + uuid4().hex[:24]
-        message = new_message("user", text, "text", client_turn_id=client_id, provider_item_id=item_id)
+        message = new_message("user", text, "text", client_turn_id=client_id, provider_item_id=item_id,
+                              finalized_at=state_ops.iso_now())
         def save(document, _):
             if any(m.get("client_turn_id") == client_id for m in document["messages"]):
                 raise HTTPException(409, "This message was already sent.")
@@ -571,6 +768,8 @@ class SpeakingConnection:
                 raise HTTPException(409, "Mission turn limit reached. End the mission to review it.")
             message["ordinal"] = len(document["messages"])
             document["messages"].append(message)
+            if (document.get("help") or {}).get("source") == "automatic":
+                document["help"] = None
             document["analysis_status"] = "pending"
         await self.commit(save)
         await self.upstream({"type": "conversation.item.create", "item": {

@@ -1,0 +1,21 @@
+{
+  "session_id": "8b1828a5-0071-4561-b805-6f0ba15dec50",
+  "api_requests": [
+    {
+      "at": "2026-10-18T15:02:35.298Z",
+      "kind": "http",
+      "method": "GET",
+      "path": "/api/speaking/sessions/8b1828a5-0071-4561-b805-6f0ba15dec50/workspace",
+      "status": 200
+    },
+    {
+      "at": "2026-10-18T15:02:36.626Z",
+      "kind": "http",
+      "method": "POST",
+      "path": "/api/speaking/sessions/8b1828a5-0071-4561-b805-6f0ba15dec50/realtime",
+      "status": 200
+    }
+  ],
+  "page_errors": [],
+  "ended_at": "2026-10-18T15:04:03.167Z"
+}

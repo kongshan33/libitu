@@ -1,6 +1,7 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request, Response, WebSocket, status
+from fastapi import APIRouter, HTTPException, Query, Request, Response, WebSocket, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.routing import APIRoute
 
@@ -17,6 +18,7 @@ from app.services.speaking_runtime import accept_connection
 from app.services.speaking_lifecycle import end_speaking_session, delete_speaking_session
 from app.schemas.speaking_feedback import FeedbackRequest, SpeakingFeedback
 from app.services.speaking_feedback_service import read_feedback, request_feedback
+from app.services.speaking_diagnostics import read_events
 
 class SpeakingRoute(APIRoute):
     def get_route_handler(self):
@@ -68,6 +70,15 @@ def create_turn(
 @router.get("/sessions/{session_id}/workspace")
 def get_workspace(session_id: UUID, current_user: CurrentUserDep) -> SpeakingWorkspace:
     return speaking_runtime_state.public_workspace(current_user.id, str(session_id))
+
+
+@router.get("/sessions/{session_id}/diagnostics")
+def get_diagnostics(
+    session_id: UUID, current_user: CurrentUserDep,
+    limit: Annotated[int, Query(ge=1, le=200)] = 200,
+    before: Annotated[UUID | None, Query()] = None,
+) -> dict:
+    return read_events(current_user.id, str(session_id), limit, str(before) if before else None)
 
 
 @router.post("/sessions/{session_id}/realtime")

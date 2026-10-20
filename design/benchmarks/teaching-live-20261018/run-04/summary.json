@@ -1,0 +1,2169 @@
+{
+  "generated_at": "2026-10-18T15:07:21.882278+00:00",
+  "session_id": "b2a3824a-dadc-4590-9c0e-b643940de34e",
+  "models": {
+    "gemini": "gemini-3.8-live",
+    "deepseek": "deepseek-v4-flash"
+  },
+  "turn_count": 7,
+  "diagnostic_event_count": 109,
+  "user_rows_by_status": {
+    "final": 3,
+    "unavailable": 4
+  },
+  "browser_event_count": 1356,
+  "browser_result_count": 31,
+  "event_counts": {
+    "analysis.completed": 3,
+    "analysis.queued": 3,
+    "analysis.reconciled": 3,
+    "analysis.scheduled": 3,
+    "analysis.started": 3,
+    "diagnostics.closed": 1,
+    "hint.analyzed": 2,
+    "hint.generated": 2,
+    "hint.requested": 2,
+    "hint.shown": 9,
+    "response.completed": 6,
+    "response.first_audio": 6,
+    "response.playback": 60,
+    "response.shown": 6
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "final",
+      "text": "We need a database for a small analytics product and our engineering team is only three",
+      "analyses": [
+        {
+          "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+          "revision": 1,
+          "current_revision": true,
+          "started_at": "2026-10-18T14:58:35.463587+00:00",
+          "completed_at": "2026-10-18T14:58:36.528253+00:00",
+          "status": "ready",
+          "trace": {
+            "model": "deepseek-v4-flash",
+            "usage": {
+              "total_tokens": 955,
+              "prompt_tokens": 844,
+              "completion_tokens": 111
+            },
+            "status": "ready",
+            "accepted": [],
+            "fallback": [],
+            "rejected": [],
+            "policy_id": "11244723-1db3-5fec-ba7e-1a7820f98a4e",
+            "elapsed_ms": 1064.54,
+            "error_type": null,
+            "help_level": null,
+            "needs_help": false,
+            "started_at": "2026-10-18T14:58:35.463747+00:00",
+            "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":{\"target_item_id\":\"3355e385-6086-4d40-8e18-01298e1cff92\",\"intent\":\"Introduce a compromise between two competing considerations\",\"opportunity\":\"Given your small team, what compromise would you point out between keeping costs low and keeping the system reliable?\",\"skip_when\":\"The learner is only listing requirements without weighing two options against each other.\",\"context_sufficient\":true,\"closing\":false}}",
+            "completed_at": "2026-10-18T14:58:36.528185+00:00",
+            "finish_reason": "stop",
+            "policy_action": "continue_naturally",
+            "policy_reason": "observation_phase",
+            "prompt_version": "speaking-analysis-v3",
+            "recommendation": {
+              "intent": "Introduce a compromise between two competing considerations",
+              "closing": false,
+              "skip_when": "The learner is only listing requirements without weighing two options against each other.",
+              "opportunity": "Given your small team, what compromise would you point out between keeping costs low and keeping the system reliable?",
+              "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+              "context_sufficient": true
+            },
+            "context_version": 11,
+            "source_revision": 1,
+            "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "context_message_ids": [
+              "e188c486-57c7-4ae8-8a9f-27ce7ff74354"
+            ],
+            "effective_user_turns": 1
+          },
+          "policy": {
+            "id": "11244723-1db3-5fec-ba7e-1a7820f98a4e",
+            "action": "continue_naturally",
+            "intent": "",
+            "status": "pending",
+            "skip_when": "",
+            "created_at": "2026-10-18T14:58:34.864827+00:00",
+            "expires_at": "2026-10-18T14:59:19.864827+00:00",
+            "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+            "opportunity": "",
+            "response_id": null,
+            "source_turn": 1,
+            "target_kind": null,
+            "target_text": null,
+            "prompt_version": "speaking-elicitation-v2",
+            "target_item_id": null,
+            "source_revision": 1,
+            "learning_version": 1,
+            "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "eligible_until_turn": 3
+          },
+          "reconciled": {
+            "id": "c1a815d3-3653-4bca-a835-632386555847",
+            "kind": "analysis.reconciled",
+            "created_at": "2026-10-18T14:58:37.077674+00:00",
+            "payload": {
+              "policy": {
+                "id": "11244723-1db3-5fec-ba7e-1a7820f98a4e",
+                "action": "continue_naturally",
+                "intent": "",
+                "status": "pending",
+                "skip_when": "",
+                "created_at": "2026-10-18T14:58:34.864827+00:00",
+                "expires_at": "2026-10-18T14:59:19.864827+00:00",
+                "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+                "opportunity": "",
+                "response_id": null,
+                "source_turn": 1,
+                "target_kind": null,
+                "target_text": null,
+                "prompt_version": "speaking-elicitation-v2",
+                "target_item_id": null,
+                "source_revision": 1,
+                "learning_version": 1,
+                "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "eligible_until_turn": 3
+              },
+              "reason": "committed",
+              "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+              "revision": 1,
+              "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+              "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+            }
+          }
+        }
+      ],
+      "replies": [
+        {
+          "response_id": "gemini_response_6daea6a3ca50446cbcb73cb05233cccc",
+          "message_id": "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+          "position_after_user": 1,
+          "text": "With a team that size, maintenance effort is definitely a key concern. Which factors are most important to you when we consider our options?",
+          "status": "interrupted",
+          "first_audio_at": "2026-10-18T14:58:31.074199+00:00",
+          "browser_first_audio_at": "2026-10-18T14:58:31.097Z",
+          "web_audio_clock_started_at": "2026-10-18T14:58:31.146Z",
+          "first_audio_minus_analysis_started_ms": -4389.39,
+          "first_audio_minus_analysis_completed_ms": -5454.05,
+          "audio_before_analysis_start": true,
+          "audio_before_analysis_complete": true
+        }
+      ],
+      "evidence": [],
+      "key_events": [
+        {
+          "id": "ddb4a8e6-8bda-4de3-b546-dc0f9a96ef56",
+          "kind": "analysis.scheduled",
+          "created_at": "2026-10-18T14:58:35.158207+00:00",
+          "payload": {
+            "context": [
+              {
+                "id": "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "role": "assistant",
+                "text": "Hi there. I wanted to chat about the database options for our new analytics product. Do you have a few minutes to dive into the pros and cons?",
+                "revision": 1
+              },
+              {
+                "id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "role": "user",
+                "text": "We need a database for a small analytics product and our engineering team is only three",
+                "revision": 1
+              }
+            ],
+            "revision": 1,
+            "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+            "source_text": "We need a database for a small analytics product and our engineering team is only three",
+            "context_version": 11
+          }
+        },
+        {
+          "id": "d995f452-1c42-43b4-b015-1918f76dfa6b",
+          "kind": "analysis.queued",
+          "created_at": "2026-10-18T14:58:35.159988+00:00",
+          "payload": {
+            "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+            "context": [
+              {
+                "id": "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "revision": 1
+              },
+              {
+                "id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "revision": 1
+              }
+            ],
+            "revision": 1,
+            "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        },
+        {
+          "id": "b8fa7706-dd29-4c74-bd4a-f39e486b7ec1",
+          "kind": "analysis.started",
+          "created_at": "2026-10-18T14:58:35.463587+00:00",
+          "payload": {
+            "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+            "queue_ms": 305,
+            "revision": 1,
+            "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+            "context_version": 11
+          }
+        },
+        {
+          "id": "9f5f6273-e3cd-4d05-9d74-c4ae137b4b66",
+          "kind": "analysis.completed",
+          "created_at": "2026-10-18T14:58:36.528253+00:00",
+          "payload": {
+            "trace": {
+              "model": "deepseek-v4-flash",
+              "usage": {
+                "total_tokens": 955,
+                "prompt_tokens": 844,
+                "completion_tokens": 111
+              },
+              "status": "ready",
+              "accepted": [],
+              "fallback": [],
+              "rejected": [],
+              "policy_id": "11244723-1db3-5fec-ba7e-1a7820f98a4e",
+              "elapsed_ms": 1064.54,
+              "error_type": null,
+              "help_level": null,
+              "needs_help": false,
+              "started_at": "2026-10-18T14:58:35.463747+00:00",
+              "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":{\"target_item_id\":\"3355e385-6086-4d40-8e18-01298e1cff92\",\"intent\":\"Introduce a compromise between two competing considerations\",\"opportunity\":\"Given your small team, what compromise would you point out between keeping costs low and keeping the system reliable?\",\"skip_when\":\"The learner is only listing requirements without weighing two options against each other.\",\"context_sufficient\":true,\"closing\":false}}",
+              "completed_at": "2026-10-18T14:58:36.528185+00:00",
+              "finish_reason": "stop",
+              "policy_action": "continue_naturally",
+              "policy_reason": "observation_phase",
+              "prompt_version": "speaking-analysis-v3",
+              "recommendation": {
+                "intent": "Introduce a compromise between two competing considerations",
+                "closing": false,
+                "skip_when": "The learner is only listing requirements without weighing two options against each other.",
+                "opportunity": "Given your small team, what compromise would you point out between keeping costs low and keeping the system reliable?",
+                "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+                "context_sufficient": true
+              },
+              "context_version": 11,
+              "source_revision": 1,
+              "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+              "context_message_ids": [
+                "e188c486-57c7-4ae8-8a9f-27ce7ff74354"
+              ],
+              "effective_user_turns": 1
+            },
+            "policy": {
+              "id": "11244723-1db3-5fec-ba7e-1a7820f98a4e",
+              "action": "continue_naturally",
+              "intent": "",
+              "status": "pending",
+              "skip_when": "",
+              "created_at": "2026-10-18T14:58:34.864827+00:00",
+              "expires_at": "2026-10-18T14:59:19.864827+00:00",
+              "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+              "opportunity": "",
+              "response_id": null,
+              "source_turn": 1,
+              "target_kind": null,
+              "target_text": null,
+              "prompt_version": "speaking-elicitation-v2",
+              "target_item_id": null,
+              "source_revision": 1,
+              "learning_version": 1,
+              "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+              "eligible_until_turn": 3
+            },
+            "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+            "status": "ready",
+            "revision": 1,
+            "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        },
+        {
+          "id": "c1a815d3-3653-4bca-a835-632386555847",
+          "kind": "analysis.reconciled",
+          "created_at": "2026-10-18T14:58:37.077674+00:00",
+          "payload": {
+            "policy": {
+              "id": "11244723-1db3-5fec-ba7e-1a7820f98a4e",
+              "action": "continue_naturally",
+              "intent": "",
+              "status": "pending",
+              "skip_when": "",
+              "created_at": "2026-10-18T14:58:34.864827+00:00",
+              "expires_at": "2026-10-18T14:59:19.864827+00:00",
+              "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+              "opportunity": "",
+              "response_id": null,
+              "source_turn": 1,
+              "target_kind": null,
+              "target_text": null,
+              "prompt_version": "speaking-elicitation-v2",
+              "target_item_id": null,
+              "source_revision": 1,
+              "learning_version": 1,
+              "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+              "eligible_until_turn": 3
+            },
+            "reason": "committed",
+            "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+            "revision": 1,
+            "message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        }
+      ]
+    },
+    {
+      "turn": 2,
+      "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "final",
+      "text": "Our budget is limited and we cannot spend much time maintaining servers.",
+      "analyses": [
+        {
+          "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+          "revision": 1,
+          "current_revision": true,
+          "started_at": "2026-10-18T14:58:47.881897+00:00",
+          "completed_at": "2026-10-18T14:58:48.997585+00:00",
+          "status": "ready",
+          "trace": {
+            "model": "deepseek-v4-flash",
+            "usage": {
+              "total_tokens": 1016,
+              "prompt_tokens": 907,
+              "completion_tokens": 109
+            },
+            "status": "ready",
+            "accepted": [],
+            "fallback": [],
+            "rejected": [],
+            "policy_id": "35623392-1af3-55f8-872c-247ab1d1aaad",
+            "elapsed_ms": 1115.6,
+            "error_type": null,
+            "help_level": null,
+            "needs_help": false,
+            "started_at": "2026-10-18T14:58:47.882031+00:00",
+            "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":{\"target_item_id\":\"3355e385-6086-4d40-8e18-01298e1cff92\",\"intent\":\"Introduce a compromise between two competing considerations\",\"opportunity\":\"Given your limited budget and little time for maintenance, how would you frame the compromise between those two concerns?\",\"skip_when\":\"The learner is only listing constraints without comparing or weighing options.\",\"context_sufficient\":true,\"closing\":false}}",
+            "completed_at": "2026-10-18T14:58:48.997547+00:00",
+            "finish_reason": "stop",
+            "policy_action": "continue_naturally",
+            "policy_reason": "observation_phase",
+            "prompt_version": "speaking-analysis-v3",
+            "recommendation": {
+              "intent": "Introduce a compromise between two competing considerations",
+              "closing": false,
+              "skip_when": "The learner is only listing constraints without comparing or weighing options.",
+              "opportunity": "Given your limited budget and little time for maintenance, how would you frame the compromise between those two concerns?",
+              "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+              "context_sufficient": true
+            },
+            "context_version": 19,
+            "source_revision": 1,
+            "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "context_message_ids": [
+              "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+              "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+              "c79c4840-1fea-45d2-981f-6002edbb7dd2"
+            ],
+            "effective_user_turns": 2
+          },
+          "policy": {
+            "id": "35623392-1af3-55f8-872c-247ab1d1aaad",
+            "action": "continue_naturally",
+            "intent": "",
+            "status": "pending",
+            "skip_when": "",
+            "created_at": "2026-10-18T14:58:47.342288+00:00",
+            "expires_at": "2026-10-18T14:59:32.342288+00:00",
+            "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+            "opportunity": "",
+            "response_id": null,
+            "source_turn": 2,
+            "target_kind": null,
+            "target_text": null,
+            "prompt_version": "speaking-elicitation-v2",
+            "target_item_id": null,
+            "source_revision": 1,
+            "learning_version": 2,
+            "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "eligible_until_turn": 4
+          },
+          "reconciled": {
+            "id": "d864f1b6-3955-4bae-9bd6-4d38aef7f212",
+            "kind": "analysis.reconciled",
+            "created_at": "2026-10-18T14:58:49.507501+00:00",
+            "payload": {
+              "policy": {
+                "id": "35623392-1af3-55f8-872c-247ab1d1aaad",
+                "action": "continue_naturally",
+                "intent": "",
+                "status": "pending",
+                "skip_when": "",
+                "created_at": "2026-10-18T14:58:47.342288+00:00",
+                "expires_at": "2026-10-18T14:59:32.342288+00:00",
+                "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+                "opportunity": "",
+                "response_id": null,
+                "source_turn": 2,
+                "target_kind": null,
+                "target_text": null,
+                "prompt_version": "speaking-elicitation-v2",
+                "target_item_id": null,
+                "source_revision": 1,
+                "learning_version": 2,
+                "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+                "eligible_until_turn": 4
+              },
+              "reason": "committed",
+              "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+              "revision": 1,
+              "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+              "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+            }
+          }
+        }
+      ],
+      "replies": [
+        {
+          "response_id": "gemini_response_2de1ad3cc22449b48a22c1d9bebc6ec9",
+          "message_id": "7e6ec20a-f2f4-4dff-9aee-a5cb3554e78d",
+          "position_after_user": 1,
+          "text": "That makes sense. Given those constraints, are you leaning towards a managed solution, or something else?",
+          "status": "interrupted",
+          "first_audio_at": "2026-10-18T14:58:46.198460+00:00",
+          "browser_first_audio_at": "2026-10-18T14:58:46.210Z",
+          "web_audio_clock_started_at": "2026-10-18T14:58:46.247Z",
+          "first_audio_minus_analysis_started_ms": -1683.44,
+          "first_audio_minus_analysis_completed_ms": -2799.12,
+          "audio_before_analysis_start": true,
+          "audio_before_analysis_complete": true
+        }
+      ],
+      "evidence": [],
+      "key_events": [
+        {
+          "id": "d467a212-756d-48f9-a0fb-a37b60126d08",
+          "kind": "analysis.scheduled",
+          "created_at": "2026-10-18T14:58:47.612853+00:00",
+          "payload": {
+            "context": [
+              {
+                "id": "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "role": "assistant",
+                "text": "Hi there. I wanted to chat about the database options for our new analytics product. Do you have a few minutes to dive into the pros and cons?",
+                "revision": 1
+              },
+              {
+                "id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "role": "user",
+                "text": "We need a database for a small analytics product and our engineering team is only three",
+                "revision": 1
+              },
+              {
+                "id": "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+                "role": "assistant",
+                "text": "With a team that size, maintenance effort is definitely a key concern. Which factors are most important to you when we consider our options?",
+                "revision": 1
+              },
+              {
+                "id": "3d749694-03f0-49cf-aeca-824a8570309e",
+                "role": "user",
+                "text": "Our budget is limited and we cannot spend much time maintaining servers.",
+                "revision": 1
+              }
+            ],
+            "revision": 1,
+            "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+            "source_text": "Our budget is limited and we cannot spend much time maintaining servers.",
+            "context_version": 19
+          }
+        },
+        {
+          "id": "1eb1dea5-d466-4fb1-8923-316ace506b2b",
+          "kind": "analysis.queued",
+          "created_at": "2026-10-18T14:58:47.613170+00:00",
+          "payload": {
+            "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+            "context": [
+              {
+                "id": "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "revision": 1
+              },
+              {
+                "id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "revision": 1
+              },
+              {
+                "id": "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+                "revision": 1
+              },
+              {
+                "id": "3d749694-03f0-49cf-aeca-824a8570309e",
+                "revision": 1
+              }
+            ],
+            "revision": 1,
+            "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        },
+        {
+          "id": "33a9b0d0-1682-4ef8-a08b-7fdc12290e6e",
+          "kind": "analysis.started",
+          "created_at": "2026-10-18T14:58:47.881897+00:00",
+          "payload": {
+            "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+            "queue_ms": 269,
+            "revision": 1,
+            "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+            "context_version": 19
+          }
+        },
+        {
+          "id": "a095b280-2dc1-4d69-b2ea-f5e6f6e4d993",
+          "kind": "analysis.completed",
+          "created_at": "2026-10-18T14:58:48.997585+00:00",
+          "payload": {
+            "trace": {
+              "model": "deepseek-v4-flash",
+              "usage": {
+                "total_tokens": 1016,
+                "prompt_tokens": 907,
+                "completion_tokens": 109
+              },
+              "status": "ready",
+              "accepted": [],
+              "fallback": [],
+              "rejected": [],
+              "policy_id": "35623392-1af3-55f8-872c-247ab1d1aaad",
+              "elapsed_ms": 1115.6,
+              "error_type": null,
+              "help_level": null,
+              "needs_help": false,
+              "started_at": "2026-10-18T14:58:47.882031+00:00",
+              "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":{\"target_item_id\":\"3355e385-6086-4d40-8e18-01298e1cff92\",\"intent\":\"Introduce a compromise between two competing considerations\",\"opportunity\":\"Given your limited budget and little time for maintenance, how would you frame the compromise between those two concerns?\",\"skip_when\":\"The learner is only listing constraints without comparing or weighing options.\",\"context_sufficient\":true,\"closing\":false}}",
+              "completed_at": "2026-10-18T14:58:48.997547+00:00",
+              "finish_reason": "stop",
+              "policy_action": "continue_naturally",
+              "policy_reason": "observation_phase",
+              "prompt_version": "speaking-analysis-v3",
+              "recommendation": {
+                "intent": "Introduce a compromise between two competing considerations",
+                "closing": false,
+                "skip_when": "The learner is only listing constraints without comparing or weighing options.",
+                "opportunity": "Given your limited budget and little time for maintenance, how would you frame the compromise between those two concerns?",
+                "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+                "context_sufficient": true
+              },
+              "context_version": 19,
+              "source_revision": 1,
+              "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+              "context_message_ids": [
+                "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "c79c4840-1fea-45d2-981f-6002edbb7dd2"
+              ],
+              "effective_user_turns": 2
+            },
+            "policy": {
+              "id": "35623392-1af3-55f8-872c-247ab1d1aaad",
+              "action": "continue_naturally",
+              "intent": "",
+              "status": "pending",
+              "skip_when": "",
+              "created_at": "2026-10-18T14:58:47.342288+00:00",
+              "expires_at": "2026-10-18T14:59:32.342288+00:00",
+              "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+              "opportunity": "",
+              "response_id": null,
+              "source_turn": 2,
+              "target_kind": null,
+              "target_text": null,
+              "prompt_version": "speaking-elicitation-v2",
+              "target_item_id": null,
+              "source_revision": 1,
+              "learning_version": 2,
+              "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+              "eligible_until_turn": 4
+            },
+            "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+            "status": "ready",
+            "revision": 1,
+            "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        },
+        {
+          "id": "d864f1b6-3955-4bae-9bd6-4d38aef7f212",
+          "kind": "analysis.reconciled",
+          "created_at": "2026-10-18T14:58:49.507501+00:00",
+          "payload": {
+            "policy": {
+              "id": "35623392-1af3-55f8-872c-247ab1d1aaad",
+              "action": "continue_naturally",
+              "intent": "",
+              "status": "pending",
+              "skip_when": "",
+              "created_at": "2026-10-18T14:58:47.342288+00:00",
+              "expires_at": "2026-10-18T14:59:32.342288+00:00",
+              "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+              "opportunity": "",
+              "response_id": null,
+              "source_turn": 2,
+              "target_kind": null,
+              "target_text": null,
+              "prompt_version": "speaking-elicitation-v2",
+              "target_item_id": null,
+              "source_revision": 1,
+              "learning_version": 2,
+              "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+              "eligible_until_turn": 4
+            },
+            "reason": "committed",
+            "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+            "revision": 1,
+            "message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        }
+      ]
+    },
+    {
+      "turn": 3,
+      "message_id": "4f683a48-dd81-4b99-a4a1-2ca061327ac1",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "unavailable",
+      "text": "a managed database costs more but saves maintenance work I want to compare",
+      "analyses": [],
+      "replies": [],
+      "evidence": [],
+      "key_events": []
+    },
+    {
+      "turn": 4,
+      "message_id": "aa7195f1-1234-4b0d-b6bf-995da97ad65c",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "unavailable",
+      "text": "clearly",
+      "analyses": [],
+      "replies": [
+        {
+          "response_id": "gemini_response_b26e0be5b0724cf98539137dba5087d5",
+          "message_id": "9faf47b0-3354-46dc-a25a-01d5cf7624fd",
+          "position_after_user": 1,
+          "text": "Right, it's a balance of time versus money. What self-hosted database option were you thinking of comparing against the managed services?",
+          "status": "interrupted",
+          "first_audio_at": "2026-10-18T14:59:02.132922+00:00",
+          "browser_first_audio_at": "2026-10-18T14:59:02.158Z",
+          "web_audio_clock_started_at": "2026-10-18T14:59:02.200Z",
+          "first_audio_minus_analysis_started_ms": null,
+          "first_audio_minus_analysis_completed_ms": null,
+          "audio_before_analysis_start": null,
+          "audio_before_analysis_complete": null
+        }
+      ],
+      "evidence": [],
+      "key_events": []
+    },
+    {
+      "turn": 5,
+      "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "final",
+      "text": "matters most to me. How should we weigh that against the extra monthly cost?",
+      "analyses": [
+        {
+          "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+          "revision": 1,
+          "current_revision": true,
+          "started_at": "2026-10-18T14:59:20.211962+00:00",
+          "completed_at": "2026-10-18T14:59:21.067255+00:00",
+          "status": "ready",
+          "trace": {
+            "model": "deepseek-v4-flash",
+            "usage": {
+              "total_tokens": 1024,
+              "prompt_tokens": 1006,
+              "completion_tokens": 18
+            },
+            "status": "ready",
+            "accepted": [],
+            "fallback": [],
+            "rejected": [],
+            "policy_id": "1d4934c2-73a0-5d7b-85c6-629af426b8eb",
+            "elapsed_ms": 855.22,
+            "error_type": null,
+            "help_level": null,
+            "needs_help": false,
+            "started_at": "2026-10-18T14:59:20.212102+00:00",
+            "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":null}",
+            "completed_at": "2026-10-18T14:59:21.067222+00:00",
+            "finish_reason": "stop",
+            "policy_action": "continue_naturally",
+            "policy_reason": "no_contextual_recommendation",
+            "prompt_version": "speaking-analysis-v3",
+            "recommendation": null,
+            "context_version": 37,
+            "source_revision": 1,
+            "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "context_message_ids": [
+              "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+              "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+              "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+              "3d749694-03f0-49cf-aeca-824a8570309e",
+              "7e6ec20a-f2f4-4dff-9aee-a5cb3554e78d",
+              "9faf47b0-3354-46dc-a25a-01d5cf7624fd"
+            ],
+            "effective_user_turns": 3
+          },
+          "policy": {
+            "id": "1d4934c2-73a0-5d7b-85c6-629af426b8eb",
+            "action": "continue_naturally",
+            "intent": "",
+            "status": "pending",
+            "skip_when": "",
+            "created_at": "2026-10-18T14:59:19.623542+00:00",
+            "expires_at": "2026-10-18T15:00:04.623542+00:00",
+            "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+            "opportunity": "",
+            "response_id": null,
+            "source_turn": 3,
+            "target_kind": null,
+            "target_text": null,
+            "prompt_version": "speaking-elicitation-v2",
+            "target_item_id": null,
+            "source_revision": 1,
+            "learning_version": 3,
+            "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "eligible_until_turn": 5
+          },
+          "reconciled": {
+            "id": "8d7a68c7-23c7-4e7f-896e-523410e708b9",
+            "kind": "analysis.reconciled",
+            "created_at": "2026-10-18T14:59:21.708839+00:00",
+            "payload": {
+              "policy": {
+                "id": "1d4934c2-73a0-5d7b-85c6-629af426b8eb",
+                "action": "continue_naturally",
+                "intent": "",
+                "status": "pending",
+                "skip_when": "",
+                "created_at": "2026-10-18T14:59:19.623542+00:00",
+                "expires_at": "2026-10-18T15:00:04.623542+00:00",
+                "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+                "opportunity": "",
+                "response_id": null,
+                "source_turn": 3,
+                "target_kind": null,
+                "target_text": null,
+                "prompt_version": "speaking-elicitation-v2",
+                "target_item_id": null,
+                "source_revision": 1,
+                "learning_version": 3,
+                "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+                "eligible_until_turn": 5
+              },
+              "reason": "committed",
+              "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+              "revision": 1,
+              "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+              "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+            }
+          }
+        }
+      ],
+      "replies": [
+        {
+          "response_id": "gemini_response_70c679cb5260429e867b03a10dc9c84c",
+          "message_id": "0c233707-5a0c-4273-9b77-5f80d363b2dd",
+          "position_after_user": 1,
+          "text": "Reliability is certainly critical. What specific risks are you most concerned about if we chose a cheaper but less managed option?",
+          "status": "interrupted",
+          "first_audio_at": "2026-10-18T14:59:18.185217+00:00",
+          "browser_first_audio_at": "2026-10-18T14:59:18.210Z",
+          "web_audio_clock_started_at": "2026-10-18T14:59:18.255Z",
+          "first_audio_minus_analysis_started_ms": -2026.75,
+          "first_audio_minus_analysis_completed_ms": -2882.04,
+          "audio_before_analysis_start": true,
+          "audio_before_analysis_complete": true
+        }
+      ],
+      "evidence": [],
+      "key_events": [
+        {
+          "id": "92357ed6-1107-4efe-ba12-f26d620ceff4",
+          "kind": "analysis.scheduled",
+          "created_at": "2026-10-18T14:59:19.902816+00:00",
+          "payload": {
+            "context": [
+              {
+                "id": "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+                "role": "assistant",
+                "text": "With a team that size, maintenance effort is definitely a key concern. Which factors are most important to you when we consider our options?",
+                "revision": 1
+              },
+              {
+                "id": "3d749694-03f0-49cf-aeca-824a8570309e",
+                "role": "user",
+                "text": "Our budget is limited and we cannot spend much time maintaining servers.",
+                "revision": 1
+              },
+              {
+                "id": "7e6ec20a-f2f4-4dff-9aee-a5cb3554e78d",
+                "role": "assistant",
+                "text": "That makes sense. Given those constraints, are you leaning towards a managed solution, or something else?",
+                "revision": 1
+              },
+              {
+                "id": "4f683a48-dd81-4b99-a4a1-2ca061327ac1",
+                "role": "user",
+                "text": "a managed database costs more but saves maintenance work I want to compare",
+                "revision": 1
+              },
+              {
+                "id": "aa7195f1-1234-4b0d-b6bf-995da97ad65c",
+                "role": "user",
+                "text": "clearly",
+                "revision": 1
+              },
+              {
+                "id": "9faf47b0-3354-46dc-a25a-01d5cf7624fd",
+                "role": "assistant",
+                "text": "Right, it's a balance of time versus money. What self-hosted database option were you thinking of comparing against the managed services?",
+                "revision": 1
+              },
+              {
+                "id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+                "role": "user",
+                "text": "matters most to me. How should we weigh that against the extra monthly cost?",
+                "revision": 1
+              }
+            ],
+            "revision": 1,
+            "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+            "source_text": "matters most to me. How should we weigh that against the extra monthly cost?",
+            "context_version": 37
+          }
+        },
+        {
+          "id": "51bbb98a-e942-446f-987d-297e48390042",
+          "kind": "analysis.queued",
+          "created_at": "2026-10-18T14:59:19.905955+00:00",
+          "payload": {
+            "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+            "context": [
+              {
+                "id": "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "revision": 1
+              },
+              {
+                "id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "revision": 1
+              },
+              {
+                "id": "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+                "revision": 1
+              },
+              {
+                "id": "3d749694-03f0-49cf-aeca-824a8570309e",
+                "revision": 1
+              },
+              {
+                "id": "7e6ec20a-f2f4-4dff-9aee-a5cb3554e78d",
+                "revision": 1
+              },
+              {
+                "id": "4f683a48-dd81-4b99-a4a1-2ca061327ac1",
+                "revision": 1
+              },
+              {
+                "id": "aa7195f1-1234-4b0d-b6bf-995da97ad65c",
+                "revision": 1
+              },
+              {
+                "id": "9faf47b0-3354-46dc-a25a-01d5cf7624fd",
+                "revision": 1
+              },
+              {
+                "id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+                "revision": 1
+              }
+            ],
+            "revision": 1,
+            "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        },
+        {
+          "id": "463ce48e-e7bf-4b9a-8751-6364e72eb6e6",
+          "kind": "analysis.started",
+          "created_at": "2026-10-18T14:59:20.211962+00:00",
+          "payload": {
+            "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+            "queue_ms": 309,
+            "revision": 1,
+            "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+            "context_version": 37
+          }
+        },
+        {
+          "id": "70cfc1a9-9541-4636-bbfd-de9617ca9917",
+          "kind": "analysis.completed",
+          "created_at": "2026-10-18T14:59:21.067255+00:00",
+          "payload": {
+            "trace": {
+              "model": "deepseek-v4-flash",
+              "usage": {
+                "total_tokens": 1024,
+                "prompt_tokens": 1006,
+                "completion_tokens": 18
+              },
+              "status": "ready",
+              "accepted": [],
+              "fallback": [],
+              "rejected": [],
+              "policy_id": "1d4934c2-73a0-5d7b-85c6-629af426b8eb",
+              "elapsed_ms": 855.22,
+              "error_type": null,
+              "help_level": null,
+              "needs_help": false,
+              "started_at": "2026-10-18T14:59:20.212102+00:00",
+              "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":null}",
+              "completed_at": "2026-10-18T14:59:21.067222+00:00",
+              "finish_reason": "stop",
+              "policy_action": "continue_naturally",
+              "policy_reason": "no_contextual_recommendation",
+              "prompt_version": "speaking-analysis-v3",
+              "recommendation": null,
+              "context_version": 37,
+              "source_revision": 1,
+              "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+              "context_message_ids": [
+                "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+                "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+                "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+                "3d749694-03f0-49cf-aeca-824a8570309e",
+                "7e6ec20a-f2f4-4dff-9aee-a5cb3554e78d",
+                "9faf47b0-3354-46dc-a25a-01d5cf7624fd"
+              ],
+              "effective_user_turns": 3
+            },
+            "policy": {
+              "id": "1d4934c2-73a0-5d7b-85c6-629af426b8eb",
+              "action": "continue_naturally",
+              "intent": "",
+              "status": "pending",
+              "skip_when": "",
+              "created_at": "2026-10-18T14:59:19.623542+00:00",
+              "expires_at": "2026-10-18T15:00:04.623542+00:00",
+              "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+              "opportunity": "",
+              "response_id": null,
+              "source_turn": 3,
+              "target_kind": null,
+              "target_text": null,
+              "prompt_version": "speaking-elicitation-v2",
+              "target_item_id": null,
+              "source_revision": 1,
+              "learning_version": 3,
+              "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+              "eligible_until_turn": 5
+            },
+            "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+            "status": "ready",
+            "revision": 1,
+            "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        },
+        {
+          "id": "8d7a68c7-23c7-4e7f-896e-523410e708b9",
+          "kind": "analysis.reconciled",
+          "created_at": "2026-10-18T14:59:21.708839+00:00",
+          "payload": {
+            "policy": {
+              "id": "1d4934c2-73a0-5d7b-85c6-629af426b8eb",
+              "action": "continue_naturally",
+              "intent": "",
+              "status": "pending",
+              "skip_when": "",
+              "created_at": "2026-10-18T14:59:19.623542+00:00",
+              "expires_at": "2026-10-18T15:00:04.623542+00:00",
+              "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+              "opportunity": "",
+              "response_id": null,
+              "source_turn": 3,
+              "target_kind": null,
+              "target_text": null,
+              "prompt_version": "speaking-elicitation-v2",
+              "target_item_id": null,
+              "source_revision": 1,
+              "learning_version": 3,
+              "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+              "eligible_until_turn": 5
+            },
+            "reason": "committed",
+            "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+            "revision": 1,
+            "message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+            "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+          }
+        }
+      ]
+    },
+    {
+      "turn": 6,
+      "message_id": "95e65aac-d786-4dc3-b934-3184fe99ca0a",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "unavailable",
+      "text": "One trade-off is that a managed database costs more but gives our small team more",
+      "analyses": [],
+      "replies": [],
+      "evidence": [],
+      "key_events": []
+    },
+    {
+      "turn": 7,
+      "message_id": "86c84b5f-d8ec-41fe-b936-f54975d65514",
+      "revision": 1,
+      "input_source": "voice",
+      "status": "unavailable",
+      "text": " time to build features.",
+      "analyses": [],
+      "replies": [
+        {
+          "response_id": "gemini_response_96d9fa6a13b74adab307455c98bbbc7b",
+          "message_id": "90149823-639d-40b0-a1ec-8eca1f871651",
+          "position_after_user": 1,
+          "text": "That's a very fair point about team bandwidth. Given that, how do you see that trade-off affecting our overall project timeline?",
+          "status": "final",
+          "first_audio_at": "2026-10-18T14:59:34.861061+00:00",
+          "browser_first_audio_at": "2026-10-18T14:59:34.885Z",
+          "web_audio_clock_started_at": "2026-10-18T14:59:34.921Z",
+          "first_audio_minus_analysis_started_ms": null,
+          "first_audio_minus_analysis_completed_ms": null,
+          "audio_before_analysis_start": null,
+          "audio_before_analysis_complete": null
+        }
+      ],
+      "evidence": [],
+      "key_events": []
+    }
+  ],
+  "attempts": [],
+  "hints": [
+    {
+      "id": "d18fe4bb-0f91-4481-bff5-f83ce13d7b1f",
+      "kind": "hint.requested",
+      "created_at": "2026-10-18T14:59:43.375060+00:00",
+      "payload": {
+        "level": "usage",
+        "request_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92"
+      }
+    },
+    {
+      "id": "0ee93113-77de-59e7-9ad7-3810db8abced",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:44.058008+00:00",
+      "payload": {
+        "level": "usage",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 1,
+        "exposure": {
+          "id": "0ee93113-77de-59e7-9ad7-3810db8abced",
+          "kind": "visual_hint",
+          "level": "usage",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:44.057911+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "058a6a9d-93b9-5b61-8062-293ebd2ed8b9",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:44.058243+00:00",
+      "payload": {
+        "level": "direction",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 1,
+        "exposure": {
+          "id": "058a6a9d-93b9-5b61-8062-293ebd2ed8b9",
+          "kind": "visual_hint",
+          "level": "direction",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:44.058153+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "ce53a9b4-5061-4706-8c32-3e570dbc1d58",
+      "kind": "hint.analyzed",
+      "created_at": "2026-10-18T14:59:45.266387+00:00",
+      "payload": {
+        "trace": {
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "total_tokens": 608,
+            "prompt_tokens": 520,
+            "completion_tokens": 88
+          },
+          "status": "ready",
+          "elapsed_ms": 1296.46,
+          "error_type": null,
+          "started_at": "2026-10-18T14:59:43.969732+00:00",
+          "raw_content": "{\"direction\":\"Introduce a compromise between two options when weighing a decision\",\"meaning\":\"Use this phrase to signal that you are about to name one disadvantage or compromise that comes with a choice, often when comparing alternatives. It frames the point as one of several considerations, not the only one.\",\"pattern\":\"One trade-off is [that] + clause / One trade-off is + noun phrase\",\"example\":null,\"substitution\":null}",
+          "completed_at": "2026-10-18T14:59:45.266223+00:00",
+          "finish_reason": "stop",
+          "prompt_version": "speaking-help-v1",
+          "requested_level": "usage",
+          "source_revision": 1,
+          "source_message_id": "86c84b5f-d8ec-41fe-b936-f54975d65514"
+        },
+        "result": {
+          "level": "usage",
+          "status": "ready",
+          "example": null,
+          "meaning": "Use this phrase to signal that you are about to name one disadvantage or compromise that comes with a choice, often when comparing alternatives. It frames the point as one of several considerations, not the only one.",
+          "pattern": "One trade-off is [that] + clause / One trade-off is + noun phrase",
+          "direction": "Introduce a compromise between two options when weighing a decision",
+          "substitution": null,
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92"
+        },
+        "request_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+      }
+    },
+    {
+      "id": "234a4b65-fb93-424f-b979-8f74e7750fe8",
+      "kind": "hint.generated",
+      "created_at": "2026-10-18T14:59:46.867249+00:00",
+      "payload": {
+        "card": {
+          "id": "d2b11e33-592f-44d7-a085-81d775357639",
+          "error": null,
+          "level": "usage",
+          "source": "requested",
+          "status": "ready",
+          "example": null,
+          "meaning": "Use this phrase to signal that you are about to name one disadvantage or compromise that comes with a choice, often when comparing alternatives. It frames the point as one of several considerations, not the only one.",
+          "pattern": "One trade-off is [that] + clause / One trade-off is + noun phrase",
+          "version": 2,
+          "direction": "Introduce a compromise between two options when weighing a decision",
+          "expression": "One trade-off is",
+          "substitution": null,
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+      }
+    },
+    {
+      "id": "b012c7fb-b4fd-5d18-ac3d-6dc4d32dd7df",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:46.922690+00:00",
+      "payload": {
+        "level": "direction",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 2,
+        "exposure": {
+          "id": "b012c7fb-b4fd-5d18-ac3d-6dc4d32dd7df",
+          "kind": "visual_hint",
+          "level": "direction",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:46.922537+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "7d1c0e6d-ccfa-50a6-88aa-7469e4ff31fa",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:46.972503+00:00",
+      "payload": {
+        "level": "usage",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 2,
+        "exposure": {
+          "id": "7d1c0e6d-ccfa-50a6-88aa-7469e4ff31fa",
+          "kind": "visual_hint",
+          "level": "usage",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:46.972432+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "893d82dc-dd9d-4df4-a4b5-6a8c7fe34f76",
+      "kind": "hint.requested",
+      "created_at": "2026-10-18T14:59:47.541966+00:00",
+      "payload": {
+        "level": "example",
+        "request_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92"
+      }
+    },
+    {
+      "id": "3b3578b8-1e97-59a8-a736-a389963f8e00",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:48.289343+00:00",
+      "payload": {
+        "level": "direction",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 1,
+        "exposure": {
+          "id": "3b3578b8-1e97-59a8-a736-a389963f8e00",
+          "kind": "visual_hint",
+          "level": "direction",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:48.289124+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "b47c7438-71a4-55a4-97d6-b169b85838cc",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:48.289828+00:00",
+      "payload": {
+        "level": "usage",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 1,
+        "exposure": {
+          "id": "b47c7438-71a4-55a4-97d6-b169b85838cc",
+          "kind": "visual_hint",
+          "level": "usage",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:48.289760+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "05408c60-5aff-4472-81ca-22fc15f449f5",
+      "kind": "hint.analyzed",
+      "created_at": "2026-10-18T14:59:49.758263+00:00",
+      "payload": {
+        "trace": {
+          "model": "deepseek-v4-flash",
+          "usage": {
+            "total_tokens": 634,
+            "prompt_tokens": 520,
+            "completion_tokens": 114
+          },
+          "status": "ready",
+          "elapsed_ms": 1551.71,
+          "error_type": null,
+          "started_at": "2026-10-18T14:59:48.204746+00:00",
+          "raw_content": "{\"direction\":\"Introduce a compromise between two options when weighing a decision\",\"meaning\":\"Used to name one side of a trade-off—a compromise where gaining one benefit means giving up something else. Common in discussions comparing choices.\",\"pattern\":\"One trade-off is [benefit] versus [cost/drawback]\",\"example\":\"One trade-off is that a managed database costs more each month but saves us maintenance time.\",\"substitution\":\"Swap in your own pair of pros and cons after 'One trade-off is...' to frame the compromise you're weighing.\"}",
+          "completed_at": "2026-10-18T14:59:49.756495+00:00",
+          "finish_reason": "stop",
+          "prompt_version": "speaking-help-v1",
+          "requested_level": "example",
+          "source_revision": 1,
+          "source_message_id": "86c84b5f-d8ec-41fe-b936-f54975d65514"
+        },
+        "result": {
+          "level": "example",
+          "status": "ready",
+          "example": "One trade-off is that a managed database costs more each month but saves us maintenance time.",
+          "meaning": "Used to name one side of a trade-off—a compromise where gaining one benefit means giving up something else. Common in discussions comparing choices.",
+          "pattern": "One trade-off is [benefit] versus [cost/drawback]",
+          "direction": "Introduce a compromise between two options when weighing a decision",
+          "substitution": "Swap in your own pair of pros and cons after 'One trade-off is...' to frame the compromise you're weighing.",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92"
+        },
+        "request_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+      }
+    },
+    {
+      "id": "86dbf9d4-4400-4fde-b922-869770052c83",
+      "kind": "hint.generated",
+      "created_at": "2026-10-18T14:59:50.901318+00:00",
+      "payload": {
+        "card": {
+          "id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+          "error": null,
+          "level": "example",
+          "source": "requested",
+          "status": "ready",
+          "example": "One trade-off is that a managed database costs more each month but saves us maintenance time.",
+          "meaning": "Used to name one side of a trade-off—a compromise where gaining one benefit means giving up something else. Common in discussions comparing choices.",
+          "pattern": "One trade-off is [benefit] versus [cost/drawback]",
+          "version": 2,
+          "direction": "Introduce a compromise between two options when weighing a decision",
+          "expression": "One trade-off is",
+          "substitution": "Swap in your own pair of pros and cons after 'One trade-off is...' to frame the compromise you're weighing.",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2"
+      }
+    },
+    {
+      "id": "2f27de8e-b4ad-536d-98bb-68ea19a7a20d",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:50.967656+00:00",
+      "payload": {
+        "level": "direction",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 2,
+        "exposure": {
+          "id": "2f27de8e-b4ad-536d-98bb-68ea19a7a20d",
+          "kind": "visual_hint",
+          "level": "direction",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:50.967544+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "feb2c722-f62b-5d5b-b0d5-37882770f70f",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:50.967812+00:00",
+      "payload": {
+        "level": "usage",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 2,
+        "exposure": {
+          "id": "feb2c722-f62b-5d5b-b0d5-37882770f70f",
+          "kind": "visual_hint",
+          "level": "usage",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:50.967765+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    },
+    {
+      "id": "8b44c2ce-405d-567b-883f-eb25e5f4e364",
+      "kind": "hint.shown",
+      "created_at": "2026-10-18T14:59:51.026053+00:00",
+      "payload": {
+        "level": "example",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 2,
+        "exposure": {
+          "id": "8b44c2ce-405d-567b-883f-eb25e5f4e364",
+          "kind": "visual_hint",
+          "level": "example",
+          "scope": "session",
+          "overlap": false,
+          "visible_at": "2026-10-18T14:59:51.025959+00:00",
+          "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+          "source_revision": 1,
+          "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+        },
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "attribution": "subsequent_turns"
+      }
+    }
+  ],
+  "hint_presentations": [
+    {
+      "at": "2026-10-18T14:59:44.058008+00:00",
+      "level": "usage",
+      "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+      "version": 1,
+      "exposure": {
+        "id": "0ee93113-77de-59e7-9ad7-3810db8abced",
+        "kind": "visual_hint",
+        "level": "usage",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:44.057911+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:44.058243+00:00",
+      "level": "direction",
+      "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+      "version": 1,
+      "exposure": {
+        "id": "058a6a9d-93b9-5b61-8062-293ebd2ed8b9",
+        "kind": "visual_hint",
+        "level": "direction",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:44.058153+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:46.922690+00:00",
+      "level": "direction",
+      "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+      "version": 2,
+      "exposure": {
+        "id": "b012c7fb-b4fd-5d18-ac3d-6dc4d32dd7df",
+        "kind": "visual_hint",
+        "level": "direction",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:46.922537+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:46.972503+00:00",
+      "level": "usage",
+      "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+      "version": 2,
+      "exposure": {
+        "id": "7d1c0e6d-ccfa-50a6-88aa-7469e4ff31fa",
+        "kind": "visual_hint",
+        "level": "usage",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:46.972432+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:48.289343+00:00",
+      "level": "direction",
+      "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+      "version": 1,
+      "exposure": {
+        "id": "3b3578b8-1e97-59a8-a736-a389963f8e00",
+        "kind": "visual_hint",
+        "level": "direction",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:48.289124+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:48.289828+00:00",
+      "level": "usage",
+      "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+      "version": 1,
+      "exposure": {
+        "id": "b47c7438-71a4-55a4-97d6-b169b85838cc",
+        "kind": "visual_hint",
+        "level": "usage",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:48.289760+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:50.967656+00:00",
+      "level": "direction",
+      "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+      "version": 2,
+      "exposure": {
+        "id": "2f27de8e-b4ad-536d-98bb-68ea19a7a20d",
+        "kind": "visual_hint",
+        "level": "direction",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:50.967544+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:50.967812+00:00",
+      "level": "usage",
+      "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+      "version": 2,
+      "exposure": {
+        "id": "feb2c722-f62b-5d5b-b0d5-37882770f70f",
+        "kind": "visual_hint",
+        "level": "usage",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:50.967765+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    },
+    {
+      "at": "2026-10-18T14:59:51.026053+00:00",
+      "level": "example",
+      "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+      "version": 2,
+      "exposure": {
+        "id": "8b44c2ce-405d-567b-883f-eb25e5f4e364",
+        "kind": "visual_hint",
+        "level": "example",
+        "scope": "session",
+        "overlap": false,
+        "visible_at": "2026-10-18T14:59:51.025959+00:00",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92",
+        "source_revision": 1,
+        "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413"
+      },
+      "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+      "attribution": "subsequent_turns",
+      "matching_browser_ack": true
+    }
+  ],
+  "observations": {
+    "voice_first_reply_count": 5,
+    "voice_first_replies_with_analysis_timing": 3,
+    "voice_first_audio_before_analysis_start": 3,
+    "voice_first_audio_lead_over_analysis_complete_ms": {
+      "min": 2799.12,
+      "max": 5454.05
+    },
+    "analysis_windows_with_running_web_audio": 3,
+    "replies_with_audio_before_analysis_start": 3,
+    "replies_with_audio_before_analysis_complete": 3,
+    "cross_turn_bound_attempts": 0,
+    "cross_turn_bound_while_eligible": 0,
+    "cross_turn_reflected_with_exact_quote": 0,
+    "implicit_constraint_passed": 0,
+    "implicit_constraint_failed": 0,
+    "accepted_quote_anchor_sources": {},
+    "accepted_anchors_with_exact_utf16_slice": 0,
+    "hint_presentations_with_matching_browser_ack": 9
+  },
+  "browser_presentation_events": [
+    {
+      "at": "2026-10-18T14:58:24.281Z",
+      "epoch_ms": 1792335504281,
+      "performance_ms": 62165.70000000298,
+      "kind": "client.message.shown",
+      "event": {
+        "type": "message.shown",
+        "message_id": "e188c486-57c7-4ae8-8a9f-27ce7ff74354",
+        "revision": 1
+      },
+      "_source": "browser-events.jsonl:224"
+    },
+    {
+      "at": "2026-10-18T14:58:39.423Z",
+      "epoch_ms": 1792335519423,
+      "performance_ms": 77307.40000000596,
+      "kind": "client.message.shown",
+      "event": {
+        "type": "message.shown",
+        "message_id": "c79c4840-1fea-45d2-981f-6002edbb7dd2",
+        "revision": 1
+      },
+      "_source": "browser-events.jsonl:448"
+    },
+    {
+      "at": "2026-10-18T14:58:52.622Z",
+      "epoch_ms": 1792335532622,
+      "performance_ms": 90506.40000000596,
+      "kind": "client.message.shown",
+      "event": {
+        "type": "message.shown",
+        "message_id": "7e6ec20a-f2f4-4dff-9aee-a5cb3554e78d",
+        "revision": 1
+      },
+      "_source": "browser-events.jsonl:643"
+    },
+    {
+      "at": "2026-10-18T14:59:10.205Z",
+      "epoch_ms": 1792335550205,
+      "performance_ms": 108089.30000000447,
+      "kind": "client.message.shown",
+      "event": {
+        "type": "message.shown",
+        "message_id": "9faf47b0-3354-46dc-a25a-01d5cf7624fd",
+        "revision": 1
+      },
+      "_source": "browser-events.jsonl:862"
+    },
+    {
+      "at": "2026-10-18T14:59:26.272Z",
+      "epoch_ms": 1792335566272,
+      "performance_ms": 124155.40000000596,
+      "kind": "client.message.shown",
+      "event": {
+        "type": "message.shown",
+        "message_id": "0c233707-5a0c-4273-9b77-5f80d363b2dd",
+        "revision": 1
+      },
+      "_source": "browser-events.jsonl:1083"
+    },
+    {
+      "at": "2026-10-18T14:59:41.971Z",
+      "epoch_ms": 1792335581971,
+      "performance_ms": 139855.1000000015,
+      "kind": "client.message.shown",
+      "event": {
+        "type": "message.shown",
+        "message_id": "90149823-639d-40b0-a1ec-8eca1f871651",
+        "revision": 1
+      },
+      "_source": "browser-events.jsonl:1291"
+    },
+    {
+      "at": "2026-10-18T14:59:42.378Z",
+      "epoch_ms": 1792335582378,
+      "performance_ms": 140261.90000000596,
+      "kind": "client.hint",
+      "event": {
+        "type": "hint",
+        "request_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "level": "usage"
+      },
+      "_source": "browser-events.jsonl:1299"
+    },
+    {
+      "at": "2026-10-18T14:59:44.055Z",
+      "epoch_ms": 1792335584055,
+      "performance_ms": 141938.6000000015,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 1,
+        "level": "usage"
+      },
+      "_source": "browser-events.jsonl:1309"
+    },
+    {
+      "at": "2026-10-18T14:59:44.055Z",
+      "epoch_ms": 1792335584055,
+      "performance_ms": 141939,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 1,
+        "level": "direction"
+      },
+      "_source": "browser-events.jsonl:1310"
+    },
+    {
+      "at": "2026-10-18T14:59:46.921Z",
+      "epoch_ms": 1792335586921,
+      "performance_ms": 144804.70000000298,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 2,
+        "level": "direction"
+      },
+      "_source": "browser-events.jsonl:1324"
+    },
+    {
+      "at": "2026-10-18T14:59:46.971Z",
+      "epoch_ms": 1792335586971,
+      "performance_ms": 144855,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "d2b11e33-592f-44d7-a085-81d775357639",
+        "version": 2,
+        "level": "usage"
+      },
+      "_source": "browser-events.jsonl:1325"
+    },
+    {
+      "at": "2026-10-18T14:59:47.210Z",
+      "epoch_ms": 1792335587210,
+      "performance_ms": 145093.30000000447,
+      "kind": "client.hint",
+      "event": {
+        "type": "hint",
+        "request_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "level": "example",
+        "target_item_id": "3355e385-6086-4d40-8e18-01298e1cff92"
+      },
+      "_source": "browser-events.jsonl:1327"
+    },
+    {
+      "at": "2026-10-18T14:59:48.288Z",
+      "epoch_ms": 1792335588288,
+      "performance_ms": 146171.30000000447,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 1,
+        "level": "direction"
+      },
+      "_source": "browser-events.jsonl:1333"
+    },
+    {
+      "at": "2026-10-18T14:59:48.288Z",
+      "epoch_ms": 1792335588288,
+      "performance_ms": 146171.6000000015,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 1,
+        "level": "usage"
+      },
+      "_source": "browser-events.jsonl:1334"
+    },
+    {
+      "at": "2026-10-18T14:59:50.956Z",
+      "epoch_ms": 1792335590956,
+      "performance_ms": 148839.1000000015,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 2,
+        "level": "direction"
+      },
+      "_source": "browser-events.jsonl:1351"
+    },
+    {
+      "at": "2026-10-18T14:59:50.957Z",
+      "epoch_ms": 1792335590957,
+      "performance_ms": 148840,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 2,
+        "level": "usage"
+      },
+      "_source": "browser-events.jsonl:1352"
+    },
+    {
+      "at": "2026-10-18T14:59:51.022Z",
+      "epoch_ms": 1792335591022,
+      "performance_ms": 148905.80000000447,
+      "kind": "client.hint.shown",
+      "event": {
+        "type": "hint.shown",
+        "hint_id": "579aff3d-61b9-4abe-a2ff-bebcf298db56",
+        "version": 2,
+        "level": "example"
+      },
+      "_source": "browser-events.jsonl:1353"
+    }
+  ],
+  "browser_audio_by_response": [
+    {
+      "response_id": "gemini_response_a9874f152db84a45b8c3bbe1bdc83c48",
+      "item_id": "gemini_output_0afa7ba9b08e4be0b86b6bf2773163ab",
+      "event_counts": {
+        "server.audio.delta": 23,
+        "audio.scheduled": 23,
+        "audio.clock_started": 23,
+        "audio.ended": 23
+      },
+      "first_at": "2026-10-18T14:58:12.424Z",
+      "last_at": "2026-10-18T14:58:23.633Z"
+    },
+    {
+      "response_id": "gemini_response_6daea6a3ca50446cbcb73cb05233cccc",
+      "item_id": "gemini_output_6e9ce28ab36342ef90bc24daaa309d4b",
+      "event_counts": {
+        "server.audio.delta": 27,
+        "audio.scheduled": 27,
+        "audio.ended": 27,
+        "audio.clock_started": 26
+      },
+      "first_at": "2026-10-18T14:58:31.097Z",
+      "last_at": "2026-10-18T14:58:39.824Z"
+    },
+    {
+      "response_id": "gemini_response_2de1ad3cc22449b48a22c1d9bebc6ec9",
+      "item_id": "gemini_output_28ba02d42659497e9456cfdd679c59b4",
+      "event_counts": {
+        "server.audio.delta": 23,
+        "audio.scheduled": 23,
+        "audio.ended": 23,
+        "audio.clock_started": 21
+      },
+      "first_at": "2026-10-18T14:58:46.210Z",
+      "last_at": "2026-10-18T14:58:52.908Z"
+    },
+    {
+      "response_id": "gemini_response_b26e0be5b0724cf98539137dba5087d5",
+      "item_id": "gemini_output_a784025754014770b3befe6839848a83",
+      "event_counts": {
+        "server.audio.delta": 23,
+        "audio.scheduled": 23,
+        "audio.ended": 23,
+        "audio.clock_started": 22
+      },
+      "first_at": "2026-10-18T14:59:02.158Z",
+      "last_at": "2026-10-18T14:59:10.283Z"
+    },
+    {
+      "response_id": "gemini_response_70c679cb5260429e867b03a10dc9c84c",
+      "item_id": "gemini_output_440069b9b2b4415ba7d374762e23bd74",
+      "event_counts": {
+        "server.audio.delta": 26,
+        "audio.scheduled": 26,
+        "audio.ended": 26,
+        "audio.clock_started": 24
+      },
+      "first_at": "2026-10-18T14:59:18.210Z",
+      "last_at": "2026-10-18T14:59:26.543Z"
+    },
+    {
+      "response_id": "gemini_response_96d9fa6a13b74adab307455c98bbbc7b",
+      "item_id": "gemini_output_a4d51800a55b4f8c9fe111b5d545ab71",
+      "event_counts": {
+        "server.audio.delta": 23,
+        "audio.scheduled": 23,
+        "audio.ended": 23,
+        "audio.clock_started": 22
+      },
+      "first_at": "2026-10-18T14:59:34.885Z",
+      "last_at": "2026-10-18T14:59:42.322Z"
+    }
+  ],
+  "browser_microphone_events": [
+    {
+      "at": "2026-10-18T14:58:24.289Z",
+      "epoch_ms": 1792335504289,
+      "performance_ms": 62174,
+      "kind": "microphone.speak_started",
+      "command_id": "turn-01",
+      "duration_ms": 4948.208616780045,
+      "sample_rate": 44100,
+      "_source": "browser-events.jsonl:225"
+    },
+    {
+      "at": "2026-10-18T14:58:29.235Z",
+      "epoch_ms": 1792335509235,
+      "performance_ms": 67120.20000000298,
+      "kind": "microphone.speak_ended",
+      "command_id": "turn-01",
+      "_source": "browser-events.jsonl:237"
+    },
+    {
+      "at": "2026-10-18T14:58:39.888Z",
+      "epoch_ms": 1792335519888,
+      "performance_ms": 77773.10000000149,
+      "kind": "microphone.speak_started",
+      "command_id": "turn-02",
+      "duration_ms": 3711.655328798186,
+      "sample_rate": 44100,
+      "_source": "browser-events.jsonl:456"
+    },
+    {
+      "at": "2026-10-18T14:58:43.603Z",
+      "epoch_ms": 1792335523603,
+      "performance_ms": 81487.40000000596,
+      "kind": "microphone.speak_ended",
+      "command_id": "turn-02",
+      "_source": "browser-events.jsonl:467"
+    },
+    {
+      "at": "2026-10-18T14:58:52.976Z",
+      "epoch_ms": 1792335532976,
+      "performance_ms": 90860.90000000596,
+      "kind": "microphone.speak_started",
+      "command_id": "turn-03",
+      "duration_ms": 5732.018140589569,
+      "sample_rate": 44100,
+      "_source": "browser-events.jsonl:650"
+    },
+    {
+      "at": "2026-10-18T14:58:58.708Z",
+      "epoch_ms": 1792335538708,
+      "performance_ms": 96591.90000000596,
+      "kind": "microphone.speak_ended",
+      "command_id": "turn-03",
+      "_source": "browser-events.jsonl:667"
+    },
+    {
+      "at": "2026-10-18T14:59:10.344Z",
+      "epoch_ms": 1792335550344,
+      "performance_ms": 108228,
+      "kind": "microphone.speak_started",
+      "command_id": "turn-04",
+      "duration_ms": 4941.541950113379,
+      "sample_rate": 44100,
+      "_source": "browser-events.jsonl:866"
+    },
+    {
+      "at": "2026-10-18T14:59:15.287Z",
+      "epoch_ms": 1792335555287,
+      "performance_ms": 113171.20000000298,
+      "kind": "microphone.speak_ended",
+      "command_id": "turn-04",
+      "_source": "browser-events.jsonl:880"
+    },
+    {
+      "at": "2026-10-18T14:59:26.610Z",
+      "epoch_ms": 1792335566610,
+      "performance_ms": 124494.30000000447,
+      "kind": "microphone.speak_started",
+      "command_id": "turn-05",
+      "duration_ms": 5470.47619047619,
+      "sample_rate": 44100,
+      "_source": "browser-events.jsonl:1091"
+    },
+    {
+      "at": "2026-10-18T14:59:32.081Z",
+      "epoch_ms": 1792335572081,
+      "performance_ms": 129964.80000000447,
+      "kind": "microphone.speak_ended",
+      "command_id": "turn-05",
+      "_source": "browser-events.jsonl:1107"
+    }
+  ],
+  "browser_clock_after_node_ended": [],
+  "audio_during_analysis_windows": [],
+  "playback_during_analysis_windows": [
+    {
+      "run_id": "ca280cf7-327a-4067-8faf-21c97bc80d8c",
+      "source_message_id": "b6aa1694-04e5-42e1-a7b6-bc2c5bab91ea",
+      "provider_started_at": "2026-10-18T14:58:35.463747+00:00",
+      "analysis_completed_at": "2026-10-18T14:58:36.528185+00:00",
+      "playing_audio_nodes": 4,
+      "nodes": [
+        {
+          "audio_node_id": "3bd819d0-5ce1-4b2f-af25-f5cb0c249904",
+          "response_id": "gemini_response_6daea6a3ca50446cbcb73cb05233cccc",
+          "started_at": "2026-10-18T14:58:35.306Z",
+          "ended_at": "2026-10-18T14:58:35.621Z",
+          "overlap_ms": 157.25
+        },
+        {
+          "audio_node_id": "bc924baa-feb7-4e04-9b13-478d7443651e",
+          "response_id": "gemini_response_6daea6a3ca50446cbcb73cb05233cccc",
+          "started_at": "2026-10-18T14:58:35.625Z",
+          "ended_at": "2026-10-18T14:58:35.859Z",
+          "overlap_ms": 234.0
+        },
+        {
+          "audio_node_id": "d476713d-a3f2-42f9-9e31-67df8544d20f",
+          "response_id": "gemini_response_6daea6a3ca50446cbcb73cb05233cccc",
+          "started_at": "2026-10-18T14:58:35.866Z",
+          "ended_at": "2026-10-18T14:58:36.260Z",
+          "overlap_ms": 394.0
+        },
+        {
+          "audio_node_id": "2688d8c7-6011-465e-ab77-0227f4c1de8e",
+          "response_id": "gemini_response_6daea6a3ca50446cbcb73cb05233cccc",
+          "started_at": "2026-10-18T14:58:36.264Z",
+          "ended_at": "2026-10-18T14:58:36.701Z",
+          "overlap_ms": 264.18
+        }
+      ]
+    },
+    {
+      "run_id": "e239dba6-6b11-48a6-b15c-cc95f5dd7da3",
+      "source_message_id": "3d749694-03f0-49cf-aeca-824a8570309e",
+      "provider_started_at": "2026-10-18T14:58:47.882031+00:00",
+      "analysis_completed_at": "2026-10-18T14:58:48.997547+00:00",
+      "playing_audio_nodes": 4,
+      "nodes": [
+        {
+          "audio_node_id": "d6cb996a-4846-4528-93f7-1a0a628f2a48",
+          "response_id": "gemini_response_2de1ad3cc22449b48a22c1d9bebc6ec9",
+          "started_at": "2026-10-18T14:58:47.837Z",
+          "ended_at": "2026-10-18T14:58:47.991Z",
+          "overlap_ms": 108.97
+        },
+        {
+          "audio_node_id": "68b7676c-d87c-44ff-8465-abf18bcf8f7a",
+          "response_id": "gemini_response_2de1ad3cc22449b48a22c1d9bebc6ec9",
+          "started_at": "2026-10-18T14:58:48.313Z",
+          "ended_at": "2026-10-18T14:58:48.630Z",
+          "overlap_ms": 317.0
+        },
+        {
+          "audio_node_id": "71256a02-6cd2-46ea-9683-4bf586197f11",
+          "response_id": "gemini_response_2de1ad3cc22449b48a22c1d9bebc6ec9",
+          "started_at": "2026-10-18T14:58:48.635Z",
+          "ended_at": "2026-10-18T14:58:48.990Z",
+          "overlap_ms": 355.0
+        },
+        {
+          "audio_node_id": "ecf9be09-fa55-41a1-ad2c-01affe9311a0",
+          "response_id": "gemini_response_2de1ad3cc22449b48a22c1d9bebc6ec9",
+          "started_at": "2026-10-18T14:58:48.996Z",
+          "ended_at": "2026-10-18T14:58:49.629Z",
+          "overlap_ms": 1.55
+        }
+      ]
+    },
+    {
+      "run_id": "1c99c208-0b81-46f3-85cb-11c2fe2ee73d",
+      "source_message_id": "d91ffd6c-30f6-43a8-8415-c59cb49f8413",
+      "provider_started_at": "2026-10-18T14:59:20.212102+00:00",
+      "analysis_completed_at": "2026-10-18T14:59:21.067222+00:00",
+      "playing_audio_nodes": 3,
+      "nodes": [
+        {
+          "audio_node_id": "038aff21-9ec2-4e57-87a6-c84e441c9f38",
+          "response_id": "gemini_response_70c679cb5260429e867b03a10dc9c84c",
+          "started_at": "2026-10-18T14:59:19.950Z",
+          "ended_at": "2026-10-18T14:59:20.546Z",
+          "overlap_ms": 333.9
+        },
+        {
+          "audio_node_id": "8db5dc9b-e03c-44a1-88c9-fa276e2bdc9e",
+          "response_id": "gemini_response_70c679cb5260429e867b03a10dc9c84c",
+          "started_at": "2026-10-18T14:59:20.550Z",
+          "ended_at": "2026-10-18T14:59:20.947Z",
+          "overlap_ms": 397.0
+        },
+        {
+          "audio_node_id": "8f524543-3703-4836-b7d0-478eaddd80df",
+          "response_id": "gemini_response_70c679cb5260429e867b03a10dc9c84c",
+          "started_at": "2026-10-18T14:59:20.951Z",
+          "ended_at": "2026-10-18T14:59:21.464Z",
+          "overlap_ms": 116.22
+        }
+      ]
+    }
+  ],
+  "rejected_model_evidence": [],
+  "anchored_model_evidence": [],
+  "diagnostic_integrity": [
+    {
+      "id": "e4ed910c-e7f9-43ed-94ae-5643126ff4b0",
+      "kind": "diagnostics.closed",
+      "created_at": "2026-10-18T14:59:54.003904+00:00",
+      "payload": {
+        "status": "drained",
+        "runtime_id": "4dab32ca-59a2-4ddb-bfa6-db57d33a01d2",
+        "missing_events": 0,
+        "unreported_missing_events": 0
+      }
+    }
+  ],
+  "cleanup": {
+    "session_deleted": true,
+    "corpus_deleted": true
+  },
+  "warnings": [],
+  "browser_errors": [],
+  "execution_notes": {
+    "result": "voice_transport_completed_but_strategy_and_quote_uncovered",
+    "scripted_wav_inputs": 5,
+    "saved_nonblank_user_rows": 7,
+    "finalized_user_turns": 3,
+    "unavailable_user_fragments": 4,
+    "reason": "Gemini ASR/VAD split third and fifth WAV into unavailable fragments; surviving third substantive finalized utterance returned recommendation=null. No strategy was forced.",
+    "fifth_input": "Prewritten synthetic learner speech prepared before session, not proof of learning or causal elicitation. Its target phrase was in an unavailable transcript fragment, so quote acceptance was not exercised.",
+    "audio_rate_error": false,
+    "help": "Real Usage and Example generation plus browser visible ACKs completed.",
+    "host_context": "Local development with high background host load; repository build was not concurrent during this run.",
+    "source_hashes_unchanged_after_run": true,
+    "cleanup": "API SIGINT exported and deleted synthetic session/corpus."
+  },
+  "limits": [
+    "真实模型单次运行不代表所有输入、网络条件或物理麦克风/扬声器延迟。",
+    "首音使用服务端转发时间；浏览器收包与 WebAudio 调度另列，不等同于声学输出。",
+    "浏览器与服务端 UTC 均为本机墙上时钟；跨进程差值不是独立时钟校准结果。",
+    "audio.ended 是 onended；主动 stop 也会触发，不能据此声称每帧完整播放。",
+    "只有 clock_started 早于同一节点 ended 的区间才参与播放交叠统计；节点结束后才报告的 clock_started 不计。",
+    "回复关联按保存消息 ordinal；自动静默追问也可能出现在同一用户轮下。",
+    "跨轮绑定与模型判定 reflected 是执行/内容证据，不是因果归因或教学效果证明。",
+    "hint.shown 是实际产品可见性 ACK，不能证明用户注视、理解或学习。",
+    "analysis 时间窗口包括本地验证/回写前处理；重叠收包不等于模型同一时刻生成。"
+  ]
+}

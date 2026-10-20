@@ -1,0 +1,14 @@
+{
+  "result": "voice_transport_completed_but_strategy_and_quote_uncovered",
+  "scripted_wav_inputs": 5,
+  "saved_nonblank_user_rows": 7,
+  "finalized_user_turns": 3,
+  "unavailable_user_fragments": 4,
+  "reason": "Gemini ASR/VAD split third and fifth WAV into unavailable fragments; surviving third substantive finalized utterance returned recommendation=null. No strategy was forced.",
+  "fifth_input": "Prewritten synthetic learner speech prepared before session, not proof of learning or causal elicitation. Its target phrase was in an unavailable transcript fragment, so quote acceptance was not exercised.",
+  "audio_rate_error": false,
+  "help": "Real Usage and Example generation plus browser visible ACKs completed.",
+  "host_context": "Local development with high background host load; repository build was not concurrent during this run.",
+  "source_hashes_unchanged_after_run": true,
+  "cleanup": "API SIGINT exported and deleted synthetic session/corpus."
+}

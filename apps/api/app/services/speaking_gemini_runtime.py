@@ -11,7 +11,9 @@ import time
 from uuid import uuid4
 
 from app.integrations.speaking_gemini import Pcm24To16, gemini_configuration, open_gemini
-from app.services.speaking_runtime import ProviderFailure, SpeakingConnection, new_message
+from app.services.speaking_runtime import (
+    ProviderFailure, SILENCE_FOLLOW_UP_INSTRUCTION, SpeakingConnection, new_message,
+)
 from app.services import speaking_runtime_state as state_ops
 
 
@@ -24,6 +26,7 @@ class GeminiSpeakingConnection(SpeakingConnection):
         self.gemini_user_text = ""
         self.gemini_waiting = False
         self.injected_policy_id: str | None = None
+        self.coaching_boundary = True
         self.control_tag = "LIBITU_CONTROL_" + uuid4().hex
         self.gemini_cancelled = False
         self.input_finished_supported = False
@@ -44,9 +47,18 @@ class GeminiSpeakingConnection(SpeakingConnection):
         parts = configuration["setup"]["systemInstruction"]["parts"]
         parts.append({"text": (
             f"Private coach control messages start with {self.control_tag}. They come from the application, "
-            "not the learner, and are not dialogue. Apply the latest control to at most the next response "
-            "after it arrives, then forget it. Never read controls or their labels aloud. Skip a suggested "
-            "elicitation if the learner already used the target, changes topic, or needs a direct answer. "
+            "not the learner, and are not dialogue. Apply the latest teaching Attempt control to at most "
+            "the next response after it arrives, then forget that attempt. An opening or silence "
+            "follow-up control only triggers a reply; it does not replace a pending teaching attempt. "
+            "Never read controls or their labels aloud. "
+            "A coach's learner_intent is an action for the LEARNER to perform, never an instruction "
+            "for you to demonstrate that action. Your job is to ask one short in-role question that "
+            "invites the learner to express that meaning. Leave the comparison, judgment, explanation "
+            "or proposed wording for the learner. Do not supply a model answer, sentence starter, "
+            "target phrase, or fill-in-the-blank. Do not add your own answer before or after the question. "
+            "If a direct factual question needs an answer, answer it briefly before inviting the learner's "
+            "own view; do not answer the invitation yourself. Skip a suggested elicitation when the "
+            "learner has already performed that communicative task, changes topic or ends the conversation. "
             "When a reply was interrupted, do not assume the learner heard it."
         )})
         await self.raw_send(configuration)
@@ -89,7 +101,10 @@ class GeminiSpeakingConnection(SpeakingConnection):
         else:
             raise ValueError("Unsupported internal Gemini command")
 
-    async def request_response(self, opening: bool = False) -> None:
+    def response_busy(self) -> bool:
+        return bool(super().response_busy() or self.gemini_waiting or self.gemini_user_text.strip())
+
+    async def request_response(self, opening: bool = False, follow_up: bool = False) -> None:
         await self.fence()
         if self.active_response or self.gemini_waiting:
             self.queued_response = True
@@ -97,6 +112,8 @@ class GeminiSpeakingConnection(SpeakingConnection):
         await self.inject_policy()
         if opening:
             text = f"{self.control_tag} Begin the mission with one brief in-role opening."
+        elif follow_up:
+            text = f"{self.control_tag} {SILENCE_FOLLOW_UP_INSTRUCTION}"
         elif self.gemini_text:
             text = "\n".join(self.gemini_text)
             self.gemini_text.clear()
@@ -104,23 +121,43 @@ class GeminiSpeakingConnection(SpeakingConnection):
             # Audio responses are automatically started by Gemini VAD.
             return
         self.gemini_waiting = True
+        self.silence_since = None
         self.gemini_cancelled = False
         await self.raw_send({"clientContent": {"turns": [{"role": "user", "parts": [{"text": text}]}], "turnComplete": True}})
         await self.send({"type": "state", "state": "thinking"})
 
+    async def dispatch_coaching(self) -> None:
+        await self.inject_policy()
+
     async def inject_policy(self) -> None:
-        policy = self.state["document"].get("policy")
-        if not policy or policy["status"] != "pending" or policy["id"] == self.injected_policy_id:
+        if (self.injected_attempt or not self.coaching_boundary or self.user_speaking
+                or self.active_response or self.gemini_waiting or self.gemini_user_text.strip()
+                or self.stop.is_set() or self.coaching_closed):
+            return
+        if not self.state["document"].get("policy"):
+            return
+        policy = await self.eligible_policy()
+        if not policy:
             return
         instruction = policy.get("instruction", "")
         if not instruction:
             return
         # clientContent interrupts generation; call only before an explicit text
         # request or after the provider's turnComplete event, never during speech.
-        await self.raw_send({"clientContent": {"turns": [{"role": "user", "parts": [{
-            "text": f"{self.control_tag} For the next response only: {instruction}"
-        }]}], "turnComplete": False}})
+        attempt = self.new_attempt(policy)
         self.injected_policy_id = policy["id"]
+        self.injected_attempt = attempt
+        self.diagnostic("policy.sending", {"attempt": attempt})
+        try:
+            await self.raw_send({"clientContent": {"turns": [{"role": "user", "parts": [{
+                "text": f"{self.control_tag} Attempt {attempt['id']}. For the next response only: {instruction}"
+            }]}], "turnComplete": False}})
+        except (Exception, asyncio.CancelledError):
+            attempt["send_status"] = "uncertain"
+            self.diagnostic("policy.send_uncertain", {"attempt": attempt})
+            raise
+        attempt["send_status"] = "sent"
+        self.diagnostic("policy.sent", {"attempt": attempt})
 
     async def interrupt(self) -> None:
         active = self.responses.get(self.active_response) if self.active_response else None
@@ -149,6 +186,7 @@ class GeminiSpeakingConnection(SpeakingConnection):
                 if message.get("provider_item_id") == item_id:
                     message["status"] = "interrupted"
         await self.commit(mark)
+        self.playback_logged(item_id)
         # Gemini's public protocol does not expose OpenAI's exact audio truncate
         # operation. Do not pretend this local boundary rewrites provider memory.
 
@@ -172,7 +210,8 @@ class GeminiSpeakingConnection(SpeakingConnection):
             self.gemini_user = self.closed_input
             self.gemini_user_text = self.closed_input_text
             return self.gemini_user
-        message = new_message("user", "", "voice", provider_item_id="gemini_input_" + uuid4().hex, status="unavailable")
+        message = new_message("user", "", "voice", provider_item_id="gemini_input_" + uuid4().hex, status="unavailable",
+                              started_at=self.user_activity_at or state_ops.iso_now())
         def append(document, _):
             if sum(m["role"] == "user" for m in document["messages"]) >= self.settings.speaking_max_turns:
                 raise ProviderFailure("mission_limit", "This mission reached its turn limit. End it to review your conversation.", False)
@@ -210,6 +249,7 @@ class GeminiSpeakingConnection(SpeakingConnection):
         await self.fence()
         response_id = "gemini_response_" + uuid4().hex
         self.active_response = response_id
+        self.coaching_boundary = False
         self.gemini_waiting = False
         response = {"id": response_id, "audio": self.microphone, "text": "", "item_id": "gemini_output_" + uuid4().hex,
                     "persisted": False, "interrupted": self.gemini_cancelled, "input_generation": self.input_generation}
@@ -219,14 +259,10 @@ class GeminiSpeakingConnection(SpeakingConnection):
         def reserve(document, _):
             placeholder["ordinal"] = len(document["messages"])
             document["messages"].append(placeholder)
+            self.bind_attempt(document, response, self.injected_attempt)
         await self.commit(reserve)
-        policy_id, self.injected_policy_id = self.injected_policy_id, None
-        if policy_id:
-            def bind(document, _):
-                policy = document.get("policy")
-                if policy and policy["id"] == policy_id and policy["status"] == "pending":
-                    policy.update(status="applied", response_id=response_id)
-            await self.commit(bind)
+        self.injected_policy_id, self.injected_attempt = None, None
+        self.response_bound(response)
         return response
 
     async def gemini_event(self, event: dict) -> None:
@@ -237,6 +273,11 @@ class GeminiSpeakingConnection(SpeakingConnection):
         activity_event = event.get("voiceActivity", {})
         activity = activity_event.get("type", activity_event.get("voiceActivityType"))
         if activity == "ACTIVITY_START":
+            self.user_speaking = True
+            self.user_activity_at = state_ops.iso_now()
+            self.coaching_boundary = False
+            await self.send({"type": "user.activity", "speaking": True})
+            self.silence_since = None
             self.input_ambiguous = self.gemini_user is not None
             if self.gemini_user:
                 await self.preserve_uncertain_input()
@@ -254,6 +295,9 @@ class GeminiSpeakingConnection(SpeakingConnection):
             await self.send({"type": "state", "state": "listening"})
             await self.ensure_user()
         elif activity == "ACTIVITY_END":
+            self.user_speaking = False
+            await self.send({"type": "user.activity", "speaking": False})
+            self.silence_since = None
             self.ended_input_generation = self.input_generation
         content = event.get("serverContent")
         if not isinstance(content, dict):
@@ -268,12 +312,16 @@ class GeminiSpeakingConnection(SpeakingConnection):
             await self.send({"type": "state", "state": "listening"})
         transcription = content.get("inputTranscription")
         if isinstance(transcription, dict) and (transcription.get("text") or transcription.get("finished")):
+            self.coaching_boundary = False
             self.last_activity = time.monotonic()
             message = await self.ensure_user()
             text = transcription.get("text", "")
+            self.note_user_text(text)
             self.gemini_user_text = (self.gemini_user_text + text)[:4001]
             await self.send({"type": "transcript.delta", "role": "user", "item_id": message["provider_item_id"], "delta": text})
             if transcription.get("finished"):
+                self.user_speaking = False
+                await self.send({"type": "user.activity", "speaking": False})
                 self.input_finished_supported = True
                 await self.finalize_input()
             elif self.closed_input is not None:
@@ -283,6 +331,7 @@ class GeminiSpeakingConnection(SpeakingConnection):
         output = content.get("outputTranscription")
         parts = content.get("modelTurn", {}).get("parts", [])
         if parts or output:
+            self.silence_since = None
             response = await self.ensure_response()
             if not response.get("interrupted"):
                 if isinstance(output, dict) and output.get("text"):
@@ -297,6 +346,7 @@ class GeminiSpeakingConnection(SpeakingConnection):
                         item["generated_ms"] += len(base64.b64decode(audio["data"])) / 48
                         self.last_audio_item = item_id
                         await self.send({"type": "audio.delta", "item_id": item_id, "response_id": response["id"], "audio": audio["data"]})
+                        self.audio_forwarded(response)
                         await self.send({"type": "state", "state": "speaking"})
         if content.get("generationComplete") or content.get("turnComplete"):
             response = self.responses.get(self.active_response) if self.active_response else None
@@ -311,6 +361,7 @@ class GeminiSpeakingConnection(SpeakingConnection):
                 await self.save_assistant(response, "interrupted" if response.get("interrupted") else "final")
                 self.active_response = None
             self.gemini_waiting = False
+            self.coaching_boundary = True
             self.gemini_cancelled = False
             await self.send({"type": "state", "state": "listening"})
             if self.queued_response and self.gemini_text:
@@ -318,5 +369,4 @@ class GeminiSpeakingConnection(SpeakingConnection):
                 await self.request_response()
             else:
                 self.queued_response = False
-                await self.fence()
-                await self.inject_policy()
+                self.schedule_coaching()

@@ -1,0 +1,27 @@
+[
+  {
+    "command_id": "turn-01",
+    "text": "We need a database for a small analytics product and our engineering team is only three people.",
+    "wav": "turn-01.wav"
+  },
+  {
+    "command_id": "turn-02",
+    "text": "Our budget is limited and we cannot spend much time maintaining servers.",
+    "wav": "turn-02.wav"
+  },
+  {
+    "command_id": "turn-03",
+    "text": "A managed database costs more but saves maintenance work. I want to compare those two sides clearly.",
+    "wav": "turn-03.wav"
+  },
+  {
+    "command_id": "turn-04",
+    "text": "Reliability matters most to me. How should we weigh that against the extra monthly cost?",
+    "wav": "turn-04.wav"
+  },
+  {
+    "command_id": "turn-05",
+    "text": "One trade-off is that a managed database costs more but gives our small team more time to build features.",
+    "wav": "turn-05.wav"
+  }
+]

@@ -9,6 +9,58 @@ meta:
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
 
+## Mission teaching control and private diagnostics — 2026-10-18
+
+- [x] Observe finalized learner revisions with frozen context; keep the first two substantive utterances in observation mode and permit explicit help immediately.
+- [x] Require a contextual recommendation for automatic teaching; wake dispatch on analysis completion and provider boundaries, preserve eligible candidates across turns, and bind immutable execution attempts separately.
+- [x] Provide shared Usage/Example help cards, requested-example generation, unavailable/retry states and visibility acknowledgments; gate automatic direction on completed-response reflection.
+- [x] Record analysis/provider results, candidate/attempt outcomes, advisory response assessment, actual presentation and session-scoped assistance; overlap/unknown does not count as independent use.
+- [x] Add owner-authenticated diagnostic pagination, separate private storage and bounded best-effort background writes with gap/closure records.
+- [x] Apply `20261018111206_speaking_teaching_diagnostics` to hosted Supabase and pass transactional rollback checks. Only the pre-existing `private.content_payloads` informational advisor finding remains.
+- [x] Pass focused teaching/help/assessment regressions without paid model calls.
+- [x] Complete root lint/build/test: 1,111 API and 390 Web tests pass; 114 extension tests reuse the Turbo cache. One existing Starlette test-client deprecation warning remains.
+- [x] Pass `speaking-help.browser.mjs` at 1440/390 px with synthetic auth/API/provider events: usage/example loading, per-level visible ACK, hidden/occluded suppression, stale request fencing, automatic-card retirement and no horizontal overflow; screenshots inspected.
+- [x] Pass the existing `speaking.browser.mjs` at 1440/768/390 px, plus background/resume, denied microphone, takeover and deletion cases. Real browser AudioWorklet capture/playback uses synthetic provider/audio fixtures. Update its obsolete deletion URL assertion to accept the current `/loadout` route without requiring a query string.
+- [x] Run one real Gemini/DeepSeek/Supabase browser session with synthetic identity/WAV input: seven canonical turns, six voice first replies ahead of analysis, one eligible cross-turn binding, real Usage/Example visibility ACKs and assisted-use attribution. Export 221 diagnostic events with a drained closure and no reported gaps; remove temporary database records. [Full evidence](design/benchmarks/teaching-live-20261018/run-01/README.md).
+- [x] Address implicit-teaching answer priming: withhold selected wording from Gemini setup/implicit controls, assign the act to the learner, reject detected wording in recommendations and separate teaching attempts from opening/silence triggers. Post-response target disclosure deterministically fails compliance; otherwise assess the opportunity in the background.
+- [x] Remove model character-counting from the normal Stage 4 evidence protocol: derive offsets from unique exact quotes, safely repair unambiguous wrong ranges, require valid ranges for repeated quotes, and log model/derived/repaired provenance. Stored evidence and Stage 5 remain strictly validated.
+- [x] Address the live-probe capture backlog: PCM and high-frequency receipts bypass the provider/state lock, completed-playback writes run in the tracked background drain, and shutdown reconciles complete received ACKs. Retain microphone/control ordering, serialized provider sends, frame validation and original rate limits. Eight new mixed-stream/storage/shutdown regressions and 68 existing runtime/Gemini/coaching checks pass.
+- [x] Verify the fixes with real providers: run-04 records voice-before-analysis and nine help visibility ACKs without `audio_rate`; ASR fragments leave its strategy coverage incomplete. Controlled run-05 records turn 3→4 eligible binding, learner-directed Gemini wording, passed target non-disclosure, `reflected`, a direction ACK and server-derived `[0,16)` evidence. Preserve its later persistence 503 and absent fifth-reply audio; do not label the whole session successful. Export 109/95 diagnostic events, drained with no reported gaps, and verify temporary-record deletion. [All attempts and per-turn logs](design/benchmarks/teaching-live-20261018/README.md).
+- [x] After live sessions close, run final root lint/build/test sequentially: 1,179 API and 390 Web tests pass; 114 extension tests use the cache. One existing Starlette warning remains. Independent read-only review confirms exact quote slicing, actual strategy response/ACKs and the persistence-failure boundary.
+- [ ] Qualify and diagnose intermittent persistence failures under live load; run-05's 503 occurred after strategy and quote evidence were committed, before a fifth reply was observed.
+- [ ] Qualify physical-microphone timing, automatic-VAD injection races, natural teaching behavior and example quality across more cases. One bounded synthetic-speech live run does not establish latency distributions or learning effects.
+- [ ] Schedule the existing server-only global diagnostic purge if a strict physical-retention deadline is required; current reads filter at 30 days and append prunes the same session.
+
+See [the complete behavior and diagnostic contract](design/docs/STAGE_FOUR_TEACHING_CONTROL.md). A diagnostic timeline UI is not part of this delivery.
+
+## Mission startup, silence and audio bursts — 2026-10-18
+
+- [x] Defer opening until microphone mode is acknowledged; preserve text input during pending microphone permission and avoid duplicate openings after recovery.
+- [x] Allow bounded PCM catch-up batches using a token bucket while continuing to reject oversized frames and sustained excessive input.
+- [x] Add voice-only follow-ups after at least 15 seconds of silence following AI playback, capped at two per silent stretch; preserve speech/generation/playback and ownership fences, without creating learner turns.
+- [x] Focused offline tests cover deferred/denied permission, audible opening, recovered sessions, burst limits, playback-aware pacing, prompt cap and end/takeover/delete fences.
+- [x] Root lint/build/test pass: 1018 API and 382 Web tests ran successfully; 114 extension tests reused the Turbo cache. The opt-in live smoke now sends the initial microphone acknowledgment; no paid/live smoke was run for this change.
+- [ ] Qualify real microphone/network catch-up and provider follow-up timing; synthetic tests do not establish acoustic quality or end-to-end latency.
+
+## Mission speech-onset tuning — 2026-10-18
+
+- [x] Increase Gemini onset confirmation from 100 to 300 ms, retaining low sensitivity, automatic interruption and the existing end-of-speech silence window.
+- [x] Root lint/test/build pass; Web/extension tasks reused Turbo caches. Offline checks verify integration compatibility, not real-room false-interruption rates.
+- [ ] Qualify short speech, deliberate interruption and background-noise false triggers with a real microphone; no measured improvement is claimed by offline tests.
+
+## Chat empty-message visibility — 2026-10-18
+
+- [x] Hide empty/whitespace saved messages and live fragments in Chat, including noise-triggered voice placeholders; show messages when text arrives and derive empty-state/scroll behavior from visible content.
+
+Validation: root `pnpm lint`, `pnpm test`, and `pnpm build` pass (API/extension tasks reused Turbo caches). This presentation-only change was not tested against a live microphone/provider.
+
+## Mission loading consistency — 2026-10-18
+
+- [x] Replace generic loading cards with the Mission layout: task heading, voice workspace, composer and desktop language sidebar. Reuse page breakpoints and respect reduced motion.
+
+- [x] Remove the leftover Speaking route fallback and unify Mission auth/workspace loading geometry, avoiding sequential skeleton layouts when entering from Loadout.
+
+
 ## Stage 1 video scroll and loading cleanup — 2026-10-18
 
 - [x] Connect native wheel scrolling over the persistent video to the reader's center panel without blocking player controls.
@@ -29,6 +81,8 @@ Verification: root lint/build/test pass (1,495 tests). Fixture browser checks at
 Remove the mandatory Ready to practice screen. Confirming a segment enters Shadow directly (Quick by default); unauthenticated learners retain the existing sign-in gate and return target. The picker prefetches the selected segment’s Shadow route/code. Existing `/segments?segmentId=…&step=prepare` links replace into Shadow without a preparation history entry. Content-owned media, reference capture/cache, and account-owned save queues keep their existing ownership. Reference preparation remains available in Detailed; this does not auto-enable capture, playback, microphone or upload consent.
 
 ## Stage 2 Quick and Review — 2026-10-17
+
+- [x] Allow Skip while Quick is paused: advance directly to the next sentence, or finish the round at the last sentence. Keep Resume primary and Redo hidden.
 
 - [x] Unify Quick and Detailed primary actions on the shared purple button variant, removing Quick paint overrides and Detailed black recording buttons.
 

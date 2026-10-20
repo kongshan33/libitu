@@ -1,15 +1,15 @@
-import type { SpeakingClientEvent, SpeakingServerEvent, SpeakingWorkspace } from "@libitu/types/speaking";
+import type { SpeakingClientEvent, SpeakingHelpLevel, SpeakingServerEvent, SpeakingWorkspace } from "@libitu/types/speaking";
 import { ConversationApiError, runtimeSocketUrl, type ConversationApi } from "./api.ts";
 import { ConversationAudio } from "./audio.ts";
 
 export type ConnectionState = "loading" | "idle" | "connecting" | "connected" | "disconnected" | "paused" | "ended" | "error";
 export type ConversationState = {
   workspace: SpeakingWorkspace | null; connection: ConnectionState; phase: "listening" | "thinking" | "speaking";
-  microphone: boolean; microphoneBusy: boolean; error: string | null; conflict: boolean; busy: boolean;
+  microphone: boolean; microphoneBusy: boolean; userSpeaking: boolean; error: string | null; conflict: boolean; busy: boolean;
   partials: Record<string, { role: "user" | "assistant"; text: string }>;
   pending: { id: string; text: string; status: "sending" | "unconfirmed" } | null;
 };
-export const initialConversationState = (): ConversationState => ({ workspace: null, connection: "loading", phase: "listening", microphone: false, microphoneBusy: false, error: null, conflict: false, busy: false, partials: {}, pending: null });
+export const initialConversationState = (): ConversationState => ({ workspace: null, connection: "loading", phase: "listening", microphone: false, microphoneBusy: false, userSpeaking: false, error: null, conflict: false, busy: false, partials: {}, pending: null });
 type AudioPort = Pick<ConversationAudio, "prepare" | "enableMicrophone" | "disableMicrophone" | "append" | "report" | "clear" | "dispose">;
 type Dependencies = {
   socket?: (url: string) => WebSocket;
@@ -28,6 +28,11 @@ export class ConversationController {
   private boundary: ReturnType<typeof setInterval> | null = null;
   private readyTimer: ReturnType<typeof setTimeout> | null = null;
   private acknowledgementTimer: ReturnType<typeof setTimeout> | null = null;
+  private hintTimer: ReturnType<typeof setTimeout> | null = null;
+  private hintRequest: string | null = null;
+  private retiredHints = new Set<string>();
+  private shownHints = new Set<string>();
+  private shownMessages = new Set<string>();
   private lastPong = 0;
   private connecting: Promise<boolean> | null = null;
   private finishConnection: ((value: boolean) => void) | null = null;
@@ -41,6 +46,19 @@ export class ConversationController {
   private accept(workspace: SpeakingWorkspace): boolean {
     if (workspace.session.user_id !== this.owner || workspace.session.id !== this.sessionId || !Number.isSafeInteger(workspace.version)) return false;
     if (this.state.workspace && workspace.version < this.state.workspace.version) return false;
+    const previousHelp = this.state.workspace?.help;
+    const incomingHelp = workspace.help;
+    // A late hint result must not replace a newer request, even if another
+    // runtime mutation has advanced the enclosing snapshot version.
+    if ((this.hintRequest && incomingHelp?.id !== this.hintRequest)
+      || (incomingHelp && this.retiredHints.has(incomingHelp.id))
+      || (incomingHelp && previousHelp?.id === incomingHelp.id && incomingHelp.version < previousHelp.version)) {
+      workspace = { ...workspace, help: previousHelp ?? null };
+    } else if (incomingHelp?.id === this.hintRequest && incomingHelp?.status !== "loading") {
+      this.hintRequest = null;
+      if (this.hintTimer) clearTimeout(this.hintTimer);
+      this.hintTimer = null;
+    }
     const finalized = new Set(workspace.messages.filter(message => message.status !== "unavailable").map(message => message.provider_item_id).filter(Boolean));
     const partials = Object.fromEntries(Object.entries(this.state.partials).filter(([id]) => !finalized.has(id)));
     const pending = this.state.pending && !workspace.messages.some(message => message.client_turn_id === this.state.pending?.id) ? this.state.pending : null;
@@ -90,10 +108,14 @@ export class ConversationController {
     const audio = voice ? this.getAudio() : null;
     if (audio) void audio.enableMicrophone().then(() => {
       microphone = true;
-      if (this.current(epoch) && this.state.connection === "connected" && this.send({ type: "microphone", enabled: true })) this.patch({ microphone: true });
     }).catch(() => {
       if (this.current(epoch)) this.patch({ error: "Microphone unavailable or permission denied. You can continue by typing." });
-    }).finally(() => { microphoneSettled = true; if (this.current(epoch)) this.patch({ microphoneBusy: false }); });
+    }).finally(() => {
+      microphoneSettled = true;
+      if (!this.current(epoch)) return;
+      if (this.state.connection === "connected" && !this.send({ type: "microphone", enabled: microphone })) return;
+      if (this.current(epoch)) this.patch({ microphoneBusy: false, microphone: this.state.connection === "connected" && microphone });
+    });
     try {
       const ticket = await this.api.connect(this.uuid(), takeover, this.abort.signal);
       if (!this.current(epoch)) return false;
@@ -114,7 +136,9 @@ export class ConversationController {
             if (this.readyTimer) clearTimeout(this.readyTimer); this.readyTimer = null;
             this.lastPong = Date.now();
             this.patch({ connection: "connected", phase: "listening", microphone, microphoneBusy: !microphoneSettled });
-            if (!this.send({ type: "microphone", enabled: microphone }) || !this.current(epoch)) { finish(false); return; }
+            // Defer the opening until voice permission settles, without blocking
+            // ready/text input on the browser's permission dialog.
+            if ((microphoneSettled && !this.send({ type: "microphone", enabled: microphone })) || !this.current(epoch)) { finish(false); return; }
             this.heartbeat = setInterval(() => { if (Date.now() - this.lastPong > 35_000) this.disconnect("Connection lost. Your saved transcript is safe."); else this.send({ type: "ping" }); }, 10_000);
             this.boundary = setInterval(() => this.audio?.report(), 250);
             finish(true); return;
@@ -137,9 +161,17 @@ export class ConversationController {
     if (event.type === "ended") { if (this.accept(event.workspace)) { this.closeRuntime(); this.patch({ connection: "ended", microphone: false, microphoneBusy: false, partials: {}, pending: null }); } return; }
     if (event.type === "pong") { this.lastPong = Date.now(); return; }
     if (event.type === "state") { if (["listening", "thinking", "speaking"].includes(event.state)) this.patch({ phase: event.state }); return; }
+    if (event.type === "user.activity") {
+      if (typeof event.speaking === "boolean") {
+        if (event.speaking) this.retireAutomaticHint();
+        this.patch({ userSpeaking: event.speaking });
+      }
+      return;
+    }
     if (event.type === "transcript.delta") {
       const previous = this.state.partials[event.item_id]?.text ?? "";
       if (typeof event.delta !== "string" || previous.length + event.delta.length > 12_000 || Object.keys(this.state.partials).length > 5) return;
+      if (event.role === "user" && event.delta.trim()) this.retireAutomaticHint();
       this.patch({ partials: { ...this.state.partials, [event.item_id]: { role: event.role, text: previous + event.delta } } }); return;
     }
     if (event.type === "audio.delta") {
@@ -160,6 +192,7 @@ export class ConversationController {
   }
   async submit(text: string): Promise<boolean> {
     text = text.trim(); if (!text || text.length > 4000 || this.state.pending || this.state.connection === "ended") return false;
+    this.retireAutomaticHint();
     const pending = { id: this.uuid(), text, status: "sending" as const }; this.patch({ pending });
     if (this.state.connection !== "connected" && !await this.start(false)) {
       if (this.isPending(pending.id)) this.patch({ pending: { ...pending, status: "unconfirmed" } });
@@ -184,7 +217,49 @@ export class ConversationController {
     if (this.acknowledgementTimer) clearTimeout(this.acknowledgementTimer);
     this.acknowledgementTimer = setTimeout(() => { if (this.state.pending?.id === id) this.patch({ pending: { ...this.state.pending, status: "unconfirmed" }, error: "Your message is not confirmed yet. Retry the same message to check safely." }); }, 20_000);
   }
-  hint(): void { this.send({ type: "hint" }); }
+  hint(level: "usage" | "example" = "usage", targetItemId?: string): void {
+    const workspace = this.state.workspace;
+    if (!workspace || this.state.connection !== "connected") return;
+    const target = targetItemId ? workspace.session.items.find(item => item.id === targetItemId) : workspace.session.items.find(item => item.id === workspace.help?.target_item_id);
+    if (targetItemId && !target) return;
+    if (this.hintRequest === workspace.help?.id && workspace.help?.status === "loading" && workspace.help.level === level && workspace.help.target_item_id === (target?.id ?? null)) return;
+    const id = this.uuid();
+    if (!this.send({ type: "hint", request_id: id, level, ...(target?.id ? { target_item_id: target.id } : {}) })) return;
+    if (workspace.help) this.retiredHints.add(workspace.help.id);
+    this.hintRequest = id;
+    if (this.hintTimer) clearTimeout(this.hintTimer);
+    // The server confirms version 1 before any language is exposed or logged.
+    this.patch({ workspace: { ...workspace, help: { id, version: 0, target_item_id: target?.id ?? null, level, status: "loading", direction: null, expression: null, meaning: null, pattern: null, example: null, substitution: null, source: "requested", source_message_id: null, error: null } } });
+    this.hintTimer = setTimeout(() => {
+      if (this.hintRequest !== id || this.state.workspace?.help?.id !== id) return;
+      this.hintRequest = null; this.hintTimer = null;
+      this.patch({ workspace: { ...this.state.workspace, help: { ...this.state.workspace.help, status: "unavailable", error: "The hint is taking longer than expected. Try again when ready." } } });
+    }, 20_000);
+  }
+  private retireAutomaticHint(): void {
+    const workspace = this.state.workspace;
+    if (workspace?.help?.source !== "automatic") return;
+    this.retiredHints.add(workspace.help.id);
+    this.patch({ workspace: { ...workspace, help: null } });
+  }
+  hintShown(id: string, version: number, level: SpeakingHelpLevel): void {
+    const help = this.state.workspace?.help;
+    if (!help || help.id !== id || help.version !== version || version < 1) return;
+    if (help.source === "automatic" && this.state.userSpeaking) return;
+    const rank = { direction: 0, usage: 1, example: 2 };
+    if (rank[level] > rank[help.level]) return;
+    if (level === "direction" ? !help.direction : level === "usage" ? !help.expression : help.status !== "ready" || !help.example) return;
+    const key = `${id}:${version}:${level}`;
+    if (this.shownHints.has(key)) return;
+    if (this.send({ type: "hint.shown", hint_id: id, version, level })) this.shownHints.add(key);
+  }
+  messageShown(id: string, revision: number): void {
+    const message = this.state.workspace?.messages.find(value => value.id === id && value.revision === revision);
+    if (!message || message.role !== "assistant" || message.status === "unavailable" || !message.text.trim()) return;
+    const key = `${id}:${revision}`;
+    if (this.shownMessages.has(key)) return;
+    if (this.send({ type: "message.shown", message_id: id, revision })) this.shownMessages.add(key);
+  }
   private clearPlayback(): void {
     if (this.playingResponse) this.suppressedResponses.add(this.playingResponse);
     this.audio?.clear();
@@ -212,6 +287,10 @@ export class ConversationController {
     // Detach first: the final playback boundary may discover a broken socket and re-enter cleanup.
     const audio = this.audio; this.audio = null; audio?.dispose();
     this.playingResponse = null; this.suppressedResponses.clear(); this.awaitingAudioClear = false;
+    if (this.hintTimer) clearTimeout(this.hintTimer);
+    this.hintTimer = null; this.hintRequest = null;
+    this.retiredHints.clear(); this.shownHints.clear(); this.shownMessages.clear();
+    this.patch({ userSpeaking: false });
     if (this.heartbeat) clearInterval(this.heartbeat); if (this.boundary) clearInterval(this.boundary); if (this.readyTimer) clearTimeout(this.readyTimer); if (this.acknowledgementTimer) clearTimeout(this.acknowledgementTimer);
     this.acknowledgementTimer = null;
     this.heartbeat = null; this.boundary = null; this.readyTimer = null;

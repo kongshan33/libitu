@@ -1,0 +1,8 @@
+{
+  "apps/api/app/services/speaking_runtime.py": "c01a7e6e8a3667fe290ac041056f375ec23acec2bb16a151e4f5d2a5baae86db",
+  "apps/api/app/services/speaking_teaching.py": "c5f1451ff1f0231f0a6fea037ec711d7003bd5cfeb4ee5d9c8ce64e8a06fb180",
+  "apps/api/app/services/speaking_help.py": "da236e9dc305d0ad2ddca67d0c1f16cb1b35ac96f62f674c704f78290e7aa759",
+  "apps/api/app/integrations/speaking_gemini.py": "28472c63fccefe0bd19f070a939f01d0a074b4de298ab025bf288e9695e15313",
+  "apps/api/app/services/speaking_coaching_runtime.py": "a64731ae9034181e23877f6dec9129faada1b1b4330d9f71ee75af618acf80ff",
+  "apps/web/tests/speaking-live.browser.mjs": "cfd0f6af23cd4fea29b64f592ca12c81675e5ff606cfec5d07f33d427038b855"
+}

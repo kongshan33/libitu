@@ -29,7 +29,7 @@ try {
       await page.getByRole("button", { name: "View evidence for To be fair" }).click();
       await page.getByRole("region", { name: "Language evidence" }).waitFor();
       await page.getByRole("button", { name: "Need a hint?", exact: true }).click();
-      await page.getByText("Try ‘on the same page’ to check shared expectations.").waitFor();
+      await page.getByRole("region", { name: "Speaking hint" }).getByText("on the same page", { exact: true }).waitFor();
       const connectionsBefore = state.connections.length;
       await page.getByRole("button", { name: "Voice", exact: true }).click();
       await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
@@ -105,6 +105,6 @@ try {
   await page.getByRole("button", { name: "End mission", exact: true }).click(); await page.getByRole("button", { name: "End and review", exact: true }).click();
   await page.getByRole("heading", { name: "Your mission report", exact: true }).waitFor(); await page.getByRole("link", { name: "Conversation review", exact: true }).click();
   await page.getByRole("button", { name: "Delete mission", exact: true }).click(); await page.getByRole("button", { name: "Delete permanently", exact: true }).click();
-  await page.waitForURL("**/loadout?*"); assert.equal(state.deletes, 1); assert.deepEqual(errors, []); await context.close();
+  await page.waitForURL(url => url.pathname === "/loadout"); assert.equal(state.deletes, 1); assert.deepEqual(errors, []); await context.close();
   console.log(`PASS denied mic + explicit takeover + text + end/delete; screenshots ${artifacts}`);
 } finally { await browser.close(); }

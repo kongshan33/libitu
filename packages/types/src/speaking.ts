@@ -56,6 +56,7 @@ export type SpeakingEvidence = {
   id: string; session_item_id: string; message_id: string; transcript_revision: number;
   start: number; end: number; quote: string; match_type: "exact" | "variant" | "structure";
   appropriateness: "appropriate" | "uncertain" | "inappropriate"; prompted: boolean; reason: string;
+  assistance?: "independent" | "direction" | "usage" | "example" | "overlap" | "unknown";
 };
 export type SpeakingLearningItem = {
   session_item_id: string; observed_uses: number; independent_uses: number;
@@ -67,11 +68,20 @@ export type SpeakingTeachingPolicy = {
   target_item_id: string | null; action: "continue_naturally" | "implicit_elicitation" | "explicit_hint" | "move_on";
   status: "pending" | "applied" | "expired"; response_id: string | null;
 };
+export type SpeakingHelpLevel = "direction" | "usage" | "example";
+export type SpeakingHelpCard = {
+  id: string; version: number; target_item_id: string | null;
+  level: SpeakingHelpLevel; status: "loading" | "ready" | "unavailable";
+  direction: string | null; expression: string | null; meaning: string | null;
+  pattern: string | null; example: string | null; substitution: string | null;
+  source: "automatic" | "requested"; source_message_id: string | null; error: string | null;
+};
 export type SpeakingWorkspace = {
   session: SpeakingSession; version: number;
   runtime: { id: string; generation: number; state: "connecting" | "connected" | "disconnected"; expires_at: string } | null;
   messages: SpeakingMessage[]; evidence: SpeakingEvidence[]; learning: SpeakingLearningItem[];
   policy: SpeakingTeachingPolicy | null; analysis_status: "idle" | "pending" | "ready" | "unavailable"; hint: string | null;
+  help?: SpeakingHelpCard | null;
 };
 export type SpeakingRuntimeTicket = { runtime_id: string; ticket: string; expires_at: string; websocket_path: string };
 export type SpeakingClientEvent =
@@ -80,10 +90,14 @@ export type SpeakingClientEvent =
   | { type: "text.submit"; client_turn_id: string; text: string }
   | { type: "playback"; item_id: string; played_ms: number }
   | { type: "microphone"; enabled: boolean }
-  | { type: "hint" | "interrupt" | "ping" };
+  | { type: "hint"; request_id: string; level: "usage" | "example"; target_item_id?: string }
+  | { type: "hint.shown"; hint_id: string; version: number; level: SpeakingHelpLevel }
+  | { type: "message.shown"; message_id: string; revision: number }
+  | { type: "interrupt" | "ping" };
 export type SpeakingServerEvent =
   | { type: "ready" | "snapshot" | "ended"; workspace: SpeakingWorkspace }
   | { type: "state"; state: "listening" | "thinking" | "speaking" }
+  | { type: "user.activity"; speaking: boolean }
   | { type: "transcript.delta"; role: "user" | "assistant"; item_id: string; delta: string }
   | { type: "audio.delta"; item_id: string; response_id: string; audio: string }
   | { type: "audio.clear"; item_id: string | null }

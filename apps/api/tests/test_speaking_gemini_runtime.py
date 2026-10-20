@@ -265,3 +265,122 @@ def test_late_asr_revision_immediately_withdraws_old_evidence_before_new_analysi
     assert client.state["document"]["evidence"] == []
     assert client.state["document"]["learning"][0]["observed_uses"] == 0
     assert client.state["document"]["policy"]["status"] == "expired"
+
+
+def test_first_microphone_control_starts_one_audible_opening(connection):
+    client, browser, analyzed = connection
+
+    async def flow():
+        await client.configure()
+        assert not any(event.get("clientContent", {}).get("turnComplete") for event in client.provider.sent)
+        await client.client_event({"type": "microphone", "enabled": True})
+        await client.client_event({"type": "microphone", "enabled": True})
+        requests = [event for event in client.provider.sent if event.get("clientContent", {}).get("turnComplete")]
+        assert len(requests) == 1
+        assert "Begin the mission" in json.dumps(requests)
+        await client.gemini_event(response("Hello! What should we decide today?"))
+        await client.gemini_event({"serverContent": {"turnComplete": True}})
+        assert any(event["type"] == "audio.delta" for event in browser.sent)
+        assert history(client, "assistant")[0]["status"] == "final"
+        assert history(client, "user") == [] and analyzed == []
+
+    asyncio.run(flow())
+
+
+def test_reconnecting_with_saved_text_does_not_repeat_opening(connection):
+    client, _, _ = connection
+
+    async def flow():
+        await client.commit(lambda doc, _: doc["messages"].append(runtime.new_message("assistant", "Saved opening.", "voice")))
+        await client.client_event({"type": "microphone", "enabled": True})
+        assert not any(event.get("clientContent", {}).get("turnComplete") for event in client.provider.sent)
+
+    asyncio.run(flow())
+
+
+def test_silence_waits_for_playback_then_prompts_twice_without_fabricated_user_turns(connection):
+    client, _, analyzed = connection
+
+    async def flow():
+        await client.client_event({"type": "microphone", "enabled": True})
+        await client.gemini_event(response("What would you suggest?"))
+        await client.gemini_event({"serverContent": {"turnComplete": True}})
+        # Generation has ended, but no playback has been acknowledged.
+        await client.advance_silence(100)
+        await client.advance_silence(200)
+        assert client.silence_follow_ups == 0
+        item_id = client.last_audio_item
+        await client.client_event({"type": "playback", "item_id": item_id, "played_ms": 100})
+        for start in (201, 240):
+            await client.advance_silence(start)
+            await client.advance_silence(start + 14.9)
+            previous = client.silence_follow_ups
+            await client.advance_silence(start + 15)
+            assert client.silence_follow_ups == previous + 1
+            await client.advance_silence(start + 35)  # Waiting for provider must not enqueue another.
+            assert not client.queued_response
+            await client.gemini_event(response("Would an earlier time work?"))
+            await client.gemini_event({"serverContent": {"turnComplete": True}})
+            await client.client_event({"type": "playback", "item_id": client.last_audio_item, "played_ms": 100})
+        await client.advance_silence(400)
+        await client.advance_silence(500)
+        assert client.silence_follow_ups == 2
+        assert history(client, "user") == [] and analyzed == []
+        assert client.state["turn_count"] == 0
+        requests = [event for event in client.provider.sent if event.get("clientContent", {}).get("turnComplete")]
+        assert len(requests) == 3  # Opening and two server-owned follow-ups.
+        assert client.control_tag in json.dumps(requests[-1])
+        await client.gemini_event(activity("ACTIVITY_START"))
+        assert client.silence_follow_ups == 2  # Noise alone cannot reset the budget.
+        await client.gemini_event(transcribed("An earlier time works.", finished=True))
+        assert client.silence_follow_ups == 0
+
+    asyncio.run(flow())
+
+
+@pytest.mark.parametrize("condition", ["muted", "speaking", "generating", "waiting", "unfinalized", "stopped"])
+def test_silence_followups_never_interrupt_busy_or_disabled_conversations(connection, condition):
+    client, _, _ = connection
+    client.conversation_started = True
+    client.microphone = True
+    if condition == "muted":
+        client.microphone = False
+    elif condition == "speaking":
+        client.user_speaking = True
+    elif condition == "generating":
+        client.active_response = "active"
+    elif condition == "waiting":
+        client.gemini_waiting = True
+    elif condition == "unfinalized":
+        client.gemini_user_text = "I would like to"
+    else:
+        client.stop.set()
+
+    async def flow():
+        client.silence_since = 0
+        await client.advance_silence(50)
+        assert client.silence_since is None
+        assert client.silence_follow_ups == 0
+        assert client.provider.sent == []
+    asyncio.run(flow())
+
+
+@pytest.mark.parametrize("action", ["end", "takeover", "delete"])
+def test_silence_followup_is_fenced_after_remote_lifecycle_change(connection, action):
+    client, _, _ = connection
+    client.conversation_started = True
+    client.microphone = True
+    client.silence_since = 0
+    if action == "end":
+        state_ops.end_session(client.owner, client.session_id)
+    elif action == "takeover":
+        state_ops.create_ticket(client.owner, client.session_id, RealtimeStart(client_connection_id=uuid4(), takeover=True))
+    else:
+        state_ops.delete_session(client.owner, client.session_id)
+
+    async def flow():
+        with pytest.raises((runtime.RuntimeStopped, runtime.HTTPException)):
+            await client.advance_silence(50)
+        assert client.silence_follow_ups == 0
+        assert client.provider.sent == []
+    asyncio.run(flow())

@@ -48,7 +48,6 @@ async def exercise(owner, session_id, voice_pcm: bytes | None = None):
     audio_bytes = 0
     stream_task = None
     async def stream_voice():
-        await browser.incoming.put({"type": "microphone", "enabled": True})
         samples = bytes(48000) + voice_pcm + bytes(96000)
         for offset in range(0, len(samples), 4800):
             await browser.incoming.put({"type": "audio.append", "audio": base64.b64encode(samples[offset:offset + 4800]).decode()})
@@ -59,6 +58,8 @@ async def exercise(owner, session_id, voice_pcm: bytes | None = None):
                 event = await browser.events.get()
                 if event["type"] == "error":
                     raise RuntimeError(f'{event["code"]}: {event["message"]}')
+                if event["type"] == "ready":
+                    await browser.incoming.put({"type": "microphone", "enabled": voice_pcm is not None})
                 if event["type"] == "audio.delta":
                     count = len(base64.b64decode(event["audio"]))
                     audio_bytes += count

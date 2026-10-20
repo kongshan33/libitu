@@ -1,0 +1,10 @@
+{
+  "result": "incomplete_audio_rate_disconnect",
+  "completed_user_turns": 1,
+  "second_input_began_before_disconnect": true,
+  "browser_exit": "SIGINT after server audio_rate error; queued third and fourth inputs not run",
+  "browser_audio_append_observation": "Sampled every 25 frames, 4800 bytes each: interval approximately 2.5 seconds. No sampled burst evidence on browser send clock.",
+  "model_repeats": 0,
+  "planned_fifth_input": "Prewritten synthetic learner speech; was not delivered.",
+  "cleanup": "API SIGINT exported and deleted synthetic session/corpus."
+}

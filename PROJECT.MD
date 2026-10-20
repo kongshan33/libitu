@@ -9,6 +9,41 @@ meta:
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
 
+## Mission teaching control and private diagnostics — 2026-10-18
+
+DeepSeek observes each finalized learner utterance with frozen context while Gemini replies independently. The first two substantive learner utterances default to observation; subsequent automatic teaching needs a contextual recommendation, one pending target, bounded cross-turn eligibility and separate attempt/cooldown counters. Analysis completion now wakes safe-boundary dispatch. Immutable sent attempts, completed-response assessment and actual presentation are recorded separately.
+
+Voice and Chat share requested Usage/Example cards; automatic direction appears only after the AI reply is assessed as reflecting the teaching intent. Actual expression/example exposure remains assisted for the rest of that Mission; overlap/unknown provenance is not labeled independent. Detailed traces are owner-readable through GET `/api/speaking/sessions/{id}/diagnostics`, separate from the runtime snapshot. There is no diagnostic timeline UI. The hosted `20261018111206_speaking_teaching_diagnostics` migration and rollback checks pass. Root lint/build/test pass (1,111 API, 390 Web, 114 cached extension tests); hint-card browser checks pass at 1440/390 px with synthetic auth/API/provider events and inspected screenshots. Readable retention is 30 days, with same-session append cleanup and no scheduled global physical purge. See [behavior, API and reliability limits](design/docs/STAGE_FOUR_TEACHING_CONTROL.md).
+
+A bounded live Gemini/DeepSeek/Supabase browser probe now records seven canonical learner turns (six voice, one typed). All six voice first replies began before their analysis started; one policy from turn 5 bound while eligible to turn 6. Its content assessment was `not_reflected`, and Gemini named the expression despite the implicit-teaching constraint, so cross-turn delivery passed but teaching compliance did not. Usage/Example visibility acknowledgments and subsequent assisted use were recorded. An invalid model quote offset was rejected and retained only as uncertain lexical evidence. Synthetic identity and WAV input do not qualify real sign-in, physical microphones or general teaching quality. Temporary database records were removed; [full per-turn model, execution and presentation logs](design/benchmarks/teaching-live-20261018/run-01/README.md) retain the evidence.
+
+The follow-up fix removes selected wording from Gemini's initial mission configuration and implicit controls, assigns the communicative act explicitly to the learner, and separates teaching attempts from opening/silence triggers. Deterministic target-disclosure checks run after the response before advisory effect assessment; they do not delay or buffer audio. Stage 4 analysis now requests exact quotes and derives their UTF-16 ranges from unique occurrences in the frozen learner text. Wrong ranges can be repaired only when unambiguous; repeated quotes and persisted evidence retain strict validation. Logs expose anchor provenance and deterministic/advisory assessment sources. No public API schema or database migration is needed.
+
+A later live probe stopped before strategy coverage with `audio_rate`. PCM and high-frequency playback/display receipts now bypass the provider/state lock; completed-playback writes run in the tracked background drain, and shutdown reconciles already-received complete ACKs. Microphone/text controls retain single-reader ordering; provider writes, frame validation and rate limits remain unchanged. The failed run remains in [its own report](design/benchmarks/teaching-live-20261018/run-03/README.md), separate from any later successful coverage.
+
+Post-fix live evidence is [recorded separately](design/benchmarks/teaching-live-20261018/README.md). Run-04 completed without `audio_rate`: three finalized voice turns began audio before analysis, but four unconfirmed ASR fragments left strategy/quote coverage incomplete. Run-05 used preregistered typed inputs with real audio: one policy crossed turn 3→4 while eligible, Gemini asked the learner to frame the compromise without supplying the expression, and the deterministic check plus advisory assessment passed. An actual direction ACK and unique server-derived quote `[0,16)` were persisted. Its first analysis overlapped 20 incoming audio packets; a later persistence 503 prevented a fifth reply, so this is bounded feature evidence, not a wholly successful session or broad reliability claim. Both journals drained with zero reported gaps and temporary records were removed. Prewritten target use does not establish teaching causality.
+
+Final post-fix root checks ran after the live sessions: lint/build/test pass, including 1,179 API and 390 Web tests, with 114 extension tests replayed from cache. One existing Starlette deprecation warning remains. No deployment was performed.
+
+## Mission startup, silence and audio bursts — 2026-10-18
+
+AI opening now follows the browser's initial microphone-mode acknowledgment, avoiding cancellation/silent delivery during startup. Voice-enabled connections give a brief follow-up after at least 15 seconds of silence following generation and acknowledged playback, capped at two until nonblank user input. Speech/transcription, generation, playback and lifecycle gates prevent competing prompts; microphone-off Chat does not auto-prompt. A bounded token bucket tolerates short audio catch-up batches while retaining sustained-rate protection. Timers/budgets reset on reconnect; real microphone/provider timing remains unmeasured.
+
+## Mission speech-onset tuning — 2026-10-18
+
+Gemini automatic voice detection now requires a 300 ms speech onset instead of 100 ms to reduce brief background-noise interruptions. Low sensitivity, automatic barge-in and the 1200 ms end-of-speech silence window remain in place. New connections use the setting; the tradeoff is potentially slower deliberate interruption or missed very short utterances. Real microphone/noise effectiveness remains unmeasured.
+
+## Chat empty-message visibility — 2026-10-18
+
+Chat renders saved messages and live transcript fragments only when they contain non-whitespace text. Noise-triggered voice placeholders stay hidden and appear normally when transcription arrives. Empty-state and scroll behavior follow visible messages; runtime storage and turn handling are unchanged.
+
+## Mission loading consistency — 2026-10-18
+
+Replace generic loading cards with the Mission layout: task heading, voice workspace, composer and desktop language sidebar. Reuse page breakpoints and respect reduced motion.
+
+Mission entry now retains Loadout during route navigation and uses one consistent Mission skeleton for authentication and workspace loading. The leftover generic Speaking route fallback has been removed; errors and retry remain explicit.
+
+
 ## Stage 1 video scroll and loading cleanup — 2026-10-18
 
 The persistent media host now relays native iframe scroll chaining into Stage 1's independently scrolling center panel. The iframe remains mounted and unobscured; narrow layouts retain ordinary document scrolling. Empty extracted-corpus regions show skeletons without redundant loading copy; failure and Saved empty states remain explicit.

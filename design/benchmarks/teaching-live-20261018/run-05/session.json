@@ -1,0 +1,26 @@
+{
+  "id": "8b1828a5-0071-4561-b805-6f0ba15dec50",
+  "user_id": "libitu-teaching-live-ae99799ebc0b447f906b49a82974257b",
+  "client_id": "b2b4a13f-1385-41d1-9319-e8bd3a616094",
+  "scenario_type": "workplace",
+  "goal": "Choose a database for a small analytics product with a colleague, balancing reliability, cost and maintenance effort",
+  "difficulty": "standard",
+  "feedback_level": "balanced",
+  "logic_template": null,
+  "status": "draft",
+  "created_at": "2026-10-18T15:02:09.582590Z",
+  "turn_count": 0,
+  "items": [
+    {
+      "id": "1ba9cd5e-d4b2-4ca5-98b4-2efb3137a9cb",
+      "corpus_item_id": "b5f90942-22c6-4467-9f8a-c37c08e6b812",
+      "ordinal": 0,
+      "kind": "chunk",
+      "text": "One trade-off is",
+      "meaning": "Introduce a compromise between two choices",
+      "tags": [],
+      "slots": {},
+      "source_title": "Synthetic live teaching verification"
+    }
+  ]
+}

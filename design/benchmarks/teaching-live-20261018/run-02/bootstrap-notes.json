@@ -1,0 +1,7 @@
+{
+  "initial_browser_attempt": "page.goto net::ERR_CONNECTION_REFUSED",
+  "before_model_connection": true,
+  "old_ui_process": 893,
+  "recovery": "restart local Next dev at port 3000; reuse same session before any model socket",
+  "cpu_context": "root repository checks run concurrently"
+}

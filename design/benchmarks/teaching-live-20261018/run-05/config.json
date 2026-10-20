@@ -1,0 +1,14 @@
+{
+  "sessionId": "8b1828a5-0071-4561-b805-6f0ba15dec50",
+  "owner": "libitu-teaching-live-ae99799ebc0b447f906b49a82974257b",
+  "uiOrigin": "http://localhost:3000",
+  "apiOrigin": "http://127.0.0.1:8767",
+  "artifactDir": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-05",
+  "commandPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-05/commands.jsonl",
+  "resultPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-05/browser-results.jsonl",
+  "models": {
+    "gemini": "gemini-3.8-live",
+    "deepseek": "deepseek-v4-flash"
+  },
+  "started_at": "2026-10-18T15:02:08.527975+00:00"
+}

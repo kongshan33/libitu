@@ -1,0 +1,8 @@
+{"id": "connect", "action": "connect"}
+{"id": "turn-01", "action": "submit", "text": "We need a database for a small analytics product and our engineering team is only three people.", "wait_for_reply": true}
+{"id": "turn-02", "action": "submit", "text": "Our budget is limited and we cannot spend much time maintaining servers.", "wait_for_reply": true}
+{"id": "turn-03", "action": "submit", "text": "I want to make a short comparison of the two choices: lower monthly bills on one side, less maintenance work and fewer outages on the other.", "wait_for_reply": true}
+{"id": "turn-04", "action": "submit", "text": "I'm still deciding which downside our team could accept.", "wait_for_reply": true}
+{"id": "turn-05", "action": "submit", "text": "One trade-off is that a managed database costs more but gives our small team more time to build features.", "wait_for_reply": true}
+{"id": "final", "action": "snapshot"}
+{"id": "stop", "action": "stop"}

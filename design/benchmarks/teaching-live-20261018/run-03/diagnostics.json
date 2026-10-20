@@ -1,0 +1,429 @@
+[
+  {
+    "id": "fab5ffb7-1b2d-489f-8bfc-05875511f489",
+    "kind": "response.first_audio",
+    "created_at": "2026-10-18T14:43:48.730370+00:00",
+    "payload": {
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "measurement": "server_forwarded_first_audio_not_browser_playback",
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "input_generation": 0
+    }
+  },
+  {
+    "id": "13be56ba-c639-4d42-a913-73a7dd639fc9",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:48.957634+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 0,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 1350.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "9186843e-9f8e-4c30-8da1-2c239ae991bd",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:49.865851+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 1070,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 4750.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "cda0c51f-e29e-4919-a1f8-c1f6d1fd1319",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:51.026869+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 2219,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "2d20186a-8eea-4ae1-bcf4-28dc17cfa619",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:51.889366+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 3113,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "cfd181b6-0144-4bfc-a7aa-3067b7abc0bf",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:53.032187+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 4216,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "477055bd-9129-42c7-9b66-a1b9340e43f6",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:54.047001+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 5192,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "17e5f81d-e155-4547-b2be-6c7c8bfa9e8e",
+    "kind": "response.completed",
+    "created_at": "2026-10-18T14:43:55.197342+00:00",
+    "payload": {
+      "text": "Hey, thanks for meeting. I wanted to go over the database options for our new analytics product. What are your initial thoughts?",
+      "status": "final",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518"
+    }
+  },
+  {
+    "id": "39239aab-06af-4719-b5cb-fda511937dd9",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:55.388876+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 6219,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "d7e6db10-e471-4c36-b791-a382e2b701df",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:55.969655+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": false,
+      "played_ms": 7194,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "ab03863b-156f-4583-83fe-8418bf742ea2",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:43:56.762485+00:00",
+    "payload": {
+      "item_id": "gemini_output_73b7f43fc3e1434ba14991deba996bf0",
+      "complete": true,
+      "played_ms": 7270,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518",
+      "generated_ms": 7270.0,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "7b1380a2-1292-4921-8bfe-e993f454fefa",
+    "kind": "response.shown",
+    "created_at": "2026-10-18T14:43:56.829485+00:00",
+    "payload": {
+      "channel": "text",
+      "revision": 1,
+      "message_id": "50ed829c-ba49-4d3f-bba0-9a5e3905ad7e",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "response_id": "gemini_response_9b075b1ae4014742b917ac8214108518"
+    }
+  },
+  {
+    "id": "8a64c489-ce7f-4d0e-86ea-201606ecac9b",
+    "kind": "response.first_audio",
+    "created_at": "2026-10-18T14:44:18.148877+00:00",
+    "payload": {
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "measurement": "server_forwarded_first_audio_not_browser_playback",
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c",
+      "input_generation": 1
+    }
+  },
+  {
+    "id": "b092e1c8-5a1d-4925-9175-4b1bc830c5f7",
+    "kind": "analysis.scheduled",
+    "created_at": "2026-10-18T14:44:20.405881+00:00",
+    "payload": {
+      "context": [
+        {
+          "id": "50ed829c-ba49-4d3f-bba0-9a5e3905ad7e",
+          "role": "assistant",
+          "text": "Hey, thanks for meeting. I wanted to go over the database options for our new analytics product. What are your initial thoughts?",
+          "revision": 1
+        },
+        {
+          "id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+          "role": "user",
+          "text": "We need a database for a small analytics product and our engineering team is only three people.",
+          "revision": 1
+        }
+      ],
+      "revision": 1,
+      "message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "source_text": "We need a database for a small analytics product and our engineering team is only three people.",
+      "context_version": 11
+    }
+  },
+  {
+    "id": "a1e562ef-c3e2-4e31-b26e-fd28a4243f53",
+    "kind": "analysis.queued",
+    "created_at": "2026-10-18T14:44:20.409360+00:00",
+    "payload": {
+      "run_id": "c4fa3709-72b7-4c6d-949f-01745c568e9f",
+      "context": [
+        {
+          "id": "50ed829c-ba49-4d3f-bba0-9a5e3905ad7e",
+          "revision": 1
+        },
+        {
+          "id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+          "revision": 1
+        }
+      ],
+      "revision": 1,
+      "message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740"
+    }
+  },
+  {
+    "id": "6ff9b17b-c438-484f-81dc-fda191cddbff",
+    "kind": "analysis.started",
+    "created_at": "2026-10-18T14:44:22.091769+00:00",
+    "payload": {
+      "run_id": "c4fa3709-72b7-4c6d-949f-01745c568e9f",
+      "queue_ms": 1686,
+      "revision": 1,
+      "message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "context_version": 11
+    }
+  },
+  {
+    "id": "e064925c-680b-4860-904a-1e859a7a2c63",
+    "kind": "analysis.completed",
+    "created_at": "2026-10-18T14:44:23.389400+00:00",
+    "payload": {
+      "trace": {
+        "model": "deepseek-v4-flash",
+        "usage": {
+          "total_tokens": 944,
+          "prompt_tokens": 839,
+          "completion_tokens": 105
+        },
+        "status": "ready",
+        "accepted": [],
+        "fallback": [],
+        "rejected": [],
+        "policy_id": "24240c90-29d1-524f-9288-398d042137ff",
+        "elapsed_ms": 1297.49,
+        "error_type": null,
+        "help_level": null,
+        "needs_help": false,
+        "started_at": "2026-10-18T14:44:22.092122+00:00",
+        "raw_content": "{\"evidence\":[],\"needs_help\":null,\"recommendation\":{\"target_item_id\":\"17928c90-75e0-401e-bac7-003a42f46006\",\"intent\":\"Introduce a compromise between two database options\",\"opportunity\":\"Given your small team, what compromise would you weigh between reliability and maintenance effort?\",\"skip_when\":\"The learner has already stated a clear preference for one option without weighing alternatives.\",\"context_sufficient\":true,\"closing\":false}}",
+        "completed_at": "2026-10-18T14:44:23.389343+00:00",
+        "finish_reason": "stop",
+        "policy_action": "continue_naturally",
+        "policy_reason": "observation_phase",
+        "prompt_version": "speaking-analysis-v3",
+        "recommendation": {
+          "intent": "Introduce a compromise between two database options",
+          "closing": false,
+          "skip_when": "The learner has already stated a clear preference for one option without weighing alternatives.",
+          "opportunity": "Given your small team, what compromise would you weigh between reliability and maintenance effort?",
+          "target_item_id": "17928c90-75e0-401e-bac7-003a42f46006",
+          "context_sufficient": true
+        },
+        "context_version": 11,
+        "source_revision": 1,
+        "source_message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+        "context_message_ids": [
+          "50ed829c-ba49-4d3f-bba0-9a5e3905ad7e"
+        ],
+        "effective_user_turns": 1
+      },
+      "policy": {
+        "id": "24240c90-29d1-524f-9288-398d042137ff",
+        "action": "continue_naturally",
+        "intent": "",
+        "status": "pending",
+        "skip_when": "",
+        "created_at": "2026-10-18T14:44:19.814125+00:00",
+        "expires_at": "2026-10-18T14:45:04.814125+00:00",
+        "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+        "opportunity": "",
+        "response_id": null,
+        "source_turn": 1,
+        "target_kind": null,
+        "target_text": null,
+        "prompt_version": "speaking-elicitation-v2",
+        "target_item_id": null,
+        "source_revision": 1,
+        "learning_version": 1,
+        "source_message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+        "eligible_until_turn": 3
+      },
+      "run_id": "c4fa3709-72b7-4c6d-949f-01745c568e9f",
+      "status": "ready",
+      "revision": 1,
+      "message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740"
+    }
+  },
+  {
+    "id": "3320df9e-6d51-4a8f-a560-340c03a67931",
+    "kind": "response.completed",
+    "created_at": "2026-10-18T14:44:23.650491+00:00",
+    "payload": {
+      "text": "With a small team, maintenance effort will be a big factor. Which features are most important to you?",
+      "status": "final",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c"
+    }
+  },
+  {
+    "id": "5b9b3f93-2158-447b-82ed-9a4534f8e225",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:44:23.650565+00:00",
+    "payload": {
+      "item_id": "gemini_output_2a179e3463a0483393ec3daad74dcc34",
+      "complete": false,
+      "played_ms": 0,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c",
+      "generated_ms": 6200.041666666666,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "31559d35-fd0e-461a-97b2-820adba5629a",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:44:24.256163+00:00",
+    "payload": {
+      "item_id": "gemini_output_2a179e3463a0483393ec3daad74dcc34",
+      "complete": false,
+      "played_ms": 1024,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c",
+      "generated_ms": 6200.041666666666,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "5bb3add9-5c7d-4a85-889a-6bf6a5634a75",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:44:24.538962+00:00",
+    "payload": {
+      "item_id": "gemini_output_2a179e3463a0483393ec3daad74dcc34",
+      "complete": false,
+      "played_ms": 2028,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c",
+      "generated_ms": 6200.041666666666,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "bf218cee-b119-4c87-95e9-6834bd2c4c33",
+    "kind": "response.playback",
+    "created_at": "2026-10-18T14:44:24.826084+00:00",
+    "payload": {
+      "item_id": "gemini_output_2a179e3463a0483393ec3daad74dcc34",
+      "complete": false,
+      "played_ms": 3026,
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "interrupted": false,
+      "response_id": "gemini_response_5c3694dcbef848fba52ad00a8d003e8c",
+      "generated_ms": 6200.041666666666,
+      "text_alignment": "unknown"
+    }
+  },
+  {
+    "id": "53159e0b-b989-4716-970e-d9218d2b3d44",
+    "kind": "analysis.reconciled",
+    "created_at": "2026-10-18T14:44:25.096227+00:00",
+    "payload": {
+      "policy": {
+        "id": "24240c90-29d1-524f-9288-398d042137ff",
+        "action": "continue_naturally",
+        "intent": "",
+        "status": "pending",
+        "skip_when": "",
+        "created_at": "2026-10-18T14:44:19.814125+00:00",
+        "expires_at": "2026-10-18T14:45:04.814125+00:00",
+        "instruction": "Stay in character and continue naturally toward the mission goal. Do not pressure the learner to repeat an expression.",
+        "opportunity": "",
+        "response_id": null,
+        "source_turn": 1,
+        "target_kind": null,
+        "target_text": null,
+        "prompt_version": "speaking-elicitation-v2",
+        "target_item_id": null,
+        "source_revision": 1,
+        "learning_version": 1,
+        "source_message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+        "eligible_until_turn": 3
+      },
+      "reason": "committed",
+      "run_id": "c4fa3709-72b7-4c6d-949f-01745c568e9f",
+      "revision": 1,
+      "message_id": "5f8aeea0-9b1e-43ca-924c-711bd206bd0b",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740"
+    }
+  },
+  {
+    "id": "ecf36f62-0660-4b6e-a705-fba137302837",
+    "kind": "diagnostics.closed",
+    "created_at": "2026-10-18T14:44:27.075341+00:00",
+    "payload": {
+      "status": "drained",
+      "runtime_id": "1e3b7dfc-a26f-41a5-a129-06a8d8460740",
+      "missing_events": 0,
+      "unreported_missing_events": 0
+    }
+  }
+]

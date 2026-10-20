@@ -1,0 +1,218 @@
+{
+  "session": {
+    "id": "8b1828a5-0071-4561-b805-6f0ba15dec50",
+    "user_id": "libitu-teaching-live-ae99799ebc0b447f906b49a82974257b",
+    "client_id": "b2b4a13f-1385-41d1-9319-e8bd3a616094",
+    "scenario_type": "workplace",
+    "goal": "Choose a database for a small analytics product with a colleague, balancing reliability, cost and maintenance effort",
+    "difficulty": "standard",
+    "feedback_level": "balanced",
+    "logic_template": null,
+    "status": "active",
+    "created_at": "2026-10-18T15:02:09.582590Z",
+    "turn_count": 5,
+    "items": [
+      {
+        "id": "1ba9cd5e-d4b2-4ca5-98b4-2efb3137a9cb",
+        "corpus_item_id": "b5f90942-22c6-4467-9f8a-c37c08e6b812",
+        "ordinal": 0,
+        "kind": "chunk",
+        "text": "One trade-off is",
+        "meaning": "Introduce a compromise between two choices",
+        "tags": [],
+        "slots": {},
+        "source_title": "Synthetic live teaching verification"
+      }
+    ]
+  },
+  "version": 42,
+  "runtime": {
+    "id": "bf1fc732-f793-4023-a84e-04902840cf92",
+    "generation": 1,
+    "state": "disconnected",
+    "expires_at": "2026-10-18T15:04:02.687914Z"
+  },
+  "messages": [
+    {
+      "id": "b04ff962-3318-444b-b701-137822d820a8",
+      "ordinal": 0,
+      "role": "assistant",
+      "text": "Hey, I wanted to chat about the database options for our new analytics product. What are your initial thoughts on keeping maintenance low?",
+      "input_source": "voice",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "gemini_output_59fdc9a2c1944d8db468ccabc34e5532",
+      "response_id": "gemini_response_0a89d37a8de445c999ccd5cbe2bfa7a1",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T15:02:48.878998+00:00"
+    },
+    {
+      "id": "518762a8-7262-4a65-a8a9-ac3ecc0df804",
+      "ordinal": 1,
+      "role": "user",
+      "text": "We need a database for a small analytics product and our engineering team is only three people.",
+      "input_source": "text",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "item_69cdf2bfc9a44af084561ec1",
+      "response_id": null,
+      "client_turn_id": "2a7fc9b9-1020-4824-ae13-c2176bfa823c",
+      "created_at": "2026-10-18T15:02:50.157912+00:00"
+    },
+    {
+      "id": "ad13d0bd-8798-4258-b726-f418315757dd",
+      "ordinal": 2,
+      "role": "assistant",
+      "text": "With such a small team, we have to be careful. How do you see us balancing maintenance effort with the reliability we need?",
+      "input_source": "voice",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "gemini_output_57ffa9572813433ebfc7bdda019ec739",
+      "response_id": "gemini_response_b1110b4cdb2b427eb1cbb65bacdd030a",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T15:03:00.020397+00:00"
+    },
+    {
+      "id": "864bd8c5-6ab0-4e5d-9aeb-2d6e0a5d34a7",
+      "ordinal": 3,
+      "role": "user",
+      "text": "Our budget is limited and we cannot spend much time maintaining servers.",
+      "input_source": "text",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "item_a0f78c13570c43cdbb0517f9",
+      "response_id": null,
+      "client_turn_id": "c797e04c-6664-464f-8eba-b0550d37c2cb",
+      "created_at": "2026-10-18T15:03:02.364912+00:00"
+    },
+    {
+      "id": "4156dc5b-dcfa-45a4-b5d9-4b706d990d0a",
+      "ordinal": 4,
+      "role": "assistant",
+      "text": "That makes sense. Given those constraints, have you considered any specific types of databases that might work well for us?",
+      "input_source": "voice",
+      "status": "interrupted",
+      "revision": 1,
+      "provider_item_id": "gemini_output_19de3de8d03c4946bf17ef1b1ce2b426",
+      "response_id": "gemini_response_915a3e08210c4786a51e68e80114ce11",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T15:03:12.284678+00:00"
+    },
+    {
+      "id": "2781327a-4bb9-43f5-bbcc-a8f95dd2c401",
+      "ordinal": 5,
+      "role": "user",
+      "text": "I want to make a short comparison of the two choices: lower monthly bills on one side, less maintenance work and fewer outages on the other.",
+      "input_source": "text",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "item_dc84ddd9d44a422daf5605b7",
+      "response_id": null,
+      "client_turn_id": "054bd8ea-5d7d-4c5f-8c9d-10ab817859e0",
+      "created_at": "2026-10-18T15:03:14.715183+00:00"
+    },
+    {
+      "id": "47bc3448-a336-4a99-8628-13566141447c",
+      "ordinal": 6,
+      "role": "assistant",
+      "text": "That's a classic trade-off. Which approach do you think aligns better with our team's current situation?",
+      "input_source": "voice",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "gemini_output_d9de22d13bce4b289047dad5ec3cf221",
+      "response_id": "gemini_response_5f5517a8d4a348ec9473dd908c36e024",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T15:03:22.439591+00:00"
+    },
+    {
+      "id": "703d557f-55c7-499a-bba9-ae50cb59cbde",
+      "ordinal": 7,
+      "role": "user",
+      "text": "I'm still deciding which downside our team could accept.",
+      "input_source": "text",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "item_5aa905be08174c36b03be9d6",
+      "response_id": null,
+      "client_turn_id": "bfb86788-0a76-4593-8e80-62900e62d8e6",
+      "created_at": "2026-10-18T15:03:24.715843+00:00"
+    },
+    {
+      "id": "2b86dd5f-b5ee-4545-ac22-541d7beda589",
+      "ordinal": 8,
+      "role": "assistant",
+      "text": "It's a tough call. How would you frame the compromise between the cheaper option and the more reliable one?",
+      "input_source": "voice",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "gemini_output_fd4e3f5b631f4facb9e97cc42d3b2a92",
+      "response_id": "gemini_response_0810b8365c4444c0902ea914eee97527",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T15:03:33.319736+00:00"
+    },
+    {
+      "id": "2824eb2c-2818-4f13-b6d8-08f87c901495",
+      "ordinal": 9,
+      "role": "assistant",
+      "text": "",
+      "input_source": "voice",
+      "status": "interrupted",
+      "revision": 1,
+      "provider_item_id": "gemini_output_ae4be971db2f4cc99f39e039d242894d",
+      "response_id": "gemini_response_d05ea607b86b4be7b80eaab7bb9b179a",
+      "client_turn_id": null,
+      "created_at": "2026-10-18T15:03:54.029052+00:00"
+    },
+    {
+      "id": "61a7e6b2-ba0c-482a-996b-089587ff169e",
+      "ordinal": 10,
+      "role": "user",
+      "text": "One trade-off is that a managed database costs more but gives our small team more time to build features.",
+      "input_source": "text",
+      "status": "final",
+      "revision": 1,
+      "provider_item_id": "item_dbb9fc4b20e243a8a23547f6",
+      "response_id": null,
+      "client_turn_id": "05b9d357-a28e-43e1-8c83-7cf5831d4a96",
+      "created_at": "2026-10-18T15:03:56.931568+00:00"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "37388b6b-4c3f-5a1f-951b-06be184620fd",
+      "session_item_id": "1ba9cd5e-d4b2-4ca5-98b4-2efb3137a9cb",
+      "message_id": "61a7e6b2-ba0c-482a-996b-089587ff169e",
+      "transcript_revision": 1,
+      "start": 0,
+      "end": 16,
+      "quote": "One trade-off is",
+      "match_type": "exact",
+      "appropriateness": "appropriate",
+      "prompted": false,
+      "assistance": "direction",
+      "reason": "Uses the chunk to introduce a compromise between cost and team time."
+    }
+  ],
+  "learning": [
+    {
+      "session_item_id": "1ba9cd5e-d4b2-4ca5-98b4-2efb3137a9cb",
+      "observed_uses": 1,
+      "independent_uses": 1,
+      "prompted_uses": 0,
+      "last_message_id": "61a7e6b2-ba0c-482a-996b-089587ff169e"
+    }
+  ],
+  "policy": {
+    "id": "811f5fe4-d964-565a-9875-7cb44a8e3908",
+    "source_message_id": "61a7e6b2-ba0c-482a-996b-089587ff169e",
+    "source_revision": 1,
+    "learning_version": 5,
+    "target_item_id": null,
+    "action": "continue_naturally",
+    "status": "expired",
+    "response_id": null
+  },
+  "analysis_status": "ready",
+  "hint": null,
+  "help": null
+}

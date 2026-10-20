@@ -12,13 +12,14 @@ from app.config import Settings
 from app.schemas.speaking import SpeakingSession
 
 
-def role_instructions(session: SpeakingSession) -> str:
+def role_instructions(session: SpeakingSession, *, include_language_targets: bool = True) -> str:
     context = {
         "scenario": session.scenario_type, "learner_goal": session.goal,
         "difficulty": session.difficulty, "feedback": session.feedback_level,
-        "language_targets": [{"id": str(i.id), "kind": i.kind, "text": i.text} for i in session.items],
         "conversation_steps": session.logic_template.steps if session.logic_template else [],
     }
+    if include_language_targets:
+        context["language_targets"] = [{"id": str(i.id), "kind": i.kind, "text": i.text} for i in session.items]
     return (
         "You are the learner's English role-play partner in Libitu. Stay in a plausible counterpart role "
         "appropriate to the mission. Speak natural English, usually 1-3 short sentences and at most one "

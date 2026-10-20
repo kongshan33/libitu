@@ -1,0 +1,5 @@
+{"id": "connect", "action": "connect"}
+{"id": "turn-01", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-02/inputs/turn-01.wav", "wait_for_reply": true}
+{"id": "turn-02", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-02/inputs/turn-02.wav", "wait_for_reply": true}
+{"id": "turn-03", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-02/inputs/turn-03.wav", "wait_for_reply": true}
+{"id": "turn-04", "action": "speak", "wavPath": "/Users/river/Documents/Libitu/design/benchmarks/teaching-live-20261018/run-02/inputs/turn-04.wav", "wait_for_reply": true}
