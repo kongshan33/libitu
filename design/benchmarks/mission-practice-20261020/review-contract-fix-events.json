@@ -1,0 +1,64 @@
+{
+  "fixture": "synthetic_review_deadline",
+  "synthetic": true,
+  "database_calls": 0,
+  "rubric_version": "speaking-rubric-v2",
+  "analysis_version": "speaking-feedback-v3",
+  "evidence_contract_version": "speaking-evidence-v3",
+  "provider": {
+    "request_count": 1,
+    "diagnose_extra_keys": true,
+    "http_status": 200,
+    "usage": {
+      "prompt_tokens": 3445,
+      "completion_tokens": 886,
+      "total_tokens": 4331,
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 3445
+    },
+    "finish_reason": "stop",
+    "assessment_schema_errors": [
+      {
+        "type": "extra_forbidden",
+        "loc": [
+          "dimensions",
+          0,
+          "unknown_field"
+        ],
+        "extra_field": "criteria_note",
+        "extra_field_type": "NoneType"
+      },
+      {
+        "type": "extra_forbidden",
+        "loc": [
+          "dimensions",
+          1,
+          "unknown_field"
+        ],
+        "extra_field": "criteria_note",
+        "extra_field_type": "NoneType"
+      },
+      {
+        "type": "extra_forbidden",
+        "loc": [
+          "dimensions",
+          2,
+          "unknown_field"
+        ],
+        "extra_field": "criteria_note",
+        "extra_field_type": "NoneType"
+      }
+    ],
+    "elapsed_ms": 4118.72
+  },
+  "status": "partial",
+  "missed_opportunities_status": "unavailable",
+  "missed_opportunities_count": 0,
+  "assessed_user_turns": 1,
+  "used_primary_targets": 0,
+  "item_statuses": [
+    "not_observed"
+  ],
+  "provider_assessment_rejected": true,
+  "source_unchanged": true
+}

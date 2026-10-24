@@ -5,15 +5,16 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import logging
-import re
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from fastapi import HTTPException
 
 from app.services import speaking_runtime_state as state_ops
 from app.services.speaking_teaching import (
-    _exact_spans, _structure_supported, effective_user_turn, hint_target, record_hint_exposure,
+    _exact_spans, _structure_supported, effective_user_turn, find_target_quote, hint_target, record_hint_exposure,
 )
+from app.services.speaking_opportunities import planned_targets, target_is_skipped, target_version
+from app.services.speaking_support import effective_support, find_variant_quote, support_matches
 
 _logger = logging.getLogger(__name__)
 _LEVELS = {"direction": 0, "usage": 1, "example": 2}
@@ -35,7 +36,13 @@ def user_turns(document: dict) -> list[dict]:
             and m.get("status") == "final" and m.get("text", "").strip()]
 
 
-def policy_invalid_reason(document: dict, policy: dict) -> str | None:
+def policy_invalid_reason(document: dict, policy: dict, session=None) -> str | None:
+    if not support_matches(policy, session, document):
+        return "support_changed"
+    if target_is_skipped(document, policy.get("target_item_id")):
+        return "target_skipped"
+    if policy.get("target_state_version", 0) != target_version(document, policy.get("target_item_id")):
+        return "target_state_changed"
     users = user_turns(document)
     source = next((m for m in users if m["id"] == policy.get("source_message_id")), None)
     if not source or source["revision"] != policy.get("source_revision"):
@@ -48,10 +55,10 @@ def policy_invalid_reason(document: dict, policy: dict) -> str | None:
            and e.get("appropriateness") == "appropriate" for e in document.get("evidence", [])):
         return "target_demonstrated"
     controller = document.get("controller", {})
-    if policy.get("action") == "implicit_elicitation" and controller.get("automatic_attempts", {}).get(policy.get("target_item_id"), 0) >= 2:
+    if policy.get("action") in {"implicit_elicitation", "model_then_transfer"} and controller.get("automatic_attempts", {}).get(policy.get("target_item_id"), 0) >= 2:
         return "attempt_limit"
     last_automatic = controller.get("last_automatic_turn", -100)
-    if (policy.get("action") == "implicit_elicitation" and last_automatic >= 0
+    if (policy.get("action") in {"implicit_elicitation", "model_then_transfer"} and last_automatic >= 0
             and sum(effective_user_turn(row) for row in users[last_automatic:]) <= 2):
         return "cooldown"
     return None
@@ -74,13 +81,16 @@ class CoachingRuntime:
         self.coaching_dispatch: asyncio.Task | None = None
         self.injected_attempt: dict | None = None
         self.help_request_id: str | None = None
+        self.help_target_id: str | None = None
         self.help_requests: set[str] = set()
         self.help_cards: dict[tuple[str, int], dict] = {}
         self.help_acks: set[tuple[str, int, str]] = set()
         self.message_acks: set[tuple[str, int]] = set()
+        self.target_acks: set[str] = set()
         self.user_activity_at: str | None = None
         self.coaching_closed = False
         self.pending_exposures: dict[str, dict] = {}
+        self.pending_presentations: dict[str, str] = {}
         self.expiring_policies: set[str] = set()
 
     async def _append_diagnostic(self, event: dict) -> None:
@@ -195,10 +205,10 @@ class CoachingRuntime:
     async def eligible_policy(self) -> dict | None:
         policy = self.state["document"].get("policy")
         if not policy or policy.get("status") != "pending" or policy.get("action") not in {
-            "implicit_elicitation", "explicit_hint",
+            "implicit_elicitation", "model_then_transfer", "explicit_hint",
         }:
             return None
-        reason = policy_invalid_reason(self.state["document"], policy)
+        reason = policy_invalid_reason(self.state["document"], policy, self.session)
         if reason:
             if policy["id"] in self.expiring_policies:
                 return None
@@ -221,22 +231,44 @@ class CoachingRuntime:
         return {"id": str(uuid4()), "policy": deepcopy(policy), "runtime_id": self.runtime_id,
                 "sent_at": state_ops.iso_now(), "response_id": None}
 
+    def attempt_sent(self, attempt: dict) -> None:
+        """Persist transport facts in background; binding may win this CAS race."""
+        frozen = deepcopy(attempt)
+        async def persist():
+            try:
+                def save(document, _):
+                    records = document.setdefault("teaching_attempts", [])
+                    existing = next((row for row in records if row["id"] == frozen["id"]), None)
+                    if existing is None:
+                        records.append(frozen)
+                        del records[:-40]
+                    else:
+                        existing["send_status"] = frozen.get("send_status", "uncertain")
+                await self.commit(save)
+            except Exception:
+                self.diagnostic("policy.attempt_uncommitted", {"attempt_id": frozen["id"]})
+        self.background(persist(), exposure=True)
+
     def bind_attempt(self, document: dict, response: dict, attempt: dict | None) -> None:
         if not attempt:
             return
         bound = {**deepcopy(attempt), "response_id": response["id"], "bound_at": state_ops.iso_now()}
-        bound["validity_at_bind"] = policy_invalid_reason(document, bound["policy"]) or "eligible"
+        bound["validity_at_bind"] = policy_invalid_reason(document, bound["policy"], self.session) or "eligible"
         response["teaching_attempt"] = bound
         records = document.setdefault("teaching_attempts", [])
-        if any(row["id"] == bound["id"] for row in records):
+        existing = next((row for row in records if row["id"] == bound["id"]), None)
+        if existing and existing.get("response_id"):
             return
-        records.append(bound)
+        if existing is None:
+            records.append(bound)
+        else:
+            existing.update(bound)
         del records[:-40]
         policy = bound["policy"]
         current = document.get("policy")
         if current and current["id"] == policy["id"]:
             current.update(status="applied", response_id=response["id"])
-        if policy["action"] == "implicit_elicitation":
+        if policy["action"] in {"implicit_elicitation", "model_then_transfer"}:
             controller = document.setdefault("controller", {})
             attempts = controller.setdefault("automatic_attempts", {})
             target = policy.get("target_item_id")
@@ -274,7 +306,18 @@ class CoachingRuntime:
             self.diagnostic("policy.assessed", {"attempt_id": attempt["id"], "response_id": response["id"],
                                                  "assessment": result, "delivery": "see_presentation_events"})
             assessed = True
+            def save_assessment(document, _):
+                record = next((row for row in document.get("teaching_attempts", [])
+                               if row["id"] == attempt["id"] and row.get("response_id") == response["id"]), None)
+                if record is not None:
+                    record["assessment"] = {key: result.get(key) for key in (
+                        "outcome", "reason", "exact_quote", "model_quote", "transfer_question_quote")}
+            await self.commit(save_assessment)
             if result.get("outcome") != "reflected" or self.coaching_closed or self.stop.is_set():
+                return
+            # Explicit modes already provide the chosen label/frame surface.
+            # Never add an automatic card after a change to reduced support.
+            if effective_support(self.session, self.state["document"]) is not None:
                 return
             await self.fence()
             # Never display an old automatic card over a newer user request/turn.
@@ -288,11 +331,18 @@ class CoachingRuntime:
                     and existing.get("source_message_id") == latest_user.get("id")):
                 return
             policy = attempt["policy"]
+            if (target_is_skipped(self.state["document"], policy.get("target_item_id"))
+                    or policy.get("target_state_version", 0) != target_version(self.state["document"], policy.get("target_item_id"))):
+                return
             card = self.help_base(str(uuid4()), policy.get("target_item_id"), "direction", "automatic")
             card.update(status="ready", direction=policy.get("intent") or "Try expressing your next idea in your own words.")
             card["response_id"] = response["id"]
             self.help_cards[(card["id"], card["version"])] = deepcopy(card)
             def show(document, _):
+                if (effective_support(self.session, document) is not None
+                        or target_is_skipped(document, policy.get("target_item_id"))
+                        or policy.get("target_state_version", 0) != target_version(document, policy.get("target_item_id"))):
+                    return
                 current = document.get("help")
                 latest_current = next(iter(reversed(user_turns(document))), {})
                 if (current and current.get("source") == "requested"
@@ -332,32 +382,43 @@ class CoachingRuntime:
             raise ValueError
         policy = self.state["document"].get("policy") or {}
         suggested = policy.get("target_item_id") if policy.get("status") in {"pending", "applied"} else None
+        if target_is_skipped(self.state["document"], suggested):
+            suggested = None
         target = event.get("target_item_id") or suggested or hint_target(self.session, self.state["document"])
-        if target is None and self.session.items:
-            target = str(self.session.items[0].id)
+        if target is None:
+            # Explicitly requested help is not limited by automatic coaching budgets.
+            target = next((str(item.id) for item in self.session.items
+                           if not target_is_skipped(self.state["document"], str(item.id))), None)
         if target not in {str(item.id) for item in self.session.items}:
+            raise ValueError
+        if target_is_skipped(self.state["document"], target):
             raise ValueError
         self.help_requests.add(request_id)
         self.help_request_id = request_id
+        self.help_target_id = target
         self.diagnostic("hint.requested", {"request_id": request_id, "level": level, "target_item_id": target})
         self.background(self.build_help(request_id, target, level))
 
     async def build_help(self, request_id: str, target: str, level: str) -> None:
         from app.services.speaking_help import generate_help
+        support = effective_support(self.session, self.state["document"])
+        def current(document):
+            return (request_id == self.help_request_id and not target_is_skipped(document, target)
+                    and effective_support(self.session, document) == support)
         try:
             card = self.help_base(request_id, target, level, "requested")
-            if request_id != self.help_request_id:
+            if not current(self.state["document"]):
                 self.diagnostic("hint.discarded", {"request_id": request_id, "reason": "superseded_before_start"})
                 return
             self.help_cards[(request_id, 1)] = deepcopy(card)
             await self.commit(lambda d, _: d.update(help=card, hint=None)
-                              if request_id == self.help_request_id else None)
+                              if current(d) else None)
             history = deepcopy(self.state["document"].get("messages", []))
             message = next((m for m in reversed(history) if m["role"] == "user"), {})
             result = await generate_help(self.session, target, message, history, level=level)
             trace = result.pop("analysis_trace", None)
             self.diagnostic("hint.analyzed", {"request_id": request_id, "trace": trace, "result": result})
-            if request_id != self.help_request_id or self.coaching_closed:
+            if self.coaching_closed or not current(self.state["document"]):
                 self.diagnostic("hint.discarded", {"request_id": request_id, "reason": "superseded"})
                 return
             card.update({k: v for k, v in result.items() if k in {
@@ -369,19 +430,21 @@ class CoachingRuntime:
             if card["status"] == "unavailable":
                 card["error"] = "Detailed help is unavailable. You can use the expression above or retry."
             self.help_cards[(request_id, 2)] = deepcopy(card)
-            await self.commit(lambda d, _: d.update(help=card) if request_id == self.help_request_id else None)
+            await self.commit(lambda d, _: d.update(help=card)
+                              if current(d) else None)
             self.diagnostic("hint.generated", {"card": card})
         except asyncio.CancelledError:
             self.diagnostic("hint.cancelled", {"request_id": request_id})
             raise
         except Exception:
             self.diagnostic("hint.failed", {"request_id": request_id, "reason": "unavailable"})
-            if not self.coaching_closed and request_id == self.help_request_id:
+            if not self.coaching_closed and current(self.state["document"]):
                 try:
                     card = self.help_base(request_id, target, level, "requested")
                     card.update(version=2, status="unavailable", error="Help is unavailable. Please retry.")
                     self.help_cards[(request_id, 2)] = deepcopy(card)
-                    await self.commit(lambda d, _: d.update(help=card) if request_id == self.help_request_id else None)
+                    await self.commit(lambda d, _: d.update(help=card)
+                                      if current(d) else None)
                 except Exception:
                     pass  # A revoked connection cannot publish late help.
 
@@ -420,6 +483,34 @@ class CoachingRuntime:
                         event_id=exposure["id"])
         self.persist_exposure(exposure)
 
+    def target_shown(self, event: dict) -> None:
+        """Receipt for an actually visible expression, never inferred from a snapshot."""
+        target = event.get("target_item_id")
+        if self.state.get("status") != "active":
+            return
+        visible_targets = (
+            {str(item.id) for item in self.session.items}
+            if effective_support(self.session, self.state["document"]) is not None
+            else planned_targets(self.session)
+        )
+        if not isinstance(target, str) or target not in visible_targets:
+            raise ValueError
+        exposure_id = str(uuid5(NAMESPACE_URL, f"libitu:target-shown:{self.session_id}:{target}"))
+        if (target in self.target_acks or any(row.get("id") == exposure_id
+                for row in self.state["document"].get("controller", {}).get("exposures", []))):
+            return
+        latest = next(iter(reversed(user_turns(self.state["document"]))), {})
+        exposure = {
+            "id": exposure_id, "kind": "visual_target", "level": "usage", "scope": "session",
+            "target_item_id": target, "visible_at": state_ops.iso_now(),
+            "overlap": self.user_speaking or bool(getattr(self, "gemini_user_text", "")),
+            "source_message_id": latest.get("id"), "source_revision": latest.get("revision", 0),
+        }
+        self.target_acks.add(target)
+        self.diagnostic("target.shown", {"target_item_id": target, "exposure": exposure},
+                        event_id=exposure_id)
+        self.persist_exposure(exposure)
+
     def persist_exposure(self, exposure: dict) -> None:
         self.pending_exposures[exposure["id"]] = exposure
         async def persist():
@@ -439,15 +530,19 @@ class CoachingRuntime:
     def assistant_exposures(self, message: dict, channel: str) -> None:
         """Only acknowledged full text/audio can reveal an expression to the learner."""
         latest = next(iter(reversed(user_turns(self.state["document"]))), {})
+        modeled_target = next(((row.get("policy") or {}).get("target_item_id")
+                               for row in self.state["document"].get("teaching_attempts", [])
+                               if row.get("response_id") == message.get("response_id")
+                               and (row.get("policy") or {}).get("action") == "model_then_transfer"), None)
         for item in self.session.items:
             text = message.get("text", "")
-            matches = (any(_structure_supported(item.text, sentence.strip()) for sentence in re.split(r"[.!?]", text))
-                       if item.kind == "structure" else bool(_exact_spans(text, item.text)))
-            if not matches:
+            matches = find_target_quote(text, item.text, item.kind)
+            if not matches and (item.kind == "structure" or not find_variant_quote(text, item.text)):
                 continue
             exposure = {"id": str(uuid5(NAMESPACE_URL,
                 f"libitu:assistant-exposure:{self.session_id}:{message['id']}:{message['revision']}:{item.id}:{channel}")),
-                "kind": "assistant_" + channel, "level": "usage", "scope": "session",
+                "kind": "assistant_" + channel,
+                "level": "example" if str(item.id) == modeled_target else "usage", "scope": "session",
                 "target_item_id": str(item.id), "visible_at": state_ops.iso_now(),
                 "overlap": self.user_speaking or bool(getattr(self, "gemini_user_text", "")),
                 "source_message_id": latest.get("id"), "source_revision": latest.get("revision", 0)}
@@ -467,6 +562,26 @@ class CoachingRuntime:
         self.diagnostic("response.shown", {"message_id": key[0], "revision": key[1],
                                             "response_id": message.get("response_id"), "channel": "text"})
         self.assistant_exposures(message, "text")
+        self.opportunity_presented(message)
+
+    def opportunity_presented(self, message: dict) -> None:
+        response_id = message.get("response_id")
+        if not response_id or not any(row.get("response_id") == response_id
+                                      for row in self.state["document"].get("teaching_attempts", [])):
+            return
+        shown_at = state_ops.iso_now()
+        self.pending_presentations.setdefault(response_id, shown_at)
+        async def persist():
+            try:
+                def save(document, _):
+                    for attempt in document.get("teaching_attempts", []):
+                        if attempt.get("response_id") == response_id:
+                            attempt.update(presented=True, presented_at=attempt.get("presented_at") or shown_at)
+                await self.commit(save)
+                self.pending_presentations.pop(response_id, None)
+            except Exception:
+                self.diagnostic("policy.presentation_uncommitted", {"response_id": response_id})
+        self.background(persist(), exposure=True)
 
     def playback_logged(self, item_id: str) -> None:
         item = self.audio_items.get(item_id)
@@ -476,6 +591,26 @@ class CoachingRuntime:
         bucket = int(item["played_ms"] / 1000)
         complete = item["played_ms"] >= item["generated_ms"] - 1
         response = self.responses.get(item["response_id"], {})
+        policy = (response.get("teaching_attempt") or {}).get("policy") or {}
+        if (item["played_ms"] > 0 and not item.get("possible_exposure_recorded")
+                and policy.get("action") == "model_then_transfer"
+                and policy.get("target_item_id") in {str(target.id) for target in self.session.items}):
+            # There is no word-to-audio alignment. Any partial playback may have
+            # contained the demonstration; it confirms neither its wording nor
+            # delivery of the transfer question. A later full ACK can supersede
+            # this uncertainty through the existing assistance precedence.
+            item["possible_exposure_recorded"] = True
+            latest = next(iter(reversed(user_turns(self.state["document"]))), {})
+            exposure = {
+                "id": str(uuid5(NAMESPACE_URL, f"libitu:possible-model:{self.session_id}:{item['response_id']}")),
+                "kind": "assistant_audio", "level": "example", "scope": "session", "certainty": "possible",
+                "target_item_id": policy["target_item_id"], "response_id": item["response_id"],
+                "visible_at": state_ops.iso_now(),
+                "overlap": self.user_speaking or bool(getattr(self, "gemini_user_text", "")),
+                "source_message_id": latest.get("id"), "source_revision": latest.get("revision", 0),
+            }
+            self.persist_exposure(exposure)
+            self.diagnostic("response.possible_expression_exposure", {"exposure": exposure}, event_id=exposure["id"])
         final = complete and bool(response.get("persisted"))
         marker = (bucket, final, bool(item.get("truncated")))
         if item.get("diagnostic_marker") == marker:
@@ -490,3 +625,4 @@ class CoachingRuntime:
                             if m.get("response_id") == item["response_id"] and m.get("status") == "final"), None)
             if message:
                 self.assistant_exposures(message, "audio")
+                self.opportunity_presented(message)

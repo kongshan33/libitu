@@ -13,7 +13,7 @@ from test_speaking_teaching import mission, utterance
 @pytest.fixture(autouse=True)
 def no_paid_help(monkeypatch):
     monkeypatch.setattr(help_service, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key=None, deepseek_base_url="https://analyzer.invalid", deepseek_model="fixture-model"))
+        ark_api_key=None, ark_base_url="https://analyzer.invalid", ark_model="fixture-model"))
 
 
 def help_transport(monkeypatch, result, *, finish_reason="stop"):
@@ -24,7 +24,7 @@ def help_transport(monkeypatch, result, *, finish_reason="stop"):
         return httpx.Response(200, json={"choices": [{"finish_reason": finish_reason,
                                                      "message": {"content": json.dumps(result)}}]})
     monkeypatch.setattr(help_service, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key="test-only", deepseek_base_url="https://analyzer.invalid", deepseek_model="fixture-model"))
+        ark_api_key="test-only", ark_base_url="https://analyzer.invalid", ark_model="fixture-model"))
     monkeypatch.setattr(teaching.httpx, "AsyncClient", lambda **kwargs: original(**kwargs, transport=httpx.MockTransport(handler)))
     return requests
 
@@ -114,6 +114,108 @@ def test_effect_failure_stays_unknown_and_empty_response_skips_model():
     assert result["outcome"] == "unknown" and result["analysis_trace"]["status"] == "unavailable"
 
 
+def modeling_policy(target="to be fair", kind="chunk"):
+    return {"action": "model_then_transfer", "target_item_id": "selected-target",
+            "target_text": target, "target_kind": kind,
+            "intent": "Acknowledge another perspective", "opportunity": "Ask about a different constraint"}
+
+
+def model_effect(model_quote, question, **changes):
+    return {"outcome": "reflected", "exact_quote": question, "model_quote": model_quote,
+            "transfer_question_quote": question, "reason": "A natural model is followed by a different-content question.",
+            **changes}
+
+
+@pytest.mark.parametrize("kind,target,model_quote,question", [
+    ("chunk", "to be fair", "To be fair, my team also needs time.",
+     "What is a constraint on your team's availability?"),
+    ("structure", "The more you [action], the more you [result]",
+     "The more you change the scope, the more you need to adjust the timeline.",
+     "How does adding people affect your team's communication?"),
+    ("structure", "[A] is better than [B]", "Testing early is better than rushing later.",
+     "What two delivery options would you compare for your team?"),
+])
+def test_model_then_transfer_accepts_two_grounded_ordered_quotes(monkeypatch, kind, target, model_quote, question):
+    requests = help_transport(monkeypatch, model_effect(model_quote, question))
+    result = asyncio.run(help_service.assess_policy_response(
+        modeling_policy(target, kind), model_quote + " " + question))
+    assert result["outcome"] == "reflected"
+    assert result["model_quote"] == model_quote
+    assert result["transfer_question_quote"] == question
+    assert result["exact_quote"] == question
+    assert result["analysis_trace"]["assessment_source"] == "model_advisory"
+    prompt = requests[0]["messages"][0]["content"]
+    assert "DIFFERENT content" in prompt
+    assert "proof of delivery" in prompt
+    assert "repeat, paraphrase, confirm or finish" in prompt
+
+
+@pytest.mark.parametrize("model_quote,question,response,error", [
+    (None, "What is your constraint?", "To be fair, we need time. What is your constraint?",
+     "model_transfer_requires_both_quotes"),
+    ("To be fair, we need time.", None, "To be fair, we need time. What is your constraint?",
+     "model_transfer_requires_both_quotes"),
+    ("To be fair, we need time.", "What is your constraint?",
+     "What is your constraint? To be fair, we need time.", "model_transfer_quotes_not_independent_ordered"),
+    ("To be fair, we need time. What is your constraint?", "What is your constraint?",
+     "To be fair, we need time. What is your constraint?", "model_transfer_quotes_not_independent_ordered"),
+    ("To be fair, we need time.", "What is your constraint?",
+     "To be fair, we need time. What is your constraint? What is your constraint?",
+     "model_transfer_quotes_not_unique"),
+    ("We need time.", "What is your constraint?", "To be fair, we need time. What is your constraint?",
+     "effect_quote_not_in_response"),
+    ("We need time.", "What is your constraint?", "We need time. What is your constraint?",
+     "model_target_not_grounded"),
+    ("To be fair, we need time.", "What is your constraint?",
+     "To be fair, we need time. What is your constraint? To be fair, it is difficult.",
+     "model_target_not_used_once"),
+])
+def test_model_transfer_rejects_missing_reversed_overlapping_repeated_or_ungrounded_evidence(
+        monkeypatch, model_quote, question, response, error):
+    help_transport(monkeypatch, model_effect(model_quote, question, exact_quote="What is your constraint?"))
+    result = asyncio.run(help_service.assess_policy_response(modeling_policy(), response))
+    assert result["outcome"] == "unknown"
+    assert result["model_quote"] is None and result["transfer_question_quote"] is None
+    assert result["analysis_trace"]["error_type"] == error
+
+
+@pytest.mark.parametrize("model_quote,error", [
+    ("The more you [action], the more you [result].", "model_structure_not_filled"),
+    ("The more you work.", "model_structure_not_filled"),
+    ("The more you plan, the more you learn; the more you test, the more you improve.",
+     "model_target_not_used_once"),
+])
+def test_model_transfer_structures_need_filled_slots_and_only_one_use(monkeypatch, model_quote, error):
+    question = "How does your team's size affect communication?"
+    help_transport(monkeypatch, model_effect(model_quote, question))
+    result = asyncio.run(help_service.assess_policy_response(
+        modeling_policy("The more you [action], the more you [result]", "structure"),
+        model_quote + " " + question))
+    assert result["outcome"] == "unknown"
+    assert result["analysis_trace"]["error_type"] == error
+
+
+@pytest.mark.parametrize("question,reason", [
+    ("Can you repeat my point?", "The question asks for imitation rather than different content."),
+    ("Can you say the same thing about my team?", "This requests a paraphrase of the modeled idea."),
+    ("Do you agree?", "Confirmation alone is not a different-content transfer opportunity."),
+])
+def test_model_advisory_can_reject_repetition_even_with_grounded_quotes(monkeypatch, question, reason):
+    model_quote = "To be fair, my team also needs time."
+    help_transport(monkeypatch, model_effect(model_quote, question, outcome="not_reflected", reason=reason))
+    result = asyncio.run(help_service.assess_policy_response(modeling_policy(), model_quote + " " + question))
+    assert result["outcome"] == "not_reflected" and result["reason"] == reason
+
+
+def test_modeling_allows_grounded_contextual_skip_without_a_demonstration(monkeypatch):
+    response = "Thanks for the conversation. Goodbye!"
+    help_transport(monkeypatch, {"outcome": "appropriate_skip", "exact_quote": "Goodbye!",
+                                "reason": "The response closes the conversation."})
+    result = asyncio.run(help_service.assess_policy_response(modeling_policy(), response))
+    assert result["outcome"] == "appropriate_skip"
+    assert result["model_quote"] is None and result["transfer_question_quote"] is None
+
+
 @pytest.mark.parametrize("response,quote", [
     ("One trade-off is that reliability costs more. Would you raise the budget?", "One trade-off is"),
     ("😊 ONE trade-off is a higher monthly cost. What do you think?", "ONE trade-off is"),
@@ -199,7 +301,7 @@ def test_whole_help_request_timeout_is_bounded_without_exposing_provider_excepti
         await asyncio.sleep(0.1)
         raise AssertionError("The whole-operation deadline should cancel this request")
     monkeypatch.setattr(help_service, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key="test-only", deepseek_base_url="https://analyzer.invalid", deepseek_model="fixture-model"))
+        ark_api_key="test-only", ark_base_url="https://analyzer.invalid", ark_model="fixture-model"))
     monkeypatch.setattr(teaching, "ANALYSIS_TIMEOUT_SECONDS", 0.01)
     monkeypatch.setattr(teaching.httpx, "AsyncClient", lambda **kwargs: original(**kwargs, transport=httpx.MockTransport(handler)))
     result = request_help(mission())

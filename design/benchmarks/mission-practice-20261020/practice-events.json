@@ -1,0 +1,241 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-1ecd274c4c5743da88f5b6355c658f00",
+    "planning_requests": 2,
+    "max_model_requests": 4,
+    "provider_mode": "live",
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls",
+    "support_level": "no_hint",
+    "practice_variation": "details"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "phase": "parent",
+    "elapsed_ms": 4852.2,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1873,
+      "completion_tokens": 1143,
+      "total_tokens": 3016
+    }
+  },
+  {
+    "event": "provider_candidate_preview",
+    "phase": "parent",
+    "candidates": [
+      {
+        "title": "Project Delay Discussion",
+        "setting": "A one-on-one meeting room at the office, with a whiteboard showing the project timeline.",
+        "goal": "Acknowledge the colleague's constraint, propose a practical next step, and confirm shared understanding.",
+        "user_role": "Project lead",
+        "ai_role": "Colleague responsible for the delayed task",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "e72ca124-4395-40d0-a1bc-2c2617873690",
+            "role": "primary",
+            "communicative_function": "Concede a valid concern before giving a different view.",
+            "fit": "high",
+            "fit_reason": "The scenario involves discussing a delay where acknowledging the colleague's constraint is natural.",
+            "trigger_question": "Your colleague explains they are overloaded with another urgent task. How do you acknowledge their point before suggesting an alternative?",
+            "skip_when": "Skip if the colleague has not raised any constraint or concern.",
+            "sentence_frame": "To be fair, [colleague's constraint], but we still need to [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "28670ca4-939a-49fb-b017-e64ee760fbc6",
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "fit": "high",
+            "fit_reason": "The scenario requires proposing a next step based on the agreed constraint of limited time.",
+            "trigger_question": "You both agree that the deadline is tight. How do you propose a practical next step using that shared fact?",
+            "skip_when": "Skip if no shared fact or constraint has been established.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "11da9f3f-269b-4cb3-aa40-fb669abd1a27",
+            "role": "opportunity",
+            "communicative_function": "Confirm a shared understanding before ending a discussion.",
+            "fit": "high",
+            "fit_reason": "At the end of the discussion, confirming alignment is a natural step.",
+            "trigger_question": "Before you wrap up, how do you check that you both agree on the plan?",
+            "skip_when": "Skip if the discussion is still ongoing and no decision has been reached.",
+            "sentence_frame": "I just want to make sure we're on the same page about [decision].",
+            "metadata_status": "unknown"
+          }
+        ]
+      },
+      {
+        "title": "Delayed Project Sync",
+        "setting": "A video call between two colleagues, with the project dashboard visible on screen.",
+        "goal": "Acknowledge the colleague's workload, propose a revised timeline, and ensure alignment.",
+        "user_role": "Senior team member",
+        "ai_role": "Junior colleague who missed a deadline",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "e72ca124-4395-40d0-a1bc-2c2617873690",
+            "role": "primary",
+            "communicative_function": "Concede a valid concern before giving a different view.",
+            "fit": "high",
+            "fit_reason": "The junior colleague may have a valid reason for the delay, and conceding is appropriate.",
+            "trigger_question": "The junior colleague says they had too many tasks. How do you acknowledge that before discussing the deadline?",
+            "skip_when": "Skip if the colleague does not mention any workload issue.",
+            "sentence_frame": "To be fair, [colleague's situation], but we need to [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "28670ca4-939a-49fb-b017-e64ee760fbc6",
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "fit": "high",
+            "fit_reason": "The scenario involves using the agreed fact of the delay to propose a new plan.",
+            "trigger_question": "You both know the original deadline is missed. How do you suggest a new approach based on that?",
+            "skip_when": "Skip if the delay has not been acknowledged by both parties.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "11da9f3f-269b-4cb3-aa40-fb669abd1a27",
+            "role": "opportunity",
+            "communicative_function": "Confirm a shared understanding before ending a discussion.",
+            "fit": "high",
+            "fit_reason": "Ending the call with a mutual understanding is a natural opportunity.",
+            "trigger_question": "How do you make sure you both leave the call with the same understanding?",
+            "skip_when": "Skip if the meeting ends abruptly without a summary.",
+            "sentence_frame": "Let's make sure we're on the same page regarding [decision].",
+            "metadata_status": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "plan_created",
+    "elapsed_seconds": 6.53,
+    "plan_id": "e266270c-e80e-4f05-bb9a-8d85468b5ea9",
+    "candidates": [
+      {
+        "title": "Project Delay Discussion",
+        "goal": "Acknowledge the colleague's constraint, propose a practical next step, and confirm shared understanding.",
+        "user_role": "Project lead",
+        "ai_role": "Colleague responsible for the delayed task",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede a valid concern before giving a different view.",
+            "trigger_question": "Your colleague explains they are overloaded with another urgent task. How do you acknowledge their point before suggesting an alternative?",
+            "skip_when": "Skip if the colleague has not raised any constraint or concern.",
+            "sentence_frame": "To be fair, [colleague's constraint], but we still need to [action]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "trigger_question": "You both agree that the deadline is tight. How do you propose a practical next step using that shared fact?",
+            "skip_when": "Skip if no shared fact or constraint has been established.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm a shared understanding before ending a discussion.",
+            "trigger_question": "Before you wrap up, how do you check that you both agree on the plan?",
+            "skip_when": "Skip if the discussion is still ongoing and no decision has been reached.",
+            "sentence_frame": "I just want to make sure we're on the same page about [decision]."
+          }
+        ]
+      },
+      {
+        "title": "Delayed Project Sync",
+        "goal": "Acknowledge the colleague's workload, propose a revised timeline, and ensure alignment.",
+        "user_role": "Senior team member",
+        "ai_role": "Junior colleague who missed a deadline",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede a valid concern before giving a different view.",
+            "trigger_question": "The junior colleague says they had too many tasks. How do you acknowledge that before discussing the deadline?",
+            "skip_when": "Skip if the colleague does not mention any workload issue.",
+            "sentence_frame": "To be fair, [colleague's situation], but we need to [action]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "trigger_question": "You both know the original deadline is missed. How do you suggest a new approach based on that?",
+            "skip_when": "Skip if the delay has not been acknowledged by both parties.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm a shared understanding before ending a discussion.",
+            "trigger_question": "How do you make sure you both leave the call with the same understanding?",
+            "skip_when": "Skip if the meeting ends abruptly without a summary.",
+            "sentence_frame": "Let's make sure we're on the same page regarding [decision]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "session_frozen",
+    "session_id": "13d3205d-c4a2-4f65-a5d1-d6104e3902dd",
+    "metadata": true,
+    "stable_target_ids": true,
+    "stale_plan_check": "deferred_until_child_creation",
+    "support_level": "no_hint",
+    "support_idempotency": true,
+    "sentence_frames": true
+  },
+  {
+    "event": "runtime_support_verified",
+    "initial": "no_hint",
+    "current": {
+      "level": "no_hint",
+      "version": 2
+    },
+    "modeled_support": {
+      "level": "model_frame",
+      "version": 1
+    },
+    "stale_version_rejected": true,
+    "change_idempotent": true,
+    "transport": "direct_runtime_cas_fixture",
+    "provider_socket_opened": false
+  },
+  {
+    "event": "failed",
+    "code": "feedback_plan_snapshot"
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": false,
+    "model_requests": 1,
+    "provider_mode": "live",
+    "qualification": "planning_and_persistence_only"
+  }
+]

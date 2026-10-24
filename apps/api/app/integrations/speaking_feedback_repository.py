@@ -15,10 +15,9 @@ from fastapi import HTTPException
 from app.config import get_settings
 from app.integrations.speaking_runtime_repository import _document, _identity, _inline_runtime_store, _json_value
 from app.integrations.supabase_repository import SupabaseRepository, get_supabase_repository
+from app.schemas.speaking_feedback import ANALYSIS_VERSION, RUBRIC_VERSION
 from app.services import store
 
-RUBRIC_VERSION = "speaking-rubric-v1"
-ANALYSIS_VERSION = "speaking-feedback-v1"
 LEASE_SECONDS = 120
 MAX_ATTEMPTS = 3
 MAX_SOURCE_BYTES = 2 * 1024 * 1024
@@ -26,10 +25,13 @@ _NON_RETRYABLE = {"input_limit", "worker_version_mismatch"}
 _STATUSES = {"queued", "processing", "ready", "partial", "insufficient_data", "failed"}
 _TERMINAL = _STATUSES - {"queued", "processing"}
 _MESSAGE_FIELDS = {"id", "ordinal", "role", "text", "input_source", "status", "revision",
-                   "provider_item_id", "response_id", "client_turn_id", "created_at"}
+                   "provider_item_id", "response_id", "client_turn_id", "created_at", "started_at", "finalized_at"}
 _EVIDENCE_FIELDS = {"id", "session_item_id", "message_id", "transcript_revision", "start", "end",
-                    "quote", "match_type", "appropriateness", "prompted", "reason"}
-_EXPOSURE_FIELDS = {"id", "target_item_id", "source_message_id", "source_revision", "after_turn"}
+                    "quote", "match_type", "appropriateness", "prompted", "assistance", "reason"}
+_EXPOSURE_FIELDS = {"id", "target_item_id", "source_message_id", "source_revision", "after_turn",
+                    "kind", "level", "visible_at", "overlap", "response_id", "scope", "certainty"}
+_ATTEMPT_FIELDS = {"id", "response_id", "sent_at", "bound_at", "send_status", "presented", "presented_at"}
+_TARGET_STATE_FIELDS = {"skipped", "reason", "skipped_at", "restored_at", "version"}
 
 
 class FeedbackStore(Protocol):
@@ -177,17 +179,43 @@ class SupabaseFeedbackStore:
 
 
 def _freeze(session, document: dict) -> dict:
+    def select(row, fields):
+        return {key: row[key] for key in fields if key in row}
+
     def rows(key, fields, source=document):
         value = source.get(key, [])
         if not isinstance(value, list):
             raise _invalid()
-        return [{key: row[key] for key in fields if key in row} for row in value if isinstance(row, dict)]
+        return [select(row, fields) for row in value if isinstance(row, dict)]
 
+    attempts = []
+    for row in document.get("teaching_attempts", []):
+        if isinstance(row, dict):
+            attempts.append({
+                **select(row, _ATTEMPT_FIELDS),
+                "policy": select(row.get("policy") or {}, {"target_item_id", "action", "support_level", "support_version"}),
+                "assessment": select(row.get("assessment") or {}, {
+                    "outcome", "reason", "exact_quote", "model_quote", "transfer_question_quote",
+                }),
+            })
+    target_states = {
+        target: {**select(state, _TARGET_STATE_FIELDS),
+                 "history": [select(event, {"action", "at", "reason"}) for event in state.get("history", [])
+                             if isinstance(event, dict)]}
+        for target, state in (document.get("target_states") or {}).items() if isinstance(state, dict)
+    }
+
+    support = {}
+    if isinstance(document.get("support"), dict):
+        support["support"] = select(document["support"], {"level", "version"})
+    if isinstance(document.get("support_history"), list):
+        support["support_history"] = rows("support_history", {"level", "version", "at"})
     return _payload({"session": session.model_dump(mode="json"),
                      "messages": rows("messages", _MESSAGE_FIELDS),
                      "evidence": rows("evidence", _EVIDENCE_FIELDS),
                      "controller": {"exposures": rows("exposures", _EXPOSURE_FIELDS,
-                                                      document.get("controller") or {})}}, source=True)
+                                                      document.get("controller") or {})},
+                     "teaching_attempts": attempts, "target_states": target_states, **support}, source=True)
 
 
 class InlineFeedbackStore:

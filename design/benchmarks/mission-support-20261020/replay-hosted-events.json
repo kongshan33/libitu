@@ -1,0 +1,197 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-6cf8901ee2b145e1935f668a413004bf",
+    "planning_requests": 1,
+    "max_model_requests": 0,
+    "provider_mode": "saved_synthetic_replay",
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls",
+    "support_level": "model_frame"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_replayed",
+    "source": "safeevents.json",
+    "candidates": 3,
+    "content_changed": false,
+    "synthetic_ids_remapped": true,
+    "model_request": false
+  },
+  {
+    "event": "plan_created",
+    "elapsed_seconds": 2.13,
+    "plan_id": "ccfadb4c-3e5d-4270-921b-0e86ee876258",
+    "candidates": [
+      {
+        "title": "Delayed Handover: Agreeing the Next Step",
+        "goal": "Acknowledge your colleague's constraint, justify a practical next step, and confirm you both leave with the same understanding of the decision.",
+        "user_role": "The project lead who needs the handover to move forward and wants to agree a realistic plan with your colleague.",
+        "ai_role": "A colleague on the delivery team who is waiting on the client's data and is worried about committing to a new date.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede that the colleague's concern is reasonable before offering a different view.",
+            "trigger_question": "Your colleague says the client still hasn't sent the figures and the delay isn't their fault. How do you respond before suggesting a different plan?",
+            "skip_when": "Skip if the colleague has already fully accepted the delay and no concession is needed.",
+            "sentence_frame": "To be fair, [colleague's valid concern], but [your different view]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared fact or constraint to justify a proposed next step.",
+            "trigger_question": "You both agree the client's figures won't arrive until Thursday. What practical next step do you propose, and what shared fact supports it?",
+            "skip_when": "Skip if no shared fact or constraint has been established to base a recommendation on.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm a shared understanding of the decision before ending the discussion.",
+            "trigger_question": "Before you both hang up, how would you check that you're leaving with the same understanding of what was decided?",
+            "skip_when": "Skip if the call has already ended or the decision is still unresolved.",
+            "sentence_frame": "Before we finish, I want to make sure we're on the same page about [decision]."
+          }
+        ]
+      },
+      {
+        "title": "Rescheduling the Client Review",
+        "goal": "Recognise the supplier delay as a fair point, propose a rescheduled review based on that fact, and confirm you both agree on the new arrangement.",
+        "user_role": "The team member who owns the review deck and needs to agree a new date with your manager.",
+        "ai_role": "The manager who is under pressure from the client and needs a clear, justified plan.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Acknowledge that the other person's point is reasonable before presenting a different view.",
+            "trigger_question": "Your manager points out the client is expecting the review tomorrow and the delay looks bad. How do you respond before proposing a different arrangement?",
+            "skip_when": "Skip if the manager has already agreed the delay is unavoidable and no concession is needed.",
+            "sentence_frame": "To be fair, [manager's valid point], but [your different view]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Base a recommendation on an agreed fact or constraint.",
+            "trigger_question": "The supplier report only arrived this morning. What do you recommend for the review, and what fact makes that sensible?",
+            "skip_when": "Skip if no agreed fact or constraint has been established to justify a recommendation.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Check that both people understand the decision the same way before parting.",
+            "trigger_question": "As you part ways, how would you make sure you both understand the new arrangement the same way?",
+            "skip_when": "Skip if the conversation has already ended or no decision has been reached.",
+            "sentence_frame": "Just to check, are we on the same page about [arrangement]?"
+          }
+        ]
+      },
+      {
+        "title": "Sprint Planning: Handling the Missing Sign-off",
+        "goal": "Accept the product owner's concern as fair, propose a revised sprint scope based on the pending sign-off, and confirm shared understanding of the plan.",
+        "user_role": "The developer who needs to agree a realistic sprint scope with the product owner.",
+        "ai_role": "The product owner who is anxious about the release date and the pending legal sign-off.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede that the other person's worry is legitimate before offering a different perspective.",
+            "trigger_question": "The product owner says the release date is fixed and slipping is not acceptable. How do you respond before suggesting a different scope?",
+            "skip_when": "Skip if the product owner has already accepted the revised scope without objection.",
+            "sentence_frame": "To be fair, [product owner's valid concern], but [your different perspective]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared constraint to justify a proposed change of plan.",
+            "trigger_question": "Legal sign-off is still pending. What change to the sprint scope do you propose, and what fact supports it?",
+            "skip_when": "Skip if no shared constraint has been agreed to base a proposal on.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm that both parties share the same understanding of the agreed plan.",
+            "trigger_question": "Before the meeting ends, how would you confirm you both understand the revised scope the same way?",
+            "skip_when": "Skip if the meeting has already ended or the scope is still undecided.",
+            "sentence_frame": "Before we wrap up, let's make sure we're on the same page about [plan]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "session_frozen",
+    "session_id": "e750a4f7-93eb-4075-b723-8bfe3f5f7e96",
+    "metadata": true,
+    "stable_target_ids": true,
+    "stale_plan_rejected": true,
+    "support_level": "model_frame",
+    "support_idempotency": true,
+    "sentence_frames": true
+  },
+  {
+    "event": "runtime_support_verified",
+    "initial": "model_frame",
+    "current": {
+      "level": "no_hint",
+      "version": 1
+    },
+    "modeled_support": {
+      "level": "model_frame",
+      "version": 0
+    },
+    "stale_version_rejected": true,
+    "change_idempotent": true,
+    "transport": "direct_runtime_cas_fixture",
+    "provider_socket_opened": false
+  },
+  {
+    "event": "support_feedback_frozen",
+    "initial_support": true,
+    "current_support": true,
+    "support_history": true,
+    "policy_support_version": true,
+    "model_quote": true,
+    "transfer_question_quote": true,
+    "possible_audio_certainty": true,
+    "fixture_receipts_only": true
+  },
+  {
+    "event": "feedback_frozen",
+    "job_id": "574ce553-5c4e-46eb-a81c-42da9b111f50",
+    "status": "queued",
+    "reflected": true,
+    "presented": true,
+    "skipped": true,
+    "exposure": true,
+    "private_fields_excluded": true,
+    "reliable_user_turns": 0,
+    "feedback_model_called": false
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": true,
+    "model_requests": 0,
+    "provider_mode": "saved_synthetic_replay",
+    "qualification": "planning_and_persistence_only"
+  }
+]

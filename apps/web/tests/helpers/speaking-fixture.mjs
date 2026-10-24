@@ -9,7 +9,7 @@ export function speakingWorkspace(owner = loadoutOwner) {
         { id: "item-3", corpus_item_id: null, ordinal: 2, kind: "structure", text: "What matters most is [priority].", meaning: "State the priority", tags: [], slots: { priority: "the most important outcome" }, source_title: null }
       ] } };
 }
-export async function installSpeakingFixture(page, { origin, denyMicrophone = false, deferHints = false } = {}) {
+export async function installSpeakingFixture(page, { origin, denyMicrophone = false, deferHints = false, deferSupport = false } = {}) {
   const auth = await installLoadoutFixture(page, { origin, initialOwner: loadoutOwner, records: [] });
   await page.addInitScript(({ deny }) => {
     window.__speakingTracks = []; window.__denySpeakingMic = deny;
@@ -48,6 +48,25 @@ export async function installSpeakingFixture(page, { origin, denyMicrophone = fa
       if (event.type === "ping") socket.send(JSON.stringify({ type: "pong" }));
       if (event.type === "microphone") socket.send(JSON.stringify({ type: "state", state: "listening" }));
       if (event.type === "interrupt") { socket.send(JSON.stringify({ type: "audio.clear", item_id: "audio-item" })); socket.send(JSON.stringify({ type: "state", state: "listening" })); }
+      if (event.type === "support.set" && !deferSupport) {
+        const version = state.workspace.support?.version ?? 0;
+        if (event.expected_version !== version) {
+          socket.send(JSON.stringify({ type: "error", code: "support_changed", request_id: event.request_id, message: "Support changed.", retryable: true }));
+        } else {
+          state.workspace.support = { level: event.level, version: version + 1 };
+          state.workspace.help = null; state.workspace.version++;
+        }
+        socket.send(JSON.stringify({ type: "snapshot", workspace: state.workspace }));
+      }
+      if (event.type === "target.skip" || event.type === "target.restore") {
+        const target = state.workspace.opportunities?.find(value => value.session_item_id === event.target_item_id);
+        if (target) {
+          target.status = event.type === "target.skip" ? "skipped" : "planned";
+          target.skipped_reason = event.type === "target.skip" ? event.reason : null;
+          if (state.workspace.help?.target_item_id === target.session_item_id) state.workspace.help = null;
+          state.workspace.version++; socket.send(JSON.stringify({ type: "snapshot", workspace: state.workspace }));
+        }
+      }
       if (event.type === "hint" && !deferHints) {
         const item = state.workspace.session.items.find(value => value.id === event.target_item_id) ?? state.workspace.session.items[1];
         state.workspace.help = { id: event.request_id, version: 2, target_item_id: item.id, level: event.level, status: "ready", direction: "Check shared expectations.", expression: item.text, meaning: item.meaning, pattern: "We need to be on the same page about [topic].", example: event.level === "example" ? "We need to be on the same page about the timeline." : null, substitution: null, source: "requested", source_message_id: null, error: null };

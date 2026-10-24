@@ -4,7 +4,7 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-09-30
+  updated: 2026-10-20
 ```
 
 This roadmap orders implementation by dependency and product risk. Each phase must produce a testable learner outcome before the next phase expands scope.
@@ -12,6 +12,13 @@ This roadmap orders implementation by dependency and product risk. Each phase mu
 Routing architecture update (2026-10-10): R3 directly enables `/practice/import`, `/practice/{contentId}`, `/segments` and `/shadow` with a shared content layout/media host. Main steps push; selection and explicit returns replace. The user removed compatibility requirements: root query learning links and old extension protocols are unsupported, entry links use new paths, continuation uses v2 only, and Web/extension 0.2.0 must update together. R4 entry work is included; R5 cleanup is implemented. See [architecture](ROUTING_AND_RESPONSIBILITY_ARCHITECTURE.md) and TASK.MD for checks and the outstanding real-toolbar capture qualification. No product phase, provider, database schema or consent boundary changes.
 
 Stage 2 practice refactor update (2026-10-12): execute [the accepted contract](STAGE_TWO_REFACTOR_CONTRACT.md) in six ordered steps: contract (complete), backend three-tier gate (implemented), persistence/feedback (implemented; both migrations applied to hosted Libitu), practice UI (implemented and locally verified at desktop/mobile), full navigation/history acceptance (implemented; hosted directory RPC verified), then final wider regression/documentation. Reuse existing original-video reference acquisition. This is the next Stage 2 workspace increment, not delivery of new Sound detectors or remote file acquisition. TASK.MD tracks implementation.
+
+## Doubao text-provider migration — 2026-10-23
+
+The current text provider is Doubao for Stage 1, corpus selection, Mission planning,
+Stage 4 analysis/help and Stage 5 assessment. Gemini Live remains the voice provider.
+This infrastructure replacement preserves delivery order and product contracts;
+see `PROJECT.MD` and `TASK.MD` for configuration and verification boundaries.
 
 ## Stage 2 Quick and Review — 2026-10-17
 
@@ -95,6 +102,27 @@ Deliver:
 Exit when valid captions produce stable blueprint data and cache hits avoid repeated model calls.
 
 ## Phase 5: close the learning loop
+
+2026-10-20 delivery sequence: [expression-led Mission planning](STAGE_THREE_FOUR_MISSION_PLAN.md)
+in order: P0 selection/plan/evidence contracts; P1 language-first Loadout, one-button
+scene preparation and Mission start with optional scene comparison, bounded
+content-error recovery, actionable selection guidance, and recorded Stage 4
+opportunities; P2 natural demonstrations and four manually selected support
+levels; P3 missed opportunities and linked variants; P4 evidence-based support
+recommendations. P0–P4 are implemented; current verification is recorded in `TASK.MD`.
+2026-10-24 preparation P0/P1 follows that delivery: single-scene automatic Start
+and bounded local repair, then selected-corpus batch reads, source-aware cache
+reuse and request-correlated phase timings. Implemented and verified; samples and
+remaining model/voice validation boundaries are recorded in `TASK.MD`.
+
+P3 keeps suggested rewrites separate from observations and links changed-role/detail
+rounds. P4 requires repeated independent evidence and explicit acceptance of any
+support reduction. P2 preserves a distinct
+model-then-transfer action, server-owned frames, actual presentation evidence and
+versioned support changes; it does not infer mastery or automatically upgrade
+support. Keep primary-target
+coverage separate from actual AI opportunities and assistance, and preserve legacy
+draft/report recovery. `TASK.MD` records verification and deployment status.
 
 2026-10-02: the private personal learning center and unified practice history are implemented against existing corpus, Shadow and speaking records. Activity counts and device-local continuation do not depend on Stage 5 scores. A separate latest-Mission summary now reads compatible Stage 5 reports and history links to Analytics. The simple history page now groups local dates and supports server-side practice-type filtering before pagination. General ability assessment, score trends, full corpus management and cross-device reader position remain separate. See [scope and verification](PROFILE_IMPLEMENTATION.md).
 

@@ -7,6 +7,7 @@ import { ConversationApiError, runtimeSocketUrl } from "../features/speaking/api
 import { decodePcm, encodePcm } from "../features/speaking/audio.ts";
 import { validEvidence, observedItemIds, assistanceLabel } from "../features/speaking/evidence.ts";
 import { observeVisible } from "../features/speaking/visibility.ts";
+import { currentSupport, reducedSupport, validDemonstrations } from "../features/speaking/support.ts";
 
 const workspace = (version = 0) => ({ version, session: { id: "mission", user_id: "owner", status: "draft", items: [], turn_count: 0 }, messages: [], evidence: [], learning: [], policy: null, hint: null, runtime: null, analysis_status: "idle" });
 function setup(overrides = {}, audioOverrides = {}) {
@@ -20,6 +21,190 @@ function setup(overrides = {}, audioOverrides = {}) {
   async function connect(voice = false, snapshot = workspace()) { const promise = controller.start(voice); await new Promise(resolve => setImmediate(resolve)); const socket = sockets.at(-1); socket.onopen(); socket.message({ type: "ready", workspace: snapshot }); assert.equal(await promise, true); return socket; }
   return { controller, sockets, audio, updates, api, connect, setSaved: value => { saved = value; } };
 }
+
+test("target actions await server snapshots, and visible target receipts are plan-scoped and reconnect-safe", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), session: { ...workspace().session, mission_plan: { targets: [{ session_item_id: "item-1", role: "primary" }] } },
+    opportunities: [{ session_item_id: "item-1", role: "primary", status: "planned", sent: false, bound: false, reflected: false, presented: false, skipped_reason: null, skipped_at: null, last_response_id: null }] };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.targetShown("unknown");
+  fixture.controller.targetShown("item-1"); fixture.controller.targetShown("item-1");
+  assert.equal(socket.sent.filter(event => event.type === "target.shown").length, 1);
+  assert.equal(fixture.controller.skipTarget("unknown"), false);
+  assert.equal(fixture.controller.skipTarget("item-1", " "), false);
+  assert.equal(fixture.controller.skipTarget("item-1", "x".repeat(201)), false);
+  assert.equal(fixture.controller.skipTarget("item-1", " Wrong role "), true);
+  assert.deepEqual(socket.sent.at(-1), { type: "target.skip", target_item_id: "item-1", reason: "Wrong role" });
+  assert.equal(fixture.controller.state.workspace.opportunities[0].status, "planned", "sending does not fabricate confirmed state");
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 2, opportunities: [{ ...snapshot.opportunities[0], status: "skipped", skipped_reason: "Wrong role" }] } });
+  assert.equal(fixture.controller.skipTarget("item-1"), false);
+  assert.equal(fixture.controller.restoreTarget("item-1"), true);
+  assert.deepEqual(socket.sent.at(-1), { type: "target.restore", target_item_id: "item-1" });
+  fixture.controller.pause();
+  assert.equal(fixture.controller.restoreTarget("item-1"), false);
+  const second = await fixture.connect(false, { ...snapshot, version: 3 });
+  fixture.controller.targetShown("item-1");
+  assert.equal(second.sent.filter(event => event.type === "target.shown").length, 1);
+});
+
+test("wording seen before connection is acknowledged before the first submitted learner turn", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose());
+  const snapshot = { ...workspace(1), session: { ...workspace().session, mission_plan: { targets: [{ session_item_id: "item-1" }] } } };
+  fixture.setSaved(snapshot); await fixture.controller.load();
+  fixture.controller.targetShown("item-1");
+  assert.equal(fixture.sockets.length, 0, "a visibility receipt does not start the connection");
+  const pending = fixture.controller.submit("My own idea");
+  await new Promise(resolve => setImmediate(resolve));
+  const socket = fixture.sockets[0]; socket.onopen(); socket.message({ type: "ready", workspace: snapshot });
+  assert.equal(await pending, true);
+  const receiptIndex = socket.sent.findIndex(event => event.type === "target.shown");
+  const learnerIndex = socket.sent.findIndex(event => event.type === "text.submit");
+  assert.ok(receiptIndex > 0 && receiptIndex < learnerIndex);
+});
+
+test("support changes await a newer confirmed version, preserve old receipts, and reject stale support", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose());
+  const snapshot = { ...workspace(1), session: { ...workspace().session, support_level: "model_frame", mission_plan: { targets: [{ session_item_id: "item-1" }] } } };
+  fixture.setSaved(snapshot); await fixture.controller.load();
+  fixture.controller.targetShown("item-1");
+  const socket = await fixture.connect(false, snapshot);
+  assert.equal(fixture.controller.setSupport("model_frame"), false);
+  assert.equal(fixture.controller.setSupport("model_label"), true);
+  const request = socket.sent.at(-1);
+  assert.deepEqual(request, { type: "support.set", request_id: "uuid-2", level: "model_label", expected_version: 0 });
+  assert.equal(fixture.controller.setSupport("no_hint"), false, "one pending support operation");
+  assert.equal(currentSupport(fixture.controller.state.workspace).level, "model_frame");
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 2 } });
+  assert.ok(fixture.controller.state.supportPending, "unrelated workspace updates do not confirm support");
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 3, support: { level: "model_label", version: 1 } } });
+  assert.equal(fixture.controller.state.supportPending, null);
+  assert.equal(currentSupport(fixture.controller.state.workspace).level, "model_label");
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 4, support: { level: "model_frame", version: 0 } } });
+  assert.equal(currentSupport(fixture.controller.state.workspace).level, "model_label", "support version cannot regress inside a newer workspace");
+  fixture.controller.pause();
+  const reconnected = await fixture.connect(false, { ...snapshot, version: 5, support: { level: "no_hint", version: 2 } });
+  assert.equal(reconnected.sent.filter(event => event.type === "target.shown").length, 1, "wording already viewed remains an exposure after reducing support");
+});
+
+test("legacy sessions opting into explicit support record visible owned labels without a plan", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), session: { ...workspace().session, items: [{ id: "legacy-item" }] } };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.targetShown("legacy-item");
+  assert.equal(socket.sent.some(event => event.type === "target.shown"), false, "unchanged legacy sessions keep old behavior");
+  fixture.controller.setSupport("label_only");
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 2, support: { level: "label_only", version: 1 } } });
+  fixture.controller.targetShown("foreign-item");
+  fixture.controller.targetShown("legacy-item");
+  fixture.controller.targetShown("legacy-item");
+  assert.deepEqual(socket.sent.filter(event => event.type === "target.shown"), [{ type: "target.shown", target_item_id: "legacy-item" }]);
+});
+
+test("support busy/conflict errors do not alter text delivery, and unknown changes can recover", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const socket = await fixture.connect();
+  assert.equal(currentSupport(fixture.controller.state.workspace), null);
+  assert.equal(fixture.controller.setSupport("no_hint"), true, "legacy sessions can explicitly choose support");
+  const request = socket.sent.at(-1);
+  socket.message({ type: "error", code: "support_busy", request_id: "unrelated", message: "Busy", retryable: true });
+  assert.ok(fixture.controller.state.supportPending);
+  await fixture.controller.submit("My current idea");
+  socket.message({ type: "error", code: "support_busy", request_id: request.request_id, message: "Busy", retryable: true });
+  assert.equal(fixture.controller.state.supportPending, null);
+  assert.equal(fixture.controller.state.pending.status, "sending");
+  assert.match(fixture.controller.state.supportError, /current reply to finish/);
+  assert.equal(fixture.controller.setSupport("no_hint"), true);
+  const second = socket.sent.at(-1);
+  socket.message({ type: "error", code: "support_changed", request_id: second.request_id, message: "Conflict", retryable: true });
+  socket.message({ type: "snapshot", workspace: { ...workspace(2), support: { level: "label_only", version: 1 } } });
+  assert.equal(currentSupport(fixture.controller.state.workspace).level, "label_only");
+  assert.match(fixture.controller.state.supportError, /changed elsewhere/);
+  assert.equal(socket.sent.filter(event => event.type === "support.set").length, 2, "no automatic retry loop");
+});
+
+test("confirmed support changes retire old hints and no-hint still allows explicit requested help", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), session: { ...workspace().session, support_level: "model_frame", items: [{ id: "language" }] } };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.hint("usage", "language");
+  const old = structuredClone(fixture.controller.state.workspace.help);
+  fixture.controller.setSupport("no_hint");
+  const hidden = { ...snapshot, version: 2, support: { level: "no_hint", version: 1 }, help: null };
+  socket.message({ type: "snapshot", workspace: hidden });
+  assert.equal(fixture.controller.state.workspace.help, null);
+  socket.message({ type: "snapshot", workspace: { ...hidden, version: 3, help: { ...old, version: 2, status: "ready", expression: "Late old hint" } } });
+  assert.equal(fixture.controller.state.workspace.help, null, "old pending hint cannot be revived");
+  socket.message({ type: "snapshot", workspace: { ...hidden, version: 4, help: { ...old, id: "automatic", source: "automatic", version: 2, status: "ready", expression: "Automatic hint" } } });
+  assert.equal(fixture.controller.state.workspace.help, null);
+  fixture.controller.hint("usage", "language");
+  const requested = structuredClone(fixture.controller.state.workspace.help);
+  socket.message({ type: "snapshot", workspace: { ...hidden, version: 5, help: { ...requested, version: 1, status: "ready", expression: "Explicitly requested words" } } });
+  assert.equal(fixture.controller.state.workspace.help.expression, "Explicitly requested words");
+  fixture.controller.hintShown(requested.id, 1, "usage");
+  assert.equal(socket.sent.at(-1).type, "hint.shown");
+});
+
+test("unconfirmed support reports a bounded timeout without applying the proposed level", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  await fixture.connect(false, { ...workspace(1), support: { level: "model_frame", version: 0 } });
+  fixture.controller.setSupport("no_hint");
+  t.mock.timers.tick(10_001);
+  assert.equal(fixture.controller.state.supportPending, null);
+  assert.equal(currentSupport(fixture.controller.state.workspace).level, "model_frame");
+  assert.match(fixture.controller.state.supportError, /not confirmed/);
+  fixture.sockets.at(-1).message({ type: "snapshot", workspace: { ...workspace(2), support: { level: "no_hint", version: 1 } } });
+  assert.equal(currentSupport(fixture.controller.state.workspace).level, "no_hint");
+  assert.equal(fixture.controller.state.supportError, null, "a late canonical confirmation resolves the timeout");
+});
+
+test("support reduction is a manual sequence and demonstration marks require exact final assistant spans", () => {
+  assert.equal(currentSupport(workspace()), null);
+  assert.deepEqual(currentSupport({ ...workspace(), session: { ...workspace().session, support_level: "model_frame" } }), { level: "model_frame", version: 0 });
+  assert.deepEqual(["model_frame", "model_label", "label_only", "no_hint"].map(reducedSupport), ["model_label", "label_only", "no_hint", null]);
+  const message = { id: "assistant", role: "assistant", status: "final", revision: 2, text: "🙂 To be fair, the testing takes time." };
+  const span = { target_item_id: "language", message_id: message.id, revision: 2, start: 3, end: 13, quote: "To be fair" };
+  assert.equal(validDemonstrations(message, [span]).length, 1);
+  for (const bad of [{ ...span, revision: 1 }, { ...span, start: 2 }, { ...span, quote: "to be fair" }, { ...span, end: 100 }]) assert.equal(validDemonstrations(message, [bad]).length, 0);
+  assert.equal(validDemonstrations({ ...message, role: "user" }, [span]).length, 0);
+  assert.equal(validDemonstrations({ ...message, status: "interrupted" }, [span]).length, 0);
+});
+
+test("a confirmed target skip retires its pending help without cancelling another target's request", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), session: { ...workspace().session, items: [{ id: "item-1" }, { id: "item-2" }] },
+    opportunities: [{ session_item_id: "item-1", status: "planned" }, { session_item_id: "item-2", status: "planned" }], help: null };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.hint("usage", "item-1");
+  const oldHelp = structuredClone(fixture.controller.state.workspace.help);
+  assert.equal(fixture.controller.skipTarget("item-1"), true);
+  assert.equal(fixture.controller.state.workspace.help.status, "loading", "sending skip alone does not confirm cancellation");
+  const skipped = { ...snapshot, version: 2, opportunities: [{ session_item_id: "item-1", status: "skipped" }, snapshot.opportunities[1]] };
+  socket.message({ type: "snapshot", workspace: skipped });
+  assert.equal(fixture.controller.state.workspace.help, null);
+  socket.message({ type: "snapshot", workspace: { ...skipped, version: 3, help: { ...oldHelp, version: 2, status: "ready", expression: "Old target" } } });
+  assert.equal(fixture.controller.state.workspace.help, null, "late skipped-target provider result is ignored");
+  assert.equal(fixture.controller.restoreTarget("item-1"), true);
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 4, help: { ...oldHelp, version: 3, status: "ready" } } });
+  assert.equal(fixture.controller.state.workspace.help, null, "undo does not revive a retired help request");
+  fixture.controller.hint("usage", "item-2");
+  const otherId = fixture.controller.state.workspace.help.id;
+  socket.message({ type: "snapshot", workspace: { ...skipped, version: 5 } });
+  assert.equal(fixture.controller.state.workspace.help.id, otherId, "another target's pending help survives unrelated skip");
+});
+
+test("generic help is unavailable while every planned target is skipped and resumes after restore", async t => {
+  const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
+  const snapshot = { ...workspace(1), session: { ...workspace().session, mission_plan: { targets: [{ session_item_id: "item-1" }] }, items: [{ id: "item-1" }] },
+    opportunities: [{ session_item_id: "item-1", status: "skipped" }], help: null };
+  const socket = await fixture.connect(false, snapshot);
+  fixture.controller.hint(); fixture.controller.hint("usage", "item-1");
+  assert.equal(socket.sent.some(event => event.type === "hint"), false);
+  assert.equal(fixture.controller.state.workspace.help, null);
+  socket.message({ type: "snapshot", workspace: { ...snapshot, version: 2, opportunities: [{ session_item_id: "item-1", status: "planned" }] } });
+  fixture.controller.hint();
+  assert.equal(socket.sent.filter(event => event.type === "hint").length, 1);
+});
 
 test("authenticates only in first frame; views are absent from transport; snapshots are owner/version fenced", async t => {
   const fixture = setup(); t.after(() => fixture.controller.dispose()); await fixture.controller.load();
@@ -299,4 +484,26 @@ test("unmounting or replacing a hint before paint cannot record exposure", () =>
   const fixture = visibilityFixture(); let shown = 0;
   const stop = observeVisible(fixture.element, () => shown++);
   fixture.intersect(); stop(); fixture.painted(); assert.equal(shown, 0);
+});
+
+test("ending an overlay animation rechecks visible wording only after paint", () => {
+  for (const event of ["animationend", "transitionend"]) {
+    const fixture = visibilityFixture(); let shown = 0;
+    const stop = observeVisible(fixture.element, () => shown++);
+    fixture.cover(true); fixture.intersect(); fixture.painted(); assert.equal(shown, 0);
+    fixture.view.dispatchEvent(new Event(event)); fixture.painted(); assert.equal(shown, 0, "animation end is not itself exposure");
+    fixture.cover(false); fixture.view.dispatchEvent(new Event(event));
+    assert.equal(shown, 0, "the uncovered surface must paint");
+    fixture.painted(); assert.equal(shown, 1);
+    fixture.view.dispatchEvent(new Event(event)); fixture.painted(); assert.equal(shown, 1, "the receipt remains one-shot");
+    stop();
+  }
+});
+
+test("stopped visibility observers ignore subsequent overlay animations", () => {
+  const fixture = visibilityFixture(); let shown = 0;
+  const stop = observeVisible(fixture.element, () => shown++);
+  fixture.cover(true); fixture.intersect(); fixture.painted(); stop();
+  fixture.cover(false); fixture.view.dispatchEvent(new Event("animationend")); fixture.painted();
+  assert.equal(shown, 0);
 });

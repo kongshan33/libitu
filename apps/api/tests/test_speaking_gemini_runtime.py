@@ -39,7 +39,7 @@ class Provider:
 @pytest.fixture
 def connection(monkeypatch):
     settings = Settings.model_construct(speaking_realtime_provider="gemini", gemini_api_key="fixture-key",
-                                        deepseek_api_key=None, clerk_authorized_parties="https://libitu.fixture")
+                                        clerk_authorized_parties="https://libitu.fixture")
     monkeypatch.setattr(runtime, "get_settings", lambda: settings)
     monkeypatch.setattr(state_ops, "get_settings", lambda: settings)
 

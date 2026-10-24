@@ -1,0 +1,332 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-17f9b08351b243d5a969e9df8e093cde",
+    "planning_requests": 1,
+    "max_model_requests": 2,
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls",
+    "support_level": "model_frame"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "elapsed_ms": 7649.31,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1805,
+      "completion_tokens": 1271,
+      "total_tokens": 3076
+    }
+  },
+  {
+    "event": "provider_candidate_preview",
+    "candidates": [
+      {
+        "title": "Delayed Handover: Agreeing a Realistic Next Step",
+        "setting": "A short video call between two colleagues on the same delivery team. The handover pack for a client is two days late because the colleague has been pulled onto urgent support work. The learner needs to raise the delay, hear the colleague out, and leave the call with a workable plan.",
+        "goal": "Acknowledge the colleague's constraint, propose a practical revised next step, and confirm you both understand the decision before ending the call.",
+        "user_role": "Project coordinator responsible for the client handover, who needs a clear plan for the remaining work.",
+        "ai_role": "Busy colleague who has been handling urgent support tickets and is defensive about the delay but open to a realistic plan.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "d6746480-493e-473a-a7d8-1a9424320e14",
+            "role": "primary",
+            "communicative_function": "Concede that the colleague's reason for the delay is legitimate before raising your own concern about the timeline.",
+            "fit": "high",
+            "fit_reason": "The scene centres on a colleague defending a delay caused by other urgent work, so conceding a valid point before pushing back is a natural move.",
+            "trigger_question": "The colleague explains they were pulled onto urgent support tickets all week. How do you respond before you raise your worry about the client deadline?",
+            "skip_when": "Skip if the colleague has already fully accepted responsibility and no concession is needed.",
+            "sentence_frame": "To be fair, [the colleague's valid reason], but [your concern about the timeline].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "45788a88-5a8b-4775-b0c0-9be5a9ada28c",
+            "role": "primary",
+            "communicative_function": "Use a shared fact or constraint to justify a concrete proposed next step.",
+            "fit": "high",
+            "fit_reason": "The goal is to agree a practical next step, and the agreed constraint (limited time before the client call) naturally justifies a recommendation.",
+            "trigger_question": "You both know the client call is on Thursday morning. What next step do you suggest, and what shared fact makes it sensible?",
+            "skip_when": "Skip if no shared constraint has been established yet in the conversation.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "e9868f5d-ae80-4562-a83f-a52675d2e4c8",
+            "role": "opportunity",
+            "communicative_function": "Check that you and the colleague share the same understanding of the decision before the call ends.",
+            "fit": "high",
+            "fit_reason": "The scenario ends with a decision, so confirming mutual understanding is a natural closing move.",
+            "trigger_question": "Before you hang up, how do you check that you both understand the plan the same way?",
+            "skip_when": "Skip if the call has already ended or the decision is still unresolved.",
+            "sentence_frame": "Just to make sure we're on the same page, [summary of the agreed plan].",
+            "metadata_status": "unknown"
+          }
+        ]
+      },
+      {
+        "title": "Scope Change Review: Finding a Workable Compromise",
+        "setting": "A meeting room (or video call) where two colleagues review a project that has slipped because a key dependency arrived late. The learner chairs the review and must balance the colleague's frustration with the need to reset the plan.",
+        "goal": "Recognise the colleague's fair point about the late dependency, justify a revised plan using that shared fact, and confirm shared understanding of the new scope.",
+        "user_role": "Team lead chairing the review who must keep the project on track and agree a revised scope.",
+        "ai_role": "Frustrated developer who feels the delay was outside their control and wants the plan to reflect that.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "d6746480-493e-473a-a7d8-1a9424320e14",
+            "role": "primary",
+            "communicative_function": "Acknowledge that the colleague's complaint about the late dependency is reasonable before steering toward a solution.",
+            "fit": "high",
+            "fit_reason": "The colleague is frustrated about an external cause, so conceding that point is a natural way to keep the discussion constructive.",
+            "trigger_question": "The developer says the delay was caused by a dependency arriving late. How do you respond before you move the discussion toward a solution?",
+            "skip_when": "Skip if the colleague has not raised any complaint or concern to concede.",
+            "sentence_frame": "To be fair, [the colleague's reasonable point], so [how you want to move forward].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "45788a88-5a8b-4775-b0c0-9be5a9ada28c",
+            "role": "primary",
+            "communicative_function": "Base a proposed revised plan on a fact both sides accept.",
+            "fit": "high",
+            "fit_reason": "Resetting scope requires justifying a recommendation with an agreed constraint, which matches the structure directly.",
+            "trigger_question": "You both accept the dependency arrived late. What revised plan do you propose, and which agreed fact supports it?",
+            "skip_when": "Skip if the two sides have not yet agreed on any shared fact.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "e9868f5d-ae80-4562-a83f-a52675d2e4c8",
+            "role": "opportunity",
+            "communicative_function": "Confirm that both people understand the revised scope in the same way before closing the review.",
+            "fit": "medium",
+            "fit_reason": "The review ends with a revised scope, so a mutual-understanding check fits, though the meeting may close with action items instead.",
+            "trigger_question": "As the review wraps up, how do you make sure you and the developer understand the new scope the same way?",
+            "skip_when": "Skip if the review ends without any agreed change to scope.",
+            "sentence_frame": "Before we finish, let's check we're on the same page about [the revised scope].",
+            "metadata_status": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "planning_diagnostic",
+    "diagnostic": {
+      "request_id": "e110f586dec740febdf223b5de78f094",
+      "prompt_version": "speaking-plan-v3",
+      "code": "plan_invalid_frame",
+      "attempt": 1,
+      "outcome": "retrying",
+      "elapsed_ms": 7649.31,
+      "issues": [
+        {
+          "path": [
+            "candidates",
+            0,
+            "targets",
+            1,
+            "sentence_frame"
+          ],
+          "type": "missing_or_invalid_sentence_frame"
+        }
+      ]
+    }
+  },
+  {
+    "event": "provider_completed",
+    "elapsed_ms": 9138.95,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1944,
+      "completion_tokens": 1769,
+      "total_tokens": 3713
+    }
+  },
+  {
+    "event": "provider_candidate_preview",
+    "candidates": [
+      {
+        "title": "Delayed Handover: Agreeing the Next Step",
+        "setting": "A short video call between two colleagues on the same delivery team. The handover pack is two days late because the client's data team has not sent the final figures.",
+        "goal": "Acknowledge your colleague's constraint, justify a practical next step, and confirm you both leave with the same understanding of the decision.",
+        "user_role": "The project lead who needs the handover to move forward and wants to agree a realistic plan with your colleague.",
+        "ai_role": "A colleague on the delivery team who is waiting on the client's data and is worried about committing to a new date.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "d6746480-493e-473a-a7d8-1a9424320e14",
+            "role": "primary",
+            "communicative_function": "Concede that the colleague's concern is reasonable before offering a different view.",
+            "fit": "high",
+            "fit_reason": "The scene involves a genuine constraint (missing client data), so conceding its validity is a natural move before proposing an alternative.",
+            "trigger_question": "Your colleague says the client still hasn't sent the figures and the delay isn't their fault. How do you respond before suggesting a different plan?",
+            "skip_when": "Skip if the colleague has already fully accepted the delay and no concession is needed.",
+            "sentence_frame": "To be fair, [colleague's valid concern], but [your different view].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "45788a88-5a8b-4775-b0c0-9be5a9ada28c",
+            "role": "primary",
+            "communicative_function": "Use a shared fact or constraint to justify a proposed next step.",
+            "fit": "high",
+            "fit_reason": "The scenario centres on turning an agreed constraint (missing figures) into a concrete recommendation, which is exactly this structure's function.",
+            "trigger_question": "You both agree the client's figures won't arrive until Thursday. What practical next step do you propose, and what shared fact supports it?",
+            "skip_when": "Skip if no shared fact or constraint has been established to base a recommendation on.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "e9868f5d-ae80-4562-a83f-a52675d2e4c8",
+            "role": "opportunity",
+            "communicative_function": "Confirm a shared understanding of the decision before ending the discussion.",
+            "fit": "medium",
+            "fit_reason": "The scene ends with a decision to agree, so checking mutual understanding is a natural closing move, though not strictly required.",
+            "trigger_question": "Before you both hang up, how would you check that you're leaving with the same understanding of what was decided?",
+            "skip_when": "Skip if the call has already ended or the decision is still unresolved.",
+            "sentence_frame": "Before we finish, I want to make sure we're on the same page about [decision].",
+            "metadata_status": "unknown"
+          }
+        ]
+      },
+      {
+        "title": "Rescheduling the Client Review",
+        "setting": "An office corridor conversation between a manager and a team member. The client review deck is not ready because a key supplier report arrived late.",
+        "goal": "Recognise the supplier delay as a fair point, propose a rescheduled review based on that fact, and confirm you both agree on the new arrangement.",
+        "user_role": "The team member who owns the review deck and needs to agree a new date with your manager.",
+        "ai_role": "The manager who is under pressure from the client and needs a clear, justified plan.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "d6746480-493e-473a-a7d8-1a9424320e14",
+            "role": "primary",
+            "communicative_function": "Acknowledge that the other person's point is reasonable before presenting a different view.",
+            "fit": "high",
+            "fit_reason": "The manager will raise a legitimate pressure point, giving a natural opening to concede it before offering an alternative.",
+            "trigger_question": "Your manager points out the client is expecting the review tomorrow and the delay looks bad. How do you respond before proposing a different arrangement?",
+            "skip_when": "Skip if the manager has already agreed the delay is unavoidable and no concession is needed.",
+            "sentence_frame": "To be fair, [manager's valid point], but [your different view].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "45788a88-5a8b-4775-b0c0-9be5a9ada28c",
+            "role": "primary",
+            "communicative_function": "Base a recommendation on an agreed fact or constraint.",
+            "fit": "high",
+            "fit_reason": "The late supplier report is a concrete shared fact that naturally supports a rescheduling proposal.",
+            "trigger_question": "The supplier report only arrived this morning. What do you recommend for the review, and what fact makes that sensible?",
+            "skip_when": "Skip if no agreed fact or constraint has been established to justify a recommendation.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "e9868f5d-ae80-4562-a83f-a52675d2e4c8",
+            "role": "opportunity",
+            "communicative_function": "Check that both people understand the decision the same way before parting.",
+            "fit": "medium",
+            "fit_reason": "The corridor chat ends with a new arrangement, so confirming mutual understanding fits naturally as a closing check.",
+            "trigger_question": "As you part ways, how would you make sure you both understand the new arrangement the same way?",
+            "skip_when": "Skip if the conversation has already ended or no decision has been reached.",
+            "sentence_frame": "Just to check, are we on the same page about [arrangement]?",
+            "metadata_status": "unknown"
+          }
+        ]
+      },
+      {
+        "title": "Sprint Planning: Handling the Missing Sign-off",
+        "setting": "A sprint planning meeting between a developer and a product owner. A feature cannot ship because legal sign-off is still pending.",
+        "goal": "Accept the product owner's concern as fair, propose a revised sprint scope based on the pending sign-off, and confirm shared understanding of the plan.",
+        "user_role": "The developer who needs to agree a realistic sprint scope with the product owner.",
+        "ai_role": "The product owner who is anxious about the release date and the pending legal sign-off.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "d6746480-493e-473a-a7d8-1a9424320e14",
+            "role": "primary",
+            "communicative_function": "Concede that the other person's worry is legitimate before offering a different perspective.",
+            "fit": "high",
+            "fit_reason": "The product owner's release-date anxiety is a valid concern, making a concession a natural first move.",
+            "trigger_question": "The product owner says the release date is fixed and slipping is not acceptable. How do you respond before suggesting a different scope?",
+            "skip_when": "Skip if the product owner has already accepted the revised scope without objection.",
+            "sentence_frame": "To be fair, [product owner's valid concern], but [your different perspective].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "45788a88-5a8b-4775-b0c0-9be5a9ada28c",
+            "role": "primary",
+            "communicative_function": "Use a shared constraint to justify a proposed change of plan.",
+            "fit": "high",
+            "fit_reason": "The pending legal sign-off is an agreed constraint that directly supports a revised sprint scope.",
+            "trigger_question": "Legal sign-off is still pending. What change to the sprint scope do you propose, and what fact supports it?",
+            "skip_when": "Skip if no shared constraint has been agreed to base a proposal on.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "e9868f5d-ae80-4562-a83f-a52675d2e4c8",
+            "role": "opportunity",
+            "communicative_function": "Confirm that both parties share the same understanding of the agreed plan.",
+            "fit": "medium",
+            "fit_reason": "The meeting closes with a revised scope, so a mutual-understanding check is a natural final step.",
+            "trigger_question": "Before the meeting ends, how would you confirm you both understand the revised scope the same way?",
+            "skip_when": "Skip if the meeting has already ended or the scope is still undecided.",
+            "sentence_frame": "Before we wrap up, let's make sure we're on the same page about [plan].",
+            "metadata_status": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "planning_diagnostic",
+    "diagnostic": {
+      "request_id": "e110f586dec740febdf223b5de78f094",
+      "prompt_version": "speaking-plan-v3",
+      "code": "plan_invalid_frame",
+      "attempt": 2,
+      "outcome": "failed",
+      "elapsed_ms": 9138.95,
+      "issues": [
+        {
+          "path": [
+            "candidates",
+            0,
+            "targets",
+            1,
+            "sentence_frame"
+          ],
+          "type": "missing_or_invalid_sentence_frame"
+        }
+      ]
+    }
+  },
+  {
+    "event": "planning_rejected",
+    "category": "invalid_output",
+    "request_id": "e110f586dec740febdf223b5de78f094"
+  },
+  {
+    "event": "failed",
+    "code": "create_plan_http_503"
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": false,
+    "model_requests": 2,
+    "qualification": "planning_and_persistence_only"
+  }
+]

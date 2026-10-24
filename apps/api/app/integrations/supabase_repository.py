@@ -243,6 +243,23 @@ class SupabaseRepository:
         }).json()
         return CorpusItem.model_validate(rows[0]) if rows else None
 
+    def get_corpus_items(self, user_id: str, item_ids: list[str]) -> list[CorpusItem]:
+        """Fetch an owner-scoped selection without scanning the full library."""
+        selected_ids = list(dict.fromkeys(item_ids))
+        if not selected_ids:
+            return []
+        # Quote each PostgREST value separately; URL encoding is handled by httpx.
+        selected_filter = ",".join(json.dumps(item_id) for item_id in selected_ids)
+        rows = self._request("GET", "/corpus_items", params={
+            "user_id": f"eq.{user_id}", "id": f"in.({selected_filter})", "select": "*",
+            "limit": str(len(selected_ids)),
+        }).json()
+        selected = {
+            item.id: item for row in rows
+            if (item := CorpusItem.model_validate(row)).user_id == user_id
+        }
+        return [selected[item_id] for item_id in selected_ids if item_id in selected]
+
     def create_corpus_item(self, user_id: str, item_id: str, payload: CorpusItemCreate) -> CorpusItem:
         if payload.content_id:
             rows = self._request("GET", "/contents", params={

@@ -9,7 +9,7 @@ import httpx
 
 from app.config import get_settings
 from app.integrations import processing_queue
-from app.integrations.deepseek import AnalysisProviderError, analyze_transcript
+from app.integrations.ark_analysis import AnalysisProviderError, analyze_transcript
 from app.integrations.youtube_transcript import TranscriptUnavailableError, fetch_youtube_caption_track
 from app.integrations.supabase_repository import get_supabase_repository
 from app.schemas.analysis import (
@@ -259,8 +259,8 @@ def run_worker() -> None:
         return
     if not settings.queue_is_configured:
         raise RuntimeError("Configure Upstash before starting the blueprint worker.")
-    if not settings.deepseek_is_configured:
-        raise RuntimeError("DEEPSEEK_API_KEY is required by the blueprint worker.")
+    if not settings.ark_is_configured:
+        raise RuntimeError("ARK_API_KEY is required by the blueprint worker.")
 
     print(f"Libitu blueprint worker listening on {settings.processing_queue_name}", flush=True)
     stop_event = Event()

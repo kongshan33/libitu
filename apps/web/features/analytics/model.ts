@@ -1,6 +1,7 @@
-import type { FeedbackDimensionId, FeedbackReference, FeedbackRefactor, SpeakingFeedback, SpeakingMessage, SpeakingSession, SpeakingSessionCreate } from "@libitu/types/speaking";
+import type { FeedbackDimensionId, FeedbackReference, FeedbackRefactor, SpeakingFeedback, SpeakingMessage, SpeakingSession, SpeakingSessionCreate, SpeakingPlan, SpeakingSupportLevel } from "@libitu/types/speaking";
 import type { SavedCorpusRecord } from "../corpus/corpus-storage.ts";
 import type { LoadoutDraft } from "../loadout/draft.ts";
+import { expressionText, missionInputSignature } from "../loadout/draft.ts";
 export const DIMENSIONS: { id: FeedbackDimensionId; label: string; description: string }[] = [
   { id: "task_fit", label: "Task fit", description: "Progress toward your mission goal" },
   { id: "transfer", label: "Language transfer", description: "Selected language used appropriately" },
@@ -21,14 +22,47 @@ export function draftFromMission(session: SpeakingSession, records: SavedCorpusR
     if (record) return record.key;
     missing++; return `missing-session-item:${item.id}`;
   });
-  return { draft: { scenarioType: session.scenario_type, goal: session.goal, difficulty: session.difficulty, feedbackLevel: session.feedback_level, logicTemplateId: session.logic_template?.id ?? null, selectedKeys }, missing };
+  const targets = new Map(session.mission_plan?.targets.map(target => [target.session_item_id, target.role]));
+  const targetRoles = session.mission_plan ? Object.fromEntries(
+    [...session.items].sort((a, b) => a.ordinal - b.ordinal).map((item, index) => [selectedKeys[index], targets.get(item.id) ?? "opportunity"])
+  ) : undefined;
+  return { draft: { scenarioType: session.scenario_type, goal: session.goal, difficulty: session.difficulty, feedbackLevel: session.feedback_level, logicTemplateId: session.logic_template?.id ?? null, selectedKeys,
+    ...(targetRoles ? { targetRoles } : {}), ...(session.support_level != null ? { supportLevel: session.support_level } : {}) }, missing };
+}
+export function secondRoundSupport(report: SpeakingFeedback): SpeakingSupportLevel {
+  return report.effective_support_level === "no_hint" ? "no_hint" : "label_only";
+}
+export function practiceDraft(report: SpeakingFeedback, plan: SpeakingPlan, support: SpeakingSupportLevel, records: SavedCorpusRecord[]): LoadoutDraft {
+  if (plan.practice_source?.parent_session_id !== report.session_id) throw new Error("This second round no longer matches the original mission.");
+  const { draft, missing } = draftFromMission(report.session, records);
+  if (missing) throw new Error("Some original language is unavailable. Keep your current draft or prepare a new mission.");
+  const items = [...report.session.items].sort((a, b) => a.ordinal - b.ordinal);
+  const sameSlots = (value: Record<string, string> | undefined) => JSON.stringify(Object.entries(value ?? {}).sort(([a], [b]) => a.localeCompare(b)));
+  if (items.some((item, index) => {
+    const record = records.find(record => record.key === draft.selectedKeys[index])!;
+    const current = record.item;
+    return item.kind !== current.kind || item.text !== expressionText(record) || (item.meaning ?? "") !== (current.meaning ?? "") || sameSlots(item.slots) !== sameSlots(current.slots);
+  })) throw new Error("The original language has changed. Linked rounds need the same language; prepare a new mission instead.");
+  const roles = report.session.mission_plan?.targets;
+  if (!roles || plan.candidates.some(candidate => candidate.targets.length !== items.length || candidate.targets.some((target, index) =>
+    target.corpus_item_id !== items[index].corpus_item_id || target.role !== roles.find(role => role.session_item_id === items[index].id)?.role))) {
+    throw new Error("The second round did not preserve your original targets and roles.");
+  }
+  const result: LoadoutDraft = { ...draft, scenarioType: plan.scenario_type, goal: plan.brief, supportLevel: support };
+  return { ...result, plan: { signature: missionInputSignature(result, records), value: plan }, selectedCandidateId: plan.candidates[0]?.id };
+}
+export function validMissedOpportunities(report: SpeakingFeedback) {
+  return (report.result?.missed_opportunities ?? []).filter(suggestion => suggestion.basis === "ai_suggestion"
+    && validReference(suggestion.original, report.messages) && report.session.items.some(item => item.id === suggestion.session_item_id));
 }
 export function retryMissionRequest(session: SpeakingSession, records: SavedCorpusRecord[], clientId: string): SpeakingSessionCreate {
   const { missing } = draftFromMission(session, records);
   if (missing) throw new Error("Some original items are no longer in your corpus. Adjust the loadout to choose replacements.");
   return { client_id: clientId, scenario_type: session.scenario_type, goal: session.goal, difficulty: session.difficulty,
     feedback_level: session.feedback_level, logic_template_id: session.logic_template?.id ?? null,
-    corpus_item_ids: [...session.items].sort((a, b) => a.ordinal - b.ordinal).map(item => item.corpus_item_id!) };
+    corpus_item_ids: [...session.items].sort((a, b) => a.ordinal - b.ordinal).map(item => item.corpus_item_id!),
+    ...(session.support_level != null ? { support_level: session.support_level } : {}),
+    ...(session.mission_plan ? { plan_id: session.mission_plan.plan_id, candidate_id: session.mission_plan.candidate_id } : {}) };
 }
 export function suggestionRecord(report: SpeakingFeedback, refactor: FeedbackRefactor, origin: string): SavedCorpusRecord {
   if (!refactor.save_text?.trim() || !validReference(refactor.original, report.messages)) throw new Error("This suggestion has no verified source to save.");

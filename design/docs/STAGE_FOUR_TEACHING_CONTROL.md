@@ -1,5 +1,68 @@
 # Stage 4 teaching control and diagnostics
 
+2026-10-20 amendment: [expression-led Mission planning P0/P1 and P2](STAGE_THREE_FOUR_MISSION_PLAN.md)
+adds confirmed scenario context, primary/opportunity roles, bounded planned
+elicitation, skip/restore and actual opportunity states. Current prompt versions
+are `speaking-analysis-v5`, `speaking-support-v4` and `speaking-effect-v3`.
+Full wording visible in the target sidebar records session-scoped assistance.
+P2 adds the manual support and separate demonstration policy below. Older
+verification records describe the original 2026-10-18 increment.
+
+## P2 manual support and natural demonstrations
+
+Four settings are independent of difficulty: `model_frame`, `model_label`,
+`label_only`, `no_hint`. New Loadout drafts start at `model_frame`; missing/null
+settings retain legacy behavior. Levels are manually selected, with no automatic
+mastery recommendation or promotion. Model plus frame shows a server-validated
+sentence frame; model plus label and label-only show the target label. No-hint
+hides proactive wording, meanings, slots and demonstration highlights.
+Existing transcript text remains available as the conversation record.
+
+The first two levels choose `model_then_transfer` at the same bounded opportunity
+boundary used by implicit elicitation. The AI naturally uses one target once in
+its own point and asks one question for different learner content, without
+requesting repetition or announcing teaching. Label-only and no-hint use the
+separate implicit action; its target-disclosure prohibition remains strict.
+Base Gemini/OpenAI role context omits selected expressions. Automatic model
+controls may disclose their single selected target; implicit controls may not.
+No current voice response waits for observer/effect analysis.
+
+`speaking-effect-v3` validates separate `model_quote` and
+`transfer_question_quote` evidence for a reflected model attempt. Both must be
+unique, ordered, non-overlapping exact response substrings; the model quote must
+contain the target and the response must use it once. Structure examples must
+fill their slots. An advisory judgment checks the different-content invitation;
+exact quotation checks alone do not prove naturalness or genuine transfer.
+Failures stay unconfirmed.
+
+Only a reflected and presented attempt with a final assistant message can
+produce a public demonstration highlight. The server resolves its unique target
+quote to UTF-16 `start/end`, with message ID/revision and target ID; the browser
+checks the span against that same message. This highlight is separate from
+learner-use evidence and suppressed in no-hint mode.
+
+`support.set` carries `request_id`, `level`, `expected_version`. Frozen session
+support begins at version 0. Accepted changes advance the support version through runtime CAS,
+record bounded history and expire pending unsent policy/help. Stale versions
+return `support_changed`. Active speech, response/playback or an already injected
+control returns `support_busy`; the UI keeps the server's confirmed value and
+offers retry. Changing support does not retract a sent control, edit its immutable
+attempt or remove recorded assistance. Reconnect preserves the saved level.
+
+All explicit support levels suppress automatic help cards. Requested
+Usage/Example help remains available and is recorded when actually shown.
+Legacy null sessions retain their prior automatic-direction behavior until
+the learner selects an explicit level.
+
+Acknowledged partial playback of a modeled reply records session-scoped
+`certainty: possible`. With no word/audio alignment it confirms neither a heard
+demonstration nor a delivered transfer question; applicable learner use is
+`unknown`, never independent on that basis. Complete presentation can establish
+example assistance. Earlier visible labels/frames/examples remain applicable
+after reducing support. Stage 4 and Stage 5 share narrow contraction/inflection
+variant validation; an ungrounded semantic paraphrase is not accepted merely
+because the model labels it a variant.
+
 Implemented locally, 2026-10-18. This document supplements the [runtime contract](STAGE_FOUR_RUNTIME_CONTRACT.md) and [implementation boundaries](STAGE_FOUR_IMPLEMENTATION.md). Gemini remains the live conversation partner. DeepSeek observes finalized learner text, proposes contextual teaching opportunities, provides requested wording help and assesses completed replies in background tasks. No model analysis is awaited to release the current voice response.
 
 The diagnostic migration is applied to hosted Supabase. One bounded real-provider browser probe is recorded below; application deployment and physical-microphone qualification remain separate. The diagnostic reader is an authenticated HTTP endpoint; a diagnostic timeline UI is not implemented.
@@ -72,7 +135,7 @@ Voice and Chat share one help card. Its content has three levels:
 - **Usage:** the selected expression, meaning and an optional reusable pattern.
 - **Example:** one contextual example and a substitution tip, generated only after an explicit example request.
 
-Automatic direction cards are produced only after an actual completed response is assessed as `reflected`. They are discarded when a newer learner turn or relevant explicit help request makes them stale; the browser also suppresses automatic cards during speech or a typed draft. No automatic complete example is generated.
+Legacy automatic direction cards are produced only after an actual completed response is assessed as `reflected`. Explicit P2 support modes disable them. They are discarded when a newer learner turn or relevant explicit help request makes them stale; the browser also suppresses automatic cards during speech or a typed draft. Requested example cards remain separate from an in-role model-then-transfer response.
 
 Explicit requests work through the hint control, card actions or wording-help intent grounded in the current finalized utterance. They can start during the observation phase. The initial card can show available expression/meaning while detailed content loads. A newer request supersedes an older completion. Model failure preserves available basic help, displays an unavailable state and allows retry. Asking for usage does not authorize generating an example.
 
@@ -105,7 +168,7 @@ Read three facts separately:
 
 An interrupted/empty response is `unknown`; assessment failure does not become a positive result. Automatic card presentation depends on reflection, while delivery is recorded separately. Later learner use is another observation; it does not prove that the strategy caused learning or independent mastery.
 
-For an implicit attempt, a deterministic post-response check first looks for the target phrase or filled structure in the actual reply. A detected disclosure forces `not_reflected` with its exact quote, skips the model assessment, and prevents an automatic direction card. A legacy attempt without valid target metadata remains `unknown`. Otherwise `speaking-effect-v2` asks DeepSeek whether the reply invites the learner to perform the communicative act; demonstrating that act and appending a related question does not qualify. `analysis_trace.constraint_check` and `assessment_source` distinguish the deterministic constraint from the advisory model judgment. This is a background compliance check, not an audio filter or a guarantee that a streaming model can never violate instructions.
+For an implicit attempt, a deterministic post-response check first looks for the target phrase or filled structure in the actual reply. A detected disclosure forces `not_reflected` with its exact quote, skips the model assessment, and prevents an automatic direction card. A legacy attempt without valid target metadata remains `unknown`. Otherwise `speaking-effect-v3` asks DeepSeek whether the reply invites the learner to perform the communicative act; demonstrating that act and appending a related question does not qualify for the implicit action. `analysis_trace.constraint_check` and `assessment_source` distinguish the deterministic constraint from the advisory model judgment. This is a background compliance check, not an audio filter or a guarantee that a streaming model can never violate instructions.
 
 ## Read the diagnostic journal
 

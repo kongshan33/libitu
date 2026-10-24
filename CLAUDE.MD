@@ -72,7 +72,7 @@ design/
 - Auth: Clerk frontend and FastAPI identity boundaries exist; hosted Supabase Third-Party Auth confirmation is pending
 - Ephemeral cache: Upstash Redis queue, expiring processing state, and worker locks are implemented
 
-Do not assume Clerk-Supabase hosted trust, React Query, production queue recovery, or DeepSeek quality evals are already configured. Check the current implementation state below.
+Do not assume Clerk-Supabase hosted trust, React Query, production queue recovery, or Doubao text quality evals are already configured. Check the current implementation state below.
 
 ## Commands
 
@@ -122,11 +122,11 @@ API:
 
 - `apps/api` is initialized and route contracts mirror the MVP API boundary.
 - Queue mode persists content, jobs, and blueprints through Supabase; inline mode uses deterministic in-memory storage for tests and dependency-free development.
-- Queue-mode jobs return `pending`; the separate blueprint worker fetches missing captions and calls the DeepSeek structured-analysis adapter.
+- Queue-mode jobs return `pending`; the separate blueprint worker fetches missing captions and calls the Doubao text structured-analysis adapter.
 - Tests force inline deterministic processing and never use Upstash, YouTube, or a paid model.
-- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Stage 4 now uses Gemini Live with server-owned WebSocket controls, durable finalized transcripts/evidence, asynchronous DeepSeek analysis and bounded teaching policies. The old REST turn fixture remains compatibility-only; real turns use the Stage 4 socket. See `design/docs/STAGE_FOUR_IMPLEMENTATION.md`.
+- Speaking loadout creates and recovers authenticated, atomic session snapshots through Supabase; unconfigured inline development/tests retain an in-memory adapter. Stage 4 now uses Gemini Live with server-owned WebSocket controls, durable finalized transcripts/evidence, asynchronous Doubao text analysis and bounded teaching policies. The old REST turn fixture remains compatibility-only; real turns use the Stage 4 socket. See `design/docs/STAGE_FOUR_IMPLEMENTATION.md`.
 - Private corpus and speaking routes require a Clerk-derived identity; no client-provided owner ID is trusted.
-- Stage 5 freezes completed-session text into a durable leased feedback job and uses bounded DeepSeek assessment with validated quotes and server-calculated scores. `pnpm dev` starts its worker; separately use `pnpm --filter @libitu/api worker:feedback`. The personal learning center reads existing four-dimension summaries without requesting assessments. See `design/docs/STAGE_FIVE_CONTRACT.md` and `design/docs/PROFILE_IMPLEMENTATION.md` for version, null-score and verification boundaries.
+- Stage 5 freezes completed-session text into a durable leased feedback job and uses bounded Doubao text assessment with validated quotes and server-calculated scores. `pnpm dev` starts its worker; separately use `pnpm --filter @libitu/api worker:feedback`. The personal learning center reads existing four-dimension summaries without requesting assessments. See `design/docs/STAGE_FIVE_CONTRACT.md` and `design/docs/PROFILE_IMPLEMENTATION.md` for version, null-score and verification boundaries.
 
 Data infrastructure:
 
@@ -136,9 +136,9 @@ Data infrastructure:
 - `apps/api/app/integrations/upstash.py` creates the optional Upstash Redis client.
 - `apps/api/app/integrations/processing_queue.py` owns queue keys, expiring state, and locks.
 - `apps/api/app/integrations/youtube_transcript.py` wraps the unofficial caption provider; browser captions remain preferred.
-- `apps/api/app/integrations/deepseek.py` requests and validates DeepSeek JSON output with timeout and retry controls.
+- `apps/api/app/integrations/ark_analysis.py` requests and validates Doubao text JSON output with timeout and retry controls.
 - `apps/api/app/integrations/supabase_repository.py` activates only when `SUPABASE_SECRET_KEY` is configured.
-- The local server repository, YouTube transcript fallback, Upstash worker, source-aware sherpa-onnx subtitle formatting, DeepSeek V4 Flash SSE analysis, and monotonic Stage 1 job previews are wired; live quality evaluation remains required for the bounded `mvp-v9` extraction contract.
+- The local server repository, YouTube transcript fallback, Upstash worker, source-aware sherpa-onnx subtitle formatting, Doubao SSE analysis, and monotonic Stage 1 job previews are wired; live quality evaluation remains required for the bounded `mvp-v9` extraction contract.
 - Local ignored environment files point web and API development at Clerk and Supabase. Never commit or print their values.
 - Hosted Supabase Third-Party Auth still needs its final dashboard confirmation for direct client Data API access. FastAPI uses its server repository for configured persistence, including corpus and speaking loadouts.
 

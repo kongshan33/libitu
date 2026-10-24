@@ -38,8 +38,8 @@ def main() -> None:
     if not args.live:
         parser.error("Pass --live to authorize real paid model calls and temporary database records.")
     settings = get_settings()
-    if not (settings.gemini_api_key and settings.deepseek_api_key and settings.supabase_secret_key):
-        parser.error("Gemini, DeepSeek and Supabase must all be configured.")
+    if not (settings.gemini_api_key and settings.ark_api_key and settings.supabase_secret_key):
+        parser.error("Gemini Live, Doubao and Supabase must all be configured.")
     if settings.speaking_realtime_provider != "gemini":
         parser.error("The configured speaking provider must be Gemini.")
     output = args.output.resolve()
@@ -60,7 +60,7 @@ def main() -> None:
                   "uiOrigin": "http://localhost:3000", "apiOrigin": "http://127.0.0.1:8767",
                   "artifactDir": str(output), "commandPath": str(output / "commands.jsonl"),
                   "resultPath": str(output / "browser-results.jsonl"),
-                  "models": {"gemini": settings.gemini_live_model, "deepseek": settings.deepseek_model},
+                  "models": {"gemini": settings.gemini_live_model, "ark": settings.ark_model},
                   "started_at": datetime.now(timezone.utc).isoformat()}
         save(output / "config.json", config)
         save(output / "session.json", session.model_dump(mode="json"))

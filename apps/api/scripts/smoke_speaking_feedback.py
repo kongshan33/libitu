@@ -1,4 +1,4 @@
-"""Opt-in Stage 5 DeepSeek + durable-report smoke, using isolated synthetic records.
+"""Opt-in Stage 5 Doubao + durable-report smoke, using isolated synthetic records.
 
 Run from apps/api: uv run python -m scripts.smoke_speaking_feedback --live
 The script does not connect a microphone or read any real learner's mission.
@@ -26,7 +26,7 @@ def main() -> None:
     if not args.live:
         parser.error("Pass --live to enable one bounded paid assessment of synthetic text.")
     settings = get_settings()
-    if not settings.supabase_server_is_configured or not settings.deepseek_is_configured:
+    if not settings.supabase_server_is_configured or not settings.ark_is_configured:
         parser.error("Configure durable storage and the assessment provider first.")
     owner = "libitu-stage5-smoke-" + uuid4().hex
     items, session = [], None

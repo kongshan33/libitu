@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adoptDeviceDraft, draftSignature, emptyDraft, LOADOUT_STORAGE_KEY, openDraft, prepareSubmission, readDraftEnvelope, resolveSelection, saveDraft, selectionError, toggleSelection } from "../features/loadout/draft.ts";
+import { acknowledgeSubmission, adoptDeviceDraft, DraftConflictError, draftSignature, emptyDraft, LOADOUT_STORAGE_KEY, openDraft, prepareSubmission, readDraftEnvelope, resolveSelection, saveDraft, selectionError, toggleSelection } from "../features/loadout/draft.ts";
 import { safeReturnPath } from "../features/loadout/navigation.ts";
 import { createSpeakingApi, getSpeakingOptions, SpeakingApiError } from "../features/loadout/api/speaking-api.ts";
 
@@ -86,6 +86,47 @@ test("corrupt or blocked browser storage is not silently overwritten", async () 
   await assert.rejects(openDraft(store, null), /not been overwritten/);
   assert.equal(store.getItem(LOADOUT_STORAGE_KEY), "invalid JSON");
   await assert.rejects(saveDraft({ getItem: () => null, setItem: () => { throw new Error("quota"); } }, null, goalDraft()), /quota/);
+});
+
+test("acknowledgement releases only its matching pending request and allocates a fresh identity next time", async () => {
+  const rows = [record("saved")];
+  const prepared = prepareSubmission({ ...goalDraft(), selectedKeys: ["saved"] }, rows, () => uuid);
+  const nextId = "b0000000-0000-4000-8000-000000000002";
+  assert.throws(() => acknowledgeSubmission(prepared, nextId));
+  assert.throws(() => acknowledgeSubmission({ ...prepared, goal: "Changed setup" }, uuid));
+  assert.throws(() => acknowledgeSubmission(goalDraft(), uuid));
+  const acknowledged = acknowledgeSubmission(prepared, uuid);
+  assert.equal(acknowledged.submission, undefined);
+  assert.deepEqual(acknowledged, { ...prepared, submission: undefined });
+  assert.equal(prepared.submission.request.client_id, uuid, "acknowledgement does not mutate the immutable recovery snapshot");
+  const store = storage();
+  await saveDraft(store, "user-a", prepared);
+  await saveDraft(store, "user-a", acknowledged, { expectedDraft: prepared });
+  const restored = (await openDraft(store, "user-a")).draft;
+  assert.equal(restored.submission, undefined);
+  assert.equal(prepareSubmission(restored, rows, () => nextId).submission.request.client_id, nextId);
+});
+
+test("a late acknowledgement cannot overwrite another tab's newer request", async () => {
+  const rows = [record("saved")];
+  const prepared = prepareSubmission({ ...goalDraft(), selectedKeys: ["saved"] }, rows, () => uuid);
+  const store = storage();
+  await saveDraft(store, "user-a", prepared);
+  const newer = prepareSubmission({ ...prepared, submission: undefined }, rows, () => "b0000000-0000-4000-8000-000000000002");
+  await saveDraft(store, "user-a", newer);
+  await assert.rejects(saveDraft(store, "user-a", acknowledgeSubmission(prepared, uuid), { expectedDraft: prepared }), DraftConflictError);
+  assert.deepEqual((await openDraft(store, "user-a")).draft.submission, newer.submission);
+});
+
+test("failed acknowledgement persistence leaves the original request available for exact recovery", async () => {
+  const rows = [record("saved")];
+  const prepared = prepareSubmission({ ...goalDraft(), selectedKeys: ["saved"] }, rows, () => uuid);
+  const store = storage();
+  await saveDraft(store, "user-a", prepared);
+  const blocked = { ...store, setItem: () => { throw Error("quota"); } };
+  await assert.rejects(saveDraft(blocked, "user-a", acknowledgeSubmission(prepared, uuid), { expectedDraft: prepared }), /quota/);
+  const restored = (await openDraft(store, "user-a")).draft;
+  assert.deepEqual(prepareSubmission(restored, [], () => assert.fail("must replay the original identity")).submission, prepared.submission);
 });
 
 test("interleaved field edits, submission persistence, and guest adoption share the envelope lock", async () => {
@@ -204,4 +245,21 @@ test("API errors preserve actionable status and do not expose structured server 
     globalThis.fetch = async () => Response.json({ detail: [{ secret: "internal failure" }] }, { status: 500 });
     await assert.rejects(createSpeakingApi("user-a", async () => token("user-a")).read("mission", new AbortController().signal), (error) => !error.message.includes("internal failure"));
   } finally { globalThis.fetch = original; }
+});
+
+test("create acknowledgements must identify the exact owner and client request with a valid Mission ID", async t => {
+  const payload = prepareSubmission({ ...goalDraft(), selectedKeys: ["saved"] }, [record("saved")], () => uuid).submission.request;
+  const session = { ...payload, id: "c0000000-0000-4000-8000-000000000003", user_id: "user-a", status: "draft" };
+  const api = createSpeakingApi("user-a", async () => token("user-a"));
+  const signal = new AbortController().signal;
+  for (const patch of [{ client_id: "b0000000-0000-4000-8000-000000000002" }, { client_id: undefined }, { user_id: undefined }, { id: "not-a-mission-id" }, { id: undefined }]) {
+    t.mock.method(globalThis, "fetch", async () => Response.json({ ...session, ...patch }));
+    await assert.rejects(api.create(payload, signal), error => error instanceof SpeakingApiError && error.status === 502);
+  }
+  t.mock.method(globalThis, "fetch", async () => Response.json({ ...session, user_id: "user-b" }));
+  await assert.rejects(api.create(payload, signal), error => error instanceof SpeakingApiError && error.status === 401);
+  for (const status of ["draft", "completed"]) {
+    t.mock.method(globalThis, "fetch", async () => Response.json({ ...session, status }));
+    assert.equal((await api.create(payload, signal)).client_id, uuid, "a verified completed Mission can resolve an old stuck request");
+  }
 });

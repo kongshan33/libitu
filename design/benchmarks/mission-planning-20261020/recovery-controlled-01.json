@@ -1,0 +1,184 @@
+{
+  "verified_at": "2026-10-20T08:32:27.840314+00:00",
+  "prompt_version": "speaking-plan-v2",
+  "scope": "Controlled first-response schema failure, followed by one real DeepSeek corrective generation. Same five visible phrases with synthetic IDs and simplified metadata. No database, browser login, Mission creation or Gemini qualification.",
+  "injected_failure": {
+    "path": [
+      "candidates",
+      0,
+      "targets",
+      0,
+      "skip_when"
+    ],
+    "type": "array_instead_of_string"
+  },
+  "model_calls": 1,
+  "diagnostics": [
+    {
+      "request_id": "c0b6c488b6c34eca8227b776a499beeb",
+      "prompt_version": "speaking-plan-v2",
+      "code": "invalid_output_schema",
+      "attempt": 1,
+      "outcome": "retrying",
+      "elapsed_ms": 0,
+      "issues": [
+        {
+          "path": [
+            "candidates",
+            0,
+            "targets",
+            0,
+            "skip_when"
+          ],
+          "type": "string_type"
+        }
+      ]
+    },
+    {
+      "request_id": "c0b6c488b6c34eca8227b776a499beeb",
+      "prompt_version": "speaking-plan-v2",
+      "code": "generation_recovered",
+      "attempt": 2,
+      "outcome": "accepted",
+      "elapsed_ms": 9013.6
+    }
+  ],
+  "provider": {
+    "model": "deepseek-v4-flash",
+    "elapsed_ms": 9013.6,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1872,
+      "completion_tokens": 1549,
+      "total_tokens": 3421
+    },
+    "error_type": null
+  },
+  "status": "passed",
+  "attempt": 2,
+  "candidate_count": 2,
+  "eligible_count": 2,
+  "candidates": [
+    {
+      "title": "Market Entry Strategy Meeting",
+      "setting": "A mid-sized consumer goods company's strategy room. You are presenting a proposal for entering a new regional market to the head of business development.",
+      "goal": "Convince the head of business development that the new region offers a viable entry point, clarify what you meant in your earlier written proposal, and agree on a long-term evaluation approach.",
+      "user_role": "Junior strategy analyst pitching a market entry plan",
+      "ai_role": "Skeptical head of business development who asks probing questions",
+      "register": "professional",
+      "targets": [
+        {
+          "corpus_item_id": "c80f2bcd-9ea3-4f6c-94c5-5763340ada28",
+          "role": "primary",
+          "communicative_function": "Identifying a specific point of entry that gives a secure initial position",
+          "fit": "high",
+          "fit_reason": "The scenario is about entering a new market, so naming the initial secure position is central to the pitch.",
+          "trigger_question": "Where exactly in this new region should we start so that we gain a secure initial position before competitors arrive?",
+          "skip_when": "Skip if the conversation has already settled on a specific entry point and moved on to pricing.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "bd974ebe-3841-4fb9-822f-8e506fdae325",
+          "role": "primary",
+          "communicative_function": "Clarifying an indirect reference made earlier without naming it directly",
+          "fit": "high",
+          "fit_reason": "The AI counterpart can ask what the analyst meant by an earlier vague remark in the written proposal, prompting an indirect-reference clarification.",
+          "trigger_question": "In your memo you mentioned certain risks without spelling them out — what exactly were you referring to there?",
+          "skip_when": "Skip if the memo's vague remark has already been explained clearly.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "f2036761-8300-41a3-9f6f-8d66e92d2e31",
+          "role": "primary",
+          "communicative_function": "Describing a planning approach that considers long-term effects rather than quick gains",
+          "fit": "high",
+          "fit_reason": "The meeting involves evaluating whether the plan should prioritize durable results, making this description natural.",
+          "trigger_question": "Should this entry plan prioritize quick returns or focus on effects that play out over many years?",
+          "skip_when": "Skip if the discussion has already agreed on the planning horizon.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "0854b77a-190c-4db5-85f9-5b15177dd057",
+          "role": "opportunity",
+          "communicative_function": "Referring to the leadership and management of the organization",
+          "fit": "medium",
+          "fit_reason": "The analyst may naturally mention the company's leadership when justifying strategic direction.",
+          "trigger_question": "Who at the top of the organization would need to approve this kind of move?",
+          "skip_when": "Skip if the conversation never touches on who leads or manages the company.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "a7243762-c628-473e-9e06-537b6b613b98",
+          "role": "opportunity",
+          "communicative_function": "Describing a plan becoming reality or succeeding",
+          "fit": "medium",
+          "fit_reason": "Closing a strategy pitch often involves imagining the plan succeeding, so this idiom fits naturally.",
+          "trigger_question": "If everything goes well over the next two years, what would success look like for this plan?",
+          "skip_when": "Skip if the meeting ends before any discussion of future success.",
+          "metadata_status": "unknown"
+        }
+      ]
+    },
+    {
+      "title": "Quarterly Review with the Board Chair",
+      "setting": "A startup's small conference room. You are the operations lead giving a quarterly update to the board chair, who wants clarity on strategy and leadership.",
+      "goal": "Explain your growth strategy, clarify a vague comment from last quarter's report, and align on a long-term outlook while addressing questions about company leadership.",
+      "user_role": "Operations lead reporting to the board",
+      "ai_role": "Board chair pressing for specifics and long-term thinking",
+      "register": "formal",
+      "targets": [
+        {
+          "corpus_item_id": "c80f2bcd-9ea3-4f6c-94c5-5763340ada28",
+          "role": "primary",
+          "communicative_function": "Identifying a specific point of entry that gives a secure initial position",
+          "fit": "high",
+          "fit_reason": "Explaining growth strategy naturally involves naming where the company can secure its first solid position.",
+          "trigger_question": "In this expansion, which customer segment gives us our first secure position to build from?",
+          "skip_when": "Skip if the board chair has already accepted the growth plan without asking about entry points.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "bd974ebe-3841-4fb9-822f-8e506fdae325",
+          "role": "primary",
+          "communicative_function": "Clarifying an indirect reference made earlier without naming it directly",
+          "fit": "high",
+          "fit_reason": "The board chair can ask what the operations lead meant by an oblique comment in the previous report.",
+          "trigger_question": "Last quarter's report hinted at something without saying it plainly — what were you getting at?",
+          "skip_when": "Skip if the earlier report's hint has already been clarified in this meeting.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "f2036761-8300-41a3-9f6f-8d66e92d2e31",
+          "role": "primary",
+          "communicative_function": "Describing a planning approach that considers long-term effects rather than quick gains",
+          "fit": "high",
+          "fit_reason": "Board reviews commonly contrast short-term wins with durable planning, making this description natural.",
+          "trigger_question": "Are we planning for quick wins this year or for results that matter over many years?",
+          "skip_when": "Skip if the board chair has already stated the preferred planning horizon.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "0854b77a-190c-4db5-85f9-5b15177dd057",
+          "role": "opportunity",
+          "communicative_function": "Referring to the leadership and management of the organization",
+          "fit": "high",
+          "fit_reason": "A board chair would naturally ask about who is running the company and how leadership is structured.",
+          "trigger_question": "How is the top leadership of the company holding up under this growth?",
+          "skip_when": "Skip if the review stays purely on financial figures and never mentions leadership.",
+          "metadata_status": "unknown"
+        },
+        {
+          "corpus_item_id": "a7243762-c628-473e-9e06-537b6b613b98",
+          "role": "opportunity",
+          "communicative_function": "Describing a plan becoming reality or succeeding",
+          "fit": "medium",
+          "fit_reason": "Board reviews often close by imagining the strategy succeeding, so this idiom can appear naturally.",
+          "trigger_question": "If this strategy works out, what will the company look like in three years?",
+          "skip_when": "Skip if the meeting ends before any forward-looking success discussion.",
+          "metadata_status": "unknown"
+        }
+      ]
+    }
+  ],
+  "total_elapsed_ms": 9026.46
+}

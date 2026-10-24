@@ -10,7 +10,8 @@ from pydantic import ValidationError
 from app.config import get_settings
 from app.integrations.speaking_repository import SpeakingRepository, get_speaking_repository
 from app.schemas.speaking import (
-    LogicTemplate, SpeakingOptions, SpeakingSession, SpeakingSessionCreate, SpeakingSessionItem,
+    EVIDENCE_CONTRACT_VERSION, LogicTemplate, SpeakingOptions, SpeakingPractice,
+    SpeakingSession, SpeakingSessionCreate, SpeakingSessionItem,
     SpeakingTurnCreate, SpeakingTurnResponse,
 )
 from app.services import store
@@ -37,6 +38,10 @@ _RPC_ERRORS = {
     "PT404": (404, "One or more selected corpus items are unavailable. Refresh your library and try again."),
     "PT409": (409, "This submission ID already belongs to a different loadout. Start a new submission."),
     "PT422": (422, "Choose at least one item, with up to three structures and five expressions."),
+    "PT412": (409, "Selected language changed after planning. Generate new scenarios before starting."),
+    "PT424": (422, "Some primary targets do not fit this scenario. Change targets or generate new scenarios."),
+    "PT425": (409, "The earlier mission is unavailable or its language changed. Prepare a new practice round."),
+    "PT426": (422, "Choose a support level for your practice round."),
 }
 
 
@@ -75,6 +80,10 @@ def _memory_view(session: SpeakingSession) -> SpeakingSession:
         source = store.corpus_items.get(str(item.corpus_item_id))
         if source is None or source.user_id != session.user_id:
             item.corpus_item_id = None
+    if result.practice and result.practice.parent_session_id:
+        parent = store.speaking_sessions.get(str(result.practice.parent_session_id))
+        if parent is None or parent.user_id != session.user_id:
+            result.practice.parent_session_id = None
     return result
 
 
@@ -87,7 +96,10 @@ def create_speaking_session(user_id: str, payload: SpeakingSessionCreate) -> Spe
     # The durable adapter repeats validation and takes snapshots within one transaction.
     with _MEMORY_LOCK:
         key = (user_id, str(payload.client_id))
-        request = payload.model_dump(mode="json")
+        excluded = {"plan_id", "candidate_id"} if payload.plan_id is None else set()
+        if payload.support_level is None:
+            excluded.add("support_level")  # Keep legacy idempotency payloads unchanged.
+        request = payload.model_dump(mode="json", exclude=excluded)
         previous = store.speaking_session_submissions.get(key)
         if previous is not None and previous[1] in store.speaking_sessions:
             if previous[0] != request:
@@ -100,17 +112,33 @@ def create_speaking_session(user_id: str, payload: SpeakingSessionCreate) -> Spe
         structures = sum(item.kind == "structure" for item in selected)
         if structures > 3 or len(selected) - structures > 5:
             raise HTTPException(status_code=422, detail=_RPC_ERRORS["PT422"][1])
+        from app.services.speaking_planning import corpus_plan_snapshot, frozen_memory_plan
+        items = [SpeakingSessionItem(
+            id=uuid4(), corpus_item_id=item.id, ordinal=index, kind=item.kind,
+            source_corpus_item_id=item.id if payload.support_level is not None else None,
+            text=item.text, meaning=item.meaning, tags=list(item.tags), slots=dict(item.slots),
+            source_title=item.source_locator.source_title,
+            **{key: value for key, value in corpus_plan_snapshot(item).items()
+               if key in {"usage_note", "register", "scenario_tags", "pattern_family"}},
+        ) for index, item in enumerate(selected)]
+        mission_plan = frozen_memory_plan(user_id, payload, selected, items)
+        plan = store.speaking_plans[str(payload.plan_id)][2] if payload.plan_id else None
+        practice = SpeakingPractice(
+            parent_session_id=plan.practice_source.parent_session_id,
+            root_session_id=plan.practice_source.root_session_id,
+            variation=plan.practice_source.variation, changes=mission_plan.changes,
+        ) if plan and plan.practice_source else None
         session = SpeakingSession(
             id=uuid4(), user_id=user_id, client_id=payload.client_id,
             scenario_type=payload.scenario_type, goal=payload.goal,
             difficulty=payload.difficulty, feedback_level=payload.feedback_level,
             logic_template=logic.model_copy(deep=True) if logic else None,
             created_at=datetime.now(timezone.utc),
-            items=[SpeakingSessionItem(
-                id=uuid4(), corpus_item_id=item.id, ordinal=index, kind=item.kind,
-                text=item.text, meaning=item.meaning, tags=list(item.tags), slots=dict(item.slots),
-                source_title=item.source_locator.source_title,
-            ) for index, item in enumerate(selected)],
+            mission_plan=mission_plan,
+            support_level=payload.support_level,
+            evidence_contract_version=EVIDENCE_CONTRACT_VERSION if payload.support_level is not None else None,
+            practice=practice,
+            items=items,
         )
         store.speaking_sessions[str(session.id)] = session
         store.speaking_session_submissions[key] = (request, str(session.id))

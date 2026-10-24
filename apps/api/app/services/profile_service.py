@@ -12,7 +12,7 @@ from app.schemas.profile import (
     ProfileHistoryPage, ProfileOverview, ProfileRange, ResumeSpeaking, ProfileFeedbackDimension,
     ProfileFeedbackSummary, ProfileHistoryFeedback, ProfileHistoryKind,
 )
-from app.schemas.speaking_feedback import ANALYSIS_VERSION, RUBRIC_VERSION
+from app.schemas.speaking_feedback import SUPPORTED_REPORT_VERSIONS
 
 _DIMENSIONS = ("task_fit", "transfer", "scenario_fit", "naturalness")
 _FEEDBACK_STATUSES = {"queued", "processing", "ready", "partial", "insufficient_data", "failed"}
@@ -87,7 +87,7 @@ def _feedback(row: dict, turns: list[datetime]):
         if not report.get("rubric_version") or not report.get("analysis_version"):
             history.unavailable_reason = "legacy_report"
             return history, None, "legacy_report"
-        if report.get("rubric_version") != RUBRIC_VERSION or report.get("analysis_version") != ANALYSIS_VERSION:
+        if (report.get("rubric_version"), report.get("analysis_version")) not in SUPPORTED_REPORT_VERSIONS:
             history.unavailable_reason = "version_mismatch"
             return history, None, "version_mismatch"
         if report["status"] not in {"ready", "partial"}:

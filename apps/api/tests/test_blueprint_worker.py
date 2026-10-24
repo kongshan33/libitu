@@ -6,7 +6,7 @@ from app.schemas.analysis import (
 from app.schemas.content import ContentKind, ContentResolveResponse
 from app.schemas.job import ProcessingJob, ProcessingStatus
 from app.workers import blueprint_worker
-from app.integrations.deepseek import AnalysisProviderError
+from app.integrations.ark_analysis import AnalysisProviderError
 from app.services.transcript_formatter import ParsedTranscriptLine
 
 
@@ -229,7 +229,7 @@ def test_worker_persists_provider_error_code_and_analysis_timing(monkeypatch) ->
 
     def fail_analysis(_content, _transcript, _on_progress):
         raise AnalysisProviderError(
-            "DeepSeek stopped before the blueprint JSON was complete. Please retry.",
+            "Doubao stopped before the blueprint JSON was complete. Please retry.",
             code="analysis_response_truncated",
             diagnostic="finish_reason=length",
         )

@@ -51,7 +51,12 @@ class GeminiSpeakingConnection(SpeakingConnection):
             "the next response after it arrives, then forget that attempt. An opening or silence "
             "follow-up control only triggers a reply; it does not replace a pending teaching attempt. "
             "Never read controls or their labels aloud. "
-            "A coach's learner_intent is an action for the LEARNER to perform, never an instruction "
+            "A model_then_transfer Attempt is a separate explicit teaching mode: use its single "
+            "target naturally ONCE in your own in-role reply, then ask ONE related question about "
+            "different content for the learner to answer in their own words. Do not ask for "
+            "repetition, read a sentence frame, announce the demonstration, or supply their answer. "
+            "Only this mode permits a target demonstration; it does not enable future demonstrations. "
+            "For an implicit_elicitation Attempt, a coach's learner_intent is an action for the LEARNER to perform, never an instruction "
             "for you to demonstrate that action. Your job is to ask one short in-role question that "
             "invites the learner to express that meaning. Leave the comparison, judgment, explanation "
             "or proposed wording for the learner. Do not supply a model answer, sentence starter, "
@@ -155,9 +160,11 @@ class GeminiSpeakingConnection(SpeakingConnection):
         except (Exception, asyncio.CancelledError):
             attempt["send_status"] = "uncertain"
             self.diagnostic("policy.send_uncertain", {"attempt": attempt})
+            self.attempt_sent(attempt)
             raise
         attempt["send_status"] = "sent"
         self.diagnostic("policy.sent", {"attempt": attempt})
+        self.attempt_sent(attempt)
 
     async def interrupt(self) -> None:
         active = self.responses.get(self.active_response) if self.active_response else None

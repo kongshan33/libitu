@@ -1,0 +1,210 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-e52924ca1af047fab0e74fe1269deb49",
+    "planning_requests": 1,
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "elapsed_ms": 6099.68,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1626,
+      "completion_tokens": 1079,
+      "total_tokens": 2705
+    }
+  },
+  {
+    "event": "provider_candidate_preview",
+    "candidates": [
+      {
+        "title": "Project Delay Discussion",
+        "setting": "A one-on-one meeting room at the office, with a whiteboard showing the project timeline.",
+        "goal": "Acknowledge your colleague's constraint, propose a practical next step, and confirm shared understanding.",
+        "user_role": "Project lead who needs to address the delay and agree on a revised plan.",
+        "ai_role": "Colleague who is responsible for the delayed task and has a valid reason for the setback.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "293ed7f9-0bfe-4c37-a7c9-50d6f74df93a",
+            "role": "primary",
+            "communicative_function": "Concede a valid point before offering a different perspective.",
+            "fit": "high",
+            "fit_reason": "The scenario involves acknowledging the colleague's constraint, which naturally calls for a concession phrase.",
+            "trigger_question": "Your colleague explains that the delay was due to a family emergency. How do you acknowledge that while still moving the project forward?",
+            "skip_when": "Skip if the colleague has not raised any personal constraint.",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "f564ac32-afbe-4198-970b-d2a29debbd7e",
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "fit": "high",
+            "fit_reason": "The goal includes agreeing on a practical next step based on the acknowledged constraint.",
+            "trigger_question": "You both agree that the deadline is tight. How do you propose a specific action based on that shared understanding?",
+            "skip_when": "Skip if no shared constraint or fact has been established.",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "1c4eed28-ed9c-4f61-af4b-5909b53df729",
+            "role": "opportunity",
+            "communicative_function": "Confirm that both parties have the same understanding before concluding.",
+            "fit": "medium",
+            "fit_reason": "The scenario ends with a need to ensure alignment, making this idiom relevant.",
+            "trigger_question": "Before you wrap up, how would you check that you both agree on the revised plan?",
+            "skip_when": "Skip if the discussion is cut short or no agreement is reached.",
+            "metadata_status": "unknown"
+          }
+        ]
+      },
+      {
+        "title": "Deadline Negotiation with a Colleague",
+        "setting": "A video call between two colleagues working remotely, with a shared document open.",
+        "goal": "Acknowledge the colleague's workload, suggest a realistic adjustment, and ensure mutual agreement.",
+        "user_role": "Team member who needs to renegotiate a deadline due to new information.",
+        "ai_role": "Colleague who is currently overwhelmed with other tasks and cannot meet the original deadline.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "293ed7f9-0bfe-4c37-a7c9-50d6f74df93a",
+            "role": "primary",
+            "communicative_function": "Concede a valid point before offering a different perspective.",
+            "fit": "high",
+            "fit_reason": "The scenario requires acknowledging the colleague's workload before proposing a change.",
+            "trigger_question": "Your colleague says they are swamped with other assignments. How do you show you understand their situation while still addressing the deadline?",
+            "skip_when": "Skip if the colleague does not mention any workload issue.",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "f564ac32-afbe-4198-970b-d2a29debbd7e",
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "fit": "high",
+            "fit_reason": "The goal involves suggesting an adjustment based on the acknowledged workload.",
+            "trigger_question": "You both know the client expects a draft by Friday. How do you propose a new plan based on that fact?",
+            "skip_when": "Skip if no shared deadline or constraint is mentioned.",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "1c4eed28-ed9c-4f61-af4b-5909b53df729",
+            "role": "opportunity",
+            "communicative_function": "Confirm that both parties have the same understanding before concluding.",
+            "fit": "medium",
+            "fit_reason": "The negotiation ends with a need to ensure alignment on the new plan.",
+            "trigger_question": "How would you verify that you both interpret the new deadline the same way?",
+            "skip_when": "Skip if the conversation ends abruptly or no new plan is agreed.",
+            "metadata_status": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "plan_created",
+    "elapsed_seconds": 9.98,
+    "plan_id": "5e27cfc8-2798-47b4-b307-94628e8d68e0",
+    "candidates": [
+      {
+        "title": "Project Delay Discussion",
+        "goal": "Acknowledge your colleague's constraint, propose a practical next step, and confirm shared understanding.",
+        "user_role": "Project lead who needs to address the delay and agree on a revised plan.",
+        "ai_role": "Colleague who is responsible for the delayed task and has a valid reason for the setback.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede a valid point before offering a different perspective.",
+            "trigger_question": "Your colleague explains that the delay was due to a family emergency. How do you acknowledge that while still moving the project forward?",
+            "skip_when": "Skip if the colleague has not raised any personal constraint."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "trigger_question": "You both agree that the deadline is tight. How do you propose a specific action based on that shared understanding?",
+            "skip_when": "Skip if no shared constraint or fact has been established."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm that both parties have the same understanding before concluding.",
+            "trigger_question": "Before you wrap up, how would you check that you both agree on the revised plan?",
+            "skip_when": "Skip if the discussion is cut short or no agreement is reached."
+          }
+        ]
+      },
+      {
+        "title": "Deadline Negotiation with a Colleague",
+        "goal": "Acknowledge the colleague's workload, suggest a realistic adjustment, and ensure mutual agreement.",
+        "user_role": "Team member who needs to renegotiate a deadline due to new information.",
+        "ai_role": "Colleague who is currently overwhelmed with other tasks and cannot meet the original deadline.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede a valid point before offering a different perspective.",
+            "trigger_question": "Your colleague says they are swamped with other assignments. How do you show you understand their situation while still addressing the deadline?",
+            "skip_when": "Skip if the colleague does not mention any workload issue."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "trigger_question": "You both know the client expects a draft by Friday. How do you propose a new plan based on that fact?",
+            "skip_when": "Skip if no shared deadline or constraint is mentioned."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm that both parties have the same understanding before concluding.",
+            "trigger_question": "How would you verify that you both interpret the new deadline the same way?",
+            "skip_when": "Skip if the conversation ends abruptly or no new plan is agreed."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "session_frozen",
+    "session_id": "cca9df74-d82d-46dc-bc36-cfba335f8eb7",
+    "metadata": true,
+    "stable_target_ids": true,
+    "stale_plan_rejected": true
+  },
+  {
+    "event": "feedback_frozen",
+    "job_id": "b93c3abc-c2aa-4241-9596-a9f91eaa7d2a",
+    "status": "queued",
+    "reflected": true,
+    "presented": true,
+    "skipped": true,
+    "exposure": true,
+    "private_fields_excluded": true,
+    "reliable_user_turns": 0,
+    "feedback_model_called": false
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": true,
+    "qualification": "planning_and_persistence_only"
+  }
+]

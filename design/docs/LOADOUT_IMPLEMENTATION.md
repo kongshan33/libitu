@@ -1,10 +1,61 @@
 # Speaking loadout
 
-Status: implemented local increment, 2026-09-30. The connected Supabase migration is applied; real role-play remains planned.
+Current amendment, 2026-10-20: new Loadout follows
+[expression-led Mission planning P0/P1 and P2](STAGE_THREE_FOUR_MISSION_PLAN.md).
+Select one to three primary targets and up to two opportunity targets, then use
+Start mission to generate or reuse one matching scene and open its frozen Mission.
+Choose a scene myself optionally generates two scenes for manual comparison.
+The 2026-10-24 latency follow-up repairs only failed fields, batches selected
+corpus reads, and exposes bounded request/phase timings. Changes to difficulty,
+feedback, logic template or support reuse a source-matching cached plan.
+An uncertain creation retry reuses the saved request before any planning. The new budget is
+shared across structures and expressions. The contract below records the legacy
+loadout and remains relevant to old sessions and uncertain creation retries.
+The current flow recommends two primary targets with zero or one opportunity,
+recovers content-validation errors once within the model time budget, and keeps
+system-error recovery separate from candidate-specific selection advice.
+
+P2 adds optional `support_level` independently of difficulty: `model_frame`,
+`model_label`, `label_only`, `no_hint`. New drafts default to `model_frame`;
+old drafts, sessions and exact pending requests without the field retain null
+legacy behavior. The learner chooses support manually. Changing only support
+does not invalidate a valid generated scene; an already-uncertain creation keeps
+its original request and level until recovered.
+
+New plans include a server-validated `sentence_frame` per target, with complete
+target wording outside a nonempty `[slot]`; structures retain existing anchors
+and slots, allowing only terminal sentence-punctuation differences.
+Missing frames in old plans stay absent and are explained by the UI. New invalid
+frames are output errors (`plan_invalid_frame`), use the existing single
+constrained repair and do not blame or change the learner's selection.
+
+The session API accepts an omitted/null level for legacy, or an explicit enum.
+Explicit support is frozen atomically in the session and included in its
+idempotency payload by `create_supported_speaking_loadout`; old creation RPCs and
+absent-field payloads are unchanged. The initial setting is version 0 when the
+Mission opens. Runtime manual changes have their own CAS/history contract in
+[Stage 4](STAGE_FOUR_TEACHING_CONTROL.md). The connected development database has
+`20261020090509_speaking_support_and_demonstrations`; local/hosted SQL rollback
+checks pass. Overall P2 verification is tracked in `TASK.MD`.
+
+P3 adds an explicit linked-round import with changed details or swapped roles and
+before/after scene changes. The learner chooses support before starting; an uncertain
+creation still recovers its exact saved request. The new evidence-create wrapper
+preserves existing payload identities, freezes original corpus IDs and adds
+`speaking-evidence-v3` only to new explicit-support sessions.
+
+P4 offers read-only support history and a user-applied reduction of at most one level.
+Every primary target needs three reliable independent Missions on two UTC practice
+dates across two scene families; repeats do not manufacture variety. Failures and
+insufficient history do not block starting. See the [full contract](STAGE_THREE_FOUR_MISSION_PLAN.md)
+for evidence eligibility, account/input fencing and version boundaries.
 
 ## Accepted scope and rules
 
-This increment delivers the Stage 3 loadout and a durable, recoverable session preparation page. Real role-play, turn history and feedback remain separate work. Loadout may be opened directly or from Stage 1/2; completing Shadow is not required.
+The original 2026-09-30 increment delivered Stage 3 loadout and durable session
+preparation. Real-time role-play, turn history and feedback have since been
+implemented separately. Loadout may be opened directly or from Stage 1/2;
+completing Shadow is not required.
 
 - At least one saved corpus item is required.
 - Up to three structures; chunks and idioms share up to five expression slots.

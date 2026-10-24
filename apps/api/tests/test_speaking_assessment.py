@@ -16,7 +16,7 @@ STRUCTURE = "10000000-0000-0000-0000-000000000002"
 @pytest.fixture(autouse=True)
 def no_live_calls(monkeypatch):
     monkeypatch.setattr(assessment, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key=None, deepseek_base_url="https://assessor.invalid", deepseek_model="fixture-model"))
+        ark_api_key=None, ark_base_url="https://assessor.invalid", ark_model="fixture-model"))
 
 
 def message(text, identifier="user-1", **updates):
@@ -133,7 +133,7 @@ def test_final_utterance_is_assessed_without_stage4_analysis(monkeypatch):
     output = model(data, quote=None)
     output["item_results"][0]["uses"] = [{"reference": reference(data["messages"][-1], "One trade-off is"),
         "match_type": "exact", "appropriateness": "appropriate", "reason": "Expresses an actual trade-off."}]
-    async def fake(value):
+    async def fake(value, **kwargs):
         assert value["evidence"] == []
         return assessment._Assessment.model_validate(output)
     monkeypatch.setattr(assessment, "_assess_with_provider", fake)
@@ -173,6 +173,171 @@ def test_prompted_use_has_separate_counts_and_same_transfer_score():
     assert result.item_results[0].prompted_uses == 0
 
 
+@pytest.mark.parametrize("level,certainty,expected", [
+    (None, None, True), ("usage", None, False), ("example", None, False),
+    ("direction", None, False), ("example", "possible", False),
+])
+def test_positive_evidence_requires_accepted_appropriate_use_with_exactly_independent_assistance(level, certainty, expected):
+    data = source()
+    if level:
+        data["controller"]["exposures"] = [{"id": "shown", "target_item_id": ITEM, "after_turn": 0,
+                                          "scope": "session", "level": level, "certainty": certainty}]
+    result = assessment.compile_assessment(data, model(data))[1]
+    item = result.item_results[0]
+    assert bool(item.qualifying_independent_evidence) is expected
+    if expected:
+        assert item.qualifying_independent_evidence[0].quote == "One trade-off is"
+    else:
+        assert item.evidence  # Mixed observation history is intentionally separate.
+
+
+def test_positive_evidence_excludes_inappropriate_uncertain_and_assisted_references_in_a_mixed_item():
+    data = source()
+    data["messages"].extend([
+        message("One trade-off is our schedule.", "inappropriate", ordinal=2),
+        message("One trade-off is our budget.", "uncertain", ordinal=3),
+        message("One trade-off is flexibility.", "assisted", ordinal=4),
+    ])
+    data["controller"]["exposures"] = [{"id": "shown", "target_item_id": ITEM, "after_turn": 3,
+                                       "scope": "session", "level": "usage"}]
+    output = model(data)
+    for row, verdict in zip(data["messages"][1:], ["inappropriate", "uncertain", "appropriate"]):
+        output["item_results"][0]["uses"].append({
+            "reference": reference(row, "One trade-off is"), "match_type": "exact",
+            "appropriateness": verdict, "reason": "Fixture reviewed in context.",
+        })
+    item = assessment.compile_assessment(data, output)[1].item_results[0]
+    assert {ref.message_id for ref in item.evidence} == {"user-1", "inappropriate", "uncertain", "assisted"}
+    assert [ref.message_id for ref in item.qualifying_independent_evidence] == ["user-1"]
+    old = assessment.compile_assessment(data, output, analysis_version="speaking-feedback-v2")[1]
+    assert old.item_results[0].qualifying_independent_evidence == []
+
+
+def test_session_scoped_example_remains_assisted_after_two_turns():
+    data = source()
+    target_message = data["messages"][0]
+    target_message.update(id="last", ordinal=4, created_at="2026-10-20T00:04:00Z",
+                          started_at="2026-10-20T00:04:00Z", finalized_at="2026-10-20T00:04:05Z")
+    data["messages"] = [message("We should compare the options.", f"early-{i}", ordinal=i,
+                                created_at=f"2026-10-20T00:0{i}:00Z") for i in range(1, 4)] + [target_message]
+    data["controller"]["exposures"] = [{"id": "shown", "target_item_id": ITEM, "after_turn": 0,
+        "scope": "session", "level": "example", "visible_at": "2026-10-20T00:00:00Z"}]
+    output = model(data, quote=None)
+    output["item_results"][0]["uses"] = [{"reference": reference(target_message, "One trade-off is"),
+        "match_type": "exact", "appropriateness": "appropriate", "reason": "Fits the trade-off."}]
+    _, result = assessment.compile_assessment(data, output)
+    assert result.item_results[0].prompted_uses == 1
+    assert result.item_results[0].independent_uses == 0
+    data["controller"]["exposures"][0].pop("scope")
+    _, legacy = assessment.compile_assessment(data, output)
+    assert legacy.item_results[0].independent_uses == 1
+
+
+@pytest.mark.parametrize("visible, expected", [
+    ("2026-10-01T00:00:03Z", (0, 0, 1)),  # Presentation overlaps speech.
+    ("2026-10-01T00:00:10Z", (1, 0, 0)),  # Late ACK cannot rewrite earlier provenance.
+    ("2026-09-30T23:59:59Z", (0, 1, 0)),
+])
+def test_assistance_uses_actual_utterance_and_presentation_times(visible, expected):
+    data = source()
+    data["messages"][0].update(started_at="2026-10-01T00:00:00Z", finalized_at="2026-10-01T00:00:05Z")
+    data["controller"]["exposures"] = [{"id": "shown", "target_item_id": ITEM, "after_turn": 0,
+        "scope": "session", "level": "usage", "visible_at": visible}]
+    _, result = assessment.compile_assessment(data, model(data))
+    item = result.item_results[0]
+    assert (item.independent_uses, item.prompted_uses, item.uncertain_assistance_uses) == expected
+
+
+def planned_source(text="We could use the simpler option for this initial release."):
+    data = source(text)
+    corpus_id = "40000000-0000-0000-0000-000000000001"
+    data["session"]["items"][0]["corpus_item_id"] = corpus_id
+    data["session"]["mission_plan"] = {
+        "plan_id": "50000000-0000-0000-0000-000000000001",
+        "candidate_id": "60000000-0000-0000-0000-000000000001", "version": 1,
+        "scenario_type": "workplace", "title": "Database choice", "setting": "A design review",
+        "goal": "Choose a suitable database", "user_role": "Engineer", "ai_role": "Reviewer", "register": "professional",
+        "targets": [{"session_item_id": ITEM, "corpus_item_id": corpus_id, "role": "primary",
+            "communicative_function": "Compare benefits and costs", "fit": "high", "fit_reason": "A choice needs trade-offs.",
+            "trigger_question": "What do we gain and lose with this option?", "skip_when": "The decision is already final."}],
+    }
+    return data
+
+
+def offered_attempt(identifier="attempt", **updates):
+    return {"id": identifier, "send_status": "sent", "response_id": "response", "presented": True,
+            "policy": {"target_item_id": ITEM, "action": "implicit_elicitation"},
+            "assessment": {"outcome": "reflected"}, **updates}
+
+
+def test_planned_target_without_actual_opportunity_is_not_a_failure():
+    data = planned_source()
+    _, result = assessment.compile_assessment(data, model(data, quote=None))
+    assert scores(result)["transfer"] is None
+    assert result.statistics.assessed_primary_targets == 0
+    assert result.item_results[0].opportunity_status == "planned"
+    assert "not a learner failure" in result.item_results[0].excluded_reason
+
+
+def test_reflection_and_presentation_must_belong_to_same_attempt():
+    data = planned_source()
+    data["teaching_attempts"] = [offered_attempt(presented=False),
+                                offered_attempt("other", assessment={"outcome": "not_reflected"})]
+    _, result = assessment.compile_assessment(data, model(data, quote=None))
+    assert scores(result)["transfer"] is None
+    assert result.statistics.offered_primary_targets == 0
+    data["teaching_attempts"][0]["presented"] = True
+    _, result = assessment.compile_assessment(data, model(data, quote=None))
+    assert scores(result)["transfer"] == 0
+    assert result.statistics.offered_primary_targets == 1
+
+
+def test_skipped_primary_is_excluded_even_if_it_was_offered():
+    data = planned_source()
+    data["teaching_attempts"] = [offered_attempt()]
+    data["target_states"] = {ITEM: {"skipped": True, "reason": "This is not a trade-off."}}
+    _, result = assessment.compile_assessment(data, model(data, quote=None))
+    assert scores(result)["transfer"] is None
+    assert result.statistics.skipped_targets == 1
+    assert result.item_results[0].opportunity_status == "skipped"
+    assert result.item_results[0].excluded_reason == "This is not a trade-off."
+
+
+def test_skipped_use_remains_in_evidence_but_not_production_counts():
+    data = planned_source("One trade-off is cost, but the simpler option is easier to maintain.")
+    data["target_states"] = {ITEM: {"skipped": True, "reason": "Not relevant to this mission."}}
+    _, result = assessment.compile_assessment(data, model(data))
+    assert result.item_results[0].status == "appropriate"
+    assert result.item_results[0].evidence
+    assert result.statistics.used_expressions == 0
+    assert result.statistics.used_primary_targets == 0
+    assert scores(result)["transfer"] is None
+
+
+def test_spontaneous_primary_use_counts_without_fabricating_an_ai_opportunity():
+    data = planned_source("One trade-off is cost, but the simpler option is easier to maintain.")
+    _, result = assessment.compile_assessment(data, model(data))
+    assert scores(result)["transfer"] == 100
+    assert result.statistics.used_primary_targets == 1
+    assert result.statistics.offered_primary_targets == 0
+
+
+def test_opportunity_target_does_not_reduce_primary_coverage():
+    data = planned_source("One trade-off is cost, but the simpler option is easier to maintain.")
+    extra_corpus_id = "40000000-0000-0000-0000-000000000002"
+    data["session"]["items"].append({"id": STRUCTURE, "corpus_item_id": extra_corpus_id, "ordinal": 1,
+                                     "kind": "chunk", "text": "to be fair"})
+    data["session"]["mission_plan"]["targets"].append({
+        **data["session"]["mission_plan"]["targets"][0], "session_item_id": STRUCTURE,
+        "corpus_item_id": extra_corpus_id, "role": "opportunity"})
+    output = model(data)
+    output["item_results"].append({"session_item_id": STRUCTURE, "reason": "No use.", "uses": []})
+    _, result = assessment.compile_assessment(data, output)
+    assert scores(result)["transfer"] == 100
+    assert result.statistics.opportunity_targets == 1
+    assert result.statistics.used_opportunity_targets == 0
+
+
 def test_missing_transcript_and_unresolved_occurrences_keep_transfer_null():
     data = source()
     data["messages"].append(message("", "missing", ordinal=3, status="unavailable"))
@@ -196,7 +361,7 @@ def test_pending_structure_candidate_cannot_silently_disappear():
 def test_no_user_speech_never_calls_provider(monkeypatch):
     data = source()
     data["messages"][0]["role"] = "assistant"
-    async def must_not_call(_):
+    async def must_not_call(_, **kwargs):
         raise AssertionError("No speech must not call a provider")
     monkeypatch.setattr(assessment, "_assess_with_provider", must_not_call)
     status, result = run(data)
@@ -220,6 +385,27 @@ def test_context_excludes_unheard_assistant_and_old_revisions():
     assert len(context["conversation"]) == 1
     assert context["conversation"][0]["text"].startswith("One trade-off")
     assert "user_id" not in json.dumps(context)
+
+
+def test_context_uses_frozen_roles_register_and_language_metadata():
+    data = planned_source()
+    data["session"]["items"][0].update(
+        usage_note="Introduce a compromise.", register="professional", pattern_family=None,
+    )
+    context = assessment._context(data)
+    assert context["confirmed_scene"] == {
+        "title": "Database choice", "setting": "A design review",
+        "user_role": "Engineer", "ai_role": "Reviewer", "register": "professional",
+    }
+    assert context["selected_language"][0]["usage_note"] == "Introduce a compromise."
+    assert context["selected_language"][0]["register"] == "professional"
+    # Planned questions and model fit opinions must not masquerade as observed use.
+    assert "trigger_question" not in json.dumps(context)
+    assert "fit_reason" not in json.dumps(context)
+    changed = deepcopy(data)
+    changed["session"]["mission_plan"].update(ai_role="Close friend", register="casual")
+    assert assessment._context(changed)["confirmed_scene"] != context["confirmed_scene"]
+    assert "confirmed_scene" not in assessment._context(source())
 
 
 def test_logic_observation_is_separate_and_requires_evidence():
@@ -263,7 +449,7 @@ def test_surface_refactor_provenance_and_saveable_phrase():
 def transport(monkeypatch, handler):
     original = httpx.AsyncClient
     monkeypatch.setattr(assessment, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key="fixture-only", deepseek_base_url="https://assessor.invalid", deepseek_model="fixture-model"))
+        ark_api_key="fixture-only", ark_base_url="https://assessor.invalid", ark_model="fixture-model"))
     monkeypatch.setattr(assessment.httpx, "AsyncClient", lambda **kwargs: original(**kwargs, transport=httpx.MockTransport(handler)))
 
 

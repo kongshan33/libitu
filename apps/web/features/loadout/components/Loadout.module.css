@@ -20,7 +20,7 @@
 .fieldGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .fieldGrid label, .filters label { display: flex; flex-direction: column; gap: 7px; min-width: 0; color: var(--color-text-secondary, #66645f); font-size: 11px; font-weight: 500; }
 .fieldGrid label:nth-child(2) { grid-column: 2; }
-.fieldGrid label:last-child { grid-column: 3; grid-row: 1; }
+.fieldGrid .feedbackField { grid-column: 3; grid-row: 1; }
 .goalField { grid-column: 1 / -1; }
 .fieldGrid select, .fieldGrid textarea, .filters input, .filters select { width: 100%; min-height: 40px; border: 1px solid var(--color-border-secondary, #cccac5); border-radius: var(--radius-md); padding: 10px 11px; background: var(--color-background-primary, #fff); color: var(--color-text-primary, #252520); font: inherit; font-size: 12px; }
 .fieldGrid textarea { resize: vertical; min-height: 84px; line-height: 1.6; }
@@ -33,6 +33,24 @@
 .logicDescription { font-size: 11px; line-height: 1.45; color: var(--color-text-secondary, #66645f); }
 .logicFlow { font-family: var(--font-mono, monospace); font-size: 10px; line-height: 1.75; color: #6556a7; margin-top: 3px; overflow-wrap: anywhere; }
 .selectedCard, .selectedCard:hover { background: var(--selection-background); border-color: var(--selection-border); }
+.generateButton { margin-top: 18px; min-height: 40px; padding: 10px 16px; }
+.strategyOptions { margin-top: 20px; }
+.strategyOptions > summary { font-size: 12px; color: #534ab7; cursor: pointer; padding: 8px 0; }
+.sceneList { display: grid; gap: 14px; margin-top: 20px; }
+.sceneCard { border: 1px solid var(--color-border-tertiary); border-radius: var(--radius-lg); padding: 18px; min-width: 0; overflow-wrap: anywhere; }
+.sceneCard h3 { margin: 0 0 8px; font-size: 16px; }
+.sceneCard > p, .sceneCard dd, .targetFitList p { font-size: 12px; line-height: 1.65; margin: 0; color: var(--color-text-secondary); }
+.sceneCard dl { margin: 15px 0; display: grid; gap: 7px; }
+.sceneCard dl > div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 10px; }
+.sceneCard dt { font-size: 11px; color: var(--color-text-secondary); }
+.sceneCard > button { display: inline-flex; align-items: center; min-height: 40px; padding: 9px 14px; margin-top: 14px; gap: 8px; }
+.targetFitList { padding: 0; margin: 0; list-style: none; display: grid; gap: 12px; }
+.targetFitList li { display: grid; gap: 4px; border-top: 1px solid var(--color-border-tertiary); padding-top: 11px; }
+.targetFitList strong { font-size: 12px; line-height: 1.65; }
+.targetFitList li > span { font-size: 11px; color: var(--color-text-secondary); }
+.fitBadge { display: inline-block; margin-left: 4px; padding: 2px 7px; border-radius: 20px; background: #eeedfe; color: #534ab7; font-size: 10px; font-weight: 400; }
+.targetSlot { margin: 0 0 12px; }
+.targetSlot .slot { margin-bottom: 5px; }
 .corpusCard.selectedCard, .corpusCard.selectedCard:hover { background: var(--selection-background); border-color: var(--selection-border); }
 .textButton { border: 0; font-size: 11px; padding: 10px 0; min-height: 36px; }
 .filters { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; margin-bottom: 24px; }
@@ -112,7 +130,7 @@
 .patternSlots dd { margin: 0; }
 @media (max-width: 1060px) { .main { padding: 22px; } .body { grid-template-columns: minmax(0, 1fr) 280px; } .logicGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .page { padding: 16px; } .body { grid-template-columns: minmax(0, 1fr); } .main { border-right: 0; } .preview { position: static; max-height: none; overflow: visible; border-top: 1px solid #e4e3df; padding: 24px; } .slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; } .slots h3 { grid-column: 1 / -1; } .slot { margin: 0; } .stagePill { display: none; } .remove { min-width: 44px; height: 44px; } .page button, .back { min-height: 44px; } }
-@media (max-width: 480px) { .page { padding: 8px; } .topbar { padding: 12px; gap: 10px; flex-wrap: wrap; } .topbarTitle { font-size: 12px; } .main, .preview, .sessionMain { padding: 20px 16px; } .pageHeading h1, .sessionMain h1 { font-size: 25px; } .fieldGrid { grid-template-columns: 1fr 1fr; } .fieldGrid label:last-child { grid-column: 1 / -1; grid-row: auto; } .fieldGrid label:nth-child(2) { grid-column: auto; } .logicGrid { grid-template-columns: 1fr 1fr; } .logicCard { padding: 11px; } .expressionGrid, .filters, .slots, .savedItems { grid-template-columns: minmax(0, 1fr); } .pickerHeading { align-items: flex-start; } .sessionSettings { flex-wrap: wrap; gap: 20px; } .goalField { grid-column: 1 / -1; } }
+@media (max-width: 480px) { .page { padding: 8px; } .topbar { padding: 12px; gap: 10px; flex-wrap: wrap; } .topbarTitle { font-size: 12px; } .main, .preview, .sessionMain { padding: 20px 16px; } .pageHeading h1, .sessionMain h1 { font-size: 25px; } .fieldGrid { grid-template-columns: 1fr 1fr; } .fieldGrid .feedbackField { grid-column: 1 / -1; grid-row: auto; } .fieldGrid label:nth-child(2) { grid-column: auto; } .logicGrid { grid-template-columns: 1fr 1fr; } .logicCard { padding: 11px; } .expressionGrid, .filters, .slots, .savedItems { grid-template-columns: minmax(0, 1fr); } .pickerHeading { align-items: flex-start; } .sessionSettings { flex-wrap: wrap; gap: 20px; } .goalField { grid-column: 1 / -1; } }
 
 .fieldGrid :global(.ui-select-trigger), .filters :global(.ui-select-trigger) { width: 100%; min-width: 0; }
 
@@ -121,3 +139,25 @@
 .draftStatus[data-pending="true"] { visibility: visible; animation: draft-status-in 120ms ease 250ms both; }
 @keyframes draft-status-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .draftStatus[data-pending="true"] { animation: none; } }
+
+.selectionGuide { padding: 14px 16px; margin-bottom: 20px; border: 1px solid var(--color-border-tertiary); border-radius: var(--radius-md); background: var(--color-background-secondary); }
+.selectionGuide p { margin: 0 0 9px; font-size: 12px; line-height: 1.7; color: var(--color-text-secondary); }
+.selectionGuide p:last-child { margin-bottom: 0; }
+.selectionGuide .selectionCount { color: var(--purple-600); font-size: 11px; }
+.selectionGuide summary { cursor: pointer; color: var(--purple-600); font-size: 12px; padding: 5px 0; }
+.selectionGuide details p { margin-top: 9px; }
+.recovery { margin: 0 0 28px; padding: 18px; border: 1px solid var(--selection-border); border-radius: var(--radius-lg); background: var(--color-background-subtle); overflow-wrap: anywhere; }
+.recovery h2 { font-size: 16px; line-height: 1.5; font-weight: 500; margin: 0 0 8px; }
+.recovery p { font-size: 12px; line-height: 1.7; color: var(--color-text-secondary); margin: 8px 0; }
+.recovery .recoveryBasis { color: var(--color-text-primary); margin-top: 14px; }
+.recoveryTargets { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 12px; }
+.recoveryTargets li { background: var(--color-background-primary); border: 1px solid var(--color-border-tertiary); border-radius: var(--radius-md); padding: 14px; min-width: 0; }
+.recoveryTargets h3 { font-size: 13px; line-height: 1.6; margin: 0; font-weight: 500; }
+.recoveryTargets h3 span { display: block; font-size: 11px; color: var(--color-text-secondary); font-weight: 400; }
+.recoveryActions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.recoveryActions button, .recoveryLink { font-size: 12px; line-height: 1.5; padding: 8px 12px; min-height: 38px; }
+.recoveryDetail { border-left: 2px solid var(--color-border-secondary); padding-left: 10px; }
+.recoveryLink { width: 100%; margin-bottom: 10px; }
+.fieldGrid .supportField { grid-column: 1 / -1; }
+@media (max-width: 800px) { .recoveryActions button, .recoveryLink { min-height: 44px; } }
+.historyPanel{margin:18px 0;padding:16px;border:1px solid var(--color-border-tertiary);border-radius:var(--radius-md);background:var(--color-background-subtle)}.historyPanel h3{font-size:13px;margin:0 0 8px}.historyPanel>button{margin:10px 0}.historyTargets{display:grid;gap:10px;margin:12px 0}.historyTargets article{background:white;border:1px solid var(--color-border-tertiary);padding:12px;border-radius:var(--radius-sm);font-size:12px;overflow-wrap:anywhere}.historyTargets p{margin:5px 0;color:var(--color-text-secondary)}.historyTargets ul{padding-left:18px;margin:7px 0}.historyTargets a{color:var(--purple-600)}.sceneChanges{margin:12px 0;padding:12px;background:var(--purple-50);border-radius:var(--radius-sm);font-size:12px}.sceneChanges span{display:block;overflow-wrap:anywhere}.strategyFieldset{border:0;padding:0;margin:0;min-width:0}

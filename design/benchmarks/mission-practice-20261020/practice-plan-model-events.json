@@ -1,0 +1,117 @@
+{
+  "fixture": "synthetic_review_deadline",
+  "synthetic": true,
+  "database_calls": 0,
+  "planning_requests": 1,
+  "max_model_requests": 2,
+  "variation": "details",
+  "persistence": "process_local_fixture",
+  "qualification": "real_child_generation_and_strict_validation_only",
+  "passed": true,
+  "candidates": [
+    {
+      "title": "Budget review deadline negotiation",
+      "setting": "A short planning call on Thursday morning about the Q3 budget review deadline; the finance team has asked for the draft two days earlier than originally agreed.",
+      "goal": "Agree on a realistic date for the budget review draft while acknowledging the finance team's scheduling pressure.",
+      "user_role": "Project engineer",
+      "ai_role": "Team lead",
+      "changes": [
+        {
+          "field": "setting",
+          "before": "A planning meeting about the other team's review deadline.",
+          "after": "A short planning call on Thursday morning about the Q3 budget review deadline; the finance team has asked for the draft two days earlier than originally agreed."
+        },
+        {
+          "field": "goal",
+          "before": "Discuss a reasonable review deadline.",
+          "after": "Agree on a realistic date for the budget review draft while acknowledging the finance team's scheduling pressure."
+        }
+      ],
+      "primary_fit": [
+        "high"
+      ],
+      "confirmable": true
+    },
+    {
+      "title": "Client demo scope meeting",
+      "setting": "A Friday afternoon meeting where the client has asked to add two features to next week's demo, and the engineering team is already at capacity.",
+      "goal": "Reach a shared decision on which demo features to keep, showing that the client's request is understood while protecting the team's capacity.",
+      "user_role": "Project engineer",
+      "ai_role": "Team lead",
+      "changes": [
+        {
+          "field": "setting",
+          "before": "A planning meeting about the other team's review deadline.",
+          "after": "A Friday afternoon meeting where the client has asked to add two features to next week's demo, and the engineering team is already at capacity."
+        },
+        {
+          "field": "goal",
+          "before": "Discuss a reasonable review deadline.",
+          "after": "Reach a shared decision on which demo features to keep, showing that the client's request is understood while protecting the team's capacity."
+        }
+      ],
+      "primary_fit": [
+        "high"
+      ],
+      "confirmable": true
+    }
+  ],
+  "strict_validation": true,
+  "target_identity_preserved": true,
+  "target_roles_preserved": true,
+  "source_link_verified": true,
+  "saved_once": true,
+  "parent_unchanged": true,
+  "provider": {
+    "model_requests": 2,
+    "calls": [
+      {
+        "elapsed_ms": 2586.93,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 1629,
+          "completion_tokens": 472,
+          "total_tokens": 2101
+        }
+      },
+      {
+        "elapsed_ms": 3315.51,
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 1778,
+          "completion_tokens": 570,
+          "total_tokens": 2348
+        }
+      }
+    ],
+    "diagnostics": [
+      {
+        "request_id": "e4f309cbc57f491eb417f1a7d3a68c94",
+        "prompt_version": "speaking-plan-v3",
+        "code": "plan_invalid_variation",
+        "attempt": 1,
+        "outcome": "retrying",
+        "elapsed_ms": 2586.93,
+        "issues": [
+          {
+            "path": [
+              "candidates",
+              0
+            ],
+            "type": "practice_variation_mismatch"
+          }
+        ]
+      },
+      {
+        "request_id": "e4f309cbc57f491eb417f1a7d3a68c94",
+        "prompt_version": "speaking-plan-v3",
+        "code": "generation_recovered",
+        "attempt": 2,
+        "outcome": "accepted",
+        "elapsed_ms": 3315.51
+      }
+    ]
+  },
+  "elapsed_ms": 5934.84,
+  "cleanup": "no_persistent_records_created"
+}

@@ -16,6 +16,8 @@ from app.integrations.speaking_realtime import open_realtime, role_instructions,
 from app.schemas.speaking_runtime import SpeakingWorkspace
 from app.services import speaking_runtime_state as state_ops
 from app.services.speaking_coaching_runtime import CoachingRuntime
+from app.services.speaking_opportunities import opportunity_view, planned_targets, set_target_skipped
+from app.services.speaking_support_runtime import SupportConflict, change_support, support_workspace
 from app.services.speaking_teaching import (
     analyze_utterance, record_hint_exposure, reconcile_analysis_result, rebuild_learning,
 )
@@ -63,6 +65,40 @@ def new_message(role: str, text: str, source: str, **fields) -> dict:
 
 # Only used for prompt local release; DB fencing is the authority across workers.
 _connections: dict[str, "SpeakingConnection"] = {}
+END_RECEIPT_DRAIN_SECONDS = 2.0
+
+
+async def capture_local_receipts(owner: str, session_id: str) -> dict | None:
+    """Flush received presentation facts before end; the final CAS rechecks ownership."""
+    candidates = {}
+    for connection in _connections.values():
+        local_runtime = connection.state.get("document", {}).get("runtime") or {}
+        if (connection.owner == owner and connection.session_id == session_id
+                and connection.state.get("status") == "active"
+                and local_runtime.get("id") == connection.runtime_id
+                and local_runtime.get("state") != "disconnected"
+                and state_ops.is_future(local_runtime.get("expires_at"))):
+            candidates[connection.runtime_id] = (connection, {
+                "runtime_id": connection.runtime_id,
+                "exposures": deepcopy(connection.pending_exposures),
+                "presentations": dict(connection.pending_presentations),
+            })
+    # A slow authoritative read can overlap normal WS shutdown. Capture first:
+    # registry cleanup must not erase already-received facts while this read waits.
+    state = await asyncio.to_thread(state_ops.read_state, owner, session_id)
+    runtime = state["document"].get("runtime") or {}
+    candidate = candidates.get(runtime.get("id"))
+    if state["status"] != "active" or candidate is None:
+        return None
+    connection, receipts = candidate
+    connection.stop.set()
+    if connection.exposure_tasks:
+        # Do not cancel a DB write or infer that a timed-out write never committed.
+        # The same end CAS merges captured receipts idempotently if it wins first.
+        await asyncio.wait(list(connection.exposure_tasks), timeout=END_RECEIPT_DRAIN_SECONDS)
+    receipts["exposures"].update(deepcopy(connection.pending_exposures))
+    receipts["presentations"].update(connection.pending_presentations)
+    return receipts
 
 
 async def stop_local(session_id: str) -> None:
@@ -121,6 +157,8 @@ class SpeakingConnection(CoachingRuntime):
         document = self.state["document"]
         return SpeakingWorkspace.model_validate({
             "session": session, "version": self.state["version"],
+            "opportunities": opportunity_view(session, document),
+            **support_workspace(session, document),
             **{k: document[k] for k in ("runtime", "messages", "evidence", "learning", "policy", "analysis_status", "hint", "help")
                if k in document},
         }).model_dump(mode="json")
@@ -187,10 +225,12 @@ class SpeakingConnection(CoachingRuntime):
             for task in tasks + list(self.analysis_tasks):
                 task.cancel()
             await asyncio.gather(*tasks, *self.analysis_tasks, return_exceptions=True)
-            _connections.pop(self.runtime_id, None)
             with contextlib.suppress(Exception):
                 await self.persist_interrupted()
-            await self.close_coaching()
+            try:
+                await self.close_coaching()
+            finally:
+                _connections.pop(self.runtime_id, None)
             with contextlib.suppress(Exception):
                 await asyncio.to_thread(state_ops.disconnect_runtime, self.owner, self.session_id, self.runtime_id)
             with contextlib.suppress(Exception):
@@ -285,7 +325,7 @@ class SpeakingConnection(CoachingRuntime):
             return
         request_id = str(uuid4())
         policy = await self.eligible_policy()
-        instruction = role_instructions(self.session)
+        instruction = role_instructions(self.session, include_language_targets=False)
         policy_id = None
         if policy and policy.get("status") == "pending":
             source = next((m for m in self.state["document"].get("messages", [])
@@ -310,7 +350,9 @@ class SpeakingConnection(CoachingRuntime):
             "metadata": {"request_id": request_id},
         }})
         if attempt:
+            attempt["send_status"] = "sent"
             self.diagnostic("policy.sent", {"attempt": attempt})
+            self.attempt_sent(attempt)
         await self.send({"type": "state", "state": "thinking"})
 
     async def interrupt(self) -> None:
@@ -658,7 +700,7 @@ class SpeakingConnection(CoachingRuntime):
                 # PCM and presentation receipts only touch client-owned or
                 # monotonic local state. Waiting for provider transcript storage
                 # here turns real-time PCM into an artificial catch-up burst.
-                if event.get("type") in {"audio.append", "ping", "playback", "message.shown", "hint.shown"}:
+                if event.get("type") in {"audio.append", "ping", "playback", "message.shown", "hint.shown", "target.shown"}:
                     await self.client_event(event)
                 else:
                     # One reader preserves FIFO with microphone/text controls;
@@ -708,6 +750,9 @@ class SpeakingConnection(CoachingRuntime):
         if kind == "hint.shown":
             await self.hint_shown(event)  # Capture receipt now; persistence runs outside the audio lock.
             return
+        if kind == "target.shown":
+            self.target_shown(event)
+            return
         if current - self.control_window > 10:
             self.control_window, self.control_count = current, 0
         self.control_count += 1
@@ -737,6 +782,51 @@ class SpeakingConnection(CoachingRuntime):
             await self.submit_text(event)
         elif kind == "hint":
             self.request_help(event)
+        elif kind == "support.set":
+            level, expected = event.get("level"), event.get("expected_version")
+            request_id = str(UUID(event["request_id"]))
+            if level not in {"model_frame", "model_label", "label_only", "no_hint"} or type(expected) is not int or expected < 0:
+                raise ValueError
+            # A sent provider control cannot be retracted. Change support only
+            # between complete replies, before another immutable attempt is sent.
+            if (self.response_busy() or self.user_speaking or self.injected_attempt
+                    or self.state["document"].get("playback_pending")
+                    or any(not item.get("truncated") and item["played_ms"] < item["generated_ms"] - 1
+                           for item in self.audio_items.values())):
+                await self.send({"type": "error", "code": "support_busy", "request_id": request_id,
+                                 "message": "Let the current reply finish before changing support.", "retryable": True})
+                await self.send({"type": "snapshot", "workspace": self.workspace()})
+                return
+            timestamp = state_ops.iso_now()
+            try:
+                await self.commit(lambda document, _: change_support(self.session, document, level, expected, timestamp))
+            except SupportConflict:
+                await self.fence()
+                await self.send({"type": "error", "code": "support_changed", "request_id": request_id,
+                                 "message": "Support changed in another window. Review the current setting and retry.",
+                                 "retryable": True})
+                await self.send({"type": "snapshot", "workspace": self.workspace()})
+                return
+            self.help_request_id = None
+            self.diagnostic("support.changed", {"level": level, "at": timestamp,
+                                                 "version": (self.state["document"].get("support") or {}).get("version", 0)})
+        elif kind in {"target.skip", "target.restore"}:
+            target = event.get("target_item_id")
+            if not isinstance(target, str) or target not in planned_targets(self.session):
+                raise ValueError
+            reason = event.get("reason") if kind == "target.skip" else None
+            if kind == "target.skip":
+                if not isinstance(reason, str) or not 1 <= len(reason.strip()) <= 200:
+                    raise ValueError
+                reason = reason.strip()
+            timestamp = state_ops.iso_now()
+            help_target = self.help_target_id
+            await self.commit(lambda document, _: set_target_skipped(document, target, reason, timestamp))
+            # A control already sent upstream cannot be retracted. Preserve its
+            # immutable attempt, but fence every unsent or stale analysis action.
+            if help_target == target:
+                self.help_request_id = None
+            self.diagnostic(kind, {"target_item_id": target, "reason": reason, "at": timestamp})
         else:
             raise ValueError
 

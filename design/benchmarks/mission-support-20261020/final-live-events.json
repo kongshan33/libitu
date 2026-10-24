@@ -1,0 +1,257 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-3e9c0efec7ee49f08e4ab057c911d3b5",
+    "planning_requests": 1,
+    "max_model_requests": 2,
+    "provider_mode": "live",
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls",
+    "support_level": "model_frame"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "elapsed_ms": 6748.07,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1811,
+      "completion_tokens": 1213,
+      "total_tokens": 3024
+    }
+  },
+  {
+    "event": "provider_candidate_preview",
+    "candidates": [
+      {
+        "title": "Delayed Launch: Finding a Way Forward",
+        "setting": "A one-to-one video call between you and a colleague on the same delivery team. The launch has slipped by two weeks because a key supplier missed a deadline, and you need to decide what to tell stakeholders and what to adjust.",
+        "goal": "Acknowledge your colleague's valid constraint, propose one practical next step justified by a shared fact, and confirm you both leave with the same understanding of the decision.",
+        "user_role": "Project coordinator who owns the schedule and needs to agree a revised plan with the colleague.",
+        "ai_role": "Colleague responsible for the supplier relationship who is frustrated by the delay and worried about the team's workload.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "de5fb9f2-9679-40d5-8cc7-f682fd252098",
+            "role": "primary",
+            "communicative_function": "Concede that the other person's concern is reasonable before offering a different angle.",
+            "fit": "high",
+            "fit_reason": "The scenario centers on a disagreement about a delay, so conceding a valid point before countering is a natural move.",
+            "trigger_question": "Your colleague says the team is already stretched and pushing harder would burn people out. How do you show you accept that point before suggesting a different view?",
+            "skip_when": "Skip if the colleague has already fully agreed with your position and no concession is needed.",
+            "sentence_frame": "To be fair, [colleague's valid concern], but [your different view].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "ac739572-4277-4f52-a077-b7f4dfe5457c",
+            "role": "primary",
+            "communicative_function": "Use an agreed fact or constraint to justify a recommended next step.",
+            "fit": "high",
+            "fit_reason": "The task requires agreeing a practical next step grounded in the shared supplier delay, which matches this justified-proposal structure.",
+            "trigger_question": "You both know the supplier cannot deliver before the end of the month. What next step would you recommend, and how do you tie it to that fact?",
+            "skip_when": "Skip if no shared fact or constraint has been established to base a recommendation on.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "d07287e4-3fc0-4094-a207-3ac57b9b5c91",
+            "role": "opportunity",
+            "communicative_function": "Check that both people share the same understanding of the decision before wrapping up.",
+            "fit": "medium",
+            "fit_reason": "The conversation ends with a decision, so confirming mutual understanding is a plausible optional closing move.",
+            "trigger_question": "Before you end the call, how would you check that you and your colleague both understand the agreed plan the same way?",
+            "skip_when": "Skip if the discussion is still unresolved and no decision has been reached yet.",
+            "sentence_frame": "Before we finish, I want to make sure we're on the same page about [decision or plan].",
+            "metadata_status": "unknown"
+          }
+        ]
+      },
+      {
+        "title": "The Slipped Deadline: A Calmer Conversation",
+        "setting": "An in-person meeting room after a tense stand-up. A teammate's part of the project is behind schedule, and you have been asked to talk it through with them privately and settle on what happens next.",
+        "goal": "Recognize the teammate's real constraint, recommend a concrete adjustment based on a fact you both accept, and leave the room with a shared understanding of the plan.",
+        "user_role": "Team lead holding a private follow-up conversation with the teammate.",
+        "ai_role": "Teammate who is defensive about the delay and worried about being blamed.",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "de5fb9f2-9679-40d5-8cc7-f682fd252098",
+            "role": "primary",
+            "communicative_function": "Grant that the other person's point has merit before presenting your own perspective.",
+            "fit": "high",
+            "fit_reason": "A defensive teammate makes it natural to concede a valid point before steering toward a solution.",
+            "trigger_question": "Your teammate insists the original estimate was unrealistic. How do you acknowledge that before giving your own view?",
+            "skip_when": "Skip if the teammate is not raising any objection that needs acknowledging.",
+            "sentence_frame": "To be fair, [teammate's point], but [your perspective].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "ac739572-4277-4f52-a077-b7f4dfe5457c",
+            "role": "primary",
+            "communicative_function": "Base a proposed next step on a fact or limit both sides accept.",
+            "fit": "high",
+            "fit_reason": "The meeting's purpose is to agree an adjustment, and the shared deadline pressure gives a clear premise to justify it.",
+            "trigger_question": "You both accept the client demo is fixed for next Friday. What adjustment would you suggest, and how does that fixed date support it?",
+            "skip_when": "Skip if there is no agreed fact or limit available to justify a proposal.",
+            "sentence_frame": "Given [premise], we should [action].",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "d07287e4-3fc0-4094-a207-3ac57b9b5c91",
+            "role": "opportunity",
+            "communicative_function": "Confirm mutual understanding of the agreed outcome before the meeting closes.",
+            "fit": "medium",
+            "fit_reason": "The private meeting aims at a settled plan, so a closing check of shared understanding fits naturally.",
+            "trigger_question": "As the meeting wraps up, how would you confirm you and your teammate understand the agreed plan identically?",
+            "skip_when": "Skip if the meeting ends without any agreed outcome.",
+            "sentence_frame": "Let's make sure we're on the same page about [agreed outcome] before we wrap up.",
+            "metadata_status": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "plan_created",
+    "elapsed_seconds": 9.35,
+    "plan_id": "022b7023-9727-4194-8e2f-76ade52276dd",
+    "candidates": [
+      {
+        "title": "Delayed Launch: Finding a Way Forward",
+        "goal": "Acknowledge your colleague's valid constraint, propose one practical next step justified by a shared fact, and confirm you both leave with the same understanding of the decision.",
+        "user_role": "Project coordinator who owns the schedule and needs to agree a revised plan with the colleague.",
+        "ai_role": "Colleague responsible for the supplier relationship who is frustrated by the delay and worried about the team's workload.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede that the other person's concern is reasonable before offering a different angle.",
+            "trigger_question": "Your colleague says the team is already stretched and pushing harder would burn people out. How do you show you accept that point before suggesting a different view?",
+            "skip_when": "Skip if the colleague has already fully agreed with your position and no concession is needed.",
+            "sentence_frame": "To be fair, [colleague's valid concern], but [your different view]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use an agreed fact or constraint to justify a recommended next step.",
+            "trigger_question": "You both know the supplier cannot deliver before the end of the month. What next step would you recommend, and how do you tie it to that fact?",
+            "skip_when": "Skip if no shared fact or constraint has been established to base a recommendation on.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Check that both people share the same understanding of the decision before wrapping up.",
+            "trigger_question": "Before you end the call, how would you check that you and your colleague both understand the agreed plan the same way?",
+            "skip_when": "Skip if the discussion is still unresolved and no decision has been reached yet.",
+            "sentence_frame": "Before we finish, I want to make sure we're on the same page about [decision or plan]."
+          }
+        ]
+      },
+      {
+        "title": "The Slipped Deadline: A Calmer Conversation",
+        "goal": "Recognize the teammate's real constraint, recommend a concrete adjustment based on a fact you both accept, and leave the room with a shared understanding of the plan.",
+        "user_role": "Team lead holding a private follow-up conversation with the teammate.",
+        "ai_role": "Teammate who is defensive about the delay and worried about being blamed.",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Grant that the other person's point has merit before presenting your own perspective.",
+            "trigger_question": "Your teammate insists the original estimate was unrealistic. How do you acknowledge that before giving your own view?",
+            "skip_when": "Skip if the teammate is not raising any objection that needs acknowledging.",
+            "sentence_frame": "To be fair, [teammate's point], but [your perspective]."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Base a proposed next step on a fact or limit both sides accept.",
+            "trigger_question": "You both accept the client demo is fixed for next Friday. What adjustment would you suggest, and how does that fixed date support it?",
+            "skip_when": "Skip if there is no agreed fact or limit available to justify a proposal.",
+            "sentence_frame": "Given [premise], we should [action]."
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm mutual understanding of the agreed outcome before the meeting closes.",
+            "trigger_question": "As the meeting wraps up, how would you confirm you and your teammate understand the agreed plan identically?",
+            "skip_when": "Skip if the meeting ends without any agreed outcome.",
+            "sentence_frame": "Let's make sure we're on the same page about [agreed outcome] before we wrap up."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "session_frozen",
+    "session_id": "c6dc30f5-f461-4f19-a038-d27a990434e0",
+    "metadata": true,
+    "stable_target_ids": true,
+    "stale_plan_rejected": true,
+    "support_level": "model_frame",
+    "support_idempotency": true,
+    "sentence_frames": true
+  },
+  {
+    "event": "runtime_support_verified",
+    "initial": "model_frame",
+    "current": {
+      "level": "no_hint",
+      "version": 1
+    },
+    "modeled_support": {
+      "level": "model_frame",
+      "version": 0
+    },
+    "stale_version_rejected": true,
+    "change_idempotent": true,
+    "transport": "direct_runtime_cas_fixture",
+    "provider_socket_opened": false
+  },
+  {
+    "event": "support_feedback_frozen",
+    "initial_support": true,
+    "current_support": true,
+    "support_history": true,
+    "policy_support_version": true,
+    "model_quote": true,
+    "transfer_question_quote": true,
+    "possible_audio_certainty": true,
+    "fixture_receipts_only": true
+  },
+  {
+    "event": "feedback_frozen",
+    "job_id": "1f8ef053-9f47-45a2-acab-93ee957bfd2f",
+    "status": "queued",
+    "reflected": true,
+    "presented": true,
+    "skipped": true,
+    "exposure": true,
+    "private_fields_excluded": true,
+    "reliable_user_turns": 0,
+    "feedback_model_called": false
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": true,
+    "model_requests": 1,
+    "provider_mode": "live",
+    "qualification": "planning_and_persistence_only"
+  }
+]

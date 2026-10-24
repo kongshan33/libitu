@@ -1,5 +1,44 @@
 # Stage 5 report contract
 
+2026-10-20 amendment: new reports use `speaking-rubric-v2` /
+`speaking-feedback-v3`, described in
+[expression-led Mission planning P0–P4](STAGE_THREE_FOUR_MISSION_PLAN.md).
+Planned Missions count active primary targets for transfer and report opportunity
+targets separately. Skipped targets are excluded; unoffered primary targets do
+not represent learner failures. A complete percentage requires an offered
+opportunity or spontaneous appropriate use for every remaining primary target.
+The frozen confirmed roles/register inform scenario fit, and full assistance
+provenance survives freezing. Existing v1 results remain readable without
+automatic reassessment. The all-selected denominator below describes legacy
+Missions without a confirmed plan.
+
+P3 adds separately validated missed-opportunity suggestions to the same assessment
+call; malformed optional suggestions cannot invalidate otherwise valid scores.
+Their quotes bind to the first reliable learner reply after a confirmed presented
+opportunity, and suggested wording never becomes use evidence. Public feedback
+includes the frozen effective support level. Linked-round comparison reads existing
+ready compatible reports without triggering analysis or calculating improvement.
+P4 records a dedicated positive independent-reference projection for new v3 reports.
+Only new explicit-support sessions marked `speaking-evidence-v3` can contribute to
+history recommendations; old results are neither upgraded nor backfilled.
+
+P2 adds frozen initial/current support, runtime change history, each attempt's
+support level/version, exact model/transfer-question quotes and exposure
+certainty. The SQL enqueue allowlist and inline adapter preserve the same fields.
+`20261020090509_speaking_support_and_demonstrations` is applied to the connected
+development database and local/hosted rollback contracts pass. Existing v1/v2
+jobs/results retain their saved inputs and are not regraded on reads.
+
+Partial modeled audio can carry `certainty: possible`, which produces uncertain
+assistance rather than independent use; it does not establish a delivered model
+or transfer question. Reducing/hiding support preserves earlier session-scoped
+label, frame and example exposure. Stage 4 and Stage 5 now share the same narrow
+contraction/inflection variant check; model labels and `pattern_family` alone do
+not establish unrestricted semantic equivalence. Reflection is advisory content
+assessment, presentation is receipt-based evidence, and learner use is assessed
+separately. The existing transfer dimension remains selected-item coverage; P2
+does not introduce a proven learning-gain or different-content-transfer score.
+
 Implemented locally, 2026-10-01. This page records the accepted contract, implementation and verification limits. The prototype is a layout reference, not evidence of implemented metrics. No production deployment was performed.
 
 - Four dimensions: task fit, language transfer, scenario fit and naturalness. No overall, fluency, pronunciation or mastery score.
@@ -21,7 +60,7 @@ The common scale is 0 (observed language does not meet the criterion), 1 (substa
 
 The provider returns message ID, transcript revision and exact quotation. The server resolves a unique exact substring to UTF-16 positions. Repeated ambiguous quotations, stale revisions, AI quotations and explicitly wrong positions are rejected; no fuzzy matching repairs them. The first real-provider check exposed unreliable model-generated positions, which is why final positions are calculated by the server.
 
-Transfer counts unique appropriately used selected items, not occurrences. Prompted attribution reuses Stage 4's recorded two-user-turn exposure window; it is not a claim that all possible coaching was detected. Exact lexical and valid Stage 4 candidates omitted by the final analyzer remain uncertain and prevent a complete transfer score. Repeated use never inflates the denominator. The final assessment is separate from Stage 4 observations and can disagree with preliminary evidence.
+Transfer counts unique appropriately used selected items, not occurrences. Prompted attribution shares Stage 4's session-scoped wording/example ledger; old unscoped exposures retain their original two-user-turn window. This is not a claim that all possible coaching was detected. Exact lexical and valid Stage 4 candidates omitted by the final analyzer remain uncertain and prevent a complete transfer score. Repeated use never inflates the denominator. The final assessment is separate from Stage 4 observations and can disagree with preliminary evidence.
 
 Refactors are optional and deliberately conservative. Validation preserves content-token order, names, numbers, pronouns and modal/polarity commitments, accepting mainly surface grammar changes. Many useful paraphrases are therefore omitted. Saveable text must occur in the accepted suggestion. Changed retry suggestions receive new IDs; unchanged suggestions remain idempotent when saved.
 

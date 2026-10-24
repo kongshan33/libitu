@@ -67,6 +67,19 @@ def get_corpus_item(user_id: str, item_id: str) -> CorpusItem | None:
     return item if item is not None and item.user_id == user_id else None
 
 
+def get_corpus_items(user_id: str, item_ids: list[str]) -> list[CorpusItem]:
+    """Read selected items once, in requested order; unavailable items are omitted."""
+    selected_ids = list(dict.fromkeys(item_ids))
+    if not selected_ids:
+        return []
+    if repository := _repository():
+        return _call(repository.get_corpus_items, user_id, selected_ids)
+    return [
+        item for item_id in selected_ids
+        if (item := store.corpus_items.get(item_id)) is not None and item.user_id == user_id
+    ]
+
+
 def hydrate_corpus_analysis_detail(
     user_id: str,
     item_id: str,

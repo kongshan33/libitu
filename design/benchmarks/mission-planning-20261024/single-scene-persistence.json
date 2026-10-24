@@ -1,0 +1,255 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-95a343738e07434c9fd58ab9078d8c8e",
+    "planning_requests": 1,
+    "max_model_requests": 2,
+    "provider_mode": "live",
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls",
+    "support_level": "model_frame",
+    "practice_variation": null,
+    "candidate_count": 1
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "phase": "parent",
+    "elapsed_ms": 9919.36,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 2459,
+      "completion_tokens": 508,
+      "total_tokens": 2967
+    }
+  },
+  {
+    "event": "provider_candidate_preview",
+    "phase": "parent",
+    "candidates": [
+      {
+        "title": "Delayed Project Sync with Colleague",
+        "setting": "A 15-minute video call about a delayed client onboarding project.",
+        "goal": "Acknowledge the colleague's staffing constraint and agree on a practical next step.",
+        "user_role": "Project lead",
+        "ai_role": "Colleague from the delivery team",
+        "register": "professional",
+        "targets": [
+          {
+            "corpus_item_id": "d07e84c5-df59-43fd-82ec-4e4beabf7d1a",
+            "role": "primary",
+            "communicative_function": "Concede a valid concern before sharing a different view.",
+            "fit": "high",
+            "fit_reason": "The colleague explains a staffing constraint; conceding it softens the disagreement.",
+            "trigger_question": "How would you acknowledge their constraint before sharing your view?",
+            "skip_when": "Skip if no disagreement or constraint needs softening.",
+            "sentence_frame": "{{target}}, [colleague] has been understaffed this sprint.",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "84775961-ad5f-4849-bcc7-8161e9ea5c12",
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "fit": "high",
+            "fit_reason": "The agreed staffing constraint naturally justifies a practical rescheduling action.",
+            "trigger_question": "How would you connect the constraint to a practical next step?",
+            "skip_when": "Skip if no shared fact supports a recommendation.",
+            "sentence_frame": "{{target}}",
+            "metadata_status": "unknown"
+          },
+          {
+            "corpus_item_id": "09ff97c0-9494-4773-9853-24cbb0269943",
+            "role": "opportunity",
+            "communicative_function": "Confirm both sides share the same understanding before ending.",
+            "fit": "high",
+            "fit_reason": "Ending a project sync with a shared-understanding check is natural.",
+            "trigger_question": "How would you confirm you both understand the decision?",
+            "skip_when": "Skip if the discussion has already ended or understanding is confirmed.",
+            "sentence_frame": "Let's make sure we're {{target}} about [next step].",
+            "metadata_status": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "request_timing",
+    "operation": "create_plan",
+    "status_code": 201,
+    "request_id": "122469c0d7024e79bdba43b3b582001f",
+    "durations_ms": {
+      "input_read": 272.72,
+      "model_generation": 9921.28,
+      "validation": 5.13,
+      "save_plan": 1261.81,
+      "total": 11468.09
+    }
+  },
+  {
+    "event": "plan_created",
+    "elapsed_seconds": 11.86,
+    "plan_id": "921a0d95-1bc2-4b16-a0ee-8cb32b9f40a9",
+    "candidates": [
+      {
+        "title": "Delayed Project Sync with Colleague",
+        "goal": "Acknowledge the colleague's staffing constraint and agree on a practical next step.",
+        "user_role": "Project lead",
+        "ai_role": "Colleague from the delivery team",
+        "primary_fit": [
+          "high",
+          "high"
+        ],
+        "implicit_targets": [
+          {
+            "role": "primary",
+            "communicative_function": "Concede a valid concern before sharing a different view.",
+            "trigger_question": "How would you acknowledge their constraint before sharing your view?",
+            "skip_when": "Skip if no disagreement or constraint needs softening.",
+            "sentence_frame": "to be fair, [colleague] has been understaffed this sprint."
+          },
+          {
+            "role": "primary",
+            "communicative_function": "Use a shared fact to justify a proposed next step.",
+            "trigger_question": "How would you connect the constraint to a practical next step?",
+            "skip_when": "Skip if no shared fact supports a recommendation.",
+            "sentence_frame": "Given [premise], we should [action]"
+          },
+          {
+            "role": "opportunity",
+            "communicative_function": "Confirm both sides share the same understanding before ending.",
+            "trigger_question": "How would you confirm you both understand the decision?",
+            "skip_when": "Skip if the discussion has already ended or understanding is confirmed.",
+            "sentence_frame": "Let's make sure we're on the same page about [next step]."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "event": "request_timing",
+    "operation": "create_session",
+    "status_code": 201,
+    "request_id": "7aba6253fbc946178d43d0f0d9b5cde7",
+    "durations_ms": {
+      "create": 316.31,
+      "total": 318.69
+    }
+  },
+  {
+    "event": "request_timing",
+    "operation": "read_workspace",
+    "status_code": 200,
+    "request_id": "9e750334372f443a984fb2cf12cef60b",
+    "durations_ms": {
+      "workspace_session_read": 318.03,
+      "workspace_runtime_read": 307.68,
+      "total": 628.84
+    }
+  },
+  {
+    "event": "request_timing",
+    "operation": "retry_session",
+    "status_code": 201,
+    "request_id": "69a8017a8a464a08b9fe7cb007f7d77a",
+    "durations_ms": {
+      "create": 298.86,
+      "total": 301.61
+    }
+  },
+  {
+    "event": "request_timing",
+    "operation": "retry_after_edit",
+    "status_code": 201,
+    "request_id": "54031216d2be4ce3ae5eae936780920b",
+    "durations_ms": {
+      "create": 341.54,
+      "total": 343.2
+    }
+  },
+  {
+    "event": "request_timing",
+    "operation": "retry_after_delete",
+    "status_code": 201,
+    "request_id": "864d488c8d0d464090fa596c50209b3d",
+    "durations_ms": {
+      "create": 328.45,
+      "total": 330.32
+    }
+  },
+  {
+    "event": "session_frozen",
+    "session_id": "03041e46-313f-42f7-bb00-2caab635b166",
+    "metadata": true,
+    "stable_target_ids": true,
+    "stale_plan_check": "verified",
+    "support_level": "model_frame",
+    "support_idempotency": true,
+    "sentence_frames": true
+  },
+  {
+    "event": "runtime_support_verified",
+    "initial": "model_frame",
+    "current": {
+      "level": "no_hint",
+      "version": 1
+    },
+    "modeled_support": {
+      "level": "model_frame",
+      "version": 0
+    },
+    "stale_version_rejected": true,
+    "change_idempotent": true,
+    "transport": "direct_runtime_cas_fixture",
+    "provider_socket_opened": false
+  },
+  {
+    "event": "frozen_plan_defaults_normalized",
+    "absent_optional_parent_links": 3,
+    "semantic_plan_unchanged": true,
+    "persisted_source_rewritten": false
+  },
+  {
+    "event": "support_feedback_frozen",
+    "initial_support": true,
+    "current_support": true,
+    "support_history": true,
+    "policy_support_version": true,
+    "model_quote": true,
+    "transfer_question_quote": true,
+    "possible_audio_certainty": true,
+    "fixture_receipts_only": true
+  },
+  {
+    "event": "feedback_frozen",
+    "job_id": "b111fba7-e33b-438f-a33b-f7ebd32bbe77",
+    "status": "queued",
+    "reflected": true,
+    "presented": true,
+    "skipped": true,
+    "exposure": true,
+    "private_fields_excluded": true,
+    "reliable_user_turns": 0,
+    "feedback_model_called": false
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": true,
+    "model_requests": 1,
+    "provider_mode": "live",
+    "qualification": "planning_and_persistence_only"
+  }
+]

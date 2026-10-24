@@ -18,7 +18,7 @@ Move straight from saved expressions to a conversation, or practice shadowing fi
 
 ## Tech stack
 
-Next.js 15 · React 19 · TypeScript · FastAPI · Supabase · Clerk · Upstash Redis · DeepSeek · Gemini Live
+Next.js 15 · React 19 · TypeScript · FastAPI · Supabase · Clerk · Upstash Redis · Doubao text · Gemini Live
 
 The monorepo uses pnpm and Turborepo. Server-side shadowing analysis uses faster-whisper, MFA, Silero VAD, and Praat.
 
@@ -82,9 +82,11 @@ Add the relevant settings to `apps/api/.env`. See the [API environment template]
 | Feature | Additional setup |
 | --- | --- |
 | Persistent data and practice history | Configure your own Supabase project, apply the migrations in `supabase/migrations` in order, and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` |
-| Real video analysis | With persistence configured, set `PROCESSING_MODE=queue`, the Upstash REST URL / token, and `DEEPSEEK_API_KEY`; run `pnpm --filter @libitu/api setup:punctuation` to prepare the subtitle punctuation model |
-| AI voice conversations and session reports | With persistence configured, set `GEMINI_API_KEY` and `DEEPSEEK_API_KEY`, and keep `SPEAKING_REALTIME_PROVIDER=gemini`; check that your provider account has access to the configured models |
+| Real video analysis | With persistence configured, set `PROCESSING_MODE=queue`, the Upstash REST URL / token, and `ARK_API_KEY`; run `pnpm --filter @libitu/api setup:punctuation` to prepare the subtitle punctuation model |
+| AI voice conversations and session reports | With persistence configured, set `GEMINI_API_KEY` and `ARK_API_KEY`, and keep `SPEAKING_REALTIME_PROVIDER=gemini`; check that your provider account has access to the configured models |
 | Server-side shadowing analysis | With persistence configured, install FFmpeg and MFA, prepare the ASR model, acoustic model, and dictionary, and configure their paths and checksums; see the [acoustic runtime guide](apps/api/deploy/README.md) |
+
+Text analysis uses `ARK_API_KEY` and defaults to `ARK_MODEL=doubao-seed-2-1-lite-260915`. Voice retains its separate `GEMINI_API_KEY` and `GEMINI_LIVE_MODEL`.
 
 For video analysis or conversations, start the workers you need alongside the Web app and API:
 

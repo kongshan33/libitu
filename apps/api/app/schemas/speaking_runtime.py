@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.speaking import SpeakingSession
+from app.schemas.speaking import SpeakingSession, SupportLevel
 
 
 class RealtimeStart(BaseModel):
@@ -72,7 +72,7 @@ class TeachingPolicyView(BaseModel):
     source_revision: int
     learning_version: int
     target_item_id: str | None
-    action: Literal["continue_naturally", "implicit_elicitation", "explicit_hint", "move_on"]
+    action: Literal["continue_naturally", "implicit_elicitation", "explicit_hint", "model_then_transfer", "move_on"]
     status: Literal["pending", "applied", "expired"]
     response_id: str | None = None
 
@@ -94,6 +94,33 @@ class SpeakingHelpCard(BaseModel):
     error: str | None = None
 
 
+class SpeakingOpportunity(BaseModel):
+    session_item_id: str
+    role: Literal["primary", "opportunity"]
+    status: Literal["planned", "offered", "used", "skipped"]
+    skipped_reason: str | None = None
+    skipped_at: str | None = None
+    sent: bool = False
+    bound: bool = False
+    reflected: bool = False
+    presented: bool = False
+    last_response_id: str | None = None
+
+
+class SupportView(BaseModel):
+    level: SupportLevel
+    version: int = Field(ge=0)
+
+
+class DemonstrationView(BaseModel):
+    target_item_id: str
+    message_id: str
+    revision: int = Field(ge=1)
+    start: int = Field(ge=0)
+    end: int = Field(gt=0)
+    quote: str
+
+
 class SpeakingWorkspace(BaseModel):
     session: SpeakingSession
     version: int
@@ -105,3 +132,6 @@ class SpeakingWorkspace(BaseModel):
     analysis_status: Literal["idle", "pending", "ready", "unavailable"] = "idle"
     hint: str | None = None
     help: SpeakingHelpCard | None = None
+    opportunities: list[SpeakingOpportunity] = Field(default_factory=list)
+    support: SupportView | None = None
+    demonstrations: list[DemonstrationView] = Field(default_factory=list)

@@ -36,7 +36,7 @@ def readiness_check() -> dict[str, str]:
         )
     if (
         heartbeat["analysis_version"] != settings.analysis_version
-        or heartbeat["model"] != settings.deepseek_model
+        or heartbeat["model"] != settings.ark_model
     ):
         raise HTTPException(
             status_code=503,
@@ -45,7 +45,7 @@ def readiness_check() -> dict[str, str]:
                 "worker": "stale",
                 "expected_analysis_version": settings.analysis_version,
                 "worker_analysis_version": heartbeat["analysis_version"],
-                "expected_model": settings.deepseek_model,
+                "expected_model": settings.ark_model,
                 "worker_model": heartbeat["model"],
             },
         )

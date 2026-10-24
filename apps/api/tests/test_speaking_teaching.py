@@ -15,7 +15,7 @@ from app.services import speaking_teaching as teaching
 @pytest.fixture(autouse=True)
 def no_paid_analysis(monkeypatch):
     monkeypatch.setattr(teaching, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key=None, deepseek_base_url="https://analyzer.invalid", deepseek_model="fixture-model",
+        ark_api_key=None, ark_base_url="https://analyzer.invalid", ark_model="fixture-model",
     ))
 
 
@@ -280,8 +280,10 @@ def test_prompt_provenance_requires_visual_exposure_and_does_not_use_application
     assert seen["controller"]["automatic_attempts"] == {}
 
 
-def test_automatic_prompt_cap_and_cooldown_are_separate_from_help_exposure(monkeypatch):
+@pytest.mark.parametrize("support_level", [None, "model_frame", "model_label", "label_only", "no_hint"])
+def test_automatic_prompt_cap_and_cooldown_are_separate_from_help_exposure(monkeypatch, support_level):
     session = mission(("chunk", "to be fair"))
+    session = session.model_copy(update={"support_level": support_level})
     model(monkeypatch, recommendation=recommendation(session.items[0]))
     history, state = [], {}
     applied = []
@@ -290,7 +292,7 @@ def test_automatic_prompt_cap_and_cooldown_are_separate_from_help_exposure(monke
         history.append(message)
         state = analyze(session, message, history, state)
         policy = state["policy"]
-        if policy["action"] == "implicit_elicitation":
+        if policy["action"] in {"implicit_elicitation", "model_then_transfer"}:
             applied.append(turn)
             policy.update(status="applied", response_id=f"r-{turn}")
             state["controller"]["automatic_attempts"][str(session.items[0].id)] = len(applied)
@@ -433,7 +435,7 @@ def test_reconcile_rejects_changed_transcript_revision_without_removing_newer_ev
 def transport(monkeypatch, handler):
     original = httpx.AsyncClient
     monkeypatch.setattr(teaching, "get_settings", lambda: SimpleNamespace(
-        deepseek_api_key="test-only", deepseek_base_url="https://analyzer.invalid", deepseek_model="fixture-model"))
+        ark_api_key="test-only", ark_base_url="https://analyzer.invalid", ark_model="fixture-model"))
     monkeypatch.setattr(teaching.httpx, "AsyncClient", lambda **kwargs: original(**kwargs, transport=httpx.MockTransport(handler)))
 
 

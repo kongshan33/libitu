@@ -6,10 +6,18 @@ meta:
   version: 1.1
   status: active
   audience: product, design, engineering, coding agents
-  updated: 2026-09-30
+  updated: 2026-10-20
 ```
 
 This specification defines the current Libitu MVP product and interaction model. Use it for product behavior and user experience. Use `MVP_SYSTEM_DESIGN.md` for system boundaries, `BACKEND_SYSTEM_DESIGN.md` for API implementation, and `DESIGN.md` for visual direction.
+
+## Current AI providers — 2026-10-23
+
+Doubao text analysis replaces DeepSeek for new blueprint/selection, Mission
+planning/teaching/help and assessment requests. Gemini Live continues to handle
+real-time conversations. This provider change preserves interaction behavior,
+source/evidence validation and visible failure/retry states. Existing saved results
+remain available; software verification does not establish model-quality parity.
 
 ## Stage 2 Quick and Review — 2026-10-17
 
@@ -192,7 +200,7 @@ For a completed YouTube cache with no usable word timing, run a separate recover
 - When auto-scroll is enabled, align the active line only while the video is playing. Pausing or ending playback suspends transcript alignment, but the auto-scroll control remains available so the learner can change the setting before resuming. Manual transcript scrolling temporarily pauses automatic alignment so the learner can read; the auto-scroll control still toggles the setting in this paused state, and turning it back on resumes alignment immediately when playback is active. Explicit timestamp or logic-node navigation resumes alignment once playback starts.
 - Keep Logic Flow aligned to playback time. Clicking a transcript row seeks the video and immediately activates the latest logic node at or before that timestamp; normal playback updates the same logic selection as the active transcript advances.
 - Remove square-bracket caption cues (including their contents), stray square brackets and repeated angle speaker markers (`>>`, `<<`) from subtitle text. Clean cached display text before corpus annotation too; preserve normal spoken punctuation and source timing.
-- Before punctuation and analysis, remove only standalone English filler tokens `um`, `uh`, `er`, and `ah`; never remove those character sequences inside another word. Use this same normalized transcript for DeepSeek, evidence validation, and display.
+- Before punctuation and analysis, remove only standalone English filler tokens `um`, `uh`, `er`, and `ah`; never remove those character sequences inside another word. Use this same normalized transcript for Doubao text analysis, evidence validation, and display.
 - Preserve reliable source sentence punctuation without running the punctuation model. For captions that need punctuation, send a punctuation-free copy to the local model, attach its sentence marks to the original source words without accepting model casing, then deterministically normalize duplicate or conflicting marks and high-confidence opening discourse markers on every path.
 - Merge caption continuations and conservatively repair incomplete punctuation-model candidates using local syntax evidence. Stage 1 and Stage 2 share one finalized sentence sequence; complete long sentences remain intact, with no child practice groups or length-based hard sentence cuts. Processing windows may cross sentence boundaries without changing the displayed units.
 - Keep independent sentences separate even when they share one source caption timestamp. Use stable sentence IDs for selection and caption-interpolated start/end metadata for approximate navigation. Confirmed streaming rows cannot be changed by later batches; hold uncertain tails for lookahead and label unresolved end-of-source fragments honestly in metadata.
@@ -413,6 +421,33 @@ Deleting a corpus item must not delete its source content or old session transcr
 
 ## Speaking loadout
 
+2026-10-20 P0/P1 supersedes the setup order and default target budget below for new
+Missions: choose language first, assign one to three primary targets and up to two
+opportunity targets, then click Start mission. This action generates one
+matching scene if needed, accepts it when suitable for every primary target, saves
+the Mission and opens it. Show preparation and saving progress. Reuse a valid
+selected scene or matching cached plan; retry an uncertain creation with its exact
+saved request before planning again. Successful creation confirmation clears only
+the pending request before navigation, retaining the setup so returning after End
+can start a new Mission. Optional Choose a scene myself generates two scenes for
+comparison and selection. Changes to difficulty,
+feedback, logic template or support reuse the scene; changed language, roles or
+scene preferences require a new plan. Structures share the target budget. Preserve old drafts and sessions without
+silent truncation. See [the Mission planning contract](STAGE_THREE_FOUR_MISSION_PLAN.md)
+for scenario fit, immutable plans, opportunity dispatch, skip/restore and reporting.
+
+Recommend beginning with two primary targets and zero or one opportunity target
+that serve the same communication task with a compatible tone; a single primary
+target is also valid. This recommendation does not reduce the permitted budget.
+System generation failures preserve selections and offer recovery without blaming
+the learner's choices. Locatable generated-content errors permit one field repair
+inside the existing model time budget. When validated scenes have low or unknown
+primary fit, name one scene and show the affected targets' actual fit reasons.
+Offer explicit role/removal changes or scene preferences, preserving at least one
+primary and the opportunity limit. Selection changes are explicit and invalidate
+the old plan; a changed selection is planned only after the learner presses Start
+mission again.
+
 The loadout limits active language so the learner can focus during role-play.
 
 ### Speaking setup fields
@@ -420,6 +455,7 @@ The loadout limits active language so the learner can focus during role-play.
 - Scenario type: workplace or everyday life
 - Specific goal stated as an outcome
 - Difficulty
+- Support: model plus frame, model plus label, label only, or no hint; independent of difficulty and manually chosen
 - Feedback level
 - Optional logic template
 - Up to three structures
@@ -431,7 +467,40 @@ Anonymous learners can keep a browser-local draft. On login, the draft binds to 
 
 ## AI role-play
 
-The role-play keeps the scenario and selected language visible. The AI stays in character and creates natural opportunities to use the loadout.
+Planned Missions use their frozen roles and scene. Starting with the third
+substantive user turn, suitable unused primary targets receive bounded scheduling
+priority. P2 provides four manual support levels. New drafts default to
+`model_frame`; absent/null settings preserve legacy behavior. The two modeling
+levels use a distinct `model_then_transfer` strategy: one natural target use in
+the AI's own response, then a question inviting different learner content.
+`label_only` and `no_hint` retain learner-directed implicit elicitation without
+demonstrating target wording. Track actual reflection and presentation
+separately; missing delivery is not learner failure. Visible wording, frames and
+examples count as session-scoped assistance. No automatic mastery-based level
+change is implemented.
+
+P3 report review can suggest a target-framed rewrite of the learner's own reply to
+a confirmed presented opportunity. Suggestions are separately validated and never
+count as uses. Learners can prepare a linked second round with changed details or
+swapped roles, explicitly choose support, and compare existing reports factually.
+P4 can suggest one level less support after each primary target has reliable
+independent evidence in three Missions, two UTC practice dates and two scene families.
+Applying that suggestion remains explicit; older or incomplete evidence cannot imply
+mastery. See [the Mission contract](STAGE_THREE_FOUR_MISSION_PLAN.md).
+
+The role-play keeps the scenario visible. Target wording follows the chosen
+support level: server-owned frame plus label, label, or no proactive wording.
+Old plans without a frame state its absence and offer requested help. Verified
+demonstration highlights are tied to actual assistant message revisions and
+server-derived UTF-16 spans; no-hint hides these highlights. The AI stays in
+character and creates opportunities to use the loadout. Naturalness and
+different-content transfer remain advisory judgments, not proven learning effects.
+
+Learners can change support manually between replies. The initial setting is
+frozen with the session and starts at version 0; runtime changes use versioned CAS
+and history. Active speech, reply/playback or a sent control prevents a change
+until the boundary is safe. A stale version prompts review/retry. Reducing support
+does not erase earlier assistance or historical transcript wording.
 
 Each turn response can include:
 
@@ -449,9 +518,17 @@ Teaching observation begins with each finalized learner utterance, while the fir
 
 Implicit teaching asks the learner to perform the relevant communicative act in their own words. The AI creates that opportunity with a brief contextual question; it should not supply the target expression, sentence starter or completed answer. Explicitly requested usage and examples remain available separately. Strategy delivery and actual compliance are evaluated as different facts.
 
-Voice and Chat share a progressive help card: direction, expression usage, then a contextual example only when requested. Explicit help is available immediately and outside automatic teaching budgets. Automatic direction appears only after the AI's actual reply is assessed as providing the intended opportunity; it should not interrupt a learner's current speech or typed draft. Generated help is not counted as seen until its relevant level is visibly presented. Viewing the target/example, or receiving that expression in an AI reply, keeps later use assisted within that Mission; overlapping or uncertain presentation must not be labeled independent mastery. See [teaching behavior and verification boundaries](STAGE_FOUR_TEACHING_CONTROL.md).
+Voice and Chat share requested help: direction, expression usage, then a contextual example only when requested. Explicit help is available immediately and outside automatic teaching budgets, including in no-hint mode. Every explicit support level disables automatic help cards. Legacy automatic direction appears only after the AI's actual reply is assessed as providing the intended opportunity; it should not interrupt a learner's current speech or typed draft. Generated help is not counted as seen until its relevant level is visibly presented. Viewing the target/example, or receiving that expression in an AI reply, keeps later use assisted within that Mission. Partial modeled audio records possible exposure and uncertain assistance; overlap or uncertainty must not become independent mastery. Stage 4/5 use the same conservative variant validation. See [teaching behavior and verification boundaries](STAGE_FOUR_TEACHING_CONTROL.md).
 
 ## Session feedback
+
+For planned Missions, version 2 reports assess primary-target coverage separately
+from opportunity-target use and AI opportunity delivery. Skipped targets are
+excluded; unoffered targets do not count as learner failures. A complete percentage
+requires an assessable opportunity or spontaneous appropriate use for every
+remaining primary target. Preserve session-scoped wording assistance and uncertain
+presentation timing through the frozen report. Existing reports retain their
+original versions and results.
 
 The first release uses four dimensions:
 

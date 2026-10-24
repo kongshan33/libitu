@@ -1,0 +1,52 @@
+{
+  "fixture": "synthetic_review_deadline",
+  "synthetic": true,
+  "database_calls": 0,
+  "rubric_version": "speaking-rubric-v2",
+  "analysis_version": "speaking-feedback-v3",
+  "evidence_contract_version": "speaking-evidence-v3",
+  "provider": {
+    "request_count": 1,
+    "diagnose_extra_keys": true,
+    "http_status": 200,
+    "usage": {
+      "prompt_tokens": 3445,
+      "completion_tokens": 863,
+      "total_tokens": 4308,
+      "prompt_cache_hit_tokens": 3200,
+      "prompt_cache_miss_tokens": 245
+    },
+    "finish_reason": "stop",
+    "canonicalized_empty_notes": 3,
+    "assessment_schema_valid": true,
+    "validation_checks": {
+      "reviewed_all_users": true,
+      "dimension_ids_exact": true,
+      "criterion_ids_exact": true,
+      "rating_references_valid": true,
+      "item_ids_exact": true,
+      "suggestions_list": true,
+      "suggestions": [
+        {
+          "schema_valid": true,
+          "candidate_match": true,
+          "reference_valid": true,
+          "full_user_quote": true,
+          "content_preserved": true
+        }
+      ],
+      "suggestion_count": 1
+    },
+    "elapsed_ms": 3876.2
+  },
+  "status": "ready",
+  "missed_opportunities_status": "ready",
+  "missed_opportunities_count": 1,
+  "assessed_user_turns": 1,
+  "used_primary_targets": 0,
+  "item_statuses": [
+    "not_observed"
+  ],
+  "provider_assessment_rejected": false,
+  "source_unchanged": true
+}

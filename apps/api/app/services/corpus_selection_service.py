@@ -1,7 +1,7 @@
 import re
 
-from app.integrations.deepseek import AnalysisProviderError
-from app.integrations.deepseek_selection import generate_selection_analysis
+from app.integrations.ark_analysis import AnalysisProviderError
+from app.integrations.ark_selection import generate_selection_analysis
 from app.schemas.corpus import (
     CorpusReusablePattern,
     CorpusSelectionAnalysis,

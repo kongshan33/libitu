@@ -7,7 +7,7 @@ from threading import Event
 
 from app.config import get_settings
 from app.integrations.speaking_feedback_repository import get_feedback_store
-from app.schemas.speaking_feedback import ANALYSIS_VERSION, RUBRIC_VERSION, FeedbackResult
+from app.schemas.speaking_feedback import SUPPORTED_REPORT_VERSIONS, FeedbackResult
 from app.services.speaking_assessment import INPUT_LIMIT_NOTICE, PROVIDER_UNAVAILABLE_NOTICE, assess_feedback
 
 log = logging.getLogger(__name__)
@@ -25,10 +25,12 @@ async def process_job(repository, job: dict) -> bool:
     status = "failed"
     error_code = None
     try:
-        if job["analysis_version"] != ANALYSIS_VERSION or job["rubric_version"] != RUBRIC_VERSION:
+        if (job["rubric_version"], job["analysis_version"]) not in SUPPORTED_REPORT_VERSIONS:
             error_code = "worker_version_mismatch"
         else:
-            status, assessed = await asyncio.wait_for(assess_feedback(job["source"]), DEADLINE_SECONDS)
+            status, assessed = await asyncio.wait_for(
+                assess_feedback(job["source"], analysis_version=job["analysis_version"]), DEADLINE_SECONDS,
+            )
             if status not in ("ready", "partial", "insufficient_data"):
                 raise ValueError("Unexpected assessment state")
             result = FeedbackResult.model_validate(assessed).model_dump(mode="json")

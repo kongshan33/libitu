@@ -18,7 +18,7 @@ Libitu 是一个 AI 英语学习应用，将 YouTube 视频中的真实表达转
 
 ## 技术栈
 
-Next.js 15 · React 19 · TypeScript · FastAPI · Supabase · Clerk · Upstash Redis · DeepSeek · Gemini Live
+Next.js 15 · React 19 · TypeScript · FastAPI · Supabase · Clerk · Upstash Redis · Doubao text · Gemini Live
 
 项目使用 pnpm + Turborepo 管理；服务端跟读分析使用 faster-whisper、MFA、Silero VAD 和 Praat。
 
@@ -82,9 +82,11 @@ pnpm --filter @libitu/web dev
 | 功能 | 额外配置 |
 | --- | --- |
 | 持久化数据与练习记录 | 配置自己的 Supabase 项目，按顺序应用 `supabase/migrations` 中的迁移，填写 `SUPABASE_URL` 和 `SUPABASE_SECRET_KEY` |
-| 真实视频分析 | 在持久化配置基础上设置 `PROCESSING_MODE=queue`，填写 Upstash REST URL / Token 和 `DEEPSEEK_API_KEY`；运行 `pnpm --filter @libitu/api setup:punctuation` 准备字幕标点模型 |
-| AI 语音对话与会话报告 | 在持久化配置基础上填写 `GEMINI_API_KEY` 和 `DEEPSEEK_API_KEY`，保留 `SPEAKING_REALTIME_PROVIDER=gemini`；确认所配置模型在自己的服务账号中可用 |
+| 真实视频分析 | 在持久化配置基础上设置 `PROCESSING_MODE=queue`，填写 Upstash REST URL / Token 和 `ARK_API_KEY`；运行 `pnpm --filter @libitu/api setup:punctuation` 准备字幕标点模型 |
+| AI 语音对话与会话报告 | 在持久化配置基础上填写 `GEMINI_API_KEY` 和 `ARK_API_KEY`，保留 `SPEAKING_REALTIME_PROVIDER=gemini`；确认所配置模型在自己的服务账号中可用 |
 | 服务端跟读分析 | 在持久化配置基础上安装 FFmpeg、MFA 并准备 ASR、声学模型与词典；配置模型路径和校验值，见 [声学运行说明](apps/api/deploy/README.md) |
+
+文本分析使用 `ARK_API_KEY`，默认模型为 `ARK_MODEL=doubao-seed-2-1-lite-260915`。语音继续使用独立的 `GEMINI_API_KEY` 和 `GEMINI_LIVE_MODEL`。
 
 只启用视频分析或对话时，可在 Web/API 之外按需启动 worker：
 

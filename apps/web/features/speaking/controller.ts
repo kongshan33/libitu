@@ -1,6 +1,7 @@
-import type { SpeakingClientEvent, SpeakingHelpLevel, SpeakingServerEvent, SpeakingWorkspace } from "@libitu/types/speaking";
+import type { SpeakingClientEvent, SpeakingHelpLevel, SpeakingServerEvent, SpeakingSupportLevel, SpeakingWorkspace } from "@libitu/types/speaking";
 import { ConversationApiError, runtimeSocketUrl, type ConversationApi } from "./api.ts";
 import { ConversationAudio } from "./audio.ts";
+import { currentSupport, isSupportLevel } from "./support.ts";
 
 export type ConnectionState = "loading" | "idle" | "connecting" | "connected" | "disconnected" | "paused" | "ended" | "error";
 export type ConversationState = {
@@ -8,8 +9,10 @@ export type ConversationState = {
   microphone: boolean; microphoneBusy: boolean; userSpeaking: boolean; error: string | null; conflict: boolean; busy: boolean;
   partials: Record<string, { role: "user" | "assistant"; text: string }>;
   pending: { id: string; text: string; status: "sending" | "unconfirmed" } | null;
+  supportPending: { requestId: string; level: SpeakingSupportLevel; expectedVersion: number } | null;
+  supportError: string | null;
 };
-export const initialConversationState = (): ConversationState => ({ workspace: null, connection: "loading", phase: "listening", microphone: false, microphoneBusy: false, userSpeaking: false, error: null, conflict: false, busy: false, partials: {}, pending: null });
+export const initialConversationState = (): ConversationState => ({ workspace: null, connection: "loading", phase: "listening", microphone: false, microphoneBusy: false, userSpeaking: false, error: null, conflict: false, busy: false, partials: {}, pending: null, supportPending: null, supportError: null });
 type AudioPort = Pick<ConversationAudio, "prepare" | "enableMicrophone" | "disableMicrophone" | "append" | "report" | "clear" | "dispose">;
 type Dependencies = {
   socket?: (url: string) => WebSocket;
@@ -29,10 +32,14 @@ export class ConversationController {
   private readyTimer: ReturnType<typeof setTimeout> | null = null;
   private acknowledgementTimer: ReturnType<typeof setTimeout> | null = null;
   private hintTimer: ReturnType<typeof setTimeout> | null = null;
+  private supportTimer: ReturnType<typeof setTimeout> | null = null;
+  private unconfirmedSupport: ConversationState["supportPending"] = null;
   private hintRequest: string | null = null;
   private retiredHints = new Set<string>();
   private shownHints = new Set<string>();
   private shownMessages = new Set<string>();
+  private shownTargets = new Set<string>();
+  private visibleTargets = new Set<string>();
   private lastPong = 0;
   private connecting: Promise<boolean> | null = null;
   private finishConnection: ((value: boolean) => void) | null = null;
@@ -46,8 +53,45 @@ export class ConversationController {
   private accept(workspace: SpeakingWorkspace): boolean {
     if (workspace.session.user_id !== this.owner || workspace.session.id !== this.sessionId || !Number.isSafeInteger(workspace.version)) return false;
     if (this.state.workspace && workspace.version < this.state.workspace.version) return false;
-    const previousHelp = this.state.workspace?.help;
-    const incomingHelp = workspace.help;
+    const previousSupport = this.state.workspace ? currentSupport(this.state.workspace) : null;
+    let support = currentSupport(workspace);
+    if (previousSupport && (!support || support.version < previousSupport.version)) {
+      workspace = { ...workspace, support: previousSupport };
+      support = previousSupport;
+    }
+    const supportChanged = !!this.state.workspace && (support?.level !== previousSupport?.level || support?.version !== previousSupport?.version);
+    let previousHelp = this.state.workspace?.help;
+    let incomingHelp = workspace.help;
+    if (supportChanged) {
+      if (previousHelp) this.retiredHints.add(previousHelp.id);
+      if (this.hintRequest) this.retiredHints.add(this.hintRequest);
+      this.hintRequest = null;
+      if (this.hintTimer) clearTimeout(this.hintTimer);
+      this.hintTimer = null;
+      previousHelp = null;
+    }
+    if (support && incomingHelp?.source === "automatic") {
+      this.retiredHints.add(incomingHelp.id);
+      incomingHelp = null;
+      workspace = { ...workspace, help: null };
+    }
+    const skipped = new Set(workspace.opportunities?.filter(value => value.status === "skipped").map(value => value.session_item_id));
+    // A confirmed skip cancels this target's help, including a request whose
+    // provider result is still in flight. Do not revive it as a stale snapshot.
+    if (previousHelp?.target_item_id && skipped.has(previousHelp.target_item_id)) {
+      this.retiredHints.add(previousHelp.id);
+      if (this.hintRequest === previousHelp.id) {
+        this.hintRequest = null;
+        if (this.hintTimer) clearTimeout(this.hintTimer);
+        this.hintTimer = null;
+      }
+      previousHelp = null;
+    }
+    if (incomingHelp?.target_item_id && skipped.has(incomingHelp.target_item_id)) {
+      this.retiredHints.add(incomingHelp.id);
+      incomingHelp = null;
+      workspace = { ...workspace, help: null };
+    }
     // A late hint result must not replace a newer request, even if another
     // runtime mutation has advanced the enclosing snapshot version.
     if ((this.hintRequest && incomingHelp?.id !== this.hintRequest)
@@ -63,7 +107,16 @@ export class ConversationController {
     const partials = Object.fromEntries(Object.entries(this.state.partials).filter(([id]) => !finalized.has(id)));
     const pending = this.state.pending && !workspace.messages.some(message => message.client_turn_id === this.state.pending?.id) ? this.state.pending : null;
     if (!pending && this.acknowledgementTimer) { clearTimeout(this.acknowledgementTimer); this.acknowledgementTimer = null; }
-    this.patch({ workspace, partials, pending }); return true;
+    const supportRequest = this.state.supportPending ?? this.unconfirmedSupport;
+    const supportConfirmed = !!supportRequest && !!support && support.version > supportRequest.expectedVersion;
+    if (supportConfirmed) {
+      if (this.supportTimer) clearTimeout(this.supportTimer);
+      this.supportTimer = null; this.unconfirmedSupport = null;
+    }
+    this.patch({ workspace, partials, pending, ...(supportConfirmed ? {
+      supportPending: null,
+      supportError: support?.level === supportRequest?.level ? null : "Support changed elsewhere. Review the current level before choosing again."
+    } : {}) }); return true;
   }
   async load(): Promise<void> {
     const epoch = this.epoch;
@@ -136,6 +189,10 @@ export class ConversationController {
             if (this.readyTimer) clearTimeout(this.readyTimer); this.readyTimer = null;
             this.lastPong = Date.now();
             this.patch({ connection: "connected", phase: "listening", microphone, microphoneBusy: !microphoneSettled });
+            // Wording can be viewed before connecting. Deliver those actual
+            // exposures before the first text turn is allowed to submit.
+            for (const id of this.visibleTargets) this.targetShown(id);
+            if (!this.current(epoch)) { finish(false); return; }
             // Defer the opening until voice permission settles, without blocking
             // ready/text input on the browser's permission dialog.
             if ((microphoneSettled && !this.send({ type: "microphone", enabled: microphone })) || !this.current(epoch)) { finish(false); return; }
@@ -181,7 +238,18 @@ export class ConversationController {
       return;
     }
     if (event.type === "audio.clear") { this.clearPlayback(); this.awaitingAudioClear = false; return; }
-    if (event.type === "error") { this.patch({ error: event.message.slice(0, 300), pending: this.state.pending ? { ...this.state.pending, status: "unconfirmed" } : null }); if (!event.retryable) this.disconnect(event.message.slice(0, 300)); }
+    if (event.type === "error") {
+      if (event.code === "support_changed" || event.code === "support_busy") {
+        if (!this.state.supportPending || event.request_id && event.request_id !== this.state.supportPending.requestId) return;
+        if (this.supportTimer) clearTimeout(this.supportTimer);
+        this.supportTimer = null; this.unconfirmedSupport = null;
+        this.patch({ supportPending: null, supportError: event.code === "support_busy"
+          ? "Wait for the current reply to finish, then choose support again."
+          : "Support changed elsewhere. Review the current level before choosing again." });
+        return;
+      }
+      this.patch({ error: event.message.slice(0, 300), pending: this.state.pending ? { ...this.state.pending, status: "unconfirmed" } : null }); if (!event.retryable) this.disconnect(event.message.slice(0, 300));
+    }
   }
   async setMicrophone(enabled: boolean): Promise<void> {
     if (this.state.connection !== "connected" || this.state.microphoneBusy) return;
@@ -220,8 +288,10 @@ export class ConversationController {
   hint(level: "usage" | "example" = "usage", targetItemId?: string): void {
     const workspace = this.state.workspace;
     if (!workspace || this.state.connection !== "connected") return;
+    if (!targetItemId && workspace.session.mission_plan && workspace.opportunities?.length && workspace.opportunities.every(value => value.status === "skipped")) return;
     const target = targetItemId ? workspace.session.items.find(item => item.id === targetItemId) : workspace.session.items.find(item => item.id === workspace.help?.target_item_id);
     if (targetItemId && !target) return;
+    if (target && workspace.opportunities?.some(value => value.session_item_id === target.id && value.status === "skipped")) return;
     if (this.hintRequest === workspace.help?.id && workspace.help?.status === "loading" && workspace.help.level === level && workspace.help.target_item_id === (target?.id ?? null)) return;
     const id = this.uuid();
     if (!this.send({ type: "hint", request_id: id, level, ...(target?.id ? { target_item_id: target.id } : {}) })) return;
@@ -235,6 +305,43 @@ export class ConversationController {
       this.hintRequest = null; this.hintTimer = null;
       this.patch({ workspace: { ...this.state.workspace, help: { ...this.state.workspace.help, status: "unavailable", error: "The hint is taking longer than expected. Try again when ready." } } });
     }, 20_000);
+  }
+  skipTarget(targetItemId: string, reason = "Not applicable in this scene"): boolean {
+    const opportunity = this.state.workspace?.opportunities?.find(value => value.session_item_id === targetItemId);
+    if (!opportunity || opportunity.status === "skipped" || this.state.connection !== "connected") return false;
+    const trimmed = reason.trim();
+    if (!trimmed || trimmed.length > 200) return false;
+    return this.send({ type: "target.skip", target_item_id: targetItemId, reason: trimmed });
+  }
+  restoreTarget(targetItemId: string): boolean {
+    const opportunity = this.state.workspace?.opportunities?.find(value => value.session_item_id === targetItemId);
+    if (opportunity?.status !== "skipped" || this.state.connection !== "connected") return false;
+    return this.send({ type: "target.restore", target_item_id: targetItemId });
+  }
+  setSupport(level: SpeakingSupportLevel): boolean {
+    const workspace = this.state.workspace;
+    if (!workspace || this.state.connection !== "connected" || this.state.supportPending || !isSupportLevel(level)) return false;
+    const support = currentSupport(workspace);
+    if (support?.level === level) return false;
+    const pending = { requestId: this.uuid(), level, expectedVersion: support?.version ?? 0 };
+    if (!this.send({ type: "support.set", request_id: pending.requestId, level, expected_version: pending.expectedVersion })) return false;
+    this.unconfirmedSupport = null;
+    this.patch({ supportPending: pending, supportError: null });
+    this.supportTimer = setTimeout(() => {
+      if (this.state.supportPending?.requestId !== pending.requestId) return;
+      this.supportTimer = null;
+      this.unconfirmedSupport = pending;
+      this.patch({ supportPending: null, supportError: "The support change is not confirmed. Check your connection and choose again." });
+    }, 10_000);
+    return true;
+  }
+  targetShown(targetItemId: string): void {
+    const workspace = this.state.workspace;
+    if (!workspace || !(workspace.session.mission_plan?.targets.some(value => value.session_item_id === targetItemId)
+      || currentSupport(workspace) && workspace.session.items.some(value => value.id === targetItemId))) return;
+    this.visibleTargets.add(targetItemId);
+    if (this.state.connection !== "connected" || this.shownTargets.has(targetItemId)) return;
+    if (this.send({ type: "target.shown", target_item_id: targetItemId })) this.shownTargets.add(targetItemId);
   }
   private retireAutomaticHint(): void {
     const workspace = this.state.workspace;
@@ -289,8 +396,11 @@ export class ConversationController {
     this.playingResponse = null; this.suppressedResponses.clear(); this.awaitingAudioClear = false;
     if (this.hintTimer) clearTimeout(this.hintTimer);
     this.hintTimer = null; this.hintRequest = null;
-    this.retiredHints.clear(); this.shownHints.clear(); this.shownMessages.clear();
-    this.patch({ userSpeaking: false });
+    this.retiredHints.clear(); this.shownHints.clear(); this.shownMessages.clear(); this.shownTargets.clear();
+    if (this.supportTimer) clearTimeout(this.supportTimer);
+    this.supportTimer = null;
+    if (this.state.supportPending) this.unconfirmedSupport = this.state.supportPending;
+    this.patch({ userSpeaking: false, supportPending: null });
     if (this.heartbeat) clearInterval(this.heartbeat); if (this.boundary) clearInterval(this.boundary); if (this.readyTimer) clearTimeout(this.readyTimer); if (this.acknowledgementTimer) clearTimeout(this.acknowledgementTimer);
     this.acknowledgementTimer = null;
     this.heartbeat = null; this.boundary = null; this.readyTimer = null;

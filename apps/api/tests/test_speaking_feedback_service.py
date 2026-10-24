@@ -75,6 +75,23 @@ def test_report_projection_keeps_nulls_and_excludes_private_fields(mission):
     assert "PRIVATE" not in str(value)
 
 
+@pytest.mark.parametrize("initial,current,expected", [
+    (None, None, None), ("model_frame", None, "model_frame"),
+    ("model_frame", "no_hint", "no_hint"), ("no_hint", "label_only", "label_only"),
+    ("model_label", "invalid-level", "model_label"),
+])
+def test_effective_support_is_frozen_current_with_legacy_initial_fallback(mission, initial, current, expected):
+    session, sid, repo = mission
+    repo.saved["source"]["session"]["support_level"] = initial
+    if current is not None:
+        repo.saved["source"]["support"] = {"level": current, "version": 2}
+    # A later in-memory/session object edit is not the report's frozen setting.
+    session.support_level = "model_label"
+    report = service.read_feedback(session.user_id, sid)
+    assert report.effective_support_level == expected
+    assert report.session.support_level == initial
+
+
 def test_get_does_not_enqueue_and_post_forwards_only_explicit_retry(mission):
     _, sid, repo = mission
     with TestClient(app) as client:
@@ -149,7 +166,7 @@ def test_end_is_successful_when_enqueue_needs_recovery(mission, monkeypatch):
 
 def test_worker_reconciles_end_gap_and_publishes_validated_result(mission, monkeypatch):
     _, _, repo = mission
-    async def assess(source):
+    async def assess(source, **kwargs):
         return "partial", result()
     monkeypatch.setattr(worker, "assess_feedback", assess)
     assert asyncio.run(worker.run_once(repo))
@@ -162,16 +179,33 @@ def test_worker_reconciles_end_gap_and_publishes_validated_result(mission, monke
 def test_worker_stale_completion_cannot_publish(mission, monkeypatch):
     _, _, repo = mission
     repo.can_complete = False
-    async def assess(source):
+    async def assess(source, **kwargs):
         return "ready", result()
     monkeypatch.setattr(worker, "assess_feedback", assess)
     assert asyncio.run(worker.process_job(repo, repo.saved)) is False
 
 
+@pytest.mark.parametrize("rubric,version", [
+    ("speaking-rubric-v1", "speaking-feedback-v1"),
+    ("speaking-rubric-v2", "speaking-feedback-v2"),
+    ("speaking-rubric-v2", "speaking-feedback-v3"),
+])
+def test_worker_dispatches_the_saved_analysis_version_without_upgrading_old_jobs(mission, monkeypatch, rubric, version):
+    _, _, repo = mission
+    repo.saved.update(rubric_version=rubric, analysis_version=version)
+    seen = []
+    async def assess(source, *, analysis_version):
+        seen.append(analysis_version)
+        return "ready", result()
+    monkeypatch.setattr(worker, "assess_feedback", assess)
+    assert asyncio.run(worker.process_job(repo, repo.saved))
+    assert seen == [version] and repo.saved["analysis_version"] == version
+
+
 def test_worker_version_mismatch_never_calls_provider(mission, monkeypatch):
     _, _, repo = mission
     repo.saved["rubric_version"] = "future-rubric"
-    async def forbidden(*args):
+    async def forbidden(*args, **kwargs):
         pytest.fail("Version mismatch called provider")
     monkeypatch.setattr(worker, "assess_feedback", forbidden)
     asyncio.run(worker.process_job(repo, repo.saved))
@@ -180,7 +214,7 @@ def test_worker_version_mismatch_never_calls_provider(mission, monkeypatch):
 
 def test_worker_exception_is_sanitized(mission, monkeypatch, caplog):
     _, _, repo = mission
-    async def failed(*args):
+    async def failed(*args, **kwargs):
         raise RuntimeError("PRIVATE provider body and request headers")
     monkeypatch.setattr(worker, "assess_feedback", failed)
     asyncio.run(worker.process_job(repo, repo.saved))
@@ -190,7 +224,7 @@ def test_worker_exception_is_sanitized(mission, monkeypatch, caplog):
 
 def test_worker_has_total_deadline(mission, monkeypatch):
     _, _, repo = mission
-    async def hanging(*args):
+    async def hanging(*args, **kwargs):
         await asyncio.sleep(5)
     monkeypatch.setattr(worker, "assess_feedback", hanging)
     monkeypatch.setattr(worker, "DEADLINE_SECONDS", 0.005)
@@ -203,7 +237,7 @@ def test_failed_retry_preserves_previous_validated_report(mission, monkeypatch):
     previous = result()
     previous.dimensions[1].score = 50
     repo.saved["result"] = previous.model_dump(mode="json")
-    async def failed(*args):
+    async def failed(*args, **kwargs):
         raise TimeoutError
     monkeypatch.setattr(worker, "assess_feedback", failed)
     asyncio.run(worker.process_job(repo, repo.saved))

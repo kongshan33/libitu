@@ -110,6 +110,10 @@ export const shadowBlueprint = { id: shadowJob.blueprint_id, content_id: fixture
 export async function installLoadoutFixture(page, {
   origin, records = fixtureRecords, initialOwner = null, shadow = false, seedCorpus = true, sharedState
 } = {}) {
+  // Clerk's development middleware otherwise redirects document navigation to
+  // a real handshake before the synthetic React identity can hydrate. This
+  // device marker is not a session token: middleware remains signed out.
+  await page.context().addCookies([{ name: "__clerk_db_jwt", value: "synthetic-browser-device", url: origin }]);
   const state = sharedState ?? { errors: [], requests: [], corpusSaves: [], creates: [], sessionReads: [],
     cloud: new Map(), sessions: new Map(), failNextCreate: false, corpusGate: null, createGate: null,
     practiceGate: null, practiceRequests: [], practiceRows: new Map(), practiceCompleted: 0 };
@@ -168,6 +172,25 @@ export async function installLoadoutFixture(page, {
         cloud.set(key, row);
         return route.fulfill({ status: 201, json: row, headers });
       }
+      if (url.pathname === "/api/speaking/plans" && request.method() === "POST") {
+        const input = request.postDataJSON();
+        state.planRequests ??= []; state.plans ??= new Map();
+        state.planRequests.push({ owner, input });
+        const serial = state.planRequests.length;
+        const plan = { id: `20000000-0000-4000-8000-${String(serial).padStart(12, "0")}`, version: 1,
+          scenario_type: input.scenario_type, brief: input.brief, created_at: new Date().toISOString(),
+          candidates: Array.from({ length: input.candidate_count ?? 2 }, (_, index) => ({ id: `30000000-0000-4000-8000-${String(serial * 10 + index).padStart(12, "0")}`,
+            title: index ? "Agree on a team handoff" : "Plan a small launch", setting: "A short planning discussion with a colleague.",
+            goal: index ? "Agree on owners and next steps" : "Agree on a practical launch plan", user_role: "Project lead", ai_role: "Colleague",
+            register: "professional", targets: input.targets.map(target => ({ ...target, communicative_function: "Explain and align priorities",
+              fit: state.nextPlanFit ?? "high", fit_reason: "The decision calls for the communicative function of this target.",
+              trigger_question: "What would you recommend for our next step?", skip_when: "The conversation no longer needs this decision.", metadata_status: "partial",
+              sentence_frame: (() => { const item = [...state.cloud.get(owner).values()].find(row => row.id === target.corpus_item_id); return item.kind === "structure" ? item.text : `${item.text}, [your idea].`; })() })) })) };
+        state.plans.set(plan.id, { owner, plan });
+        if (state.planGate) await state.planGate;
+        if (state.failNextPlan) { state.failNextPlan = false; return route.fulfill({ status: 503, headers, json: { detail: "Scene generation temporarily unavailable." } }); }
+        return route.fulfill({ status: 201, headers, json: plan }).catch(() => {});
+      }
       if (url.pathname === "/api/speaking/sessions" && request.method() === "POST") {
         const input = request.postDataJSON();
         state.creates.push({ owner, input });
@@ -175,8 +198,17 @@ export async function installLoadoutFixture(page, {
         const rows = input.corpus_item_ids.map((id) => [...state.cloud.get(owner).values()].find((row) => row.id === id));
         assert.ok(rows.every(Boolean), "submission must use synchronized server IDs, never blueprint candidate IDs");
         assert.equal(new Set(input.corpus_item_ids).size, input.corpus_item_ids.length);
-        assert.ok(rows.filter((row) => row.kind === "structure").length <= 3);
-        assert.ok(rows.filter((row) => row.kind !== "structure").length <= 5);
+        const savedPlan = input.plan_id ? state.plans?.get(input.plan_id) : null;
+        const candidate = savedPlan?.plan.candidates.find(value => value.id === input.candidate_id);
+        if (input.plan_id) {
+          assert.equal(savedPlan?.owner, owner);
+          assert.ok(candidate);
+          assert.equal(input.goal, candidate.goal);
+          assert.deepEqual(input.corpus_item_ids, candidate.targets.map(target => target.corpus_item_id));
+        } else {
+          assert.ok(rows.filter((row) => row.kind === "structure").length <= 3);
+          assert.ok(rows.filter((row) => row.kind !== "structure").length <= 5);
+        }
         let session = [...state.sessions.values()].find((row) => row.client_id === input.client_id && row.user_id === owner);
         if (!session) {
           session = { ...input, id: `10000000-0000-4000-8000-${String(state.sessions.size + 1).padStart(12, "0")}`,
@@ -185,6 +217,8 @@ export async function installLoadoutFixture(page, {
             items: rows.map((row, ordinal) => ({ id: `snapshot-${ordinal}`, corpus_item_id: row.id, ordinal,
               kind: row.kind, text: row.text, meaning: row.meaning, tags: row.tags, slots: row.slots,
               source_title: row.source_locator.source_title })) };
+          if (candidate) session.mission_plan = { ...candidate, plan_id: input.plan_id, candidate_id: candidate.id, version: 1,
+            scenario_type: input.scenario_type, targets: candidate.targets.map((target, index) => ({ ...target, session_item_id: session.items[index].id })) };
           state.sessions.set(session.id, structuredClone(session));
         }
         if (state.createGate) await state.createGate;
@@ -192,13 +226,17 @@ export async function installLoadoutFixture(page, {
           state.failNextCreate = false;
           return route.fulfill({ status: 503, json: { detail: "Fixture connection interrupted. Please retry." }, headers });
         }
-        return route.fulfill({ status: 201, json: session, headers });
+        return route.fulfill({ status: 201, json: state.createResponseTransform ? state.createResponseTransform(structuredClone(session)) : session, headers });
       }
       const match = url.pathname.match(/^\/api\/speaking\/sessions\/([^/]+)(\/workspace)?$/);
       if (match && request.method() === "GET") {
         state.sessionReads.push({ owner, id: match[1] });
         const session = state.sessions.get(match[1]);
-        const result = match[2] ? { session, version: 0, runtime: null, messages: [], evidence: [], learning: [], policy: null, analysis_status: "idle", hint: null } : session;
+        state.workspaces ??= new Map();
+        if (session && !state.workspaces.has(session.id)) state.workspaces.set(session.id, { session, version: 0, runtime: null, messages: [], evidence: [], learning: [], policy: null, analysis_status: "idle", hint: null,
+          support: session.support_level ? { level: session.support_level, version: 0 } : null, demonstrations: [],
+          opportunities: session.mission_plan?.targets.map(target => ({ session_item_id: target.session_item_id, role: target.role, status: "planned", skipped_reason: null, skipped_at: null, sent: false, bound: false, reflected: false, presented: false, last_response_id: null })) ?? [] });
+        const result = match[2] ? state.workspaces.get(match[1]) : session;
         return route.fulfill(session?.user_id === owner ? { json: result, headers }
           : { status: 404, json: { detail: "Session not found." }, headers });
       }

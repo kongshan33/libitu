@@ -53,7 +53,7 @@ def gemini_configuration(settings: Settings, session: SpeakingSession) -> dict:
             "maxOutputTokens": settings.speaking_max_output_tokens,
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": settings.gemini_live_voice}}},
         },
-        # DeepSeek owns selected wording. Priming the voice partner with the
+        # The text analyzer owns selected wording. Priming the voice partner with the
         # answer itself encourages it to demonstrate rather than elicit it.
         "systemInstruction": {"parts": [{"text": role_instructions(session, include_language_targets=False)}]},
         # Defaults are verbatim; do not bias ASR with equipped language, which

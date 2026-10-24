@@ -1,0 +1,41 @@
+{
+  "verified_on": "2026-10-20",
+  "method": "Supabase MCP exact-owner read after script cleanup",
+  "owners": [
+    {
+      "owner": "libitu-planning-smoke-1c55a6e2a7bc400ab8536320d7b82575",
+      "profiles": 0,
+      "corpus_items": 0,
+      "plans": 0,
+      "sessions": 0
+    },
+    {
+      "owner": "libitu-planning-smoke-65f3b73a28644b619413701e3b060df2",
+      "profiles": 0,
+      "corpus_items": 0,
+      "plans": 0,
+      "sessions": 0
+    },
+    {
+      "owner": "libitu-planning-smoke-b333cd5e040042ccb5f1d69c6f0513c8",
+      "profiles": 0,
+      "corpus_items": 0,
+      "plans": 0,
+      "sessions": 0
+    },
+    {
+      "owner": "libitu-planning-smoke-e6d005e94ad5412ea9726aacd229a42d",
+      "profiles": 0,
+      "corpus_items": 0,
+      "plans": 0,
+      "sessions": 0
+    }
+  ],
+  "successful_session_dependents": {
+    "session_id": "ad9d6787-5d13-4a4f-98ce-c040305a4355",
+    "session_items": 0,
+    "runtime": 0,
+    "feedback": 0,
+    "turns": 0
+  }
+}

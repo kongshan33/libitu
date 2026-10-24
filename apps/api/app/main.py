@@ -33,6 +33,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Speaking-Plan-Error", "X-Speaking-Plan-Request-ID", "X-Request-ID", "Server-Timing"],
 )
 
 app.include_router(health.router)

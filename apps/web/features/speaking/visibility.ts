@@ -46,6 +46,8 @@ export function observeVisible(element: HTMLElement, onVisible: () => void): () 
     view!.removeEventListener("pointerup", schedule);
     view!.removeEventListener("scroll", schedule, true);
     view!.removeEventListener("resize", schedule);
+    view!.removeEventListener("animationend", schedule, true);
+    view!.removeEventListener("transitionend", schedule, true);
   }
   observer.observe(element);
   doc.addEventListener("visibilitychange", schedule);
@@ -53,5 +55,9 @@ export function observeVisible(element: HTMLElement, onVisible: () => void): () 
   view.addEventListener("pointerup", schedule);
   view.addEventListener("scroll", schedule, true);
   view.addEventListener("resize", schedule);
+  // A menu may cover a newly mounted label until its exit animation ends,
+  // without changing the label's intersection or scroll position.
+  view.addEventListener("animationend", schedule, true);
+  view.addEventListener("transitionend", schedule, true);
   return cleanup;
 }

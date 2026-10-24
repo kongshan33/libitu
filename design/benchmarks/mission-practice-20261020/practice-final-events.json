@@ -1,0 +1,32 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-ed7a8fa028174dcdb3226391546dc5ab",
+    "planning_requests": 2,
+    "max_model_requests": 4,
+    "provider_mode": "live",
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls",
+    "support_level": "no_hint",
+    "practice_variation": "details"
+  },
+  {
+    "event": "failed",
+    "code": "ConnectError"
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": false,
+    "model_requests": 0,
+    "provider_mode": "live",
+    "qualification": "planning_and_persistence_only"
+  }
+]

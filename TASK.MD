@@ -4,10 +4,211 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-10-12
+  updated: 2026-10-20
 ```
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
+
+## Release confirmed Mission starts — 2026-10-24
+
+- [x] Reproduce the lifecycle defect in code: successful create/retry navigated
+  without acknowledging the persisted pending submission, so Return/End could
+  never release its exact-retry lock.
+- [x] Verify create response owner, original client ID and valid Mission ID;
+  clear only the matching pending submission through the existing draft CAS.
+  Preserve selections, settings and cached scenes for the next explicit Start.
+- [x] Persist acknowledgement before publishing unlocked state. Failed network,
+  mismatched responses, storage errors and account/tab changes cannot clear a
+  different or still-unconfirmed request.
+- [x] Verify create/retry, End and return-to-Loadout create a new request/Mission,
+  including legacy completed recovery, storage failure and cross-tab races.
+- [x] Full Web suite: 443 passed. TypeScript, changed-file ESLint and isolated
+  production build pass. Browser fixtures at 1440/390 px cover exact retry,
+  End, editable Loadout and a distinct new Mission with the cached scene; legacy
+  completed requests, mismatched responses, quota failure and late responses
+  across tabs also pass. Existing Loadout (1440/768/390 px), scene planning and
+  linked-practice (1440/390 px) browser suites pass. No paid model call or live
+  database write was needed.
+
+## Mission preparation latency P0/P1 — 2026-10-24
+
+- [x] Automatic Start requests exactly one scene; manual comparison and linked
+  practice keep two, with legacy one-to-three plan readability.
+- [x] Replace complete regeneration with one bounded field-patch call. Aggregate
+  original schema/semantic/practice errors, normalize verified target order,
+  reject unrequested/missing/duplicate patch IDs, and revalidate the full result.
+  Good fields remain unchanged. Unlocatable/malformed output stops safely.
+- [x] Batch selected owner-bound corpus reads; retain snapshot validation at
+  save/create and committed retry before stale-source checks.
+- [x] Reuse cached scenes for difficulty/feedback/template/support changes;
+  invalidate on scenario/brief/target order/roles/wording/metadata changes. Keep
+  owner and multi-tab fences. Fix linked-practice matching of decorated corpus
+  labels against the actual saved expression.
+- [x] Add privacy-safe input/model/repair/validation/save/create/workspace timing,
+  `Server-Timing` and `X-Request-ID`, plus bounded browser Performance measures
+  for cache state, requests, navigation and click-to-ready.
+- [x] Apply all 30 migrations and five SQL rollback suites on isolated Postgres;
+  apply `20261024092759_speaking_single_scenario_plans` to development Supabase
+  and pass hosted planning rollback tests (single-scene save/create/replay,
+  0/4 rejection, legacy 2/3 acceptance, ownership and stale-source checks).
+- [x] Database-free five-target real Ark probe: 18.01 seconds including two-field
+  repair (13.85 + 4.11 seconds provider time). Injected missing-slot repair takes
+  2.46 seconds and preserves every other field. Three real calls total.
+- [x] Separate real three-target, single-scene hosted smoke: planning 11,468.09 ms
+  (input 272.72, model 9,921.28, validation 5.13, save 1,261.81), create 318.69 ms,
+  workspace 628.84 ms. One model call. Save/recovery, frozen targets, exact retry,
+  stale-source and support checks pass; synthetic records/dependents cleaned up.
+  Evidence: `design/benchmarks/mission-planning-20261024/`. These are individual
+  synthetic runs, not end-to-end user latency distributions or learning evidence.
+- [x] Full API suite: 1,645 passed. Full Web suite: 438 passed. Root lint,
+  TypeScript and isolated production Web build pass. Browser suites pass for
+  Mission planning and linked practice at 1440/390 px, and original Loadout at
+  1440/768/390 px, including source drift, account/tab fences, exact retry,
+  settings cache reuse and ready-page timing. The user's dev server was preserved.
+
+## Loadout planning timeout repair — 2026-10-24
+
+- [x] Reproduce the current Loadout failure in the signed-in browser: planning
+  times out, so both manual generation and first-time Start are blocked.
+- [x] Give two attempts one shared 90-second model deadline and the browser a
+  120-second planning deadline; preserve ordinary 20-second Mission saving.
+- [x] Request exactly two concise candidates. Require non-null sentence frames
+  for all new targets in the model-facing schema, omit derived metadata, and
+  constrain generated IDs to the selected set without weakening final validation.
+  Bind model-authored `{{target}}` frames to the saved wording, then check every
+  frame and supply all safe failure locations to the single repair attempt.
+- [x] Pass 226 focused API regressions, 27 Web planning/practice tests, TypeScript
+  and changed-frontend-file ESLint. Preserve old optional-frame plans.
+- [x] Run a five-target, database-free Ark probe: initial old-contract response
+  took 36.88 seconds and failed validation. With the fix, generation plus one
+  frame repair passed in 52.71 seconds (26.25 + 26.40 seconds provider time),
+  demonstrating why the original shared budget was insufficient. Further checks
+  exposed missing slots and rephrased target words. The final placeholder-based
+  five-target probe passes in 51.44 seconds (24.75 + 26.65 seconds), with exact
+  words and slots validated after expansion. These checks verify transport and
+  strict plan validation, not teaching quality.
+- [x] Verify the refreshed signed-in browser can generate, persist and open the
+  original five-target Mission through Start mission. The final real request
+  validates after one repair (25.65 + 28.91 seconds provider time), preserves
+  three primary and two opportunity targets, and reaches the ready conversation
+  page. Microphone/conversation were not started; no learning-effect claim.
+
+## Doubao text-provider migration — 2026-10-23
+
+- [x] Replace all former DeepSeek text calls with Doubao through Ark, including
+  blueprints, selection, Mission planning/help/teaching and assessment.
+- [x] Keep Gemini Live independent; store the supplied Ark key only in ignored
+  local environment configuration and update worker readiness and diagnostics.
+- [x] Verify that the configured `doubao-seed-2-1-lite-260915` returns JSON;
+  the Pro model from the supplied example is not activated for this account.
+- [x] Real synthetic blueprint streaming and selection analysis pass (27.60 s and
+  27.96 s); blueprint emits 16 previews and seven validated corpus items.
+- [x] Real teaching analysis returns `ready` on a fresh attempt (6.34 s) after an
+  initial transport failure. Assessment returns a schema-valid response that
+  compiles to `partial` for the single-turn fixture; complete report verification
+  is tracked separately. No learner data or database writes were involved.
+- [x] A separate three-turn synthetic assessment returns `ready` with all four
+  dimensions scored (21.03 s). This checks transport/schema/evidence processing,
+  not human-calibrated scoring quality or learning effects.
+- [x] Root lint/build/test pass: 1,589 API, 429 cached Web and 114 cached extension
+  tests. Seven stale review-probe credential fixtures failed on the first run;
+  after correcting their field names, the full rerun passes. Script compilation
+  and `git diff --check` pass. Supplied credentials remain absent from nonignored
+  source files; no application deployment or live microphone acceptance is implied.
+
+## Grounded review, linked practice and support history P3/P4 — 2026-10-20
+
+- [x] Add independently validated missed-opportunity suggestions to the existing
+  assessment call, keeping suggestions separate from use evidence and scores.
+  Preserve v1/v2 jobs; new analysis uses v3 with rubric v2.
+- [x] Add owner-bound detail/role-swap practice planning, server-computed changes,
+  frozen parent/root/item associations and explicit support on linked creation.
+  Preserve committed retries before deleted-source checks.
+- [x] Read existing compatible ready reports for factual second-round comparison;
+  retain pending, unavailable and incompatible states without inferred zeros.
+- [x] Add conservative read-only support history: every primary needs three reliable
+  independent Missions, two UTC practice dates and two scene families. Require
+  new explicit evidence contracts and dedicated validated positive references.
+  Never backfill old sessions or write mastery state.
+- [x] Apply `20261020094401_speaking_linked_practice` and
+  `20261020094408_speaking_support_history` and
+  `20261020094938_speaking_support_evidence_dates` to connected development Supabase.
+  Practice-day eligibility uses frozen independent learner utterance times, not
+  when an empty Mission or its report was created.
+  Both new and the three previous planning/support/feedback SQL rollback suites
+  pass locally and hosted; synthetic profile residue is zero. Advisors retain
+  one existing security INFO and three unused-index INFO findings, with no
+  warning/error results.
+- [ ] Finish frontend acceptance and root lint/build/test verification.
+- [ ] Record bounded real-provider smoke results and their synthetic-data limits.
+
+## Mission demonstrations and manual support P2 — 2026-10-20
+
+- [x] Add independent `model_frame`, `model_label`, `label_only`, `no_hint` settings. Default new drafts to `model_frame`; retain absent/null legacy settings and exact uncertain-creation payloads.
+- [x] Generate and validate server-owned sentence frames, with original expression wording and unfilled slots. Old plans without frames remain readable; unusable new frames use the existing bounded repair.
+- [x] Add separate `model_then_transfer` policy and completed-response assessment with exact model/transfer-question quotes. Keep implicit target non-disclosure, observation/cooldown/attempt limits and asynchronous voice behavior.
+- [x] Add manual `support.set` with initial version 0, runtime CAS/conflict handling and rejection during active speech, reply/playback or a sent control. Preserve assistance history when changing support.
+- [x] Publish verified UTF-16 demonstration spans, hide proactive wording/highlights in `no_hint`, and disable automatic help cards in every explicit mode while preserving requested help.
+- [x] Freeze current support/history, immutable attempt support version, demonstration/transfer quotations and possible partial-audio exposure. Stage 4/5 share conservative variant and assistance rules.
+- [x] Pass 174 focused planning/loadout/feedback-repository tests. New support and existing planning/feedback SQL rollback contracts pass locally; synthetic support-test records remain absent afterward.
+- [x] Apply `20261020090509_speaking_support_and_demonstrations` to connected development Supabase; all three hosted SQL rollback contracts complete without errors.
+- [x] Pass root `pnpm lint`, `pnpm build` and the final `pnpm test` rerun: 1,384 API, 423 Web and 114 extension tests. The first API run had one existing Stage 2 lease-heartbeat timing failure; its isolated rerun and the full reruns passed without changing Stage 2.
+- [x] Recheck hosted advisors: one pre-existing security INFO for `private.content_payloads` without a policy and three unused-index INFO notices; no warning/error findings.
+- [x] Pass existing `mission-plans`/`speaking-help` browser regressions at 1440/390 px and `loadout`/`analytics` at 1440/768/390 px with synthetic identity/API/provider fixtures.
+- [x] Fix a real planner validation failure where both attempts only added a final period to an unchanged structure frame. Permit terminal sentence punctuation while still rejecting changed anchors, slots/order and appended content; 89 planning tests pass after this correction. The original provider candidates pass the corrected validator offline without a new paid call.
+- [x] Verify the corrected planner with a fresh real DeepSeek request: one model call, 6.75 seconds provider time, no repair required. The hosted chain verifies frames, support/idempotency, versioned transitions and feedback freezing. Initial failure, unchanged-candidate replay and final live run all clean up their synthetic records. Runtime receipts are fixtures; this does not qualify Gemini, actual playback or teaching quality. [Evidence](design/benchmarks/mission-support-20261020/README.md).
+- [x] Pass dedicated `speaking-support` browser acceptance at 1440/390 px: default support, cached scene reuse, confirmed four-level changes, verified demonstration spans, no-hint wording removal, skip/undo, requested help and recoverable busy state. Cold no-hint sends no target-visibility receipt. Legacy sessions that opt in record actual visible wording without a mission plan.
+- [x] Recheck visibility after dropdown exit animations, preserving occlusion/viewport checks and one receipt per exposure. The legacy opt-in browser passes without extra scrolling or interaction; shared `speaking-help` regressions pass again at 1440/390 px. Desktop/mobile screenshots were inspected.
+- [x] Fence late legacy automatic-help writes inside the support CAS boundary. Record conservative contraction/inflection variants in acknowledged assistant text as assistance, including mobile sessions whose target cards were never opened; this does not loosen model-compliance or demonstration-highlighting checks.
+
+Support reduction is learner-controlled. P2 does not infer comfort/focus/stretch,
+upgrade mastery automatically, or establish naturalness, transfer quality or
+learning gains from fixture checks. The P3/P4 section above records the later rewrites, linked rounds and history-based
+support increment.
+
+## Expression-led Mission planning P0/P1 — 2026-10-20
+
+User-approved scope: [selection, scenarios, frozen plans and opportunities](design/docs/STAGE_THREE_FOUR_MISSION_PLAN.md).
+
+- [x] Recover generated-content validation failures once within a shared 45-second model budget, preserving strict final validation, roles and target identity; never repeat provider/network/storage failures automatically.
+- [x] Add practical target-selection guidance and distinct recovery actions for system errors versus candidate-specific fit issues. Changes to targets remain explicit and preserve draft/idempotency protections.
+- [x] Verify repair limits, safe cross-origin error categories, fit advice, role budgets and desktop/mobile recovery flows.
+
+- [x] Simplify the default to one Start mission action, retaining optional scene comparison, suitable-candidate checks, cached-plan reuse and exact uncertain-creation recovery. Separate preparing/saving progress, block duplicate clicks and reject stale same-owner draft writes inside the browser storage lock.
+- [x] Add safe planning failure categories and request-correlated diagnostics for timeout, provider, invalid-output and storage failures. A strict-validation real-provider/Supabase follow-up passes; the original generic user error cannot be retrospectively assigned a cause. The later bounded content-recovery increment above supersedes the initial single-attempt policy; invalid plans and unsupported database changes remain excluded.
+
+- [x] Implement owner-bound plan generation and read APIs, metadata snapshots, strict target validation and atomic planned-session creation.
+- [x] Deliver selection-first Loadout, primary/opportunity roles, scenario comparison and recoverable confirmation without losing legacy drafts.
+- [x] Add bounded primary opportunity scheduling, actual delivery states, skip/restore and stale-analysis fencing.
+- [x] Preserve full assistance/target evidence in Stage 5 and distinguish primary coverage, skipped targets, missing opportunities and optional use.
+- [x] Verify API, database rollback contracts and desktop/mobile browser flows. After the content-recovery and selection-guidance follow-up, root `pnpm lint`, `pnpm build` and `pnpm test` pass: 1,284 API and 412 Web tests, plus 114 cached extension tests. One existing Starlette test-client deprecation warning remains.
+- [x] Apply `20261020071447_speaking_feedback_opportunities` and `20261020071454_speaking_scenario_plans` to the connected development database. Both SQL transaction/rollback contracts pass locally and on hosted Supabase. Security advisor retains the pre-existing `private.content_payloads` RLS-without-policy INFO; performance advisor reports four unused-index INFO notices, including the new owner index. No warning/error findings were returned; no index was removed based on these notices.
+- [x] Run bounded real-provider scenario-generation probes. The initial successful DeepSeek/Supabase run generated three candidates and verified metadata, stable target IDs, stale-plan rejection, idempotent recovery, frozen feedback and cleanup. A follow-up generated two candidates under the expanded three-field disclosure guard and passed the hosted chain. Synthetic identity and runtime events do not qualify Clerk, Gemini, microphones or learning effects. [Failures, correction and successful evidence](design/benchmarks/mission-planning-20261020/README.md).
+- [x] Verify the corrective prompt with one real DeepSeek call after a controlled invalid `skip_when` field. The second attempt produced two strictly valid candidates in 9.01 seconds of provider time. This probe created no database records or user Missions and does not reproduce the original failure or establish a recovery rate.
+
+Browser acceptance uses an isolated production build, synthetic identity/API/provider
+events and inspected screenshots. `mission-plans.browser.mjs` passes at 1440/390 px,
+including failed generation/retry, stale/account fencing, legacy eight-item drafts,
+actual opportunity display, skip/restore, separate counts and all-skipped hints.
+The one-button follow-up also passes automatic scene preparation, collapsed manual
+comparison, cached-plan reuse, no-suitable-scene handling, duplicate clicks, exact
+creation recovery after refresh and same-owner cross-tab edits. The legacy Loadout
+suite additionally confirms that another account's draft write cannot invalidate
+an unchanged in-flight creation response.
+The content-recovery follow-up reruns both Mission-plan and legacy Loadout suites:
+system failures preserve the complete draft and offer optional guidance; fit advice
+uses one candidate's reasons; choosing another candidate clears the previous advice;
+explicit demotion/removal changes only the requested target; the last primary and
+two-opportunity limits are preserved; edits do not automatically regenerate.
+Desktop/mobile system-error and fit-advice screenshots were inspected, with no
+horizontal overflow. Uncertain creation still offers recovery of the same Mission.
+`analytics.browser.mjs` passes at 1440/768/390 px, with planned reports at 1440/390 px.
+Existing Loadout cross-tab/account/retry and Stage 1/2 entry flows pass at all three
+widths; legacy conversation and help browsers also pass. The existing port-3000
+dev service had static asset 404s, so acceptance ran on port 3005; application
+deployment and physical-microphone qualification remain separate.
+
+The P0/P1 verification above predates the separate P2 increment. The later P3/P4 delivery is tracked in the current section at the top of this file.
 
 ## Mission teaching control and private diagnostics — 2026-10-18
 

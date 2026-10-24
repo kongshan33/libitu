@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from app.integrations.speaking_feedback_repository import get_feedback_store
 from app.schemas.speaking_feedback import SpeakingFeedback
 from app.services.speaking_runtime_state import require_session
+from app.services.speaking_support import SUPPORT_LEVELS
 
 
 def public_feedback(job: dict) -> SpeakingFeedback:
@@ -15,13 +16,18 @@ def public_feedback(job: dict) -> SpeakingFeedback:
         retryable = False
     try:
         source = job["source"]
+        support = source.get("support")
+        current_support = support.get("level") if isinstance(support, dict) else None
+        initial_support = source["session"].get("support_level")
+        effective = current_support if isinstance(current_support, str) and current_support in SUPPORT_LEVELS else initial_support
         return SpeakingFeedback(
             id=job["id"], session_id=job["session_id"], status=job["status"],
             input_hash=job["input_hash"], rubric_version=job["rubric_version"],
             analysis_version=job["analysis_version"], attempts=job["attempts"],
             retryable=retryable, error_code=job.get("error_code"),
             created_at=job["created_at"], updated_at=job["updated_at"],
-            session=source["session"], messages=source.get("messages", []), result=job.get("result"),
+            session=source["session"], effective_support_level=effective,
+            messages=source.get("messages", []), result=job.get("result"),
         )
     except (ValidationError, KeyError, TypeError):
         raise HTTPException(503, "This report is temporarily unavailable. Please retry.") from None

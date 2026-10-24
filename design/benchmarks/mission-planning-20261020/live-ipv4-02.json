@@ -1,0 +1,108 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-b333cd5e040042ccb5f1d69c6f0513c8",
+    "planning_requests": 1,
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "elapsed_ms": 7037.1,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 844,
+      "completion_tokens": 1654,
+      "total_tokens": 2498
+    }
+  },
+  {
+    "event": "provider_schema_failed",
+    "errors": [
+      {
+        "location": [
+          "candidates",
+          0,
+          "targets",
+          0,
+          "skip_when"
+        ],
+        "type": "string_type"
+      },
+      {
+        "location": [
+          "candidates",
+          0,
+          "targets",
+          1,
+          "skip_when"
+        ],
+        "type": "string_type"
+      },
+      {
+        "location": [
+          "candidates",
+          1,
+          "targets",
+          0,
+          "skip_when"
+        ],
+        "type": "string_type"
+      },
+      {
+        "location": [
+          "candidates",
+          1,
+          "targets",
+          1,
+          "skip_when"
+        ],
+        "type": "string_type"
+      },
+      {
+        "location": [
+          "candidates",
+          2,
+          "targets",
+          0,
+          "skip_when"
+        ],
+        "type": "string_type"
+      },
+      {
+        "location": [
+          "candidates",
+          2,
+          "targets",
+          1,
+          "skip_when"
+        ],
+        "type": "string_type"
+      }
+    ]
+  },
+  {
+    "event": "failed",
+    "code": "create_plan_http_503"
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": false,
+    "qualification": "planning_and_persistence_only"
+  }
+]

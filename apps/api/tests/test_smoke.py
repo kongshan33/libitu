@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 
 from app.auth import AuthenticatedUser, require_user
-from app.integrations.deepseek import AnalysisProviderError
+from app.integrations.ark_analysis import AnalysisProviderError
 from app.main import app
 from app.routers import health, jobs as jobs_router
 from app.schemas.analysis import AnalysisTranscriptPreviewLine, BlueprintAnalysisPreview
@@ -195,7 +195,7 @@ def test_corpus_selection_analysis_keeps_a_complete_short_phrase(monkeypatch) ->
 
 def test_corpus_selection_analysis_marks_provider_fallback(monkeypatch) -> None:
     def unavailable(_payload) -> CorpusSelectionAnalysis:
-        raise AnalysisProviderError("DeepSeek is not configured.")
+        raise AnalysisProviderError("Doubao is not configured.")
 
     monkeypatch.setattr(
         corpus_selection_service,
@@ -273,7 +273,7 @@ def test_queue_readiness_reports_missing_worker(monkeypatch) -> None:
                 "processing_mode": "queue",
                 "upstash_is_configured": True,
                 "analysis_version": "mvp-v6",
-                "deepseek_model": "deepseek-v4-flash",
+                "ark_model": "doubao-seed-2-1-lite-260915",
             },
         )(),
     )
@@ -313,7 +313,7 @@ def test_queue_readiness_reports_live_worker(monkeypatch) -> None:
                 "processing_mode": "queue",
                 "upstash_is_configured": True,
                 "analysis_version": "mvp-v6",
-                "deepseek_model": "deepseek-v4-flash",
+                "ark_model": "doubao-seed-2-1-lite-260915",
             },
         )(),
     )
@@ -323,7 +323,7 @@ def test_queue_readiness_reports_live_worker(monkeypatch) -> None:
         lambda: {
             "timestamp": "2026-09-02T08:30:00+00:00",
             "analysis_version": "mvp-v6",
-            "model": "deepseek-v4-flash",
+            "model": "doubao-seed-2-1-lite-260915",
         },
     )
 
@@ -344,7 +344,7 @@ def test_queue_readiness_reports_stale_worker(monkeypatch) -> None:
                 "processing_mode": "queue",
                 "upstash_is_configured": True,
                 "analysis_version": "mvp-v5",
-                "deepseek_model": "deepseek-v4-flash",
+                "ark_model": "doubao-seed-2-1-lite-260915",
             },
         )(),
     )
@@ -354,7 +354,7 @@ def test_queue_readiness_reports_stale_worker(monkeypatch) -> None:
         lambda: {
             "timestamp": "2026-09-02T08:30:00+00:00",
             "analysis_version": "mvp-v2",
-            "model": "deepseek-v4-pro",
+            "model": "doubao-other-model",
         },
     )
 

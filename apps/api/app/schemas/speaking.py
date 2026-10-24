@@ -2,7 +2,9 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+
+from app.schemas.speaking_plan import PracticeVariation, ScenarioChange, SpeakingMissionPlan
 
 
 LogicTemplateId = Literal[
@@ -12,6 +14,8 @@ LogicTemplateId = Literal[
 ScenarioType = Literal["workplace", "everyday"]
 SpeakingDifficulty = Literal["guided", "standard", "challenging"]
 FeedbackLevel = Literal["light", "balanced", "detailed"]
+SupportLevel = Literal["model_frame", "model_label", "label_only", "no_hint"]
+EVIDENCE_CONTRACT_VERSION = "speaking-evidence-v3"
 
 
 class LogicTemplate(BaseModel):
@@ -38,6 +42,15 @@ class SpeakingSessionCreate(BaseModel):
     feedback_level: FeedbackLevel = "balanced"
     logic_template_id: LogicTemplateId | None = None
     corpus_item_ids: list[UUID] = Field(min_length=1, max_length=8)
+    plan_id: UUID | None = None
+    candidate_id: UUID | None = None
+    support_level: SupportLevel | None = None
+
+    @model_validator(mode="after")
+    def require_plan_pair(self) -> "SpeakingSessionCreate":
+        if (self.plan_id is None) != (self.candidate_id is None):
+            raise ValueError("Choose both a saved plan and its scenario.")
+        return self
 
     @field_validator("corpus_item_ids")
     @classmethod
@@ -48,8 +61,11 @@ class SpeakingSessionCreate(BaseModel):
 
 
 class SpeakingSessionItem(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, serialize_by_alias=True)
+
     id: UUID
     corpus_item_id: UUID | None
+    source_corpus_item_id: UUID | None = None
     ordinal: int = Field(ge=0)
     kind: Literal["chunk", "idiom", "structure"]
     text: str
@@ -57,6 +73,21 @@ class SpeakingSessionItem(BaseModel):
     tags: list[str] = Field(default_factory=list)
     slots: dict[str, str] = Field(default_factory=dict)
     source_title: str | None = None
+    usage_note: str | None = None
+    usage_register: Literal["casual", "neutral", "professional", "formal"] | None = Field(
+        default=None, validation_alias="register", serialization_alias="register",
+    )
+    scenario_tags: list[str] = Field(default_factory=list)
+    pattern_family: str | None = None
+
+
+class SpeakingPractice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    parent_session_id: UUID | None
+    root_session_id: UUID
+    variation: PracticeVariation
+    changes: list[ScenarioChange] = Field(default_factory=list, max_length=4)
 
 
 class SpeakingSession(BaseModel):
@@ -72,6 +103,10 @@ class SpeakingSession(BaseModel):
     created_at: datetime
     turn_count: int = 0
     items: list[SpeakingSessionItem]
+    mission_plan: SpeakingMissionPlan | None = None
+    support_level: SupportLevel | None = None
+    evidence_contract_version: Literal["speaking-evidence-v3"] | None = None
+    practice: SpeakingPractice | None = None
 
 
 class SpeakingTurnCreate(BaseModel):

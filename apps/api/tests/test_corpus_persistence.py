@@ -49,6 +49,68 @@ def test_repository_scopes_every_corpus_read_update_and_delete() -> None:
         repo._client.close()
 
 
+def test_repository_batch_reads_only_selected_owner_items_once_in_requested_order() -> None:
+    calls = []
+
+    def row(item_id, owner="user-a"):
+        return {"id": item_id, "user_id": owner, **payload().model_dump(mode="json")}
+
+    def respond(request):
+        calls.append(request)
+        assert request.method == "GET"
+        assert request.url.path.endswith("/corpus_items")
+        assert request.url.params["user_id"] == "eq.user-a"
+        assert request.url.params["id"] == 'in.("second","missing","first","foreign")'
+        assert request.url.params["limit"] == "4"
+        assert "offset" not in request.url.params
+        # Database order is not selection order. Never return an unexpected row
+        # or another owner's row even if the adapter receives one.
+        return httpx.Response(200, json=[
+            row("first"), row("foreign", "user-b"), row("unselected"), row("second"),
+        ])
+
+    repo = repository(respond)
+    try:
+        items = repo.get_corpus_items("user-a", ["second", "missing", "first", "foreign", "second"])
+        assert [item.id for item in items] == ["second", "first"]
+        assert len(calls) == 1
+        assert repo.get_corpus_items("user-a", []) == []
+        assert len(calls) == 1
+    finally:
+        repo._client.close()
+
+
+def test_service_batch_keeps_owner_order_and_current_sources(monkeypatch) -> None:
+    monkeypatch.setattr(corpus_service, "get_supabase_repository", lambda: None)
+    first = corpus_service.create_corpus_item("batch-owner", payload())
+    second = corpus_service.create_corpus_item("batch-owner", payload().model_copy(update={
+        "source_locator": payload().source_locator.model_copy(update={"client_key": "second"}),
+    }))
+    foreign = corpus_service.create_corpus_item("batch-other", payload())
+    corpus_service.update_corpus_item("batch-owner", first.id, CorpusItemUpdate(text="changed wording"))
+    selected = [second.id, "missing", first.id, foreign.id, second.id]
+    items = corpus_service.get_corpus_items("batch-owner", selected)
+    assert [item.id for item in items] == [second.id, first.id]
+    assert items[1].text == "changed wording"
+    corpus_service.delete_corpus_item("batch-owner", second.id)
+    assert [item.id for item in corpus_service.get_corpus_items("batch-owner", selected)] == [first.id]
+
+
+def test_service_batch_calls_repository_once_and_preserves_failure(monkeypatch) -> None:
+    calls = []
+
+    def unavailable(user_id, item_ids):
+        calls.append((user_id, item_ids))
+        raise httpx.ConnectError("database unavailable")
+
+    monkeypatch.setattr(corpus_service, "get_supabase_repository", lambda: SimpleNamespace(get_corpus_items=unavailable))
+    assert corpus_service.get_corpus_items("user-a", []) == []
+    with pytest.raises(HTTPException) as error:
+        corpus_service.get_corpus_items("user-a", ["second", "first", "second"])
+    assert error.value.status_code == 503
+    assert calls == [("user-a", ["second", "first"])]
+
+
 def test_repeated_import_preserves_cloud_edits_and_learning_snapshot() -> None:
     stored = None
 

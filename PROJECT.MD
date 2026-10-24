@@ -4,14 +4,149 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-12
+  updated: 2026-10-20
 ```
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
 
+## Release confirmed Mission starts — 2026-10-24
+
+Loadout now clears its pending creation request after a verified successful
+create or retry, before navigating to the Mission. The response must match the
+account and original client request ID. Confirmation is persisted under the
+existing draft lock/CAS before the UI is unlocked; failures retain the exact
+retry request. Targets, scenes and settings remain available for a new Mission.
+Previously successful requests stayed pending forever, so returning after ending
+a Mission replayed the old ID and kept setup controls locked. No API/database or
+cancelled startup-optimization change is included. Verification is in `TASK.MD`.
+
+## Mission preparation latency P0/P1 — 2026-10-24
+
+One-button Start now requests one scenario; manual comparison and linked practice
+request two. Existing one-to-three-candidate plans remain readable. Planning v5
+makes at most one field repair: verified good fields/scenes stay unchanged, the
+server chooses patch locations, and the complete merged plan must validate.
+Original schema, semantic and practice errors are collected together. Malformed
+JSON or an unlocatable structure fails with selection retained, without a full
+regeneration. The shared 90-second model / 120-second browser limits remain.
+
+Selected corpus inputs use one owner-filtered batch read. The browser reuses a
+matching plan across difficulty, feedback, logic-template and support changes;
+scene preferences, target order/roles and source content invalidate it. Exact
+uncertain-create replay still takes precedence. A fresh five-target startup now
+uses five database HTTP requests (one input read, one plan save, one creation,
+two workspace reads), previously nine; this excludes corpus bootstrap and auth.
+Server phase timings and correlated request IDs reach browser Performance
+measures, including cache hit/miss and click-to-ready. No learner text is logged.
+
+The single-scene migration is applied to the connected development database.
+A five-target synthetic Ark request validated in 18.01 seconds (13.85 generation
++ 4.11 local repair); an injected one-field repair took 2.46 seconds. A separate
+three-target hosted persistence smoke passed with planning 11.47 seconds,
+creation 0.32 seconds and workspace read 0.63 seconds, then removed all synthetic
+records. These samples verify the pipeline, not latency percentiles, teaching
+quality or Gemini voice. See `TASK.MD` and
+`design/benchmarks/mission-planning-20261024/` for verification.
+
+## Loadout planning timeout repair — 2026-10-24
+
+Loadout generation and one-button Start share the same planner. A live browser
+reproduction timed out under its former 45-second model budget. New planning now
+requests two concise candidates with mandatory non-null sentence frames in the
+model-facing schema, while legacy stored plans remain readable. AI frames use a
+target placeholder that the server expands from the verified saved expression,
+then validates; this prevents the model from silently rewriting selected words.
+Repair receives all safe semantic error locations. The two-attempt
+shared budget is 90 seconds; browser planning allows 120 seconds and shows that
+wait explicitly. Mission creation retains its 20-second timeout and exact retry
+identity. The signed-in browser successfully generated and saved the original
+five-target plan and opened its ready Mission. 226 focused API tests and 27 Web
+tests pass; microphone/runtime verification is outside this repair. Details are
+recorded in `TASK.MD`.
+
+## Doubao text-provider migration — 2026-10-23
+
+All former DeepSeek text requests now use Doubao through Volcengine Ark:
+Stage 1 streaming blueprints, selection explanations, Mission planning, background
+teaching analysis, explicit help and Stage 5 assessment. `ARK_API_KEY` is server-only;
+`ARK_MODEL` defaults to `doubao-seed-2-1-lite-260915` and `ARK_BASE_URL` to
+`https://ark.cn-beijing.volces.com/api/v3`. Gemini Live retains its own key/model.
+Text timeout and Stage 1 budgets use `ARK_*`. Obsolete `DEEPSEEK_*` and
+`GEMINI_TEXT_*` entries are ignored. Requests disable thinking and retain existing
+JSON/evidence validation, retries, streaming previews and bounded failure handling.
+Existing cached blueprints, reports and historical provider verification records
+remain unchanged. The supplied key can generate JSON with the Lite model; the
+Pro model in the supplied example returns `ModelNotOpen`. Real synthetic checks
+pass for streaming blueprints, selection explanations, teaching analysis (after an
+initial transport failure) and a complete three-turn assessment. Root lint/build/test
+pass (1,589 API, 429 cached Web, 114 cached extension tests). No learner records or
+database writes were involved; this migration does not establish model or teaching
+quality. Verification details are tracked in `TASK.MD`.
+
+## Linked practice and evidence-based support P3/P4 — 2026-10-20
+
+P3 adds separately validated missed-opportunity rewrites, explicit second rounds with
+changed details or swapped roles, and factual comparison of existing ready reports.
+Rewrites quote the learner's actual reply to a presented opportunity and remain AI
+suggestions, never observations or scores. P4 reads repeated reliable independent
+evidence and offers a user-applied reduction of one support level; it does not infer
+mastery. Every primary target needs three Missions, two UTC practice dates and two
+scene families. See [the contract](design/docs/STAGE_THREE_FOUR_MISSION_PLAN.md).
+
+New explicit-support sessions freeze original corpus IDs and an evidence version;
+legacy sources and retries retain their identities and are not retrospectively
+upgraded. Migrations `20261020094401_speaking_linked_practice` and
+`20261020094408_speaking_support_history` and the evidence-date follow-up
+`20261020094938_speaking_support_evidence_dates` are applied to the connected development
+database. Both new and all three previous SQL rollback suites pass locally and
+hosted. Application and browser verification is tracked in `TASK.MD`; no application
+deployment or learning-effect validation is implied.
+
+## Mission demonstrations and manual support P2 — 2026-10-20
+
+P2 adds four explicit support levels independent of difficulty: `model_frame`,
+`model_label`, `label_only` and `no_hint`. New drafts start with model plus frame;
+old absent/null settings keep legacy behavior. Learners change support manually.
+The two modeling levels use a separate `model_then_transfer` policy: one natural
+use in the AI's own response, followed by a question inviting different learner
+content. Reduced levels retain implicit elicitation without selected wording.
+Every explicit level suppresses automatic help cards; requested help stays available.
+
+Server-validated sentence frames, revision-bound UTF-16 demonstration highlights,
+versioned safe-boundary support changes and frozen presentation evidence are
+implemented. Hiding support does not erase earlier assistance; partially played
+demonstrations carry possible exposure and cannot establish independent use.
+Stage 4 and Stage 5 share conservative contraction/inflection variant validation.
+There is no automatic mastery-based upgrade, semantic-paraphrase matching claim
+or measured teaching-effect result. See [the Mission contract](design/docs/STAGE_THREE_FOUR_MISSION_PLAN.md).
+
+Migration `20261020090509_speaking_support_and_demonstrations` is applied to the
+connected development database. New and existing planning/feedback SQL rollback
+contracts pass locally and on hosted Supabase. Root lint/build/test pass:
+1,384 API, 423 Web and 114 extension tests. Existing planning/help and
+loadout/analytics browser regressions pass with synthetic fixtures; dedicated
+support acceptance passes at 1440/390 px, including cold no-hint, legacy opt-in,
+actual visibility after menu animations and explicit help. A real DeepSeek/Supabase probe
+passes after fixing an overly strict terminal-punctuation frame check; all synthetic
+records are removed. Its runtime receipts are fixtures, not live Gemini or learner
+evidence. See [verification details](design/benchmarks/mission-support-20261020/README.md).
+
+## Expression-led Mission planning — 2026-10-20
+
+P0/P1 connects selected language to generated scenarios and frozen, target-specific opportunity plans. New Loadout uses one to three primary targets plus up to two opportunity targets. Its default Start mission action generates or reuses a suitable scene, saves the Mission and opens it; manual scene comparison is optional. Uncertain creation retries reuse the saved request before generating another plan. Stage 4 keeps asynchronous implicit teaching, adds planned primary-target priority, records actual opportunity delivery, and supports skip/restore. Stage 5 freezes complete presentation provenance and excludes skipped or unoffered targets from learner-failure claims. P2 adds demonstrations and manual support; the P3/P4 section above records the later review, linked-round and history increment. See [the implementation contract](design/docs/STAGE_THREE_FOUR_MISSION_PLAN.md) and `TASK.MD` for verification and migration status.
+
+Selection guidance recommends two primary targets plus zero or one opportunity
+target while retaining the full allowed budget. Recoverable generated-content
+errors get at most one constrained regeneration inside a shared 45-second model
+budget; final validation stays strict. System errors keep the selection and offer
+retry. Scene-fit advice names one validated candidate and its target-specific
+reasons, with explicit role/removal actions rather than automatic target changes.
+
+The two development-database migrations are applied. A bounded real DeepSeek/Supabase probe passed scenario generation, snapshot creation, stale-plan rejection, recovery and feedback freezing; all synthetic records were removed. Runtime opportunity events in that probe are fixtures, so it does not qualify Gemini teaching behavior or learning effects. See [the integration evidence](design/benchmarks/mission-planning-20261020/README.md).
+
 ## Mission teaching control and private diagnostics — 2026-10-18
 
-DeepSeek observes each finalized learner utterance with frozen context while Gemini replies independently. The first two substantive learner utterances default to observation; subsequent automatic teaching needs a contextual recommendation, one pending target, bounded cross-turn eligibility and separate attempt/cooldown counters. Analysis completion now wakes safe-boundary dispatch. Immutable sent attempts, completed-response assessment and actual presentation are recorded separately.
+Doubao text analysis observes each finalized learner utterance with frozen context while Gemini Live replies independently. The first two substantive learner utterances default to observation; subsequent automatic teaching needs a contextual recommendation, one pending target, bounded cross-turn eligibility and separate attempt/cooldown counters. Analysis completion now wakes safe-boundary dispatch. Immutable sent attempts, completed-response assessment and actual presentation are recorded separately.
 
 Voice and Chat share requested Usage/Example cards; automatic direction appears only after the AI reply is assessed as reflecting the teaching intent. Actual expression/example exposure remains assisted for the rest of that Mission; overlap/unknown provenance is not labeled independent. Detailed traces are owner-readable through GET `/api/speaking/sessions/{id}/diagnostics`, separate from the runtime snapshot. There is no diagnostic timeline UI. The hosted `20261018111206_speaking_teaching_diagnostics` migration and rollback checks pass. Root lint/build/test pass (1,111 API, 390 Web, 114 cached extension tests); hint-card browser checks pass at 1440/390 px with synthetic auth/API/provider events and inspected screenshots. Readable retention is 30 days, with same-session append cleanup and no scheduled global physical purge. See [behavior, API and reliability limits](design/docs/STAGE_FOUR_TEACHING_CONTROL.md).
 
@@ -203,13 +338,13 @@ verification target that local setup, not a deployed production website.
 |---|---|---|
 | Monorepo | pnpm workspace and Turborepo configured | Keep root commands green |
 | Web | Stage 1 corpus persistence, Loadout drafts, Stage 4 Voice/Chat and Stage 5 evidence-linked reports with retry/adjust actions, plus private activity/history and latest-report summaries; pending Shadow saves survive client-side route changes | Complete real OAuth acceptance; add Decks and corpus usage aggregation |
-| API | FastAPI routes, Clerk identity, recoverable queued blueprint workers, local subtitle punctuation, stage timing, YouTube fallback, and live DeepSeek analysis | Add rate limits and external metrics export |
+| API | FastAPI routes, Clerk identity, recoverable queued blueprint workers, local subtitle punctuation, stage timing, YouTube fallback, and live Doubao text analysis | Add rate limits and external metrics export |
 | Extension | YouTube player-control button and toolbar action verify English video metadata, perform a bounded passive caption preflight, then open Stage 1; session handoff preserves browser captions | Harden caption acquisition across YouTube UI variants and add playback controls |
 | Shared packages | Types, pure core helpers, UI tokens, config | Add only contracts used by two or more apps |
 | Auth | Clerk UI, Next.js middleware, and FastAPI identity verification are configured locally | Finish hosted Clerk-Supabase trust setup and add real-token integration tests |
 | Database | Supabase persists content, jobs, blueprints, corpus, speaking snapshots/transcripts/evidence and leased immutable-input assessment reports | Qualify operational recovery, retention and production supervision |
 | Cache | Upstash queue, versioned blueprint keys, pending-job recovery, bounded requests, worker heartbeat, and locks implemented | Add rate limiting and a durable retry scheduler |
-| AI | Local caption cleanup, DeepSeek semantic blueprints, Gemini Live conversation/teaching control and bounded DeepSeek session assessment with validated quotes | Calibrate conversation judgments against independent human-reviewed examples |
+| AI | Local caption cleanup, Doubao text semantic blueprints, Gemini Live conversation/teaching control and bounded Doubao text session assessment with validated quotes | Calibrate conversation judgments against independent human-reviewed examples |
 
 ## Product references
 
@@ -252,10 +387,10 @@ The release is coherent when a learner can:
 - Initial load and Retry share one abortable effect. Cleanup cancels fetch, SSE, and polling; cancellation never falls back to polling. Identical previews are suppressed. Preview and final corpus items share content-derived UI identities, a learner-level ranking policy, a 12-item limit, and source-evidence highlighting. Logic IDs and timestamps remain stable across finalization, and cached ready jobs skip stale previews. Normal streaming updates and development Strict Mode remain enabled.
 - Web regression tests run with Node 22.15+ via `pnpm --filter @libitu/web test`, using built-in test mocks without paid providers. The optional `apps/web/tests/stage-one-render.browser.mjs` check uses Playwright and an existing dev server to verify DOM identity and request counts on desktop/mobile; `LIBITU_PLAYWRIGHT_MODULE` can select an externally installed Playwright runtime.
 - Stage 1 uses the YouTube IFrame API for timestamp seeking. Transcript lines and logic nodes seek the same stable player; transcript clicks and normal playback select the latest timestamped logic node at or before the active subtitle. Streamed transcript callback changes do not destroy the iframe. The redundant Chapters UI and inferred chapter timestamps are removed; `chapters` remains in the backend contract for compatibility with cached blueprints.
-- Stage 1 transcript selection now opens an analysis card on mouseup. The card sends the selected span plus the current, previous, and next subtitle lines to `/api/corpus/analyze-selection`; the configured DeepSeek adapter follows separate explanation and seven-module syntax task sections, explains the exact selection in context, and validates any boundary expansion against the current subtitle. Complete selections show no redundant boundary message; only `needs_expansion` renders a suggested unit and reason. Explanation stays first, syntax remains available, inferred chips are editable, and accepted expressions or reusable structures use the same local/account save flow as extracted candidates. Provider failures are visibly labelled and never replaced with fabricated meanings or IPA.
+- Stage 1 transcript selection now opens an analysis card on mouseup. The card sends the selected span plus the current, previous, and next subtitle lines to `/api/corpus/analyze-selection`; the configured Doubao text adapter follows separate explanation and seven-module syntax task sections, explains the exact selection in context, and validates any boundary expansion against the current subtitle. Complete selections show no redundant boundary message; only `needs_expansion` renders a suggested unit and reason. Explanation stays first, syntax remains available, inferred chips are editable, and accepted expressions or reusable structures use the same local/account save flow as extracted candidates. Provider failures are visibly labelled and never replaced with fabricated meanings or IPA.
 - Stage 1 exposes source-grounded practice segments, a bottom Stage 2 CTA, and a timeline/card picker. Stage 2 Milestone 1 adds a sentence directory, previous/next and keyboard navigation, separate play/pause/seek, mutually exclusive sentence or segment looping, and the playback speeds reported by YouTube. Preparation reports the actual available sentence count without simulated audio-analysis progress. Switching a sentence or range pauses playback; entering or refreshing Stage 2 restores the selected sentence without autoplay.
 - Stage 1 and Stage 2 share server-finalized transcript rows: `sentence-v2` for plain captions and `sentence-v3` for structured caption sources. The local spaCy small English pipeline conservatively merges incomplete punctuation candidates; complete long sentences are not split into child units or cut at a word limit. Each row carries a source/timing fingerprint, normalized source token range, boundary provenance/confidence, and caption-estimated start/end. Same-timestamp sentences and repeated text remain independently selectable. Stage 2 consumes versioned rows directly; wholly legacy client responses retain the previous navigation fallback. `stage`, `segmentId`, and `sentenceId` recover selection, stale sentence IDs fall back safely, and timings remain approximate rather than acoustic evidence.
-- Existing blueprints receive a bounded, process-local cached sentence view on read without new DeepSeek calls or changes to persisted semantic analysis and personal corpus snapshots. Legacy punctuation is treated as uncertain, and lost internal caption anchors cannot be recovered. New worker results retain the richer source anchors and the exact sentence metadata through SSE, finalization, and personalization. See `design/docs/SENTENCE_SEGMENTATION.md` for evaluation and limitations.
+- Existing blueprints receive a bounded, process-local cached sentence view on read without new Doubao text calls or changes to persisted semantic analysis and personal corpus snapshots. Legacy punctuation is treated as uncertain, and lost internal caption anchors cannot be recovered. New worker results retain the richer source anchors and the exact sentence metadata through SSE, finalization, and personalization. See `design/docs/SENTENCE_SEGMENTATION.md` for evaluation and limitations.
 - Stage 2 pure sentence and playback-controller tests run in the normal web suite. `apps/web/tests/stage-two-navigation.browser.mjs` uses an existing dev server and mocked API/player to exercise desktop, tablet, and mobile navigation, looping, playback speed, and refresh recovery. Real YouTube seek precision is not established by the mock.
 - Stage 2 Milestone 2 adds microphone recording for the selected shared sentence ID, with permission/error states, Stop/Cancel, a timer, and local Replay/Re-record/Delete. Browser MediaRecorder produces one temporary take for the current sentence, capped at 60 seconds. A new successful take replaces the old one; cancellation or failure preserves the previous take. Changing sentences or leaving/refreshing Stage 2 clears the take, and hiding the tab cancels unfinished capture. Audio is held in a Blob/object URL in page memory only; microphone tracks, timers, and playback resources are released on cancellation and exit. Reference playback is paused during recording, and replay/reference playback are mutually exclusive. This M2 increment adds no media upload, model call, score, or recording history. The M3 implementation described below adds local reference access and Rhythm/Melody measurements; Sound detectors and the Stage 3 mission remain planned.
 - Recorder lifecycle tests run in the normal web suite. `apps/web/tests/stage-two-recording.browser.mjs` additionally checks actual Chrome encoding/decoding/replay with synthetic microphone input and mocked API/YouTube playback at desktop/mobile widths. This verifies the local media path without recording a person; physical microphone permissions/devices, Safari, and live YouTube interaction still need manual checks.
@@ -269,14 +404,14 @@ The release is coherent when a learner can:
 - `apps/web/features/stage-one/data/stage-one-demo.ts` is now a fixture only; the Stage 1 component does not import it directly.
 - In queue mode, processing jobs return `pending`, are pushed to Upstash, and are consumed by `apps/api/app/workers/blueprint_worker.py`. Tests use the deterministic inline path and never call a paid model.
 - `pnpm dev` starts the API server and blueprint worker together. `/health/ready` reports a missing or unreachable queue worker instead of allowing silent pending-job accumulation.
-- The worker prefers browser-provided captions, falls back to `youtube-transcript-api`, and asks DeepSeek V4 Flash for validated JSON blueprint output.
+- The worker prefers browser-provided captions, falls back to `youtube-transcript-api`, and asks Doubao for validated JSON blueprint output.
 - Analysis version selection is server-owned. Job IDs and blueprint cache keys include the active version; pending jobs are safely re-enqueued and obsolete queued versions fail without a model call.
 - Stage 1 detects missing current-version blueprints behind old shared job URLs and resolves the server-owned active job instead of retrying the stale job forever.
-- Jobs expose their current processing stage, timestamps, per-stage milliseconds, and an ephemeral validated analysis preview. The worker publishes cumulative local subtitle batches before consuming DeepSeek SSE, handles two jobs concurrently by default, and emits structured lifecycle logs without transcript content.
-- `mvp-v9` loads the maintained Stage 1 system prompt from `apps/api/app/prompts/stage_one_system.txt` and asks DeepSeek for 16-32 evidenced chunks, idioms, and structures plus summary, chapters, logic, key points, and scenarios. Every generated text field has a hard word bound and the prompt forbids transcript reproduction. Candidates retain usage, register, scenario, phonology, pattern-family, CEFR, and quality-score metadata; blueprint reads rank and return a three-kind-balanced subset for the requested learner level without rerunning the model.
-- English transcript normalization removes only standalone `um`, `uh`, `er`, and `ah` tokens and joins caption continuations. Independent complete sentences are no longer combined solely because they share a timestamp. The finalized source words are shared by DeepSeek, displayed subtitles, and evidence validation; raw caption text remains stored as the source payload.
+- Jobs expose their current processing stage, timestamps, per-stage milliseconds, and an ephemeral validated analysis preview. The worker publishes cumulative local subtitle batches before consuming Doubao text SSE, handles two jobs concurrently by default, and emits structured lifecycle logs without transcript content.
+- `mvp-v9` loads the maintained Stage 1 system prompt from `apps/api/app/prompts/stage_one_system.txt` and asks Doubao text for 16-32 evidenced chunks, idioms, and structures plus summary, chapters, logic, key points, and scenarios. Every generated text field has a hard word bound and the prompt forbids transcript reproduction. Candidates retain usage, register, scenario, phonology, pattern-family, CEFR, and quality-score metadata; blueprint reads rank and return a three-kind-balanced subset for the requested learner level without rerunning the model.
+- English transcript normalization removes only standalone `um`, `uh`, `er`, and `ah` tokens and joins caption continuations. Independent complete sentences are no longer combined solely because they share a timestamp. The finalized source words are shared by Doubao text, displayed subtitles, and evidence validation; raw caption text remains stored as the source payload.
 - English subtitles with reliable source sentence punctuation bypass sherpa-onnx and receive deterministic normalization. Other subtitles are sent to the local INT8 model without external sentence punctuation; model punctuation is attached to the original source words, model casing is ignored, and all paths normalize duplicate/conflicting marks and high-confidence opening discourse markers. Missing models, unsupported languages, or alignment failures use conservative deterministic merging.
-- Stage 1 displays the source video immediately and streams locally formatted sentence batches from `/api/jobs/{job_id}/events`, then progressively fills DeepSeek summary, logic, and evidenced corpus candidates; browser polling remains a disconnect fallback. One-job input is explicitly capped at 240,000 characters, and semantic-only output budgets scale from 32K to a bounded 64K retry without carrying transcript sentence metadata. Retry previews are monotonic, so a fresh provider attempt cannot clear fields already shown. The browser waits up to ten minutes for an active long job and keeps its last preview during explicit Retry.
+- Stage 1 displays the source video immediately and streams locally formatted sentence batches from `/api/jobs/{job_id}/events`, then progressively fills Doubao text summary, logic, and evidenced corpus candidates; browser polling remains a disconnect fallback. One-job input is explicitly capped at 240,000 characters, and semantic-only output budgets scale from 32K to a bounded 64K retry without carrying transcript sentence metadata. Retry previews are monotonic, so a fresh provider attempt cannot clear fields already shown. The browser waits up to ten minutes for an active long job and keeps its last preview during explicit Retry.
 - A 2026-09-05 production diagnosis found that the latest 54,852-character failed transcript spent 12.491 seconds formatting and 230.952 seconds in DeepSeek before `analysis_response_truncated`; total job time was 251.5 seconds. The former browser deadline was 210 seconds, so it could report failure while the worker was still active. This evidence drove the `mvp-v7` output bounds, 32K/64K budgets, monotonic previews, and longer client deadline.
 - The Chrome extension adds a Libitu icon button to the YouTube player's lower-right control bar and uses the toolbar action for the same launch. Both inspect YouTube's video-language metadata against an explicit supported-language list, currently `en` only. The player button stays disabled while checking and for non-English or unknown languages; its hover hint explains why. Unsupported toolbar clicks show an action badge/title and an in-player message without launching. URL, video DOM, and SPA navigation checks still guard entry; player-control redraws reattach the button, and repeated clicks focus the existing Stage 1 tab.
 - Stage 1 opens after lightweight metadata validation, before caption capture or API calls. A random handoff ID refers to a 15-minute extension-session record; the same-origin web bridge delivers browser captions with bounded waits and the existing backend caption fallback. Transcript text stays out of the URL. Stage 1 owns content/job creation, replaces handoff parameters with durable content/job IDs, and preserves abortable loading, explicit Retry, and streamed previews.

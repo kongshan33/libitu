@@ -37,13 +37,14 @@ class Settings(BaseSettings):
     upstash_max_retries: int = 1
     upstash_retry_interval_seconds: float = 0.5
 
-    deepseek_api_key: str | None = None
-    deepseek_base_url: str = "https://api.deepseek.com"
-    deepseek_model: str = "deepseek-v4-flash"
-    deepseek_timeout_seconds: float = 90.0
-    deepseek_max_attempts: int = 2
-    deepseek_max_input_chars: int = 240000
-    deepseek_max_output_tokens: int = 32000
+    # Doubao text analysis through Volcengine Ark. Server-only.
+    ark_api_key: str | None = None
+    ark_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
+    ark_model: str = "doubao-seed-2-1-lite-260915"
+    ark_timeout_seconds: float = 90.0
+    ark_max_attempts: int = 2
+    ark_max_input_chars: int = 240000
+    ark_max_output_tokens: int = 32000
 
     # Stage 4 has separate, bounded requests; these never use Stage 1 token budgets.
     openai_api_key: str | None = None
@@ -107,8 +108,8 @@ class Settings(BaseSettings):
         return self.processing_mode == "queue" and self.upstash_is_configured
 
     @property
-    def deepseek_is_configured(self) -> bool:
-        return bool(self.deepseek_api_key)
+    def ark_is_configured(self) -> bool:
+        return bool(self.ark_api_key)
 
     @property
     def supabase_server_is_configured(self) -> bool:

@@ -26,7 +26,7 @@ def mission(monkeypatch):
     # Do not copy local .env values into a fixture that pytest may display on failure.
     settings = Settings.model_construct(
         speaking_realtime_provider="openai", openai_api_key="fixture-not-a-real-key",
-        gemini_api_key="fixture-not-a-real-key", deepseek_api_key=None,
+        gemini_api_key="fixture-not-a-real-key",
         clerk_authorized_parties="https://libitu.fixture",
     )
     monkeypatch.setattr(runtime, "get_settings", lambda: settings)

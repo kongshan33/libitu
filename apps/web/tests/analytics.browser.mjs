@@ -25,7 +25,7 @@ try {
       assert.equal(await page.getByRole("tab", { name: /^Language transfer/ }).getAttribute("aria-selected"), "true");
       await page.getByRole("heading", { name: "Expressions", exact: true }).waitFor();
       await page.getByRole("heading", { name: "Structures", exact: true }).waitFor();
-      await page.getByText("0 independent · 1 prompted", { exact: true }).waitFor();
+      await page.getByText("0 without recorded wording help · 1 assisted", { exact: true }).waitFor();
       await page.getByRole("tabpanel").getByRole("link", { name: /To be fair/ }).click();
       assert.equal(await page.locator("#source-report-message-1 mark").textContent(), "To be fair");
       assert.equal(await page.evaluate(() => document.activeElement.id), "source-report-message-1");
@@ -43,7 +43,7 @@ try {
       await page.evaluate(() => { localStorage.setItem("libitu:loadout:v1", JSON.stringify({ version: 1, guest: null, accounts: { "loadout-browser-a": { draft: { scenarioType: "everyday", goal: "Keep my unrelated draft", difficulty: "guided", feedbackLevel: "light", logicTemplateId: null, selectedKeys: [] }, deviceDrafts: [] } } })); });
       await page.getByRole("button", { name: /Adjust loadout/ }).click(); await page.waitForURL("**/loadout?reportImport=saved");
       await page.getByRole("button", { name: "Use device draft", exact: true }).waitFor();
-      assert.equal(await page.getByRole("textbox", { name: "Mission goal", exact: true }).inputValue(), "Keep my unrelated draft");
+      assert.equal(await page.getByRole("textbox", { name: "Scene preferences", exact: true }).inputValue(), "Keep my unrelated draft");
       await page.goto(origin + reportPath, { waitUntil: "domcontentloaded" }); await page.getByRole("heading", { name: "Your mission report", exact: true }).waitFor();
       auth.failNextCreate = true; await page.getByRole("button", { name: /Retry this mission/ }).click();
       await page.getByText("Fixture connection interrupted. Please retry.", { exact: true }).waitFor();
@@ -57,6 +57,24 @@ try {
     } catch (error) { await page.screenshot({ path: join(artifacts, `failure-${width}.png`), fullPage: true }); throw error; }
     finally { await context.close(); }
   }
+  for (const width of [1440, 390]) {
+    const plannedContext = await browser.newContext({ viewport: { width, height: 1050 } }); const plannedPage = await plannedContext.newPage();
+    const fixture = await installAnalyticsFixture(plannedPage, { origin, planned: true });
+    await plannedPage.goto(origin + reportPath, { waitUntil: "domcontentloaded" });
+    await plannedPage.getByRole("heading", { name: "Your mission report", exact: true }).waitFor();
+    const summary = plannedPage.getByRole("complementary", { name: "Report summary and next steps" });
+    for (const label of ["Primary targets used", "Opportunity targets used", "Skipped targets"]) {
+      assert.equal(await summary.locator("dl > div").filter({ has: plannedPage.getByText(label, { exact: true }) }).locator("dd").innerText(), "1");
+    }
+    assert.equal(await summary.getByText("Expressions used", { exact: true }).count(), 0, "planned summary does not count skipped or optional items in a ratio");
+    await plannedPage.getByRole("tab", { name: /^Language transfer/ }).click();
+    await plannedPage.getByText("Primary target · Skipped", { exact: true }).waitFor();
+    await plannedPage.getByText(/Skipped targets and missing opportunities are not learner failures/).waitFor();
+    assert.equal(await plannedPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+    await plannedPage.screenshot({ path: join(artifacts, `planned-report-${width}.png`), fullPage: true });
+    assert.deepEqual(fixture.auth.errors, []); await plannedContext.close();
+  }
+  console.log("PASS planned primary/opportunity/skipped report counts and excluded target explanations at 1440/390");
   const context = await browser.newContext({ viewport: { width: 390, height: 900 } }); const page = await context.newPage();
   const { auth, feedback } = await installAnalyticsFixture(page, { origin, status: "queued", missing: true });
   await page.goto(origin + reportPath, { waitUntil: "domcontentloaded" }); await page.getByText("Your report is queued", { exact: true }).waitFor();
@@ -68,7 +86,7 @@ try {
   await page.getByRole("img", { name: /out of 100/ }).waitFor(); assert.deepEqual(feedback.posts, [{ retry: false }, { retry: true }]);
   auth.cloud.get(loadoutOwner).delete(`corpus-fixture:${feedback.report.session.items[0].corpus_item_id}`);
   await page.getByRole("button", { name: /Retry this mission/ }).click(); await page.waitForURL("**/loadout?reportImport=active&replaceMissing=1");
-  await page.getByText(/Some original items were deleted/).waitFor(); assert.equal(auth.creates.length, 0);
+  await page.getByText(/Remove unavailable selections and choose replacements/).waitFor(); assert.equal(auth.creates.length, 0);
   await page.goto(origin + reportPath, { waitUntil: "domcontentloaded" }); await page.getByRole("heading", { name: "Your mission report", exact: true }).waitFor();
   await page.evaluate(() => window.__setLoadoutUser(null)); await page.getByRole("heading", { name: "Sign in to view your report", exact: true }).waitFor();
   assert.equal(await page.getByRole("tab").count(), 0); assert.deepEqual(auth.errors, []); await context.close();

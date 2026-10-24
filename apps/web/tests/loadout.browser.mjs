@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fixtureContentId, fixtureRecords, installLoadoutFixture, loadoutOwner } from "./helpers/loadout-fixture.mjs";
+import { fixtureContentId, fixtureRecords, installLoadoutFixture, loadoutOwner, shadowBlueprint } from "./helpers/loadout-fixture.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.LIBITU_PLAYWRIGHT_MODULE ?? "playwright");
@@ -39,6 +39,19 @@ async function checkLayout(page, name) {
   await page.screenshot({ path: join(artifacts, `${name}.png`), fullPage: true });
 }
 
+async function chooseScene(page) {
+  await page.waitForFunction(() => [...document.querySelectorAll("button")]
+    .some((button) => button.textContent?.trim() === "Start mission" && !button.disabled));
+  const chooser = page.locator("details").filter({
+    has: page.locator("summary").filter({ hasText: /^Choose a scene myself$/ })
+  });
+  if (!await chooser.evaluate((node) => node.open)) await chooser.locator("summary").click();
+  await page.getByRole("button", { name: "Generate matching scenes", exact: true }).click();
+  await page.getByRole("button", { name: "Choose Plan a small launch", exact: true }).click();
+  await page.waitForFunction(() => document.querySelector("[data-pending]")?.getAttribute("data-pending") === "false");
+  assert.equal(await page.getByRole("button", { name: "Scene selected", exact: true }).getAttribute("aria-pressed"), "true");
+}
+
 async function holdDraftLock(page) {
   // Model another live tab holding the same browser lock. This makes a lost
   // envelope update reproducible instead of relying on a probabilistic race.
@@ -62,12 +75,18 @@ try {
       await page.goto(entry, { waitUntil: "domcontentloaded", timeout: 60_000 });
       await page.getByRole("heading", { name: "Mission loadout", exact: true }).waitFor();
       await select(page, structures[0]).waitFor();
-      await page.getByLabel("Mission goal", { exact: true }).fill("Agree on a revised project deadline");
+      await page.getByText("2 primary targets and 0–1 opportunity target", { exact: true }).waitFor();
+      await page.getByLabel("Scene preferences", { exact: true }).fill("Agree on a revised project deadline");
       const guestStart = page.getByRole("button", { name: "Sign in to start mission", exact: true });
+      assert.equal(await page.locator("details").filter({
+        has: page.locator("summary").filter({ hasText: /^Choose a scene myself$/ })
+      }).evaluate((node) => node.open), false,
+        "manual scene selection is optional and collapsed initially");
       assert.equal(await guestStart.isDisabled(), true, "no language selected cannot start");
       await select(page, expressions[2]).focus();
       await select(page, expressions[2]).press("Space");
       await waitForSelected(page, 1);
+      await page.getByText("Selected: 1 primary · 0 opportunity", { exact: true }).waitFor();
       assert.equal(await guestStart.isEnabled(), true, "one idiom alone is sufficient");
       await page.getByLabel("Search corpus", { exact: true }).fill("same page");
       assert.equal(await select(page, structures[0]).count(), 0, "search filters the picker");
@@ -84,27 +103,33 @@ try {
       assert.equal(authCall.forceRedirectUrl, page.url());
       assert.equal(authCall.signUpForceRedirectUrl, page.url());
       assert.equal(state.creates.length, 0, "guest click only opens sign-in");
+      assert.equal(state.planRequests?.length ?? 0, 0, "guest click cannot call scene generation before sign-in");
       await remove(page, expressions[2]).focus();
       await remove(page, expressions[2]).press("Enter");
 
       await choose(page, "Scenario type", "everyday");
       await choose(page, "Difficulty", "challenging");
       await choose(page, "Feedback level", "detailed");
+      await page.getByText("Conversation strategy · optional", { exact: true }).click();
       const logic = page.getByRole("button", { name: /Persuasive pitch/ });
       await logic.focus();
       await logic.press("Enter");
       assert.equal(await logic.getAttribute("aria-pressed"), "true");
-      for (const record of structures.slice(0, 3)) await select(page, record).click();
-      for (const record of expressions.slice(0, 5)) await select(page, record).click();
-      await waitForSelected(page, 8);
-      assert.equal(await select(page, structures[3]).isDisabled(), true, "structures stop at three");
-      assert.equal(await select(page, expressions[5]).isDisabled(), true, "chunks and idioms share five slots");
+      for (const record of structures.slice(0, 2)) await select(page, record).click();
+      for (const record of expressions.slice(0, 3)) await select(page, record).click();
+      await waitForSelected(page, 5);
+      assert.equal(await page.getByRole("region", { name: "Primary targets", exact: true })
+        .getByRole("button", { name: /^Remove .+ from loadout$/ }).count(), 3);
+      assert.equal(await page.getByRole("region", { name: "Opportunity targets", exact: true })
+        .getByRole("button", { name: /^Remove .+ from loadout$/ }).count(), 2);
+      assert.equal(await select(page, structures[3]).isDisabled(), true, "structures share the five-target limit");
+      assert.equal(await select(page, expressions[5]).isDisabled(), true, "all target kinds share five slots");
       await remove(page, expressions[2]).click();
-      await waitForSelected(page, 7);
-      assert.equal(await select(page, expressions[5]).isEnabled(), true, "removing an idiom releases one expression slot");
+      await waitForSelected(page, 4);
+      assert.equal(await select(page, expressions[5]).isEnabled(), true, "removing an idiom releases one shared target slot");
       assert.equal(await remove(page, expressions[2]).count(), 0, "preview reflects removal");
       await select(page, expressions[2]).click();
-      await waitForSelected(page, 8);
+      await waitForSelected(page, 5);
       await logic.focus();
       await logic.press("Space");
       assert.equal(await logic.getAttribute("aria-pressed"), "false", "logic is optional and can be removed");
@@ -127,11 +152,12 @@ try {
       }
 
       await page.reload({ waitUntil: "domcontentloaded" });
-      await waitForSelected(page, 8);
-      assert.equal(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "Agree on a revised project deadline");
+      await waitForSelected(page, 5);
+      assert.equal(await page.getByLabel("Scene preferences", { exact: true }).inputValue(), "Agree on a revised project deadline");
       assert.equal(await page.getByRole("combobox", { name: "Scenario type", exact: true }).innerText(), "Everyday life");
       assert.equal(await page.getByRole("combobox", { name: "Difficulty", exact: true }).innerText(), "Challenging");
       assert.equal(await page.getByRole("combobox", { name: "Feedback level", exact: true }).innerText(), "Detailed");
+      await page.getByText("Conversation strategy · optional", { exact: true }).click();
       assert.equal(await logic.getAttribute("aria-pressed"), "true");
       assert.equal(new URL(page.url()).searchParams.get("returnTo"), returnTo);
 
@@ -145,16 +171,25 @@ try {
       state.corpusGate = null;
       releaseCorpus();
       await page.waitForFunction(() => [...document.querySelectorAll("button")]
-        .some((button) => button.textContent?.includes("Start mission") && !button.disabled));
-      await waitForSelected(page, 8);
+        .some((button) => button.textContent?.trim() === "Start mission" && !button.disabled));
+      await waitForSelected(page, 5);
       assert.equal(state.corpusSaves.length, fixtureRecords.length, "guest corpus is imported once");
 
+      await chooseScene(page);
       state.failNextCreate = true;
       await page.getByRole("button", { name: "Start mission", exact: true }).click();
       await page.getByRole("button", { name: "Retry start mission", exact: true }).waitFor();
-      await waitForSelected(page, 8);
+      await waitForSelected(page, 5);
       assert.equal(state.creates.length, 1);
       const first = state.creates[0].input;
+      assert.equal(state.planRequests.length, 1);
+      const planned = state.plans.get(first.plan_id).plan;
+      const candidate = planned.candidates.find(scene => scene.id === first.candidate_id);
+      assert.ok(candidate, "creation freezes the chosen candidate from the generated plan");
+      assert.equal(first.goal, candidate.goal);
+      assert.equal(candidate.targets.filter(target => target.role === "primary").length, 3);
+      assert.equal(candidate.targets.filter(target => target.role === "opportunity").length, 2);
+      assert.deepEqual(first.corpus_item_ids, candidate.targets.map(target => target.corpus_item_id));
       assert.equal(first.logic_template_id, "persuasive_pitch");
       assert.equal(first.scenario_type, "everyday");
       assert.equal(first.difficulty, "challenging");
@@ -162,7 +197,7 @@ try {
       assert.ok(first.corpus_item_ids.every((id) => !id.startsWith("blueprint-candidate")));
       assert.equal(state.sessions.size, 1, "the fixture models an uncertain response after committing");
       await page.reload({ waitUntil: "domcontentloaded" });
-      await waitForSelected(page, 8);
+      await waitForSelected(page, 5);
       await page.getByRole("button", { name: /^(Retry start mission|Start mission)$/ }).click();
       await page.waitForURL(/\/speaking\/[a-f0-9-]+/);
       await page.getByRole("heading", { name: first.goal, exact: true }).waitFor();
@@ -170,6 +205,7 @@ try {
       await page.getByText(structures[0].item.text, { exact: true }).waitFor();
       assert.equal(state.creates.length, 2);
       assert.deepEqual(state.creates[1].input, first, "refresh and retry preserve the entire submission including client_id");
+      assert.equal(state.planRequests.length, 1, "uncertain creation retries preserve the plan without regenerating it");
       assert.equal(state.sessions.size, 1);
       const sessionUrl = page.url();
       const readsBefore = state.sessionReads.length;
@@ -188,7 +224,7 @@ try {
         "switching identity hides the previous account's snapshot");
       assert.equal(page.url(), sessionUrl);
       assert.deepEqual(state.errors, []);
-      console.log(`PASS ${viewport.width}px: guest draft, 1/3/5 limits, optional logic, preview removal, identity sync, retry UUID, snapshot recovery, session identity isolation.`);
+      console.log(`PASS ${viewport.width}px: guest draft, primary/opportunity limits, optional logic, preview removal, identity sync, retry UUID, snapshot recovery, session identity isolation.`);
     } catch (error) {
       await page.screenshot({ path: join(artifacts, `failure-${viewport.width}.png`), fullPage: true });
       throw error;
@@ -202,19 +238,19 @@ try {
   const tabsState = await installLoadoutFixture(tabA, { origin, initialOwner: loadoutOwner, shadow: true });
   await tabA.goto(tabsEntry, { waitUntil: "domcontentloaded" });
   await select(tabA, expressions[0]).click();
-  await tabA.getByLabel("Mission goal", { exact: true }).fill("Account A initial draft");
+  await tabA.getByLabel("Scene preferences", { exact: true }).fill("Account A initial draft");
   const tabB = await tabsContext.newPage();
   const otherOwner = "loadout-browser-b";
   await installLoadoutFixture(tabB, { origin, initialOwner: otherOwner, seedCorpus: false, sharedState: tabsState, shadow: true });
   await tabB.goto(tabsEntry, { waitUntil: "domcontentloaded" });
-  await tabB.getByLabel("Mission goal", { exact: true }).fill("Account B initial draft");
+  await tabB.getByLabel("Scene preferences", { exact: true }).fill("Account B initial draft");
   await tabB.waitForFunction((owner) => JSON.parse(localStorage.getItem("libitu:loadout:v1")).accounts[owner]?.draft.goal === "Account B initial draft", otherOwner);
   const beforeEdits = await tabA.evaluate(() => localStorage.getItem("libitu:loadout:v1"));
   await holdDraftLock(tabA);
   await Promise.all([
-    tabA.getByLabel("Mission goal", { exact: true }).fill("Account A concurrent edit"),
+    tabA.getByLabel("Scene preferences", { exact: true }).fill("Account A concurrent edit"),
     (async () => {
-      const goal = tabB.getByLabel("Mission goal", { exact: true });
+      const goal = tabB.getByLabel("Scene preferences", { exact: true });
       await goal.fill("Account B concurrent");
       await goal.pressSequentially(" edit", { delay: 5 });
       assert.equal(await goal.inputValue(), "Account B concurrent edit", "pending writes do not interrupt continuous typing");
@@ -227,21 +263,22 @@ try {
     const accounts = JSON.parse(localStorage.getItem("libitu:loadout:v1")).accounts;
     return accounts[ownerA]?.draft.goal === "Account A concurrent edit" && accounts[ownerB]?.draft.goal === "Account B concurrent edit";
   }, [loadoutOwner, otherOwner]);
-  assert.equal(await tabA.getByLabel("Mission goal", { exact: true }).inputValue(), "Account A concurrent edit");
-  assert.equal(await tabB.getByLabel("Mission goal", { exact: true }).inputValue(), "Account B concurrent edit",
+  assert.equal(await tabA.getByLabel("Scene preferences", { exact: true }).inputValue(), "Account A concurrent edit");
+  assert.equal(await tabB.getByLabel("Scene preferences", { exact: true }).inputValue(), "Account B concurrent edit",
     "cross-tab storage events do not roll back pending input");
   assert.equal(await selected(tabB).count(), 0, "another account's selected language stays isolated");
 
+  await chooseScene(tabA);
   await holdDraftLock(tabB);
   tabsState.failNextCreate = true;
   await tabA.getByRole("button", { name: "Start mission", exact: true }).click();
-  await tabB.getByLabel("Mission goal", { exact: true }).fill("Account B edit during account A create");
+  await tabB.getByLabel("Scene preferences", { exact: true }).fill("Account B edit during account A create");
   assert.equal(tabsState.creates.length, 0, "network creation waits until the retry identifier is durably saved under the lock");
   await tabB.evaluate(() => window.__releaseLoadoutDraftLock());
   await tabA.getByRole("button", { name: "Retry start mission", exact: true }).waitFor();
   assert.equal(tabsState.creates.length, 1);
   const firstTabRequest = tabsState.creates[0];
-  await tabB.getByLabel("Mission goal", { exact: true }).fill("Account B final independent draft");
+  await tabB.getByLabel("Scene preferences", { exact: true }).fill("Account B final independent draft");
   await tabB.waitForFunction((owner) => JSON.parse(localStorage.getItem("libitu:loadout:v1")).accounts[owner]?.draft.goal === "Account B final independent draft", otherOwner);
   const concurrentEnvelope = await tabA.evaluate(() => JSON.parse(localStorage.getItem("libitu:loadout:v1")));
   assert.equal(concurrentEnvelope.accounts[loadoutOwner].draft.submission.request.client_id, firstTabRequest.input.client_id,
@@ -249,18 +286,32 @@ try {
   await Promise.all([tabA.reload({ waitUntil: "domcontentloaded" }), tabB.reload({ waitUntil: "domcontentloaded" })]);
   await tabA.getByRole("button", { name: "Retry start mission", exact: true }).waitFor();
   await tabB.waitForFunction(() => document.querySelector("textarea")?.value === "Account B final independent draft");
+  let releaseTabRetry;
+  tabsState.createGate = new Promise((resolve) => { releaseTabRetry = resolve; });
+  const tabRetry = tabA.waitForRequest((request) => new URL(request.url()).pathname === "/api/speaking/sessions" && request.method() === "POST");
   await tabA.getByRole("button", { name: "Retry start mission", exact: true }).click();
+  await tabRetry;
+  const finalOtherGoal = "Account B updated during account A retry";
+  await tabB.getByLabel("Scene preferences", { exact: true }).fill(finalOtherGoal);
+  await tabB.waitForFunction(([owner, goal]) => JSON.parse(localStorage.getItem("libitu:loadout:v1")).accounts[owner]?.draft.goal === goal,
+    [otherOwner, finalOtherGoal]);
+  // This event reloads A's unchanged draft as a new object while its response is
+  // pending. It must not be mistaken for an edit to A's actual request.
+  await tabA.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  tabsState.createGate = null;
+  releaseTabRetry();
   await tabA.waitForURL(/\/speaking\/[a-f0-9-]+/);
   assert.equal(tabsState.creates.length, 2);
   assert.deepEqual(tabsState.creates[1], firstTabRequest);
   assert.equal(tabsState.sessions.size, 1);
-  assert.equal(await tabB.getByLabel("Mission goal", { exact: true }).inputValue(), "Account B final independent draft");
+  assert.equal(await tabB.getByLabel("Scene preferences", { exact: true }).inputValue(), finalOtherGoal,
+    "another account's edit does not invalidate the unchanged retry response");
   for (const method of ["link", "history"]) {
     const pendingGoal = `Account B saved after ${method} navigation`;
     await holdDraftLock(tabA);
-    await tabB.getByLabel("Mission goal", { exact: true }).fill(pendingGoal);
+    await tabB.getByLabel("Scene preferences", { exact: true }).fill(pendingGoal);
     await tabB.getByText("Saving your draft on this device… Keep this page open until saving finishes.", { exact: true }).waitFor();
-    assert.equal(await tabB.getByLabel("Mission goal", { exact: true }).inputValue(), pendingGoal);
+    assert.equal(await tabB.getByLabel("Scene preferences", { exact: true }).inputValue(), pendingGoal);
     assert.equal(await tabB.evaluate(() => {
       const event = new Event("beforeunload", { cancelable: true });
       window.dispatchEvent(event);
@@ -283,14 +334,15 @@ try {
   }
   const beforeOwnerChange = await tabA.evaluate(() => JSON.parse(localStorage.getItem("libitu:loadout:v1")));
   await holdDraftLock(tabA);
-  await tabB.getByLabel("Mission goal", { exact: true }).fill("This queued edit must be cancelled on account change");
+  await tabB.getByLabel("Scene preferences", { exact: true }).fill("This queued edit must be cancelled on account change");
   await tabB.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await tabA.evaluate(() => window.__releaseLoadoutDraftLock());
   await waitForSelected(tabB, 1);
   const afterOwnerChange = await tabA.evaluate(() => JSON.parse(localStorage.getItem("libitu:loadout:v1")));
   assert.deepEqual(afterOwnerChange.accounts[otherOwner], beforeOwnerChange.accounts[otherOwner],
     "account changes cancel writes waiting in the previous account's queue");
-  assert.equal(afterOwnerChange.accounts[loadoutOwner].draft.submission.request.client_id, firstTabRequest.input.client_id);
+  assert.equal(afterOwnerChange.accounts[loadoutOwner].draft.submission, undefined,
+    "the acknowledged request stays cleared after navigating and switching accounts");
   assert.deepEqual(tabsState.errors, []);
   await tabsContext.close();
   console.log("PASS: two-account tabs serialize writes, preserve typing and retry IDs, retain queued drafts through SPA/history navigation, and cancel queued writes on account change.");
@@ -300,34 +352,35 @@ try {
   const state = await installLoadoutFixture(page, { origin });
   await page.goto(entry, { waitUntil: "domcontentloaded" });
   await select(page, expressions[0]).waitFor();
-  await page.getByLabel("Mission goal", { exact: true }).fill("Private account A goal");
+  await page.getByLabel("Scene preferences", { exact: true }).fill("Private account A goal");
   await select(page, expressions[0]).click();
   await page.waitForFunction(() => document.querySelector('[data-pending]')?.getAttribute('data-pending') === 'false');
   await page.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await page.waitForFunction(() => [...document.querySelectorAll("button")]
-    .some((button) => button.textContent?.includes("Start mission") && !button.disabled));
+    .some((button) => button.textContent?.trim() === "Start mission" && !button.disabled));
   await page.evaluate(() => window.__setLoadoutUser("loadout-browser-b"));
   await page.waitForFunction(() => document.querySelector("textarea")?.value !== "Private account A goal");
   await waitForSelected(page, 0);
   assert.equal(state.corpusSaves.filter((row) => row.owner === "loadout-browser-b").length, 0);
   await page.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await waitForSelected(page, 1);
-  assert.equal(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "Private account A goal");
+  assert.equal(await page.getByLabel("Scene preferences", { exact: true }).inputValue(), "Private account A goal");
   await page.evaluate(() => window.__setLoadoutUser(null));
   await waitForSelected(page, 0);
-  assert.notEqual(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "Private account A goal");
-  await page.getByLabel("Mission goal", { exact: true }).fill("A new device draft");
+  assert.notEqual(await page.getByLabel("Scene preferences", { exact: true }).inputValue(), "Private account A goal");
+  await page.getByLabel("Scene preferences", { exact: true }).fill("A new device draft");
   await page.waitForFunction(() => document.querySelector('[data-pending]')?.getAttribute('data-pending') === 'false');
   await page.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
   await page.getByRole("button", { name: "Use device draft", exact: true }).waitFor();
   await waitForSelected(page, 1);
-  assert.equal(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "Private account A goal",
+  assert.equal(await page.getByLabel("Scene preferences", { exact: true }).inputValue(), "Private account A goal",
     "an existing account draft is not silently overwritten by a later device draft");
   await page.getByRole("button", { name: "Use device draft", exact: true }).click();
   await waitForSelected(page, 0);
-  assert.equal(await page.getByLabel("Mission goal", { exact: true }).inputValue(), "A new device draft");
+  assert.equal(await page.getByLabel("Scene preferences", { exact: true }).inputValue(), "A new device draft");
   assert.equal(state.creates.length, 0);
   await select(page, expressions[0]).click();
+  await chooseScene(page);
   let releaseCreate;
   state.createGate = new Promise((resolve) => { releaseCreate = resolve; });
   const pendingCreate = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/speaking/sessions" && request.method() === "POST");
@@ -357,6 +410,7 @@ try {
   await emptyPage.goto(`${origin}/loadout`, { waitUntil: "domcontentloaded" });
   await emptyPage.getByRole("heading", { name: "Mission loadout", exact: true }).waitFor();
   await emptyPage.getByRole("button", { name: "Sign in to start mission", exact: true }).waitFor();
+  await emptyPage.getByRole("heading", { name: "Your corpus is empty", exact: true }).waitFor();
   assert.equal(await emptyPage.getByRole("button", { name: "Sign in to start mission", exact: true }).isDisabled(), true);
   assert.equal(await selected(emptyPage).count(), 0);
   assert.match(await emptyPage.locator("main").innerText(), /save.*(language|corpus)|corpus.*empty|no saved/i);
@@ -377,7 +431,7 @@ try {
   await savedPage.locator(".mission-box").getByRole("link", { name: "Open loadout", exact: true }).click();
   await select(savedPage, expressions[0]).waitFor();
   assert.equal(new URL(savedPage.url()).searchParams.get("returnTo"), savedReturnUrl.pathname + savedReturnUrl.search + savedReturnUrl.hash);
-  await savedPage.getByLabel("Mission goal", { exact: true }).fill("Share a fair assessment of the plan");
+  await savedPage.getByLabel("Scene preferences", { exact: true }).fill("Share a fair assessment of the plan");
   await select(savedPage, expressions[0]).click();
   await savedPage.waitForFunction(() => document.querySelector('[data-pending]')?.getAttribute('data-pending') === 'false');
   await savedPage.evaluate((owner) => window.__setLoadoutUser(owner), loadoutOwner);
@@ -385,18 +439,47 @@ try {
   await savedPage.waitForURL(/\/speaking\/[a-f0-9-]+/);
   await savedPage.getByText(expressions[0].item.text, { exact: true }).waitFor();
   assert.equal(savedState.corpusSaves.length, 1);
+  assert.equal(savedState.planRequests.length, 1, "one-click start generates one matching plan");
   assert.equal(savedState.creates.length, 1);
   assert.equal(savedState.creates[0].input.corpus_item_ids.length, 1);
   assert.equal(savedState.creates[0].input.logic_template_id, null, "one saved chunk can start without logic or structures");
   assert.deepEqual(savedState.errors, []);
   await savedContext.close();
-  console.log("PASS: Stage 1 save → Open loadout → login corpus sync → one-item mission creation through the real UI.");
+  console.log("PASS: Stage 1 save → Open loadout → login corpus sync → one-click, one-item mission creation through the real UI.");
 
   const shadowContext = await browser.newContext({ viewport: { width: 1440, height: 1050 } });
   const shadowPage = await shadowContext.newPage();
   const shadowState = await installLoadoutFixture(shadowPage, { origin, initialOwner: loadoutOwner, shadow: true });
+  await shadowPage.route("**/api/practice/attempts/progress?*", async route => {
+    if (route.request().method() !== "GET") return route.fallback();
+    return route.fulfill({ headers: { "access-control-allow-origin": "*" },
+      json: { practiced_sentence_ids: [...new Set([...shadowState.practiceRows.values()].map(row => row.sentence_id))],
+        best_word_matches: {} } });
+  });
+  await shadowPage.route("**/api/practice/attempts/submit", async route => {
+    const request = route.request();
+    if (request.method() !== "POST") return route.fallback();
+    const form = await new Response(request.postDataBuffer(),
+      { headers: { "content-type": request.headers()["content-type"] } }).formData();
+    const { attempt: input, analysis } = JSON.parse(form.get("metadata"));
+    assert.equal(input.recording, null, "navigation must not enable recording retention");
+    assert.equal(analysis.consent_version, "practice-analysis-v1");
+    assert.ok(form.get("audio").size > 0, "the completed take includes its analysis audio");
+    shadowState.practiceRequests.push(input);
+    if (shadowState.practiceGate) await shadowState.practiceGate;
+    const sentence = shadowBlueprint.transcript.find(row => row.id === input.sentence_id);
+    assert.ok(sentence);
+    const row = { ...input, id: input.client_id, sentence_text: sentence.parts.join(" "),
+      start_ms: sentence.start_ms, end_ms: sentence.end_ms, reference_version: "fixture",
+      recording_state: "none", created_at: new Date().toISOString(), evidence_source: "browser_recording" };
+    shadowState.practiceRows.set(row.id, row);
+    await route.fulfill({ status: 202, headers: { "access-control-allow-origin": "*" }, json: row });
+    shadowState.practiceCompleted++;
+  });
   const shadowEntry = `${origin}/practice/${fixtureContentId}/shadow?${new URLSearchParams({ learnerLevel: "B2", segmentId: "loadout-segment", sentenceId: "sentence-v2-loadout" })}#practice`;
   await shadowPage.goto(shadowEntry, { waitUntil: "domcontentloaded" });
+  await shadowPage.getByRole("navigation", { name: "Shadow mode", exact: true })
+    .getByRole("button", { name: "Detailed", exact: true }).click();
   await shadowPage.getByRole("button", { name: "Record sentence", exact: true }).waitFor();
   let releasePractice;
   shadowState.practiceGate = new Promise((resolve) => { releasePractice = resolve; });
@@ -415,7 +498,7 @@ try {
   assert.equal(await shadowPage.evaluate(() => window.__loadoutMicrophoneTracks.every((track) => track.readyState === "ended")), true);
   const savedResponse = shadowPage.waitForResponse((response) => response.url().includes("/api/practice/attempts") && response.request().method() === "POST");
   releasePractice();
-  assert.equal((await savedResponse).status(), 201);
+  assert.equal((await savedResponse).status(), 202);
   await shadowPage.locator(".practice-save-banner").waitFor({ state: "detached" });
   assert.equal(shadowState.practiceCompleted, 1);
   assert.equal(shadowState.practiceRows.size, 1);

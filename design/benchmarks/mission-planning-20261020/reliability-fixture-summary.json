@@ -1,0 +1,17 @@
+{
+  "record_type": "summary_of_captured_terminal_probe",
+  "provider": "fixed_synthetic_fixture",
+  "paid_model_calls": 0,
+  "synthetic_owner": "libitu-planning-smoke-5a4f16f7992b4c03a7d41bb24f485957",
+  "plan_id": "185f19a3-54d5-4d4f-abf4-f7a80de36634",
+  "session_id": "2c0f1dae-f96a-47d6-bb1c-1df4cd18f3b4",
+  "feedback_job_id": "a7a2f0d5-1597-4614-867b-5b92a42b8ae5",
+  "candidate_count": 2,
+  "planning_and_persistence_seconds": 1.67,
+  "session_metadata_and_stable_ids": true,
+  "stale_plan_rejected": true,
+  "feedback_snapshot_verified": true,
+  "cleanup_verified": true,
+  "passed": true,
+  "qualification": "Hosted persistence verification with a fixture provider; not evidence of model behavior."
+}

@@ -332,7 +332,7 @@ def render_report(summary: dict, directory: Path) -> str:
         measured = observed["voice_first_replies_with_analysis_timing"]
         missing = observed["voice_first_reply_count"] - measured
         timing = (f"1. 语音时序：{observed['voice_first_audio_before_analysis_start']}/{measured} 个有分析时间记录的语音首次回复，"
-                  f"首音先于本轮 DeepSeek 分析启动，早于分析完成 {lead_text}。"
+                  f"首音先于本轮文本模型分析启动，早于分析完成 {lead_text}。"
                   f"另有 {missing} 个语音首次回复缺少对应分析时间，不能判断其与分析的先后。")
     else:
         timing = ("1. 本次使用文本输入，Gemini 输出真实音频；没有语音输入时序可供判断。"
@@ -343,9 +343,9 @@ def render_report(summary: dict, directory: Path) -> str:
     content_result = (f"3. 内容落实：{observed['cross_turn_reflected_with_exact_quote']} 个跨轮尝试被评为 reflected 且有可核对的精确引用。"
                       "实际回复、确定性约束检查和评估原文见下，不能用传递成功代替内容落实。"
                       if summary["attempts"] else "3. 内容落实：本次没有已绑定的策略尝试，未覆盖内容落实验证。")
-    lines = ["# Gemini 与 DeepSeek 真实端到端记录", "",
+    lines = ["# Gemini Live 与文本分析真实端到端记录", "",
         f"会话：`{summary['session_id']}`。模型：`{summary['models'].get('gemini', 'unknown')}` / "
-        f"`{summary['models'].get('deepseek', 'unknown')}`。记录 {summary['turn_count']} 个非空用户轮、"
+        f"`{summary['models'].get('ark', summary['models'].get('gemini_text', summary['models'].get('deepseek', 'unknown')))}`。记录 {summary['turn_count']} 个非空用户轮、"
         f"{summary['diagnostic_event_count']} 条服务端诊断、{summary['browser_event_count']} 条浏览器记录。", "",
         "## 执行状态", "", json_block({"user_rows_by_status": summary["user_rows_by_status"],
                                       "warnings": summary["warnings"], "errors": summary["browser_errors"],
@@ -383,7 +383,7 @@ def render_report(summary: dict, directory: Path) -> str:
             "（true 表示与本次隐式策略“不点名目标表达”的要求不符；只检查字面包含）。", "",
             "策略发送、绑定、评估原始记录：", "", json_block(attempt["events"]), "",
             "展示/播放记录：", "", json_block(attempt["presentation"]), ""]
-    lines += ["## 每轮分析与原始 DeepSeek 回复", ""]
+    lines += ["## 每轮分析与原始文本模型回复", ""]
     for turn in summary["turns"]:
         lines += [f"### 第 {turn['turn']} 轮", "", f"用户 `{turn['message_id']}`，revision `{turn['revision']}`，"
             f"输入 `{turn['input_source']}`，状态 `{turn['status']}`：", "", raw_block(turn["text"]), ""]
@@ -393,7 +393,7 @@ def render_report(summary: dict, directory: Path) -> str:
             trace = run["trace"]
             lines += [f"分析 `{run['run_id']}`，revision `{run['revision']}`，status `{run['status']}`，"
                 f"耗时 `{trace.get('elapsed_ms', 'unknown')} ms`，策略原因 `{trace.get('policy_reason', 'unknown')}`。", "",
-                "DeepSeek 原始内容：", "", raw_block(trace.get("raw_content")), "",
+                "文本模型原始内容：", "", raw_block(trace.get("raw_content")), "",
                 "解析、证据校验与策略决策：", "", json_block({key: value for key, value in trace.items() if key != "raw_content"}), ""]
         lines += ["该轮关键诊断原文：", "", json_block(turn["key_events"]), "",
                   "最终证据及提示来源：", "", json_block(turn["evidence"]), "",

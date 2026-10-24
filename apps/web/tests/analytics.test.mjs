@@ -23,6 +23,25 @@ test("retry uses original settings and ordered owned IDs with a new explicit req
   assert.throws(() => retryMissionRequest(mission, records.slice(1), "another"), /no longer/);
   assert.deepEqual(draftFromMission(mission, records.slice(1)).draft.selectedKeys, ["missing-session-item:second", "key-2"]);
 });
+test("retry preserves confirmed plan while adjusting imports roles without an obsolete scene", () => {
+  const planned = { ...mission, mission_plan: { plan_id: "plan", candidate_id: "scene", targets: [
+    { session_item_id: "first", role: "opportunity" }, { session_item_id: "second", role: "primary" },
+  ] } };
+  const retry = retryMissionRequest(planned, records, "retry");
+  assert.equal(retry.plan_id, "plan"); assert.equal(retry.candidate_id, "scene");
+  const draft = draftFromMission(planned, records).draft;
+  assert.deepEqual(draft.targetRoles, { "key-1": "primary", "key-2": "opportunity" });
+  assert.equal(draft.plan, undefined); assert.equal(draft.selectedCandidateId, undefined);
+});
+test("retry and adjust preserve an explicit support choice while legacy missions stay unset", () => {
+  for (const level of ["model_frame", "model_label", "label_only", "no_hint"]) {
+    const supported = { ...mission, support_level: level };
+    assert.equal(draftFromMission(supported, records).draft.supportLevel, level);
+    assert.equal(retryMissionRequest(supported, records, "retry").support_level, level);
+  }
+  assert.equal(Object.hasOwn(draftFromMission(mission, records).draft, "supportLevel"), false);
+  assert.equal(Object.hasOwn(retryMissionRequest({ ...mission, support_level: null }, records, "retry"), "support_level"), false);
+});
 test("explicit mission import preserves a current draft and deduplicates additional drafts", async () => {
   const storage = memoryStorage(); const current = { ...emptyDraft(), goal: "Do not replace my current work", selectedKeys: ["old"] };
   await saveDraft(storage, "owner", current);

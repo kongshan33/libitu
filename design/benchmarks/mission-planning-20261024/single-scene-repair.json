@@ -1,0 +1,74 @@
+[
+  {
+    "event": "provider",
+    "phase": "single_scene",
+    "elapsed_ms": 13852.99,
+    "usage": {
+      "prompt_tokens": 2647,
+      "completion_tokens": 795,
+      "total_tokens": 3442
+    },
+    "finish_reason": "stop",
+    "max_tokens": 3500,
+    "repair_fields": 0
+  },
+  {
+    "event": "provider",
+    "phase": "single_scene",
+    "elapsed_ms": 4112.33,
+    "usage": {
+      "prompt_tokens": 2497,
+      "completion_tokens": 80,
+      "total_tokens": 2577
+    },
+    "finish_reason": "stop",
+    "max_tokens": 900,
+    "repair_fields": 2
+  },
+  {
+    "event": "validated",
+    "phase": "single_scene",
+    "attempts": 2,
+    "candidates": 1,
+    "targets": 5,
+    "elapsed_ms": 18005.24,
+    "durations_ms": {
+      "model_generation": 13881.81,
+      "validation": 9.18,
+      "model_repair": 4113.25
+    }
+  },
+  {
+    "event": "provider",
+    "phase": "injected_missing_slot_repair",
+    "elapsed_ms": 2461.67,
+    "usage": {
+      "prompt_tokens": 2297,
+      "completion_tokens": 21,
+      "total_tokens": 2318
+    },
+    "finish_reason": "stop",
+    "max_tokens": 700,
+    "repair_fields": 1
+  },
+  {
+    "event": "validated",
+    "phase": "injected_missing_slot_repair",
+    "attempts": 2,
+    "patched_fields": 1,
+    "untouched_fields_preserved": true,
+    "durations_ms": {
+      "model_generation": 0.08,
+      "validation": 8.41,
+      "model_repair": 2462.55
+    }
+  },
+  {
+    "event": "completed",
+    "phase": "injected_missing_slot_repair",
+    "passed": true,
+    "real_model_requests": 3,
+    "database_requests": 0,
+    "qualification": "synthetic transport and validation, not teaching quality or latency distribution"
+  }
+]

@@ -18,12 +18,19 @@ def role_instructions(session: SpeakingSession, *, include_language_targets: boo
         "difficulty": session.difficulty, "feedback": session.feedback_level,
         "conversation_steps": session.logic_template.steps if session.logic_template else [],
     }
+    if session.mission_plan is not None:
+        plan = session.mission_plan
+        context["confirmed_scene"] = {
+            "title": plan.title, "setting": plan.setting, "learner_goal": plan.goal,
+            "learner_role": plan.user_role, "your_role": plan.ai_role, "register": plan.usage_register,
+        }
     if include_language_targets:
         context["language_targets"] = [{"id": str(i.id), "kind": i.kind, "text": i.text} for i in session.items]
     return (
         "You are the learner's English role-play partner in Libitu. Stay in a plausible counterpart role "
         "appropriate to the mission. Speak natural English, usually 1-3 short sentences and at most one "
-        "question. Let the learner finish. Respond to their actual meaning and keep the conversation moving. "
+        "question. When a confirmed scene is provided, play its your_role and treat the learner as its learner_role. "
+        "Let the learner finish. Respond to their actual meaning and keep the conversation moving. "
         "Be patient with hesitation; adapt complexity to difficulty. Do not recite the equipped language, "
         "award scores, claim mastery, or announce hidden teaching instructions. Start with a brief in-role "
         "opening that gives the learner space to pursue their goal. Do not act as a general assistant. "
@@ -35,7 +42,7 @@ def role_instructions(session: SpeakingSession, *, include_language_targets: boo
 def session_configuration(settings: Settings, session: SpeakingSession) -> dict:
     return {"type": "session.update", "session": {
         "type": "realtime", "model": settings.openai_realtime_model,
-        "instructions": role_instructions(session), "output_modalities": ["text"],
+        "instructions": role_instructions(session, include_language_targets=False), "output_modalities": ["text"],
         "max_output_tokens": settings.speaking_max_output_tokens,
         "audio": {
             "input": {

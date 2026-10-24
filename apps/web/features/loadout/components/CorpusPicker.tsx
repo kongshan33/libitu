@@ -11,7 +11,7 @@ export function CorpusPicker({ title, records, selectedKeys, count, limit, struc
 }) {
   return <fieldset className={styles.picker}>
     <legend>{title}</legend>
-    <div className={styles.pickerHeading}><p>{structures ? "Choose up to 3 reusable sentence patterns." : "Chunks and idioms share 5 expression slots."}</p><span aria-live="polite">{count} / {limit} selected</span></div>
+    <div className={styles.pickerHeading}><p>{title === "Function not yet labelled" ? "No functional tag is saved for these items." : "Language for this communicative function."}</p><span aria-live="polite">{count} / {limit} total selected</span></div>
     {count >= limit ? <p className={styles.limitNotice}>All {limit} slots are filled. Remove an item to choose another.</p> : null}
     <div className={structures ? styles.structureList : styles.expressionGrid}>
       {records.map((record) => {
@@ -21,7 +21,7 @@ export function CorpusPicker({ title, records, selectedKeys, count, limit, struc
           aria-label={`${selected ? "Remove" : "Select"} ${text}`} aria-pressed={selected}
           disabled={disabled || (!selected && count >= limit)} onClick={() => onToggle(record)}>
           <span className={styles.cardToggle} aria-hidden="true">{selected ? <Check size={14} /> : <Plus size={14} />}</span>
-          <span className={structures ? styles.structureText : styles.expressionText}>{text}</span>
+          <span className={record.item.kind === "structure" ? styles.structureText : styles.expressionText}>{text}</span>
           {record.item.meaning ? <span className={styles.meaning}>{record.item.meaning}</span> : null}
           <span className={styles.tags}><span className={styles.kindTag}>{record.item.kind}</span>{record.item.tags.map((tag) => <span key={tag}>{tag}</span>)}</span>
           <span className={styles.source}>{record.sourceTitle || "Personal corpus"}{!record.serverId ? " · Saved on this device" : ""}</span>

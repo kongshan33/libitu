@@ -1,0 +1,95 @@
+[
+  {
+    "event": "started",
+    "synthetic_owner": "libitu-planning-smoke-e6d005e94ad5412ea9726aacd229a42d",
+    "planning_requests": 1,
+    "identity": "synthetic_dependency",
+    "supabase_transport": "ipv4_verified_tls"
+  },
+  {
+    "event": "connection_verified"
+  },
+  {
+    "event": "corpus_created",
+    "count": 3
+  },
+  {
+    "event": "provider_completed",
+    "elapsed_ms": 7837.48,
+    "finish_reason": "stop",
+    "usage": {
+      "prompt_tokens": 1591,
+      "completion_tokens": 1786,
+      "total_tokens": 3377
+    }
+  },
+  {
+    "event": "plan_created",
+    "elapsed_seconds": 10.87,
+    "plan_id": "d4b2b2b1-ade5-464c-9e23-7755e8d650d6",
+    "candidates": [
+      {
+        "title": "Delayed Project Check-in",
+        "goal": "Acknowledge the colleague's constraint, propose a practical next step, and confirm shared understanding.",
+        "user_role": "Project lead who needs to address the delay and agree on a revised plan.",
+        "ai_role": "Colleague who is responsible for the delayed task and has a valid reason for the setback.",
+        "primary_fit": [
+          "high",
+          "high"
+        ]
+      },
+      {
+        "title": "Client Deadline Negotiation",
+        "goal": "Acknowledge the client's concern, justify a new timeline based on a shared constraint, and ensure alignment.",
+        "user_role": "Project manager who needs to explain the delay and negotiate a new deadline.",
+        "ai_role": "Client account manager who is concerned about the delay and needs a clear plan.",
+        "primary_fit": [
+          "high",
+          "high"
+        ]
+      },
+      {
+        "title": "Team Retrospective on Delay",
+        "goal": "Acknowledge a team member's valid point, propose a process improvement based on it, and confirm team alignment.",
+        "user_role": "Team facilitator who guides the discussion and helps the team agree on improvements.",
+        "ai_role": "Team member who raises a concern about the delay and suggests a different approach.",
+        "primary_fit": [
+          "high",
+          "high"
+        ]
+      }
+    ]
+  },
+  {
+    "event": "session_frozen",
+    "session_id": "ad9d6787-5d13-4a4f-98ce-c040305a4355",
+    "metadata": true,
+    "stable_target_ids": true,
+    "stale_plan_rejected": true
+  },
+  {
+    "event": "feedback_frozen",
+    "job_id": "abb64d7f-0b54-4dcc-abb9-6266b3466ba1",
+    "status": "queued",
+    "reflected": true,
+    "presented": true,
+    "skipped": true,
+    "exposure": true,
+    "private_fields_excluded": true,
+    "reliable_user_turns": 0,
+    "feedback_model_called": false
+  },
+  {
+    "event": "cleanup_verified",
+    "profiles": 0,
+    "corpus_items": 0,
+    "plans": 0,
+    "sessions": 0,
+    "known_session_dependents": 0
+  },
+  {
+    "event": "completed",
+    "passed": true,
+    "qualification": "planning_and_persistence_only"
+  }
+]

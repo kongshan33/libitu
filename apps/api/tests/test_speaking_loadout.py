@@ -90,12 +90,39 @@ def test_one_item_and_no_logic_are_valid_with_defaults():
     assert response.json()["logic_template"] is None
     assert response.json()["difficulty"] == "standard"
     assert response.json()["feedback_level"] == "balanced"
+    assert response.json()["support_level"] is None
+
+
+@pytest.mark.parametrize("level", ["model_frame", "model_label", "label_only", "no_hint"])
+def test_support_level_round_trip_is_independent_of_difficulty(level):
+    body = request_body(difficulty="guided", support_level=level)
+    response = client.post("/api/speaking/sessions", json=body)
+    assert response.status_code == 201
+    session = response.json()
+    assert session["support_level"] == level and session["difficulty"] == "guided"
+    assert session["evidence_contract_version"] == "speaking-evidence-v3"
+    assert session["items"][0]["source_corpus_item_id"] == body["corpus_item_ids"][0]
+    assert client.get(f"/api/speaking/sessions/{session['id']}").json() == session
+    assert client.post("/api/speaking/sessions", json=body).json() == session
+    assert client.post("/api/speaking/sessions", json={**body, "support_level": None}).status_code == 409
+
+
+def test_absent_and_null_support_preserve_legacy_retry_payload():
+    body = request_body()
+    original = client.post("/api/speaking/sessions", json=body).json()
+    request, _ = store.speaking_session_submissions[("loadout-owner", body["client_id"])]
+    assert "support_level" not in request
+    assert original["evidence_contract_version"] is None
+    assert original["items"][0]["source_corpus_item_id"] is None
+    assert client.post("/api/speaking/sessions", json={**body, "support_level": None}).json() == original
+    assert client.post("/api/speaking/sessions", json={**body, "support_level": "model_frame"}).status_code == 409
 
 
 @pytest.mark.parametrize("updates", [
     {"client_id": "wrong"}, {"client_id": None}, {"goal": " \n\t "}, {"goal": "x" * 501},
     {"scenario_type": "daily_life"}, {"difficulty": "easy"}, {"feedback_level": "every_turn"},
     {"logic_template_id": "made_up"}, {"user_id": "someone-else"},
+    {"support_level": "automatic"}, {"support_level": False},
     {"corpus_item_ids": []}, {"corpus_item_ids": ["blueprint-candidate"]},
 ])
 def test_invalid_setup_returns_a_safe_string_without_creation(updates):
@@ -206,6 +233,7 @@ def test_durable_calls_use_one_atomic_rpc_with_verified_owner_and_server_logic(m
         payload = json.loads(request.content)
         assert payload["p_user_id"] == "loadout-owner" and request.method == "POST"
         if request.url.path.endswith("create_speaking_loadout"):
+            assert "p_support_level" not in payload
             assert payload["p_client_id"] == body["client_id"]
             assert payload["p_corpus_item_ids"] == body["corpus_item_ids"]
             assert payload["p_logic_template"] == document["logic_template"]
@@ -221,6 +249,32 @@ def test_durable_calls_use_one_atomic_rpc_with_verified_owner_and_server_logic(m
         assert store.speaking_sessions == {}
         assert client.post(f"/api/speaking/sessions/{document['id']}/turns", json={"user_message": "Hello"}).status_code == 501
         assert document["turn_count"] == 0
+    finally:
+        database._client.close()
+
+
+@pytest.mark.parametrize("planned", [False, True])
+def test_durable_support_uses_distinct_atomic_rpc(monkeypatch, planned):
+    body = request_body(support_level="no_hint")
+    document = client.post("/api/speaking/sessions", json=body).json()
+    if planned:
+        body.update(plan_id=str(uuid4()), candidate_id=str(uuid4()))
+    calls = []
+    def respond(request):
+        calls.append(request)
+        payload = json.loads(request.content)
+        assert request.url.path.endswith("/create_evidence_speaking_loadout")
+        assert payload["p_support_level"] == "no_hint"
+        assert payload["p_evidence_contract_version"] == "speaking-evidence-v3"
+        assert payload["p_user_id"] == "loadout-owner"
+        assert payload.get("p_plan_id") == body.get("plan_id")
+        assert payload.get("p_candidate_id") == body.get("candidate_id")
+        return httpx.Response(200, json=document)
+    database = install_repository(monkeypatch, respond)
+    try:
+        response = client.post("/api/speaking/sessions", json=body)
+        assert response.status_code == 201 and response.json() == document
+        assert len(calls) == 1
     finally:
         database._client.close()
 

@@ -15,6 +15,9 @@ from app.config import get_settings
 from app.integrations.speaking_runtime_repository import RuntimeConflict, get_runtime_store
 from app.schemas.speaking_runtime import RealtimeStart, RealtimeTicket, SpeakingWorkspace
 from app.services.speaking_service import get_speaking_session
+from app.services.speaking_opportunities import opportunity_view
+from app.services.speaking_support_runtime import support_workspace
+from app.services.speaking_timing import measure_phase
 
 
 def now() -> datetime:
@@ -79,8 +82,11 @@ def mutate(owner: str, session_id: str, operation, runtime_id: str | None = None
 
 
 def public_workspace(owner: str, session_id: str, state: dict | None = None) -> SpeakingWorkspace:
-    session = require_session(owner, session_id)
-    state = state if state is not None else read_state(owner, session_id)
+    with measure_phase("workspace_session_read"):
+        session = require_session(owner, session_id)
+    if state is None:
+        with measure_phase("workspace_runtime_read"):
+            state = read_state(owner, session_id)
     session.status = state["status"]
     session.turn_count = state["turn_count"]
     document = state["document"]
@@ -89,6 +95,8 @@ def public_workspace(owner: str, session_id: str, state: dict | None = None) -> 
         runtime["state"] = "disconnected"
     return SpeakingWorkspace.model_validate({
         "session": session, "version": state["version"], "runtime": runtime,
+        "opportunities": opportunity_view(session, document),
+        **support_workspace(session, document),
         **{key: document[key] for key in ("messages", "evidence", "learning", "policy", "analysis_status", "hint", "help")
            if key in document},
     })
@@ -187,10 +195,22 @@ def disconnect_runtime(owner: str, session_id: str, runtime_id: str) -> None:
             raise
 
 
-def end_session(owner: str, session_id: str) -> SpeakingWorkspace:
+def end_session(owner: str, session_id: str, receipts: dict | None = None) -> SpeakingWorkspace:
+    session = require_session(owner, session_id)
     def end(document, _state):
-        interrupt_unheard(document)
         runtime = document.get("runtime")
+        if (receipts and _state["status"] == "active" and runtime
+                and runtime.get("id") == receipts.get("runtime_id")):
+            # These are server-received facts captured from this owner's current
+            # connection, never client-supplied end payloads or stale generations.
+            from app.services.speaking_teaching import record_hint_exposure
+            for exposure in receipts.get("exposures", {}).values():
+                document["controller"] = record_hint_exposure(session, document, exposure)
+            for attempt in document.get("teaching_attempts", []):
+                shown_at = receipts.get("presentations", {}).get(attempt.get("response_id"))
+                if shown_at:
+                    attempt.update(presented=True, presented_at=attempt.get("presented_at") or shown_at)
+        interrupt_unheard(document)
         if runtime:
             runtime.update(state="disconnected", expires_at=iso_now())
             runtime.pop("ticket_hash", None)

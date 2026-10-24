@@ -45,9 +45,24 @@ export async function routeFeedbackFixture(page, state = { report: analyticsRepo
   });
   return state;
 }
-export async function installAnalyticsFixture(page, { origin, status = "ready", missing = false } = {}) {
+export async function installAnalyticsFixture(page, { origin, status = "ready", missing = false, planned = false } = {}) {
   const auth = await installLoadoutFixture(page, { origin, records: [], initialOwner: loadoutOwner });
   const report = analyticsReport(status);
+  if (planned) {
+    report.session.mission_plan = {
+      plan_id: "30000000-0000-4000-8000-000000000001", candidate_id: "40000000-0000-4000-8000-000000000001", version: 1,
+      scenario_type: report.session.scenario_type, title: "Agree on a safe migration", setting: "A planning meeting with a colleague", goal: report.session.goal,
+      user_role: "Project lead", ai_role: "Colleague", register: "professional",
+      targets: report.session.items.map((item, index) => ({ session_item_id: item.id, corpus_item_id: item.corpus_item_id, role: index === 2 ? "opportunity" : "primary",
+        communicative_function: "Discuss a proposal", fit: "high", fit_reason: "Fits a collaborative discussion", trigger_question: "How would you assess the proposal?", skip_when: "No proposal is being discussed", metadata_status: "available" }))
+    };
+    if (report.result) {
+      Object.assign(report.result.statistics, { primary_targets: 2, offered_primary_targets: 1, assessed_primary_targets: 1, used_primary_targets: 1, skipped_targets: 1, opportunity_targets: 1, used_opportunity_targets: 1 });
+      report.result.item_results.forEach((item, index) => Object.assign(item, { role: index === 2 ? "opportunity" : "primary", opportunity_status: index === 1 ? "skipped" : "used", excluded_reason: index === 1 ? "Skipped by the learner: this target did not fit the scene." : null }));
+      const transfer = report.result.dimensions.find(value => value.id === "transfer");
+      transfer.score = 100; transfer.summary = "The applicable primary target was used. The skipped target is excluded; the opportunity target is additional practice.";
+    }
+  }
   auth.cloud.set(loadoutOwner, new Map(report.session.items.map(item => {
     const key = `corpus-fixture:${item.corpus_item_id}`;
     return [key, { id: item.corpus_item_id, kind: item.kind, text: item.text, meaning: item.meaning, tags: [], slots: {}, content_id: null,

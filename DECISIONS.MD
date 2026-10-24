@@ -4,10 +4,165 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-12
+  updated: 2026-10-20
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
+
+## Acknowledge successful Mission creation before navigation — 2026-10-24
+
+The device draft's `submission` is an uncertain network request, not a permanent
+link to the last Mission. A successful create/retry must acknowledge its exact
+owner/client ID and valid session ID, then remove only `submission` under the
+existing owner-bound lock and expected-draft comparison. Persist before publishing
+the unlocked draft, so quota errors retain the same recoverable request. Keep
+targets, scene and settings; a later explicit Start generates a fresh client ID.
+Closing/ending a conversation is not the acknowledgement trigger. In particular,
+a retry of an already-completed Mission still releases the old device lock once
+confirmed, and deleted source cards do not block that acknowledgement.
+
+## Generate one scene and repair only failed fields — 2026-10-24
+
+Supersedes full-response regeneration in the earlier deadline repair. Add optional
+`candidate_count: 1 | 2` to planning, default two for existing callers. Automatic
+Start explicitly requests one; compare/practice requests two. Saved plan version 1
+accepts one to three candidates, retaining legacy reads and frozen Mission IDs.
+
+A second model call returns an exact object of server-assigned repair task IDs.
+Allow only known scene/target fields; a structurally mismatched target list may be
+replaced as one bounded field. No model-selected paths or arbitrary patch actions.
+Preserve all untouched values and run full schema, identity, role, no-disclosure,
+frame and practice validation after merging. Collect independent original errors
+together, including schema and practice failures. Canonicalize UUID identity/order
+before assigning locations. More than 60 schema errors or unlocatable structure
+stops safely; no hidden whole-plan regeneration. Transport errors still do not retry.
+Repair context may include only affected scene headers and the original bounded
+source inputs as untrusted data; rejected target answers are not echoed into the
+system instruction or logs. This refines the earlier no-raw-output repair boundary.
+
+Cache identity includes actual scene inputs and selected-source wording/metadata,
+separate from Mission settings and the immutable uncertain-create signature.
+Difficulty, feedback, template and support changes do not spend another generation.
+A single owner-filtered corpus read replaces N per-target reads; durable save/create
+snapshot checks remain authoritative. Browser cache is not a shared server cache.
+
+Preparation timings use generated request IDs and fixed stage labels, including
+success and failure. Return `Server-Timing` and `X-Request-ID`; browser Performance
+entries retain only the latest bounded metric per stage. No content, owner/session
+IDs or credentials enter timing logs. Provider timings cover the complete JSON
+request; they are not first-token measurements. Gemini start remains separate.
+
+## Align Mission planning schema and Ark deadlines — 2026-10-24
+
+Separate the model-facing generation schema from the backward-compatible saved
+plan schema: new sentence frames are mandatory strings, server-owned metadata is
+omitted, and target IDs are constrained to the selection. New model frames use
+one `{{target}}` marker, expanded only after target identity and role verification.
+AI still supplies the surrounding frame and learner slots; the server cannot
+invent a missing slot. Validate the expanded frame under the existing exact-word,
+structure-anchor and 500-character rules. Reject duplicate/nested markers. Public
+responses and stored plans contain expanded frames, and valid literal frames
+remain compatible. Collect all safe semantic failures for the bounded repair;
+never log source text or return rejected model output in the repair instruction.
+Request two concise candidates. Give initial generation and its one permitted content repair one
+shared 90-second deadline, with 120 seconds at the browser for the whole request.
+A real five-target repair took 52.71 seconds; the earlier 45-second budget could
+not complete it. Keep strict final validation, existing transport-error behavior,
+legacy plan readability, and the 20-second Mission-create timeout unchanged.
+
+## Use Doubao for current text analysis — 2026-10-23
+
+Accepted at the user's request: replace text analysis with Doubao through
+Volcengine Ark, using the supplied server-only `ARK_API_KEY`. Keep Gemini Live
+voice on its existing Gemini credential. Default to the successfully probed
+`doubao-seed-2-1-lite-260915`, configurable through `ARK_MODEL` (also accepting
+an Ark inference endpoint ID). Use `ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3`
+and the supplied Chat API contract: Bearer auth, JSON objects, SSE and
+`thinking.type=disabled`. Keep task-specific token/time limits, strict validation
+and explicit failure states. Do not silently fall back to Gemini or DeepSeek.
+Retain saved results and historical evaluations; provider connectivity does not
+prove equivalent model quality. Earlier DeepSeek notes describe historical work.
+
+## Grounded review, linked practice and support history P3/P4 — 2026-10-20
+
+Extend analysis to `speaking-feedback-v3` while keeping rubric v2 and historical
+v1/v2 execution/results. Missed-opportunity rewrites are optional AI suggestions in
+the same bounded assessment call. They require an actually presented opportunity,
+the immediately following final learner reply, exact revision/range evidence and a
+separate conservative content check. A rejected suggestion cannot erase valid scores
+or count as actual language use.
+
+Linked second rounds keep selected language and target roles, while changing concrete
+details or exchanging the two distinct role strings. Compute changes on the server,
+freeze parent/root IDs and parent item associations, and require an explicit support
+choice. Preserve exact retry and uncertain-request recovery before checking deleted
+or changed sources. Compare only existing compatible ready reports, without hidden
+analysis calls, manufactured zeros or learning-gain scores.
+
+New explicit-support sessions receive `speaking-evidence-v3` and immutable original
+corpus IDs; do not backfill those claims into historical sessions. Support rule
+`support-history-v1` accepts only ready v3 reports with separately recorded appropriate,
+strictly independent references whose frozen language still matches the selected
+card. Every primary target needs three Missions across two UTC dates of actual qualifying learner speech
+and two scene families. Linked rounds and identical scenes do not manufacture
+variety. Read at most 100 matching owner-bound reports and report truncation.
+Suggest at most one level less support, require user application, and never write
+mastery or comfort/focus/stretch states. These conservative thresholds are product
+rules, not empirically validated learning criteria.
+
+## Manual Mission support and model-then-transfer — 2026-10-20
+
+Implement P2 with four explicit levels independent of difficulty: `model_frame`,
+`model_label`, `label_only`, `no_hint`. New drafts default to `model_frame`;
+missing/null settings preserve legacy sessions and submission identities. Initial
+support is frozen atomically with the session through a separate supported-create
+RPC; existing creation signatures remain unchanged. Runtime changes start from
+version 0, use CAS and occur only between safe reply boundaries. A stale selector
+or busy provider/playback returns an explicit retryable result, never an optimistic
+setting that differs from the server.
+
+The two modeling levels use a distinct `model_then_transfer` action. The AI uses
+one target once in its own natural point, then asks for the learner's different
+content. Implicit elicitation retains its strict no-disclosure contract.
+Generated frames preserve target wording and blank slots; model reflection
+requires exact, separate, ordered demonstration/question evidence. Semantic
+quality remains an advisory judgment. All explicit support levels suppress
+automatic help cards; the learner can still request help.
+
+Keep sent controls, content compliance, actual presentation and learner use
+separate. Publish only server-anchored UTF-16 demonstration spans. Partial audio
+can establish possible exposure but cannot establish that a demonstration or
+transfer question was heard. Reducing support never clears prior assistance.
+Stage 4 and Stage 5 share the same narrow variant-grounding rule and conservative
+attribution. Freeze support changes and teaching evidence for later review;
+previous reports retain their original source and results. The later P4 increment offers explicit history-based support suggestions; automatic
+support upgrades and mastery inference remain excluded.
+
+## Expression-led Mission planning — 2026-10-20
+
+The next follow-up separates system output failures from learner selection fit.
+Recover locally validated model-content errors with at most one constrained
+regeneration inside a shared 45-second model budget. Canonicalize target order
+only when IDs and roles are complete and correct; never drop targets or weaken
+final validation. Network/provider/timeout/storage failures do not trigger
+automatic retries. Recommend two primary targets plus zero or one opportunity
+target without reducing the allowed budget. Fit advice must name one validated
+candidate and its actual per-target reasons; role/removal changes require the
+learner's explicit action and preserve budget and draft-recovery rules.
+
+The follow-up simplifies the default interaction to one **Start mission** action:
+prepare a matching scene if necessary, select an eligible candidate and save/open
+the Mission. Scene comparison remains an optional **Choose a scene myself**
+section. Reuse a valid current choice or cached plan, prefer candidates with more
+high-fit primary targets, and keep stable proposal order for ties. Low/unknown
+primary fit still prevents creation. Persist the selected plan and exact creation
+request before sending it; uncertain creation retries must not regenerate a plan.
+
+The user accepted P0/P1 of [the revised Stage 3/4 plan](design/docs/STAGE_THREE_FOUR_MISSION_PLAN.md). New Loadout selects language first, with one to three primary targets and at most two opportunity targets across expressions and structures. Generate two or three candidate scenes, explain suitability, then freeze the confirmed scene, roles, target metadata and learner-directed trigger plans with the Mission. Preserve legacy drafts and idempotent recovery; never silently discard excess selections. A stale corpus snapshot requires a new plan before first creation.
+
+P1 retains implicit elicitation. It prioritizes suitable primary targets and records sent, bound, reflected and actually presented opportunities separately. Skip/restore is a versioned runtime state; missing opportunities and skipped targets are not learner failures. Fix Stage 5's older two-turn-only attribution before adding demonstrations: actual expression/example visibility is session-scoped assistance, and uncertain timing is not independent use. Version the changed coverage contract, retain old report results and keep opportunity targets outside the primary denominator.
+
+P2 is now implemented as the separate model-then-transfer action and four manual support levels described above. The later P3/P4 entry above adds grounded rewrites, associated second rounds and explicit history-based support suggestions. No teaching-effect or mastery claim follows from software tests or one successful provider probe.
 
 ## Mission teaching control and private diagnostics — 2026-10-18
 

@@ -14,7 +14,14 @@ from app.workers import blueprint_worker as worker
 def test_end_commits_before_cleanup_and_enqueue_even_if_followup_fails(monkeypatch, failure, caplog):
     events = []
     result = object()
-    def end(*args):
+    receipts = {"runtime_id": "current-runtime", "exposures": {}, "presentations": {}}
+    async def capture(owner, session_id):
+        assert (owner, session_id) == ("owner", "session")
+        events.append("capture_receipts")
+        return receipts
+    def end(owner, session_id, captured):
+        assert (owner, session_id) == ("owner", "session")
+        assert captured is receipts
         events.append("durable_end")
         return result
     async def stop(*args):
@@ -25,24 +32,48 @@ def test_end_commits_before_cleanup_and_enqueue_even_if_followup_fails(monkeypat
         events.append("feedback")
         if failure == "feedback":
             raise RuntimeError("PRIVATE")
+    monkeypatch.setattr(service, "capture_local_receipts", capture)
     monkeypatch.setattr(service.speaking_runtime_state, "end_session", end)
     monkeypatch.setattr(service, "stop_local", stop)
     monkeypatch.setattr(service, "request_feedback", feedback)
     assert asyncio.run(service.end_speaking_session("owner", "session")) is result
-    assert events == ["durable_end", "cleanup", "feedback"]
+    assert events == ["capture_receipts", "durable_end", "cleanup", "feedback"]
     assert "PRIVATE" not in caplog.text
 
 
 def test_durable_end_failure_has_no_local_cleanup_or_feedback(monkeypatch):
-    def fail(*args):
+    events = []
+    async def capture(*args):
+        events.append("capture_receipts")
+        return None
+    def fail(owner, session_id, receipts):
+        assert (owner, session_id, receipts) == ("owner", "session", None)
+        events.append("durable_end")
         raise HTTPException(503, "Commit failed")
     async def unexpected(*args):
         pytest.fail("Do not clean before durable completion")
+    monkeypatch.setattr(service, "capture_local_receipts", capture)
     monkeypatch.setattr(service.speaking_runtime_state, "end_session", fail)
     monkeypatch.setattr(service, "stop_local", unexpected)
     monkeypatch.setattr(service, "request_feedback", lambda *_: pytest.fail("Must not enqueue"))
-    with pytest.raises(HTTPException):
+    with pytest.raises(HTTPException) as error:
         asyncio.run(service.end_speaking_session("owner", "session"))
+    assert error.value.status_code == 503 and error.value.detail == "Commit failed"
+    assert events == ["capture_receipts", "durable_end"]
+
+
+def test_receipt_capture_failure_never_ends_cleans_or_enqueues(monkeypatch):
+    async def fail(*args):
+        raise HTTPException(503, "Receipt read unavailable")
+    async def unexpected(*args):
+        pytest.fail("Must not clean after failed receipt capture")
+    monkeypatch.setattr(service, "capture_local_receipts", fail)
+    monkeypatch.setattr(service.speaking_runtime_state, "end_session", lambda *_: pytest.fail("Must not freeze"))
+    monkeypatch.setattr(service, "stop_local", unexpected)
+    monkeypatch.setattr(service, "request_feedback", lambda *_: pytest.fail("Must not enqueue"))
+    with pytest.raises(HTTPException) as error:
+        asyncio.run(service.end_speaking_session("owner", "session"))
+    assert error.value.status_code == 503 and error.value.detail == "Receipt read unavailable"
 
 
 def test_delete_tombstone_precedes_best_effort_cleanup(monkeypatch):

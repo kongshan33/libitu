@@ -1,0 +1,44 @@
+{
+  "verified_at": "2026-10-20T08:07:10.370073+00:00",
+  "method": "independent server REST exact-owner and session-ID reads",
+  "owners": [
+    {
+      "owner": "libitu-planning-smoke-dbff5f58647a42ae9d955a6fe7d3e2b0",
+      "profiles": 0,
+      "corpus_items": 0,
+      "speaking_plans": 0,
+      "speaking_sessions": 0
+    },
+    {
+      "owner": "libitu-planning-smoke-5a4f16f7992b4c03a7d41bb24f485957",
+      "profiles": 0,
+      "corpus_items": 0,
+      "speaking_plans": 0,
+      "speaking_sessions": 0
+    },
+    {
+      "owner": "libitu-planning-smoke-e52924ca1af047fab0e74fe1269deb49",
+      "profiles": 0,
+      "corpus_items": 0,
+      "speaking_plans": 0,
+      "speaking_sessions": 0
+    }
+  ],
+  "session_dependents": [
+    {
+      "session_id": "2c0f1dae-f96a-47d6-bb1c-1df4cd18f3b4",
+      "speaking_session_items": 0,
+      "speaking_runtime_state": 0,
+      "speaking_feedback": 0,
+      "speaking_turns": 0
+    },
+    {
+      "session_id": "cca9df74-d82d-46dc-bc36-cfba335f8eb7",
+      "speaking_session_items": 0,
+      "speaking_runtime_state": 0,
+      "speaking_feedback": 0,
+      "speaking_turns": 0
+    }
+  ],
+  "all_zero": true
+}

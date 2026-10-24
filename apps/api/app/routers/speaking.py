@@ -19,6 +19,19 @@ from app.services.speaking_lifecycle import end_speaking_session, delete_speakin
 from app.schemas.speaking_feedback import FeedbackRequest, SpeakingFeedback
 from app.services.speaking_feedback_service import read_feedback, request_feedback
 from app.services.speaking_diagnostics import read_events
+from app.schemas.speaking_plan import PracticePlanCreate, SpeakingPlan, SpeakingPlanCreate
+from app.services.speaking_planning import create_practice_plan, create_speaking_plan, read_speaking_plan
+from app.schemas.speaking_progress import (
+    PracticeComparison, SupportRecommendation, SupportRecommendationRequest,
+)
+from app.services.speaking_progress import compare_practice, recommend_support
+from app.services.speaking_timing import measure_phase, request_timing
+
+
+_PREPARATION_OPERATIONS = {
+    "create_plan": "plan", "practice_plan": "practice_plan",
+    "create_session": "create", "get_workspace": "workspace",
+}
 
 class SpeakingRoute(APIRoute):
     def get_route_handler(self):
@@ -33,7 +46,26 @@ class SpeakingRoute(APIRoute):
                     detail="Check the scenario, goal, settings and selected corpus items before continuing.",
                 ) from error
 
-        return safe_validation
+        operation = _PREPARATION_OPERATIONS.get(self.name)
+        if operation is None:
+            return safe_validation
+
+        async def timed_preparation(request: Request):
+            with request_timing(operation) as timing:
+                try:
+                    response = await safe_validation(request)
+                except HTTPException as error:
+                    error.headers = {**(error.headers or {}), **timing.finish(error.status_code)}
+                    raise
+                except BaseException:
+                    # Cancellation and unexpected errors still retain measured work
+                    # in server diagnostics; never include the exception contents.
+                    timing.finish(500)
+                    raise
+                response.headers.update(timing.finish(response.status_code))
+                return response
+
+        return timed_preparation
 
 
 router = APIRouter(route_class=SpeakingRoute)
@@ -46,7 +78,40 @@ def get_options() -> SpeakingOptions:
 
 @router.post("/sessions", status_code=status.HTTP_201_CREATED)
 def create_session(payload: SpeakingSessionCreate, current_user: CurrentUserDep) -> SpeakingSession:
-    return create_speaking_session(current_user.id, payload)
+    with measure_phase("create"):
+        return create_speaking_session(current_user.id, payload)
+
+
+@router.post("/plans", status_code=status.HTTP_201_CREATED)
+async def create_plan(payload: SpeakingPlanCreate, current_user: CurrentUserDep) -> SpeakingPlan:
+    return await create_speaking_plan(current_user.id, payload)
+
+
+@router.post("/support-recommendations")
+def support_recommendations(
+    payload: SupportRecommendationRequest, current_user: CurrentUserDep,
+) -> SupportRecommendation:
+    return recommend_support(current_user.id, payload)
+
+
+@router.post("/sessions/{session_id}/practice-plans", status_code=status.HTTP_201_CREATED)
+async def practice_plan(
+    session_id: UUID, payload: PracticePlanCreate, current_user: CurrentUserDep,
+) -> SpeakingPlan:
+    return await create_practice_plan(current_user.id, str(session_id), payload)
+
+
+@router.get("/sessions/{session_id}/practice-comparison")
+def practice_comparison(session_id: UUID, current_user: CurrentUserDep) -> PracticeComparison:
+    return compare_practice(current_user.id, str(session_id))
+
+
+@router.get("/plans/{plan_id}")
+def get_plan(plan_id: UUID, current_user: CurrentUserDep) -> SpeakingPlan:
+    plan = read_speaking_plan(current_user.id, str(plan_id))
+    if plan is None:
+        raise HTTPException(status_code=404, detail="Speaking plan not found.")
+    return plan
 
 
 @router.get("/sessions/{session_id}")

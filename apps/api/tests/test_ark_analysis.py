@@ -4,8 +4,8 @@ from types import SimpleNamespace
 import httpx
 import pytest
 
-from app.integrations import deepseek
-from app.integrations.deepseek import AnalysisProviderError
+from app.integrations import ark_analysis
+from app.integrations.ark_analysis import AnalysisProviderError
 from app.schemas.content import ContentKind, ContentResolveResponse
 
 
@@ -55,7 +55,7 @@ def test_response_normalizes_evidenced_chunk_format_variance() -> None:
         },
     )
 
-    analysis = deepseek._parse_analysis_response(
+    analysis = ark_analysis._parse_analysis_response(
         response,
         "0:01\tTo be fair, there is another side to this.",
     )
@@ -75,12 +75,12 @@ def test_truncated_response_retries_with_larger_output_budget(monkeypatch) -> No
             _stream_response("{", "length", 64000),
         ]
     )
-    monkeypatch.setattr(deepseek, "get_settings", lambda: _settings())
-    monkeypatch.setattr(deepseek, "_deepseek_client", lambda: client)
-    monkeypatch.setattr(deepseek, "sleep", lambda _seconds: None)
+    monkeypatch.setattr(ark_analysis, "get_settings", lambda: _settings())
+    monkeypatch.setattr(ark_analysis, "_ark_analysis_client", lambda: client)
+    monkeypatch.setattr(ark_analysis, "sleep", lambda _seconds: None)
 
     with pytest.raises(AnalysisProviderError) as raised:
-        deepseek.analyze_transcript(_content(), "0:01\tA short transcript.")
+        ark_analysis.analyze_transcript(_content(), "0:01\tA short transcript.")
 
     assert raised.value.code == "analysis_response_truncated"
     assert raised.value.diagnostic == (
@@ -123,10 +123,10 @@ def test_stream_emits_validated_partial_analysis_preview(monkeypatch) -> None:
     )
     client = _FakeClient([_stream_response(content, "stop", 420)])
     previews = []
-    monkeypatch.setattr(deepseek, "get_settings", lambda: _settings())
-    monkeypatch.setattr(deepseek, "_deepseek_client", lambda: client)
+    monkeypatch.setattr(ark_analysis, "get_settings", lambda: _settings())
+    monkeypatch.setattr(ark_analysis, "_ark_analysis_client", lambda: client)
 
-    analysis = deepseek.analyze_transcript(
+    analysis = ark_analysis.analyze_transcript(
         _content(),
         "0:01\tTo be fair, there is another side.",
         previews.append,
@@ -140,17 +140,17 @@ def test_stream_emits_validated_partial_analysis_preview(monkeypatch) -> None:
 
 
 def test_retry_preview_never_regresses_to_an_empty_partial_object() -> None:
-    previous = deepseek._build_analysis_preview(
+    previous = ark_analysis._build_analysis_preview(
         '{"summary":"Already visible.","chapters":["Opening"],'
         '"logic_flow":[{"title":"Framing the idea","subtitle":"The premise.","timestamp":"0:01"}]}',
         "0:01\tThe premise is already visible.",
     )
-    restarted = deepseek._build_analysis_preview(
+    restarted = ark_analysis._build_analysis_preview(
         '{',
         "0:01\tThe premise is already visible.",
     )
 
-    merged = deepseek._merge_analysis_preview(previous, restarted)
+    merged = ark_analysis._merge_analysis_preview(previous, restarted)
 
     assert merged.summary == "Already visible."
     assert merged.chapters == ["Opening"]
@@ -159,7 +159,7 @@ def test_retry_preview_never_regresses_to_an_empty_partial_object() -> None:
 
 
 def test_incomplete_json_exposes_only_closed_semantic_fields() -> None:
-    preview = deepseek._build_analysis_preview(
+    preview = ark_analysis._build_analysis_preview(
         """
         {
           "summary": "Still streaming.",
@@ -174,13 +174,13 @@ def test_incomplete_json_exposes_only_closed_semantic_fields() -> None:
 
 
 def test_prompt_leaves_subtitle_formatting_to_local_pipeline() -> None:
-    assert '"sentence_boundaries"' not in deepseek.SYSTEM_PROMPT
-    assert "transcript_sentences" not in deepseek.SYSTEM_PROMPT
+    assert '"sentence_boundaries"' not in ark_analysis.SYSTEM_PROMPT
+    assert "transcript_sentences" not in ark_analysis.SYSTEM_PROMPT
 
 
 def test_prompt_and_schema_support_idioms() -> None:
-    assert 'kind              "chunk" | "idiom" | "structure"' in deepseek.SYSTEM_PROMPT
-    normalized = deepseek._normalize_corpus_item(
+    assert 'kind              "chunk" | "idiom" | "structure"' in ark_analysis.SYSTEM_PROMPT
+    normalized = ark_analysis._normalize_corpus_item(
         {
             "kind": "IDIOM",
             "text": "double down on",
@@ -201,7 +201,7 @@ def test_prompt_and_schema_support_idioms() -> None:
         "they doubled down on the original plan",
     )
 
-    item = deepseek.AnalysisCorpusItem.model_validate(normalized)
+    item = ark_analysis.AnalysisCorpusItem.model_validate(normalized)
     assert item.kind == "idiom"
     assert item.text == "double down on"
     assert item.source_text == "doubled down on"
@@ -210,13 +210,13 @@ def test_prompt_and_schema_support_idioms() -> None:
 
 def test_oversized_transcript_fails_instead_of_silent_truncation(monkeypatch) -> None:
     settings = _settings()
-    settings.deepseek_max_input_chars = 10
+    settings.ark_max_input_chars = 10
     client = _FakeClient([])
-    monkeypatch.setattr(deepseek, "get_settings", lambda: settings)
-    monkeypatch.setattr(deepseek, "_deepseek_client", lambda: client)
+    monkeypatch.setattr(ark_analysis, "get_settings", lambda: settings)
+    monkeypatch.setattr(ark_analysis, "_ark_analysis_client", lambda: client)
 
     with pytest.raises(AnalysisProviderError) as raised:
-        deepseek.analyze_transcript(_content(), "0:01\tThis transcript exceeds the limit.")
+        ark_analysis.analyze_transcript(_content(), "0:01\tThis transcript exceeds the limit.")
 
     assert raised.value.code == "analysis_input_too_large"
     assert client.payloads == []
@@ -224,14 +224,14 @@ def test_oversized_transcript_fails_instead_of_silent_truncation(monkeypatch) ->
 
 def test_rejected_request_is_not_retried_as_schema_failure(monkeypatch) -> None:
     client = _FakeClient([_response(400, {"error": {"message": "bad request"}})])
-    monkeypatch.setattr(deepseek, "get_settings", lambda: _settings())
-    monkeypatch.setattr(deepseek, "_deepseek_client", lambda: client)
+    monkeypatch.setattr(ark_analysis, "get_settings", lambda: _settings())
+    monkeypatch.setattr(ark_analysis, "_ark_analysis_client", lambda: client)
 
     with pytest.raises(AnalysisProviderError) as raised:
-        deepseek.analyze_transcript(_content(), "0:01\tA short transcript.")
+        ark_analysis.analyze_transcript(_content(), "0:01\tA short transcript.")
 
     assert raised.value.code == "analysis_provider_rejected"
-    assert str(raised.value) == "DeepSeek rejected the blueprint request (HTTP 400)."
+    assert str(raised.value) == "Doubao rejected the blueprint request (HTTP 400)."
     assert len(client.payloads) == 1
 
 
@@ -262,7 +262,7 @@ def _response(status: int, payload: dict) -> httpx.Response:
     return httpx.Response(
         status,
         json=payload,
-        request=httpx.Request("POST", "https://api.deepseek.com/chat/completions"),
+        request=httpx.Request("POST", "https://ark.cn-beijing.volces.com/api/v3/chat/completions"),
     )
 
 
@@ -292,25 +292,25 @@ def _stream_response(content: str, finish_reason: str, completion_tokens: int) -
         200,
         text=body,
         headers={"Content-Type": "text/event-stream"},
-        request=httpx.Request("POST", "https://api.deepseek.com/chat/completions"),
+        request=httpx.Request("POST", "https://ark.cn-beijing.volces.com/api/v3/chat/completions"),
     )
 
 
 def _settings() -> SimpleNamespace:
     return SimpleNamespace(
-        deepseek_api_key="test-key",
-        deepseek_model="deepseek-v4-flash",
-        deepseek_max_input_chars=240_000,
-        deepseek_max_output_tokens=32_000,
-        deepseek_max_attempts=2,
+        ark_api_key="test-key",
+        ark_model="doubao-seed-2-1-lite-260915",
+        ark_max_input_chars=240_000,
+        ark_max_output_tokens=32_000,
+        ark_max_attempts=2,
     )
 
 
 def _content() -> ContentResolveResponse:
     return ContentResolveResponse(
-        content_id="content-deepseek-test",
+        content_id="content-ark_analysis-test",
         kind=ContentKind.youtube,
-        normalized_key="youtube:deepseek-test",
-        title="DeepSeek test",
+        normalized_key="youtube:ark_analysis-test",
+        title="Doubao test",
         language="en",
     )

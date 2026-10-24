@@ -61,7 +61,7 @@ def test_only_completed_sessions_can_enqueue(setup, status):
 def test_snapshot_is_allowlisted_frozen_and_deeply_copied(setup):
     adapter, runtime, sid, _ = setup
     job = adapter.enqueue("feedback-owner", sid)
-    assert set(job["source"]) == {"session", "messages", "evidence", "controller"}
+    assert set(job["source"]) == {"session", "messages", "evidence", "controller", "target_states", "teaching_attempts"}
     assert "private" not in json.dumps(job["source"]) and "secret" not in json.dumps(job["source"])
     original = adapter.read("feedback-owner", sid)
     job["source"]["messages"].clear()
@@ -71,6 +71,56 @@ def test_snapshot_is_allowlisted_frozen_and_deeply_copied(setup):
     assert len(again["input_hash"]) == 64
     again["source"]["session"]["goal"] = "changed"
     assert adapter.read("feedback-owner", sid) == original
+
+
+def test_freeze_preserves_attribution_and_opportunities_without_private_controls(setup):
+    adapter, runtime, sid, _ = setup
+    document = runtime.read("feedback-owner", sid)["document"]
+    document["messages"][0].update(started_at="2026-10-20T00:01:00Z", finalized_at="2026-10-20T00:01:04Z")
+    document["evidence"][0]["assistance"] = "example"
+    document["controller"]["exposures"][0].update(level="example", scope="session",
+        visible_at="2026-10-20T00:00:00Z", overlap=False)
+    document["teaching_attempts"] = [{"id": "attempt", "response_id": "reply", "presented": True,
+        "policy": {"target_item_id": "target", "action": "implicit_elicitation", "instruction": "private"},
+        "assessment": {"outcome": "reflected", "exact_quote": "What would you choose?", "trace": "secret"}}]
+    document["target_states"] = {"target": {"skipped": True, "reason": "Not relevant", "version": 1,
+        "history": [{"action": "skip", "at": "2026-10-20T00:02:00Z", "reason": "Not relevant", "private": True}]}}
+    runtime.compare_and_swap("feedback-owner", sid, 1, document, "completed", 1)
+    frozen = adapter.enqueue("feedback-owner", sid)["source"]
+    assert frozen["messages"][0]["started_at"] == "2026-10-20T00:01:00Z"
+    assert frozen["evidence"][0]["assistance"] == "example"
+    assert frozen["controller"]["exposures"][0]["scope"] == "session"
+    assert frozen["teaching_attempts"][0]["assessment"]["outcome"] == "reflected"
+    assert frozen["target_states"]["target"]["history"][0]["action"] == "skip"
+    assert "private" not in json.dumps(frozen) and "secret" not in json.dumps(frozen)
+
+
+def test_support_and_demonstration_evidence_are_allowlisted_and_frozen(setup):
+    adapter, runtime, sid, _ = setup
+    document = runtime.read("feedback-owner", sid)["document"]
+    document.update(
+        support={"level": "no_hint", "version": 2, "private": "discard"},
+        support_history=[{"level": "no_hint", "version": 2, "at": "2026-10-20T00:02:00Z", "private": "discard"}],
+        teaching_attempts=[{
+            "id": "demonstration", "response_id": "response", "presented": True,
+            "policy": {"action": "model_then_transfer", "target_item_id": "target",
+                       "support_level": "model_frame", "support_version": 0, "instruction": "private"},
+            "assessment": {"outcome": "reflected", "model_quote": "To be fair, the cost is high.",
+                           "transfer_question_quote": "What do you think about the timing?", "trace": "secret"},
+        }],
+    )
+    document["controller"]["exposures"][0].update(level="example", certainty="possible")
+    runtime.compare_and_swap("feedback-owner", sid, 1, document, "completed", 1)
+    frozen = adapter.enqueue("feedback-owner", sid)["source"]
+    assert frozen["support"] == {"level": "no_hint", "version": 2}
+    assert frozen["support_history"] == [{"level": "no_hint", "version": 2, "at": "2026-10-20T00:02:00Z"}]
+    assert frozen["controller"]["exposures"][0]["certainty"] == "possible"
+    assert frozen["teaching_attempts"][0]["policy"]["support_version"] == 0
+    assert frozen["teaching_attempts"][0]["assessment"]["model_quote"] == "To be fair, the cost is high."
+    assert frozen["teaching_attempts"][0]["assessment"]["transfer_question_quote"] == "What do you think about the timing?"
+    assert "private" not in json.dumps(frozen) and "secret" not in json.dumps(frozen)
+    runtime.compare_and_swap("feedback-owner", sid, 2, {}, "completed", 1)
+    assert adapter.enqueue("feedback-owner", sid, retry=True)["source"] == frozen
 
 
 def test_concurrent_enqueue_and_claim_have_one_winner(setup):

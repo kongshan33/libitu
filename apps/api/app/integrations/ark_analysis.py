@@ -48,16 +48,16 @@ def analyze_transcript(
     on_progress: AnalysisProgressCallback | None = None,
 ) -> BlueprintAnalysis:
     settings = get_settings()
-    if not settings.deepseek_api_key:
-        raise AnalysisProviderError("DeepSeek is not configured.")
+    if not settings.ark_api_key:
+        raise AnalysisProviderError("Doubao is not configured.")
 
-    if len(transcript_text) > settings.deepseek_max_input_chars:
+    if len(transcript_text) > settings.ark_max_input_chars:
         raise AnalysisProviderError(
             "This transcript is too long for one analysis job. Split processing is required.",
             code="analysis_input_too_large",
             diagnostic=(
                 f"input_chars={len(transcript_text)};"
-                f"max_input_chars={settings.deepseek_max_input_chars}"
+                f"max_input_chars={settings.ark_max_input_chars}"
             ),
         )
     bounded_transcript = transcript_text
@@ -66,7 +66,7 @@ def analyze_transcript(
         f"Language: {content.language or 'unknown'}\nTranscript:\n{bounded_transcript}"
     )
     payload = {
-        "model": settings.deepseek_model,
+        "model": settings.ark_model,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -74,7 +74,7 @@ def analyze_transcript(
         "response_format": {"type": "json_object"},
         "thinking": {"type": "disabled"},
         "temperature": 0.2,
-        "max_tokens": settings.deepseek_max_output_tokens,
+        "max_tokens": settings.ark_max_output_tokens,
         "stream": True,
         "stream_options": {"include_usage": True},
     }
@@ -91,8 +91,8 @@ def analyze_transcript(
         if on_progress is not None:
             on_progress(merged)
 
-    max_attempts = max(1, settings.deepseek_max_attempts)
-    base_output_tokens = min(settings.deepseek_max_output_tokens, 32_000)
+    max_attempts = max(1, settings.ark_max_attempts)
+    base_output_tokens = min(settings.ark_max_output_tokens, 32_000)
     for attempt in range(max_attempts):
         attempt_payload = {
             **payload,
@@ -127,7 +127,7 @@ def analyze_transcript(
 
     if isinstance(last_error, AnalysisProviderError):
         raise last_error
-    raise AnalysisProviderError("DeepSeek could not generate the blueprint. Please retry.") from last_error
+    raise AnalysisProviderError("Doubao could not generate the blueprint. Please retry.") from last_error
 
 
 def _merge_analysis_preview(
@@ -162,10 +162,10 @@ def _stream_analysis_response(
     last_preview_at = 0.0
     last_preview_signature: tuple[object, ...] | None = None
 
-    with _deepseek_client().stream(
+    with _ark_analysis_client().stream(
         "POST",
         "/chat/completions",
-        headers={"Authorization": f"Bearer {settings.deepseek_api_key}"},
+        headers={"Authorization": f"Bearer {settings.ark_api_key}"},
         json=request_payload,
     ) as response:
         response.raise_for_status()
@@ -200,7 +200,7 @@ def _stream_analysis_response(
     completion_text = "".join(content_parts)
     if finish_reason is None:
         raise AnalysisProviderError(
-            "DeepSeek's response stream ended before completion. Please retry.",
+            "Doubao's response stream ended before completion. Please retry.",
             code="analysis_stream_interrupted",
             diagnostic=f"attempt={attempt}/{max_attempts};output_chars={len(completion_text)}",
             retryable=True,
@@ -244,14 +244,14 @@ def _parse_analysis_payload(
     finish_reason = choice.get("finish_reason")
     if finish_reason == "length":
         raise AnalysisProviderError(
-            "DeepSeek stopped before the blueprint JSON was complete. Please retry.",
+            "Doubao stopped before the blueprint JSON was complete. Please retry.",
             code="analysis_response_truncated",
             diagnostic=_completion_diagnostic(payload, finish_reason, requested_max_tokens),
             retryable=True,
         )
     if finish_reason not in (None, "stop"):
         raise AnalysisProviderError(
-            "DeepSeek could not complete the blueprint. Please retry.",
+            "Doubao could not complete the blueprint. Please retry.",
             code="analysis_response_incomplete",
             diagnostic=_completion_diagnostic(payload, finish_reason, requested_max_tokens),
             retryable=finish_reason == "insufficient_system_resource",
@@ -260,7 +260,7 @@ def _parse_analysis_payload(
     message = choice["message"]["content"]
     if not message:
         raise AnalysisProviderError(
-            "DeepSeek returned an empty blueprint. Please retry.",
+            "Doubao returned an empty blueprint. Please retry.",
             code="analysis_response_empty",
             diagnostic="empty_content",
             retryable=True,
@@ -269,7 +269,7 @@ def _parse_analysis_payload(
         payload = json.loads(message)
     except json.JSONDecodeError as error:
         raise AnalysisProviderError(
-            "DeepSeek returned malformed blueprint JSON. Please retry.",
+            "Doubao returned malformed blueprint JSON. Please retry.",
             code="analysis_response_invalid_json",
             diagnostic=f"json_decode_error@{error.pos}",
             retryable=True,
@@ -282,7 +282,7 @@ def _parse_analysis_payload(
         issue = error.errors(include_url=False)[0]
         location = ".".join(str(part) for part in issue["loc"]) or "root"
         raise AnalysisProviderError(
-            f"DeepSeek returned an invalid blueprint field ({location}). Please retry.",
+            f"Doubao returned an invalid blueprint field ({location}). Please retry.",
             code="analysis_response_schema_invalid",
             diagnostic=f"{issue['type']}@{location}",
             retryable=True,
@@ -476,7 +476,7 @@ def _retain_valid_corpus_items(items: list[object]) -> list[object]:
         print(
             json.dumps(
                 {
-                    "event": "deepseek_corpus_items_dropped",
+                    "event": "ark_analysis_corpus_items_dropped",
                     "dropped_count": len(invalid_fields),
                     "retained_count": len(valid_items),
                     "invalid_fields": invalid_fields[:8],
@@ -544,7 +544,7 @@ def _provider_error(error: Exception) -> AnalysisProviderError:
         return error
     if isinstance(error, httpx.TimeoutException):
         return AnalysisProviderError(
-            "DeepSeek timed out while generating the blueprint. Please retry.",
+            "Doubao timed out while generating the blueprint. Please retry.",
             code="analysis_provider_timeout",
             diagnostic=type(error).__name__,
             retryable=True,
@@ -552,20 +552,20 @@ def _provider_error(error: Exception) -> AnalysisProviderError:
     if isinstance(error, httpx.HTTPStatusError):
         status = error.response.status_code
         return AnalysisProviderError(
-            f"DeepSeek rejected the blueprint request (HTTP {status}).",
+            f"Doubao rejected the blueprint request (HTTP {status}).",
             code="analysis_provider_rate_limited" if status == 429 else "analysis_provider_rejected",
             diagnostic=f"http_status={status}",
             retryable=status == 429 or status >= 500,
         )
     if isinstance(error, httpx.TransportError):
         return AnalysisProviderError(
-            "DeepSeek could not be reached. Please retry.",
+            "Doubao could not be reached. Please retry.",
             code="analysis_provider_unreachable",
             diagnostic=type(error).__name__,
             retryable=True,
         )
     return AnalysisProviderError(
-        "DeepSeek returned an unreadable blueprint response. Please retry.",
+        "Doubao returned an unreadable blueprint response. Please retry.",
         code="analysis_response_unreadable",
         diagnostic=type(error).__name__,
         retryable=True,
@@ -573,11 +573,11 @@ def _provider_error(error: Exception) -> AnalysisProviderError:
 
 
 @lru_cache
-def _deepseek_client() -> httpx.Client:
+def _ark_analysis_client() -> httpx.Client:
     settings = get_settings()
     return httpx.Client(
-        base_url=settings.deepseek_base_url.rstrip("/"),
-        timeout=httpx.Timeout(settings.deepseek_timeout_seconds, connect=10.0),
+        base_url=settings.ark_base_url.rstrip("/"),
+        timeout=httpx.Timeout(settings.ark_timeout_seconds, connect=10.0),
         limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
     )
 

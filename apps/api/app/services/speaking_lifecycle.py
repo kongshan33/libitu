@@ -1,10 +1,10 @@
-"""Application use cases; durable fencing precedes process-local cleanup."""
+"""Application use cases; end freezes received presentation facts with durable fencing."""
 import asyncio
 import logging
 
 from app.schemas.speaking_runtime import SpeakingWorkspace
 from app.services import speaking_runtime_state
-from app.services.speaking_runtime import stop_local
+from app.services.speaking_runtime import capture_local_receipts, stop_local
 from app.services.speaking_feedback_service import request_feedback
 
 log = logging.getLogger(__name__)
@@ -19,7 +19,8 @@ async def _stop_after_commit(session_id: str) -> None:
 
 
 async def end_speaking_session(owner: str, session_id: str) -> SpeakingWorkspace:
-    result = await asyncio.to_thread(speaking_runtime_state.end_session, owner, session_id)
+    receipts = await capture_local_receipts(owner, session_id)
+    result = await asyncio.to_thread(speaking_runtime_state.end_session, owner, session_id, receipts)
     await _stop_after_commit(session_id)
     try:
         await asyncio.to_thread(request_feedback, owner, session_id)

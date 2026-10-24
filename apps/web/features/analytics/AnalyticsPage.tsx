@@ -16,7 +16,7 @@ import { useRouteIntent } from "../navigation/use-route-prefetch";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowUpRight, BookPlus, Check, ChevronRight, RefreshCw } from "lucide-react";
-import type { FeedbackDimension, FeedbackDimensionId, FeedbackReference, FeedbackRefactor, SpeakingFeedback } from "@libitu/types/speaking";
+import type { FeedbackDimension, FeedbackDimensionId, FeedbackReference, FeedbackRefactor, SpeakingFeedback, SpeakingSessionCreate } from "@libitu/types/speaking";
 import { createCorpusRemote } from "../corpus/corpus-api";
 import { createSpeakingApi } from "../loadout/api/speaking-api";
 import { missionHref } from "../navigation/return-location";
@@ -24,6 +24,7 @@ import { importMissionDraft } from "../loadout/draft";
 import { createFeedbackApi } from "./api";
 import { FeedbackController, feedbackPending } from "./controller";
 import { DIMENSIONS, draftFromMission, retryMissionRequest, suggestionRecord, validReference } from "./model";
+import { MissedOpportunities, PracticeComparisonSection, SecondRound } from "./PracticeSections";
 import styles from "./Analytics.module.css";
 
 export function AnalyticsPage({ sessionId, returnTo = "/" }: { sessionId: string; returnTo?: string }) {
@@ -40,12 +41,20 @@ function EvidenceLinks({ references, report, onSelect }: { references: FeedbackR
 function DimensionDetail({ dimension, report, onSelect }: { dimension: FeedbackDimension | undefined; report: SpeakingFeedback; onSelect: (reference: FeedbackReference) => void }) {
   if (!dimension) return <p className={styles.empty}>Assessment details are not available yet.</p>;
   if (dimension.id === "transfer") return <>
-    <p className={styles.explainer}>Each selected item counts once toward coverage. Prompted use counts and is shown separately. These observations do not establish mastery.</p>
+    <p className={styles.explainer}>{report.session.mission_plan
+      ? "Coverage considers applicable primary targets. Skipped targets and missing opportunities are not learner failures; opportunity targets are extra practice. Assisted use is shown separately."
+      : "Each selected item counts once toward coverage. Prompted use counts and is shown separately."} These observations do not establish mastery.</p>
+    {report.session.mission_plan && report.result ? <p className={styles.small}>
+      {report.result.statistics.offered_primary_targets ?? 0} primary opportunities presented · {report.result.statistics.used_primary_targets ?? 0} primary targets used · {report.result.statistics.skipped_targets ?? 0} skipped.
+      {" "}A percentage appears only when every applicable primary target has an assessable opportunity or a confirmed use.
+    </p> : null}
     {(["Expressions", "Structures"] as const).map(group => {
       const items = report.result?.item_results.filter(item => group === "Structures" ? item.kind === "structure" : item.kind !== "structure") ?? [];
       return items.length ? <section className={styles.itemGroup} key={group}><h3>{group}</h3>{items.map(item => <article className={styles.item} key={item.session_item_id}>
         <div className={styles.itemHeading}><strong>{item.text}</strong><span className={`${styles.badge} ${item.status === "appropriate" ? styles.good : item.status === "inappropriate" ? styles.attention : ""}`}>{({ appropriate: "Appropriate use", inappropriate: "Needs context", uncertain: "Not confirmed", not_observed: "Not observed" })[item.status]}</span></div>
-        <p>{item.reason}</p>{item.independent_uses + item.prompted_uses > 0 ? <p className={styles.small}>{item.independent_uses} independent · {item.prompted_uses} prompted</p> : null}<EvidenceLinks references={item.evidence} report={report} onSelect={onSelect} />
+        {item.role ? <p className={styles.small}>{item.role === "primary" ? "Primary target" : "Opportunity target"}{item.opportunity_status === "skipped" ? " · Skipped" : item.opportunity_status === "planned" ? " · No confirmed opportunity" : ""}</p> : null}
+        <p>{item.reason}</p>{item.excluded_reason ? <p className={styles.small}>{item.excluded_reason}</p> : null}
+        {item.independent_uses + item.prompted_uses + (item.uncertain_assistance_uses ?? 0) > 0 ? <p className={styles.small}>{item.independent_uses} without recorded wording help · {item.prompted_uses} assisted{item.uncertain_assistance_uses ? ` · ${item.uncertain_assistance_uses} with uncertain assistance timing` : ""}</p> : null}<EvidenceLinks references={item.evidence} report={report} onSelect={onSelect} />
       </article>)}</section> : null;
     })}
   </>;
@@ -76,7 +85,14 @@ function OwnedReport({ owner, sessionId, returnTo, getToken }: { owner: string; 
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string[]>([]);
+  const retryStorageKey = `libitu:mission-retry:${owner}:${sessionId}`;
+  const [pendingRetry, setPendingRetry] = useState(false);
   const report = state.report;
+  useEffect(() => {
+    // A report revisit must retain the original uncertain creation boundary.
+    try { setPendingRetry(Boolean(window.sessionStorage.getItem(`${retryStorageKey}:request`))); }
+    catch { /* Storage errors are reported by the explicit retry action. */ }
+  }, [retryStorageKey]);
   useEffect(() => {
     const current = new FeedbackController(createFeedbackApi(owner, sessionId, getToken), setState);
     controller.current = current;
@@ -104,8 +120,22 @@ function OwnedReport({ owner, sessionId, returnTo, getToken }: { owner: string; 
     });
   }
   async function nextMission(adjust: boolean) {
-    if (!report) return;
+    if (!report || adjust && pendingRetry) return;
     await runAction(adjust ? "adjust" : "retry", async signal => {
+      const storageKey = `libitu:mission-retry:${owner}:${sessionId}`;
+      const requestKey = `${storageKey}:request`;
+      // A lost create response must recover before reading mutable corpus data.
+      if (!adjust) {
+        const savedRequest = window.sessionStorage.getItem(requestKey);
+        if (savedRequest) {
+          const payload = JSON.parse(savedRequest) as SpeakingSessionCreate;
+          if (payload.client_id !== window.sessionStorage.getItem(storageKey)) throw new Error("The saved retry request could not be verified. Reload this report before continuing.");
+          const recovered = await createSpeakingApi(owner, getToken).create(payload, signal);
+          signal.throwIfAborted(); window.sessionStorage.removeItem(requestKey); window.sessionStorage.removeItem(storageKey);
+          setPendingRetry(false);
+          router.push(missionHref("session", returnTo, recovered.id)); return;
+        }
+      }
       const records = await createCorpusRemote(owner, getToken).list(signal); signal.throwIfAborted();
       const imported = draftFromMission(report.session, records);
       if (adjust || imported.missing) {
@@ -113,11 +143,14 @@ function OwnedReport({ owner, sessionId, returnTo, getToken }: { owner: string; 
         signal.throwIfAborted(); if (!result) return;
         router.push(missionHref("loadout", returnTo, undefined, { reportImport: result, replaceMissing: imported.missing > 0 })); return;
       }
-      const storageKey = `libitu:mission-retry:${owner}:${sessionId}`;
       let clientId = window.sessionStorage.getItem(storageKey);
       if (!clientId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clientId)) { clientId = crypto.randomUUID(); window.sessionStorage.setItem(storageKey, clientId); }
-      const session = await createSpeakingApi(owner, getToken).create(retryMissionRequest(report.session, records, clientId), signal);
-      signal.throwIfAborted(); window.sessionStorage.removeItem(storageKey);
+      const payload = retryMissionRequest(report.session, records, clientId);
+      window.sessionStorage.setItem(requestKey, JSON.stringify(payload));
+      setPendingRetry(true);
+      const session = await createSpeakingApi(owner, getToken).create(payload, signal);
+      signal.throwIfAborted(); window.sessionStorage.removeItem(requestKey); window.sessionStorage.removeItem(storageKey);
+      setPendingRetry(false);
       router.push(missionHref("session", returnTo, session.id));
     });
   }
@@ -143,6 +176,8 @@ function OwnedReport({ owner, sessionId, returnTo, getToken }: { owner: string; 
         <section className={styles.detail} role="tabpanel" id="dimension-detail" aria-labelledby={`tab-${activeDimension}`} tabIndex={0}><div className={styles.sectionHeading}><h2>{DIMENSIONS.find(dimension => dimension.id === activeDimension)?.label}</h2><span className={styles.badge}>{activeDimension === "transfer" ? "Coverage" : "AI assessment"}</span></div>{selected?.summary ? <p className={styles.summary}>{selected.summary}</p> : null}<DimensionDetail dimension={selected} report={report} onSelect={selectSource} /></section>
         {report.result?.logic_stages.length ? <section><div className={styles.sectionHeading}><h2>Conversation structure</h2><span className={styles.badge}>Separate from task fit</span></div><div className={styles.logicStages}>{report.result.logic_stages.map((stage, index) => <article key={`${stage.label}:${index}`}><h3>{stage.label}<span className={styles.small}>{stage.status === "observed" ? "Observed" : stage.status === "uncertain" ? "Not confirmed" : "Not observed"}</span></h3><p>{stage.reason}</p><EvidenceLinks references={stage.evidence} report={report} onSelect={selectSource} /></article>)}</div></section> : null}
         {report.result ? <section><div className={styles.sectionHeading}><h2>Ways to refine your language</h2><span className={styles.badge}>{Math.min(3, report.result.refactors.length)} {report.result.refactors.length === 1 ? "suggestion" : "suggestions"}</span></div><p className={styles.explainer}>AI suggestions aim to preserve your meaning. Choose wording that still says what you intend.</p><div className={styles.refactors}>{report.result.refactors.slice(0, 3).filter(refactor => validReference(refactor.original, report.messages)).map(refactor => <article className={styles.refactor} key={refactor.id}><div className={styles.refactorHeader}><span className={styles.badge}>Your turn {userNumbers.get(refactor.original.message_id)}</span><a href={`#source-${refactor.original.message_id}`} onClick={event => { event.preventDefault(); selectSource(refactor.original); }}>View source <ArrowUpRight size={12} aria-hidden="true" /></a></div><div className={styles.comparison}><div><h3>Your version</h3><p>{refactor.original.quote}</p></div><div><h3>Suggested wording</h3><p>{refactor.suggested}</p></div></div><div className={styles.refactorReason}><p>{refactor.reason}</p>{refactor.save_text ? <Button variant="primary" size="inherit" type="button" disabled={!!busy || saved.includes(refactor.id)} loading={busy === refactor.id} loadingLabel="Saving…" onClick={() => void saveSuggestion(refactor)}>{saved.includes(refactor.id) ? <Check size={14} aria-hidden="true" /> : <BookPlus size={14} aria-hidden="true" />}{saved.includes(refactor.id) ? "Saved to corpus" : "Save AI suggestion"}</Button> : null}</div></article>)}</div>{!report.result.refactors.length ? <p className={styles.empty}>No verified rewrite suggestions for this conversation.</p> : null}</section> : null}
+        <MissedOpportunities report={report} onSelect={selectSource} />
+        <PracticeComparisonSection report={report} owner={owner} getToken={getToken} returnTo={returnTo} />
         <details className={styles.transcript} open={transcriptOpen} onToggle={event => setTranscriptOpen(event.currentTarget.open)}><summary>Source transcript <span>{report.messages.length} messages</span></summary><p className={styles.explainer}>This is the saved transcript used for this assessment. Unconfirmed turns do not contribute to scores.</p>{report.messages.length ? report.messages.map(message => {
           const match = source?.message_id === message.id && validReference(source, report.messages) ? source : null;
           return <article key={message.id} id={`source-${message.id}`} tabIndex={-1} className={`${styles.sourceMessage} ${message.role === "user" ? styles.userMessage : ""}`}><h3>{message.role === "user" ? `Your turn ${userNumbers.get(message.id)}` : "AI partner"}<span>{message.status === "final" ? message.input_source : message.status === "interrupted" ? "Interrupted · may include words not heard" : "Transcript not confirmed"}</span></h3><p>{match ? <>{message.text.slice(0, match.start)}<mark>{match.quote}</mark>{message.text.slice(match.end)}</> : message.text || "Transcript unavailable"}</p></article>;
@@ -151,8 +186,16 @@ function OwnedReport({ owner, sessionId, returnTo, getToken }: { owner: string; 
         <p className={styles.version}>Assessment standard: {report.rubric_version} · {report.analysis_version}</p>
       </div><aside className={styles.sidebar} aria-label="Report summary and next steps">
         <Overview report={report} />
-        <section><h2 className={styles.sideTitle}>Session at a glance</h2><dl className={styles.stats}><div><dt>User turns</dt><dd>{stats?.user_turns ?? report.session.turn_count}</dd></div><div><dt>Assessed turns</dt><dd>{stats?.assessed_turns ?? "—"}</dd></div><div><dt>Unconfirmed turns</dt><dd>{stats?.excluded_turns ?? "—"}</dd></div><div><dt>Average words / turn</dt><dd>{stats ? stats.average_words.toFixed(1) : "—"}</dd></div><div><dt>Expressions used</dt><dd>{stats ? `${stats.used_expressions} / ${stats.selected_expressions}` : "—"}</dd></div><div><dt>Structures used</dt><dd>{stats ? `${stats.used_structures} / ${stats.selected_structures}` : "—"}</dd></div></dl></section>
-        <section><h2 className={styles.sideTitle}>Keep the practice going</h2><div className={styles.nextSteps}><Button variant="primary" size="inherit" type="button" className={styles.primary} disabled={!!busy} loading={busy === "retry"} loadingLabel="Preparing mission…" onClick={() => void nextMission(false)}><span>Retry this mission<small>Same goal, settings and selected language</small></span><ChevronRight size={16} aria-hidden="true" /></Button><Button {...loadoutIntent} variant="secondary" size="inherit" type="button" disabled={!!busy} loading={busy === "adjust"} loadingLabel="Preparing loadout…" onClick={() => void nextMission(true)}><span>Adjust loadout<small>Save this setup without replacing your draft</small></span><ChevronRight size={16} aria-hidden="true" /></Button><ButtonLink variant="secondary" size="inherit" href="/loadout"><span>New mission<small>Open mission setup</small></span><ChevronRight size={16} aria-hidden="true" /></ButtonLink></div>{actionError ? <p className={styles.error} role="alert">{actionError}</p> : null}</section>
+        <section><h2 className={styles.sideTitle}>Session at a glance</h2><dl className={styles.stats}><div><dt>User turns</dt><dd>{stats?.user_turns ?? report.session.turn_count}</dd></div><div><dt>Assessed turns</dt><dd>{stats?.assessed_turns ?? "—"}</dd></div><div><dt>Unconfirmed turns</dt><dd>{stats?.excluded_turns ?? "—"}</dd></div><div><dt>Average words / turn</dt><dd>{stats ? stats.average_words.toFixed(1) : "—"}</dd></div>
+          {report.session.mission_plan ? <>
+            <div><dt>Primary targets used</dt><dd>{stats?.used_primary_targets ?? "—"}</dd></div>
+            <div><dt>Opportunity targets used</dt><dd>{stats?.used_opportunity_targets ?? "—"}</dd></div>
+            <div><dt>Skipped targets</dt><dd>{stats?.skipped_targets ?? "—"}</dd></div>
+          </> : <><div><dt>Expressions used</dt><dd>{stats ? `${stats.used_expressions} / ${stats.selected_expressions}` : "—"}</dd></div><div><dt>Structures used</dt><dd>{stats ? `${stats.used_structures} / ${stats.selected_structures}` : "—"}</dd></div></>}
+        </dl></section>
+        <section><h2 className={styles.sideTitle}>Keep the practice going</h2><div className={styles.nextSteps}><Button variant="primary" size="inherit" type="button" className={styles.primary} disabled={!!busy} loading={busy === "retry"} loadingLabel="Preparing mission…" onClick={() => void nextMission(false)}><span>Retry this mission<small>Same goal, settings and selected language</small></span><ChevronRight size={16} aria-hidden="true" /></Button><Button {...loadoutIntent} variant="secondary" size="inherit" type="button" disabled={!!busy || pendingRetry} loading={busy === "adjust"} loadingLabel="Preparing loadout…" onClick={() => void nextMission(true)}><span>Adjust loadout<small>Save this setup without replacing your draft</small></span><ChevronRight size={16} aria-hidden="true" /></Button><ButtonLink variant="secondary" size="inherit" href="/loadout"><span>New mission<small>Open mission setup</small></span><ChevronRight size={16} aria-hidden="true" /></ButtonLink></div>{actionError ? <p className={styles.error} role="alert">{actionError}</p> : null}</section>
+        {pendingRetry ? <p className={styles.small} role="status">A retry is awaiting confirmation. Use Retry this mission to recover the original request before adjusting the loadout or preparing a second round.</p> : null}
+        <SecondRound key={`${owner}:${report.session_id}:${report.effective_support_level ?? "legacy"}`} report={report} owner={owner} getToken={getToken} returnTo={returnTo} disabled={!!busy || pendingRetry} />
         <p className={styles.small}>This report stays linked to the original mission. Starting again creates a separate conversation.</p>
       </aside></div>
     </> : null}
