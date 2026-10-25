@@ -4,10 +4,34 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-20
+  updated: 2026-10-25
 ```
 
 This log records decisions that constrain product behavior or architecture. Add a dated entry when a change affects multiple apps, data ownership, privacy, API contracts, or delivery order.
+
+## Scope the neutral redesign to practice workspaces — 2026-10-25
+
+The user approved applying the supplied visual reference to the actual Stage 1,
+segment picker and Stage 2 pages, including black primary buttons. This supersedes
+the earlier purple-primary styling requirement only for these pages. Shared
+Mission, corpus and profile styling is unchanged. Retain purple branding,
+selection and playback accents, plus existing learning/error semantics.
+
+Use the existing Enable reference audio setup in Stage 1, not the reference
+mockup's independent audio player. Keep its actions, status, errors and temporary
+buffer explanation (collapsible after enablement). The reference's text hiding,
+subtitle masking, waveform examples and loading prescriptions do not authorize
+behavior changes. Preserve Quick/Detailed/Review controls, permissions, recording,
+analysis layers, retention, routes and responsive stacking.
+
+Follow-up: center the three Stage pills on the workspace, with equal-width outer
+header columns and a centered row on narrow screens. Remove the segment picker's
+five-minute header badge as requested; keep segment durations and selection rules.
+The user subsequently requested less horizontal whitespace: use 16 px desktop
+and 12 px phone page insets instead of the reference's 32 px desktop insets.
+Remove the outer 1280 px page cap and automatic margins: they created 80 px
+side margins in a 1440 px viewport. Keep the 680 px Quick content width. Place the picker's Back
+control on the right and remove only the Recommended badge's star icon.
 
 ## Acknowledge successful Mission creation before navigation — 2026-10-24
 

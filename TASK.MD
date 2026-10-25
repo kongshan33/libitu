@@ -4,10 +4,80 @@
 meta:
   contentType: How-to
   status: active
-  updated: 2026-10-20
+  updated: 2026-10-25
 ```
 
 This is the living task queue for coding agents. Work from the first unblocked milestone. Update checkboxes, verification notes, and affected decisions in the same change.
+
+## Practice workspace visual refresh — 2026-10-25
+
+- [x] Scope the supplied neutral visual direction and black primary actions to
+  Stage 1, segment selection, Stage 2 and their loading shells.
+- [x] Keep Stage 1 video and existing Reference setup; restyle transcript,
+  logic flow, corpus cards and footer without changing their event handlers.
+- [x] Replace segment decoration with neutral cards and purple selection;
+  retain timing, metadata, difficulty and selection behavior.
+- [x] Restyle Quick/Detailed/Review chrome while retaining analysis diagrams,
+  semantic feedback, settings, history and recording behavior.
+- [x] Complete responsive visual QA at 1440 / 390 px for Reader, segment
+  selection, Quick setup/listening/paused, Detailed and Review. Check horizontal
+  overflow, black enabled primary actions, segment/timeline selection and mode
+  switching. Screenshots: `/tmp/libitu-redesign-preview/` (synthetic content).
+- [x] `pnpm lint`, `pnpm build`, `pnpm test`: Web 443, API 1645 and Extension
+  114 tests pass. The production CSS includes the final keyboard-focus rules.
+- [x] `reference-setup.browser.mjs`: setup acknowledgment, stale-reply
+  cancellation and retry pass at 1440 / 390 px.
+- [x] `stage-two-practice-flow.browser.mjs` passes at 1440 / 390 px:
+  settings, reference cancellation, recording, 60/85 analysis gates, layer
+  presentation, historical takes, cancellation restoration and deletion.
+  Screenshots: `/tmp/libitu-stage4-practice/`.
+
+Browser test maintenance updates only visual expectations to black pill buttons,
+replaces the obsolete Reference progressbar wait with the existing cancel/status
+presentation, restricts synthetic microphone instrumentation to the app frame, and disables
+decorative transitions for deterministic color assertions.
+Browser checks use fake identity/audio/API data, not live login, extension media
+capture, hosted persistence or model-quality verification.
+
+### Design follow-up and live playback diagnosis — 2026-10-25
+
+- [x] Apply the user's clarified horizontal-spacing preference: 16 px page
+  insets on desktop, 12 px on phones, shared across practice headers, picker
+  title/timeline/cards/footer and Stage 1/2 page padding. Keep inner content-width limits.
+- [x] Correct the outer margin separately: remove the 1280 px workspace cap and
+  automatic centering that generated 80 px side margins at a 1440 px viewport.
+- [x] Move picker Back to the right in DOM/layout and remove the Recommended
+  star. Reset the legacy phone heading order so Back remains on the right.
+- [x] Verify Reader, picker, Quick, Detailed and Review at 1192 / 390 px with
+  fixtures: no horizontal overflow, preserved black primary buttons, matching
+  16 / 12 px picker insets and no Recommended SVG. Back's right edge is 1176 /
+  378 px respectively. Screenshots: `/tmp/libitu-spacing-preview/`.
+- [x] Final spacing checks: root lint/build/test pass; final production CSS is
+  rebuilt after the phone-order correction. Logs: `/tmp/libitu-spacing-lint.log`,
+  `/tmp/libitu-spacing-build-final.log`, `/tmp/libitu-spacing-test.log`.
+- [x] Center the shared Stage navigation with equal outer header columns; retain
+  centered navigation at narrow widths. Remove the picker header's five-minute badge.
+- [x] Verify the real supplied content's picker in the in-app browser at 1192 px:
+  navigation center is exactly 596 px, the removed badge is absent, and the
+  selected segment remains actionable. Screenshot:
+  `/tmp/libitu-design-followup-actual.png`.
+- [x] Fixture layout and iframe-click checks at 1440 / 1192 / 596 / 390 px:
+  centered navigation, no horizontal overflow, black primary actions, Stage 1,
+  Quick listening and Detailed iframe buttons remain clickable. Quick/Review
+  visibility rules are unchanged. Screenshots: `/tmp/libitu-design-followup/`.
+- [x] `reader-progressive.browser.mjs` passes desktop/mobile and reduced-motion
+  cases, including iframe clicks, wheel scrolling and preservation of the iframe.
+- [x] Re-run root `pnpm lint`, `pnpm build`, `pnpm test`; all pass (Web 443,
+  API 1645, Extension 114). Logs: `/tmp/libitu-design-followup-{lint,build,test}.log`.
+- [ ] Live YouTube playback remains blocked by Google verification redirects in
+  the current network environment. The supplied Stage 1 iframe displays
+  “www.google.com redirected you too many times”; a separate minimal page with
+  both standard and privacy-enhanced embeds reproduces it, including explicit
+  origin/referrer settings. HTTP responses redirect to `/sorry/index` and back.
+  This is not a successful playback check. No player, recording, capture or
+  network/privacy settings were changed. Retest real Stage 1/2 playback after
+  the external access issue is resolved. Evidence:
+  `/tmp/libitu-player-network-error.png`.
 
 ## Release confirmed Mission starts — 2026-10-24
 

@@ -12,13 +12,13 @@ export function ReaderSkeleton({ rows = 3 }: { rows?: number }) {
 }
 
 export function ReaderLoadingShell() {
-  return <main className="stage-page">
+  return <main className="stage-page practice-redesign">
     <section className="reader-shell" aria-label="Loading Libitu" aria-busy="true">
       <header className="topbar"><BrandLogo className="logo" /><span className="topbar-title" role="status">Opening your workspace…</span></header>
       <aside className="left-panel"><ReaderSkeleton /></aside>
       <section className="center-panel">
-        <div className="video-frame reader-skeleton-video" aria-hidden="true" />
         <div className="video-summary"><ReaderSkeleton rows={1} /></div>
+        <div className="video-frame reader-skeleton-video" aria-hidden="true" />
         <ReaderSkeleton rows={4} />
       </section>
       <aside className="right-panel"><ReaderSkeleton /></aside>

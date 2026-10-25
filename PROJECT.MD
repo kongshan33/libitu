@@ -4,10 +4,30 @@
 meta:
   contentType: Reference
   status: active
-  updated: 2026-10-20
+  updated: 2026-10-25
 ```
 
 This file gives coding agents a fast, factual view of the repository. Read `AGENTS.md` first, then use this page to distinguish implemented behavior from planned product behavior.
+
+## Practice workspace visual refresh — 2026-10-25
+
+Stage 1, segment selection and Stage 2 now use the supplied ElevenLabs-style
+reference: white canvas, warm neutral surfaces, lighter typography, pill controls
+and black primary actions. The theme is scoped to these workspace pages and their
+loading shells. Stage 1 keeps the video and existing Enable reference audio
+component, with the summary above the video and underlined transcript highlights;
+there is no separate audio player. Segment selection uses neutral cards and a
+single purple selection color. Quick, Detailed and Review keep their settings,
+recording/authorization flows, history and analysis; learning/error colors remain.
+The shared header now centers the Stage navigation independently of the title
+and account controls, including its stacked narrow-screen layout. The segment
+picker no longer shows the redundant five-minute badge.
+Following the user's spacing feedback, practice workspace horizontal insets are
+16 px on desktop and 12 px on phones. The picker places Back on the right and
+uses a text-only Recommended badge.
+The outer workspace fills the viewport; the previous 1280 px cap and automatic
+side margins have been removed to address the user's 80 px margin report.
+See `TASK.MD` for validation and fixture limitations.
 
 ## Release confirmed Mission starts — 2026-10-24
 

@@ -22,9 +22,11 @@ for(let sample=0;sample<64000;sample++)wave.writeInt16LE(Math.round(7000*(.55+.4
 await writeFile(wavePath,wave);
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream',`--use-file-for-fake-audio-capture=${wavePath}`]});
 try {for(const width of [1440,390]){
- const context=await browser.newContext({viewport:{width,height:1000},permissions:['microphone']});const page=await context.newPage();page.setDefaultTimeout(30000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const context=await browser.newContext({viewport:{width,height:1000},permissions:['microphone'],reducedMotion:'reduce'});const page=await context.newPage();page.setDefaultTimeout(30000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await installSignedInPractice(page, {serverAnalysis:true});
  await page.addInitScript(()=>{
+  // The media fixture belongs to the app, not opaque embedded video frames.
+  if (window.top !== window) return;
   window.__players=[];window.__micCalls=0;window.__referenceActions=[];window.__waveContexts=[];
   const AudioBase=window.AudioContext;window.AudioContext=class extends AudioBase{constructor(...args){super(...args);window.__waveContexts.push(this);}};
   const gum=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);navigator.mediaDevices.getUserMedia=(options)=>{window.__micCalls++;return gum(options);};
@@ -103,8 +105,8 @@ try {for(const width of [1440,390]){
  await page.goto(entry,{waitUntil:'domcontentloaded',timeout:90000});try{await page.locator('.shadow-practice-prompt').waitFor();}catch(error){await page.screenshot({path:`${output}/failed-initial-${width}.png`,fullPage:true});throw error;}
  assert.equal(await page.locator('.stage-two-layers').count(),0,'layers hidden before recording');
  assert.equal(await page.locator('.shadow-word-mask').count(),5);assert.equal(await page.locator('.stage-two-sentences').getByText(texts[0],{exact:true}).count(),1);
- assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).borderRadius),await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).getPropertyValue('--radius-md').trim()));
- assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(83, 74, 183)');
+ assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).borderRadius),'999px');
+ assert.equal(await page.locator('.stage-two-record-start').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(12, 10, 9)');
  for(const text of ['Try another take, or move to the next sentence.','Sentence timings are approximate.','Listen first, then record your voice.'])assert.equal(await page.getByText(text,{exact:true}).count(),0);
  const originalUrl=page.url();
  await page.getByRole('button',{name:'Collapse sentence list',exact:true}).click();
@@ -131,7 +133,9 @@ try {for(const width of [1440,390]){
  await page.getByRole('button',{name:'Pause',exact:true}).click();
  await page.getByRole('button',{name:'Enable reference audio',exact:true}).click();await page.getByText('Preparing reference audio…',{exact:true}).first().waitFor();
  assert.equal(await page.evaluate(()=>window.__referenceActions.filter(a=>a==='arm').length),1);
- await page.getByRole('button',{name:'Prepare this sentence at 1×',exact:true}).click();await page.getByRole('progressbar',{name:'Reference preparation progress'}).waitFor();
+ await page.getByRole('button',{name:'Prepare this sentence at 1×',exact:true}).click();
+ await page.getByRole('button',{name:'Cancel preparation',exact:true}).waitFor();
+ assert.equal(await page.getByRole('progressbar',{name:'Reference preparation progress'}).count(),0,'reference preparation uses the existing status and cancel action');
  await page.screenshot({path:`${output}/preparing-${width}.png`,fullPage:true});
  await page.getByRole('button',{name:'Cancel preparation',exact:true}).click();
  await page.getByRole('button',{name:'Reveal word 1',exact:true}).click();
@@ -146,7 +150,7 @@ try {for(const width of [1440,390]){
  assert.equal(await page.locator('.shadow-recording-waveform rect').count(),16);
  assert.equal(await page.locator('.shadow-recording-waveform').evaluate(el=>el.getBoundingClientRect().width),96);
  await page.waitForFunction(()=>[...document.querySelectorAll('.shadow-recording-waveform rect')].some(bar=>Number(bar.getAttribute('height'))>2));
- assert.equal(await page.locator('.stage-two-record-stop').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(83, 74, 183)');
+ assert.equal(await page.locator('.stage-two-record-stop').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(12, 10, 9)');
  await page.waitForFunction(()=>Math.abs(document.querySelector('.stage-two-sentences').getBoundingClientRect().width-56)<1);
  assert.equal(await page.getByRole('button',{name:'Expand sentence list',exact:true}).isDisabled(),true);
  assert.equal(await page.locator('.shadow-directory-text').first().isVisible(),false);

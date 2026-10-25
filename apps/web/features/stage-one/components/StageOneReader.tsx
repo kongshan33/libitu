@@ -19,7 +19,7 @@ import { useReaderReveal } from "./use-reader-reveal";
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 
-import { ArrowLeft, ArrowRight, Check, Clock3, Pin, PinOff, Plus, Star, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Pin, PinOff, Plus, Trash2, X } from "lucide-react";
 import type {
   CorpusFilter,
   CorpusItem,
@@ -500,11 +500,13 @@ export function StageOneReader() {
 
   return (
     <>
-    <main className="stage-page">
+    <main className="stage-page practice-redesign">
       <section ref={readerRevealRef} className="reader-shell" aria-label="Libitu stage 1 ingest reader" aria-busy={isNavigating}>
-        <header className="topbar">
-          <BrandLogo className="logo" />
-          <div className="topbar-title">{blueprint?.title ?? sourceTitle}</div>
+        <header className="topbar practice-topbar">
+          <div className="practice-topbar-source">
+            <BrandLogo className="logo" />
+            <div className="topbar-title" title={blueprint?.title ?? sourceTitle}>{blueprint?.title ?? sourceTitle}</div>
+          </div>
           <div className="stage-pills" aria-label="Learning stages">
             <Button variant="secondary" size="inherit" shape="pill"
               className={`stage-pill ${stageOneView === "reader" || stageOneView === "picker" ? "active" : ""}`}
@@ -522,8 +524,10 @@ export function StageOneReader() {
             </Button>
             <LoadoutLink className="stage-pill">Stage 3 - Mission</LoadoutLink>
           </div>
-          <ButtonLink variant="secondary" size="inherit" shape="pill" className="stage-pill" href="/corpus">Corpus</ButtonLink>
-          <AuthControls />
+          <div className="practice-topbar-account">
+            <ButtonLink variant="secondary" size="inherit" shape="pill" className="stage-pill" href="/corpus">Corpus</ButtonLink>
+            <AuthControls />
+          </div>
         </header>
 
         {stageOneView !== "reader" && status !== "failed" && status !== "unsupported"
@@ -598,6 +602,12 @@ export function StageOneReader() {
           aria-label="Video and transcript"
           onScroll={handleTranscriptViewportScroll}
         >
+          <div className="video-summary" aria-live="polite">
+            <h1>{displayTitle}</h1>
+            <p className={displaySummary ? undefined : "summary-pending"} data-reader-reveal={displaySummary ? "summary:content" : undefined}>
+              {displaySummary ?? "Preparing the video summary..."}
+            </p>
+          </div>
           <div className="video-frame">
             {displaySourceUrl ? (
               <WorkspacePlayer
@@ -615,12 +625,6 @@ export function StageOneReader() {
             ) : <div className="reader-skeleton-video" aria-hidden="true" />}
           </div>
           {displaySourceUrl && blueprint?.contentId ? <BufferedReferencePanel capture={bufferedReference} playable /> : null}
-          <div className="video-summary" aria-live="polite">
-            <h1>{displayTitle}</h1>
-            <p className={displaySummary ? undefined : "summary-pending"} data-reader-reveal={displaySummary ? "summary:content" : undefined}>
-              {displaySummary ?? "Preparing the video summary..."}
-            </p>
-          </div>
 
           {!isReady ? (
             <StageOneStatusPanel
@@ -888,24 +892,19 @@ function StageOneSegmentPicker({
   onBegin?: (segment: StageOneSegment) => void;
 }) {
   const totalDurationMs = Math.max(...segments.map((segment) => segment.endMs ?? 0), 0);
-  const allUnderFiveMinutes = segments.every((segment) => segmentDurationMs(segment) <= 5 * 60_000);
   const selectedSegment = segments.find((segment) => segment.id === selectedSegmentId) ?? null;
 
   return (
     <section className="stage-one-picker" aria-label="Choose a segment to shadow">
       <header className="stage-one-picker-header">
-        <DirectionButton variant="secondary" className="stage-one-picker-back" type="button" onClick={onBack}>
-          <ArrowLeft aria-hidden="true" />
-          Back
-        </DirectionButton>
         <div className="stage-one-picker-heading">
           <h1>Choose a segment to shadow</h1>
           <p>AI divided {title} into {segments.length} segments aligned to the logic flow.</p>
         </div>
-        <span className="stage-one-picker-rule">
-          <Clock3 aria-hidden="true" />
-          {allUnderFiveMinutes ? "All under 5 min" : "Some segments over 5 min"}
-        </span>
+        <DirectionButton variant="secondary" className="stage-one-picker-back" type="button" onClick={onBack}>
+          <ArrowLeft aria-hidden="true" />
+          Back
+        </DirectionButton>
       </header>
 
       <div className="stage-one-picker-timeline">
@@ -920,7 +919,6 @@ function StageOneSegmentPicker({
           >
             <div className="stage-one-picker-timeline-bar" role="group" aria-label="Video segments">
               {segments.map((segment, index) => {
-                const logic = segmentLogicFor(segment, logicNodes, index);
                 const selected = segment.id === selectedSegmentId;
                 return (
                   <button
@@ -930,8 +928,7 @@ function StageOneSegmentPicker({
                     aria-label={`${segment.title}, ${formatSegmentClock(segment.startMs ?? 0)} to ${formatSegmentClock(segment.endMs ?? 0)}`}
                     aria-pressed={selected}
                     style={{
-                      flex: Math.max(segmentDurationMs(segment), 1),
-                      background: logic.color
+                      flex: Math.max(segmentDurationMs(segment), 1)
                     }}
                     onClick={() => onSelect(segment.id)}
                   >
@@ -1024,7 +1021,6 @@ function StageOneSegmentCard({
           <strong className="stage-one-segment-title">{segment.title}</strong>
           {segment.recommended ? (
             <span className="stage-one-segment-recommended">
-              <Star aria-hidden="true" />
               Recommended
             </span>
           ) : null}
@@ -1041,7 +1037,7 @@ function StageOneSegmentCard({
             {segment.phonologyTags.map((tag) => <span key={tag}>{tag.toUpperCase()}</span>)}
           </span>
           <span className="stage-one-segment-difficulty">
-            {[1, 2, 3].map((dot) => <i className={dot <= difficultyDots ? "filled" : ""} key={dot} style={{ background: dot <= difficultyDots ? difficultyColor(difficulty) : undefined }} aria-hidden="true" />)}
+            {[1, 2, 3].map((dot) => <i className={dot <= difficultyDots ? "filled" : ""} key={dot} aria-hidden="true" />)}
             {difficulty}
           </span>
         </span>
@@ -1082,10 +1078,6 @@ function formatSegmentDuration(segment: StageOneSegment) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-}
-
-function difficultyColor(difficulty: NonNullable<StageOneSegment["difficulty"]>) {
-  return difficulty === "easy" ? "#1d9e75" : difficulty === "dense" ? "#e24b4a" : "#ef9f27";
 }
 
 function transcriptIdentity(line: StageOneBlueprint["transcript"][number], index: number) {

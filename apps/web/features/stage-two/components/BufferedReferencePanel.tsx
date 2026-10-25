@@ -82,6 +82,9 @@ export function BufferedReferencePanel({ capture, playable, children, compact = 
     <p role="status" className="stage-two-recording-status">{status}</p>
     {state.error ? <p role="alert" className="stage-two-recording-error">{state.error}</p> : null}
     {children}
-    <p className="stage-two-recording-note">Audio stays on this device in a limited temporary buffer. Start after any advertisement. Seeking, buffering and speed changes may leave gaps. Refreshing or changing the source clears this session.</p>
+    <details className="reader-reference-details" open={!enabled}>
+      <summary>Audio preparation details</summary>
+      <p className="stage-two-recording-note">Audio stays on this device in a limited temporary buffer. Start after any advertisement. Seeking, buffering and speed changes may leave gaps. Refreshing or changing the source clears this session.</p>
+    </details>
   </section>;
 }

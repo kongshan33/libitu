@@ -6,10 +6,39 @@ meta:
   version: 1.1
   status: active
   audience: product, design, engineering, coding agents
-  updated: 2026-10-20
+  updated: 2026-10-25
 ```
 
 This specification defines the current Libitu MVP product and interaction model. Use it for product behavior and user experience. Use `MVP_SYSTEM_DESIGN.md` for system boundaries, `BACKEND_SYSTEM_DESIGN.md` for API implementation, and `DESIGN.md` for visual direction.
+
+## Practice workspace visual direction — 2026-10-25
+
+For Stage 1, segment selection and Stage 2, the user-approved
+[ElevenLabs-style reference](libitu%20设计规范%20v1.0.md) replaces the earlier
+purple-primary requirement with black primary buttons, neutral surfaces, pill
+controls and restrained typography. Keep other product pages unchanged. Preserve
+semantic learning/error colors and the existing analysis diagrams.
+
+Stage 1 displays title/summary, video, the existing Enable reference audio setup,
+and transcript; it does not add an independent audio player or waveform. Keep
+setup status, cancellation and errors visible; the temporary-buffer explanation
+can be expanded after enablement. Transcript corpus annotations use purple solid
+(chunk) or dashed (idiom/structure) underlines. Segment decoration becomes neutral,
+with purple indicating selection and recommendation. All current metadata stays
+available. Existing responsive stacking and content scrolling remain supported.
+Center Stage navigation independently of the source title and account controls;
+keep the Stage row centered when the header stacks. Omit the segment picker's
+five-minute header badge while retaining each segment's duration metadata.
+The user's follow-up overrides the reference's desktop page insets: use 16 px
+horizontal page padding, reduced to 12 px on phones. Align picker headings,
+timeline, cards and footer to the same inset; place Back on the right and render
+Recommended without its star icon. The outer workspace fills the available width
+without automatic side margins; keep the inner Quick content-width limit.
+
+This is a visual change only. Quick/Detailed/Review retain current text support,
+video visibility, recording/countdown behavior, authorization, historical results,
+analysis gates and retention settings. The mockup does not change these behaviors
+or replace real progress/errors with illustrative waveforms or scores.
 
 ## Current AI providers — 2026-10-23
 

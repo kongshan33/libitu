@@ -25,7 +25,7 @@ export function StageTwoSkeleton({ view = "shadow", label = "Loading practice…
 }
 
 export function StageTwoLoadingShell({ view }: { view: "shadow" | "segments" }) {
-  return <main className="stage-page"><section className="reader-shell" aria-label="Loading Libitu">
+  return <main className="stage-page practice-redesign"><section className="reader-shell" aria-label="Loading Libitu">
     <header className="topbar"><BrandLogo className="logo" /><div className={`topbar-title ${styles.title}`} aria-hidden="true"><span className={styles.caption} /></div></header>
     <StageTwoSkeleton view={view} label={view === "segments" ? "Loading segments…" : "Loading practice…"} />
   </section></main>;
